@@ -1,0 +1,194 @@
+/* Layout for the showcase page only; every component style comes from NabuXUI. */
+body {
+  margin: 0;
+}
+
+.sc-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(4rem, 8vw, 7rem);
+  padding-block-end: 6rem;
+}
+
+.sc-container {
+  inline-size: min(76rem, 100% - 2rem);
+  margin-inline: auto;
+}
+
+.sc-section {
+  display: grid;
+  gap: var(--nx-space-8);
+  scroll-margin-block-start: 6rem;
+}
+
+.sc-section-head {
+  display: grid;
+  justify-items: start;
+  gap: var(--nx-space-3);
+  max-inline-size: 44rem;
+}
+
+.sc-section-head h2 {
+  margin: 0;
+  font: 700 var(--nx-text-4xl) / 1.2 var(--nx-font-display);
+  letter-spacing: var(--nx-tracking-tighter);
+  text-wrap: balance;
+}
+
+.sc-section-head p {
+  margin: 0;
+  color: var(--nx-text-muted);
+  font-size: var(--nx-text-lg);
+  text-wrap: pretty;
+}
+
+.sc-demos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: var(--nx-space-5);
+}
+
+.sc-demo {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: var(--nx-space-4);
+  min-inline-size: 0;
+  padding: var(--nx-space-6);
+  border: 1px solid var(--nx-border);
+  border-radius: var(--nx-radius-2xl);
+  background: var(--nx-surface);
+  box-shadow: var(--nx-shadow-xs);
+}
+
+.sc-demo[data-wide] { grid-column: 1 / -1; }
+.sc-demo[data-bare] { padding: 0; overflow: clip; }
+.sc-demo[data-center] { place-items: center; justify-content: center; min-block-size: 14rem; }
+
+.sc-demo-title {
+  margin: 0;
+  font-size: var(--nx-text-xs);
+  font-weight: 600;
+  color: var(--nx-text-subtle);
+}
+
+.sc-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--nx-space-3);
+}
+
+.sc-stack { display: grid; gap: var(--nx-space-4); }
+
+.sc-code {
+  margin: 0;
+  padding: var(--nx-space-4) var(--nx-space-5);
+  border-radius: var(--nx-radius-lg);
+  background: #0c0e1a;
+  color: #dfe3f5;
+  font: 400 0.8125rem / 1.7 var(--nx-font-mono);
+  overflow-x: auto;
+  tab-size: 2;
+  text-align: left;
+}
+
+.sc-code-wrap { position: relative; }
+.sc-code-wrap .nx-copy { position: absolute; inset-block-start: var(--nx-space-2); inset-inline-end: var(--nx-space-2); color: #dfe3f5; }
+
+.sc-hero-title-accent { display: block; }
+
+.sc-logo {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 2rem;
+  block-size: 2rem;
+  border-radius: 10px;
+  background: var(--nx-gradient-brand);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 800;
+  box-shadow: var(--nx-shadow-glow);
+}
+
+.sc-brand-x { color: var(--nx-gold-text); }
+
+.sc-team-card {
+  display: grid;
+  align-content: space-between;
+  inline-size: 11rem;
+  block-size: 15rem;
+  padding: var(--nx-space-4);
+  border: 1px solid rgb(255 255 255 / 0.08);
+  border-radius: var(--nx-radius-xl);
+  color: #fff;
+  background: var(--sc-glow, var(--nx-gradient-brand)), #0b0d19;
+  box-shadow: var(--nx-shadow-lg);
+}
+
+.sc-team-card strong { font-size: var(--nx-text-md); }
+.sc-team-card span { font-size: var(--nx-text-xs); opacity: 0.75; }
+
+.sc-swipe-card {
+  display: grid;
+  align-content: end;
+  gap: var(--nx-space-1);
+  block-size: 20rem;
+  padding: var(--nx-space-6);
+  border-radius: var(--nx-radius-2xl);
+  color: #fff;
+  background: var(--sc-bg), #0b0d19;
+  box-shadow: var(--nx-shadow-xl);
+}
+
+.sc-swipe-card h3 { margin: 0; font: 700 var(--nx-text-2xl) / 1.2 var(--nx-font-display); }
+.sc-swipe-card p { margin: 0; opacity: 0.8; font-size: var(--nx-text-sm); }
+
+.sc-logo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--nx-space-2);
+  padding: var(--nx-space-2) var(--nx-space-4);
+  border: 1px solid var(--nx-border);
+  border-radius: var(--nx-radius-full);
+  background: var(--nx-surface);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sc-page-demo {
+  display: grid;
+  gap: var(--nx-space-3);
+  min-block-size: 12rem;
+  padding: var(--nx-space-6);
+  border-radius: var(--nx-radius-xl);
+  background: var(--nx-bg-subtle);
+  view-transition-name: sc-page;
+}
+
+::view-transition-old(sc-page) { animation: var(--nx-dur-base) var(--nx-ease-in) both nx-fade-out; }
+::view-transition-new(sc-page) { animation: var(--nx-dur-slow) var(--nx-ease-out) both nx-fade-in; }
+:root[data-sc-preset="rise"]::view-transition-old(sc-page) { animation-name: nx-vt-out; }
+:root[data-sc-preset="rise"]::view-transition-new(sc-page) { animation-name: nx-vt-in; }
+:root[data-sc-preset="zoom"]::view-transition-old(sc-page) { animation-name: nx-vt-zoom-out; }
+:root[data-sc-preset="zoom"]::view-transition-new(sc-page) { animation-name: nx-vt-zoom-in; }
+:root[data-sc-preset="slide"]:active-view-transition-type(forward)::view-transition-old(sc-page) { animation-name: nx-vt-to-start; }
+:root[data-sc-preset="slide"]:active-view-transition-type(forward)::view-transition-new(sc-page) { animation-name: nx-vt-from-end; }
+:root[data-sc-preset="slide"]:active-view-transition-type(back)::view-transition-old(sc-page) { animation-name: nx-vt-to-end; }
+:root[data-sc-preset="slide"]:active-view-transition-type(back)::view-transition-new(sc-page) { animation-name: nx-vt-from-start; }
+
+.sc-footer {
+  padding-block: var(--nx-space-10);
+  border-block-start: 1px solid var(--nx-border);
+  color: var(--nx-text-muted);
+  font-size: var(--nx-text-sm);
+}
+
+.sc-bento-art {
+  display: grid;
+  place-items: center;
+  inline-size: 100%;
+  block-size: 100%;
+  min-block-size: 7rem;
+  background: radial-gradient(circle at 30% 20%, var(--nx-accent-soft), transparent 60%), radial-gradient(circle at 80% 70%, var(--nx-gold-soft), transparent 55%);
+}

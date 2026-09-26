@@ -1,0 +1,270 @@
+/*
+ * Hero and backdrops
+ *
+ *   <section class="nx-hero" data-align="center|start">
+ *     <div class="nx-backdrop" data-variant="aurora|grid|stars|beams|dots" aria-hidden="true"><i></i><i></i><i></i></div>
+ *     <div class="nx-hero-content">
+ *       <a class="nx-hero-eyebrow">…</a> <h1 class="nx-hero-title">…</h1>
+ *       <p class="nx-hero-subtitle">…</p> <div class="nx-hero-actions">…</div>
+ *     </div>
+ *     <div class="nx-hero-media">…</div>
+ *   </section>
+ *
+ * Backdrops are pure CSS — three empty layers every variant styles its own way —
+ * so Blade and React render the same markup and nothing waits for JavaScript.
+ */
+@layer nx.components {
+  .nx-hero {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    gap: var(--nx-space-16);
+    padding-block: clamp(4.5rem, 3rem + 8vw, 9rem) clamp(3rem, 2rem + 5vw, 6rem);
+    padding-inline: var(--nx-space-6);
+    overflow: clip;
+  }
+
+  .nx-hero-content {
+    display: grid;
+    justify-items: center;
+    gap: var(--nx-space-6);
+    max-inline-size: 56rem;
+    margin-inline: auto;
+    text-align: center;
+
+    > * { margin: 0; }
+  }
+
+  .nx-hero[data-align="start"] .nx-hero-content {
+    justify-items: start;
+    margin-inline: 0;
+    text-align: start;
+  }
+
+  .nx-hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding-block: 0.3rem;
+    padding-inline: 0.35rem 0.75rem;
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-glass);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    box-shadow: var(--nx-shadow-xs);
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+    font-weight: 500;
+    text-decoration: none;
+    transition: border-color var(--nx-dur-base), box-shadow var(--nx-dur-base);
+
+    .nx-badge { font-size: var(--nx-text-xs); }
+    .nx-icon { transition: translate var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy); }
+
+    &:is(a):hover {
+      border-color: var(--nx-accent-border);
+      box-shadow: var(--nx-shadow-glow);
+
+      .nx-icon { translate: calc(3px * var(--nx-dir) * var(--nx-motion)) 0; }
+    }
+
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 3px; }
+  }
+
+  .nx-hero-title {
+    font: 700 var(--nx-text-display) / 1.02 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tightest);
+    text-wrap: balance;
+  }
+
+  /* Persian and Arabic display type needs room for its ascenders and dots. */
+  :where(:lang(fa), :lang(ar), :lang(ur)) .nx-hero-title { line-height: 1.3; }
+
+  .nx-hero-subtitle {
+    max-inline-size: 42rem;
+    font-size: clamp(var(--nx-text-lg), 1rem + 0.5vw, var(--nx-text-xl));
+    line-height: 1.65;
+    color: var(--nx-text-muted);
+    text-wrap: pretty;
+  }
+
+  .nx-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--nx-space-3);
+    margin-block-start: var(--nx-space-2);
+  }
+
+  .nx-hero[data-align="start"] .nx-hero-actions { justify-content: flex-start; }
+
+  /* A product shot that tips forward into place. */
+  .nx-hero-media {
+    max-inline-size: 72rem;
+    inline-size: 100%;
+    margin-inline: auto;
+    perspective: 1600px;
+
+    > * {
+      border: 1px solid var(--nx-border);
+      border-radius: var(--nx-radius-2xl);
+      box-shadow: var(--nx-shadow-xl);
+      transform-origin: 50% 0;
+      transition: rotate 1.4s var(--nx-ease-out), opacity 1s var(--nx-ease-out), translate 1.4s var(--nx-ease-out);
+    }
+  }
+
+  :where(.nx-js) .nx-hero-media[data-nx-reveal]:not([data-nx-revealed]) > * {
+    rotate: x calc(18deg * var(--nx-motion));
+    translate: 0 calc(40px * var(--nx-motion));
+    opacity: 0.2;
+  }
+  .nx-hero-media[data-nx-reveal] { opacity: 1; translate: none; }
+
+  /* ---- Backdrops ------------------------------------------------------------ */
+  .nx-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    overflow: clip;
+    pointer-events: none;
+
+    > i {
+      position: absolute;
+      display: block;
+    }
+  }
+
+  /* Aurora: three lights drifting behind the page. */
+  .nx-backdrop[data-variant="aurora"] {
+    mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, #000 30%, transparent 75%);
+
+    > i {
+      inline-size: 55vmax;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      filter: blur(70px);
+      opacity: var(--nx-backdrop-intensity);
+      animation: nx-drift 22s var(--nx-ease-in-out) infinite alternate;
+    }
+
+    > i:nth-child(1) { inset: -30% auto auto -10%; background: radial-gradient(circle, var(--nx-lapis-500), transparent 65%); }
+    > i:nth-child(2) { inset: -25% -15% auto auto; background: radial-gradient(circle, var(--nx-violet-500), transparent 65%); animation-duration: 28s; animation-delay: -8s; }
+    > i:nth-child(3) { inset: 10% auto auto 25%; background: radial-gradient(circle, var(--nx-cyan-400), transparent 60%); opacity: calc(var(--nx-backdrop-intensity) * 0.6); animation-duration: 34s; animation-delay: -16s; }
+  }
+
+  @keyframes nx-drift {
+    33% { translate: calc(8vmax * var(--nx-motion)) calc(4vmax * var(--nx-motion)); scale: 1.08; }
+    66% { translate: calc(-6vmax * var(--nx-motion)) calc(6vmax * var(--nx-motion)); scale: 0.94; }
+    100% { translate: calc(4vmax * var(--nx-motion)) calc(-3vmax * var(--nx-motion)); scale: 1.04; }
+  }
+
+  /* Grid: an endless ledger that lights up under the pointer (spotlight behaviour on the hero). */
+  .nx-backdrop[data-variant="grid"] {
+    --_cell: var(--nx-grid-cell, 48px);
+    --_line: color-mix(in oklab, var(--nx-text) 8%, transparent);
+
+    background:
+      linear-gradient(var(--_line) 1px, transparent 1px) 0 0 / var(--_cell) var(--_cell),
+      linear-gradient(90deg, var(--_line) 1px, transparent 1px) 0 0 / var(--_cell) var(--_cell);
+    mask-image: radial-gradient(ellipse 75% 65% at 50% 35%, #000 25%, transparent 78%);
+    animation: nx-grid-pan 18s linear infinite;
+
+    > i:nth-child(1) {
+      inset: 0;
+      background:
+        linear-gradient(var(--nx-accent) 1px, transparent 1px) 0 0 / var(--_cell) var(--_cell),
+        linear-gradient(90deg, var(--nx-accent) 1px, transparent 1px) 0 0 / var(--_cell) var(--_cell);
+      mask-image: radial-gradient(18rem circle at var(--nx-px, 50%) var(--nx-py, 40%), #000, transparent 70%);
+      opacity: 0.55;
+      animation: inherit;
+    }
+
+    > i:nth-child(2) {
+      inset: -20% 15% auto;
+      block-size: 60%;
+      background: radial-gradient(ellipse at 50% 0%, var(--nx-accent-soft), transparent 70%);
+      filter: blur(20px);
+    }
+  }
+
+  @keyframes nx-grid-pan { to { background-position: var(--_cell) var(--_cell), var(--_cell) var(--_cell); } }
+
+  /* Stars: the night sky over Borsippa, with a constellation or two. */
+  .nx-backdrop[data-variant="stars"] {
+    background: radial-gradient(ellipse at 50% 120%, color-mix(in oklab, var(--nx-lapis-700) 35%, transparent), transparent 60%);
+
+    > i { inset: 0; }
+
+    > i:nth-child(1) {
+      background-image:
+        radial-gradient(1px 1px at 20px 30px, var(--nx-star), transparent),
+        radial-gradient(1px 1px at 80px 120px, var(--nx-star), transparent),
+        radial-gradient(1.5px 1.5px at 150px 60px, var(--nx-star), transparent),
+        radial-gradient(1px 1px at 210px 180px, var(--nx-star), transparent),
+        radial-gradient(1px 1px at 260px 20px, var(--nx-star), transparent),
+        radial-gradient(1.5px 1.5px at 40px 220px, var(--nx-star), transparent),
+        radial-gradient(1px 1px at 120px 250px, var(--nx-star), transparent);
+      background-size: 290px 290px;
+      opacity: 0.55;
+      animation: nx-twinkle 5s var(--nx-ease-in-out) infinite alternate;
+    }
+
+    > i:nth-child(2) {
+      background-image:
+        radial-gradient(1px 1px at 60px 90px, var(--nx-star), transparent),
+        radial-gradient(2px 2px at 190px 140px, var(--nx-gold-300), transparent),
+        radial-gradient(1px 1px at 330px 60px, var(--nx-star), transparent),
+        radial-gradient(1.5px 1.5px at 280px 320px, var(--nx-cyan-300), transparent),
+        radial-gradient(1px 1px at 100px 360px, var(--nx-star), transparent);
+      background-size: 420px 420px;
+      opacity: 0.7;
+      animation: nx-twinkle 7s var(--nx-ease-in-out) infinite alternate-reverse;
+    }
+
+    /* A faint constellation: the scribe's stylus, drawn in dots and lines. */
+    > i:nth-child(3) {
+      inset: 8% 6% auto auto;
+      inline-size: min(34vmax, 420px);
+      aspect-ratio: 1;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cg fill='none' stroke='%23a3a8ff' stroke-opacity='.35' stroke-width='.6'%3E%3Cpath d='M20 150 62 118 98 126 132 84 170 62M98 126 110 170M132 84 118 40'/%3E%3C/g%3E%3Cg fill='%23fff'%3E%3Ccircle cx='20' cy='150' r='1.6'/%3E%3Ccircle cx='62' cy='118' r='2'/%3E%3Ccircle cx='98' cy='126' r='1.4'/%3E%3Ccircle cx='132' cy='84' r='2.4'/%3E%3Ccircle cx='170' cy='62' r='1.6'/%3E%3Ccircle cx='110' cy='170' r='1.2'/%3E%3Ccircle cx='118' cy='40' r='1.8'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
+      opacity: 0.8;
+      animation: nx-float 9s var(--nx-ease-in-out) infinite;
+    }
+  }
+
+  @keyframes nx-twinkle { from { opacity: 0.25; } }
+
+  /* Beams: light falling through the dark. */
+  .nx-backdrop[data-variant="beams"] {
+    mask-image: linear-gradient(to bottom, #000 40%, transparent);
+
+    > i {
+      inset-block-start: -40%;
+      inline-size: 1px;
+      block-size: 45%;
+      background: linear-gradient(to bottom, transparent, var(--nx-cyan-400), transparent);
+      box-shadow: 0 0 12px 1px color-mix(in oklab, var(--nx-cyan-400) 45%, transparent);
+      opacity: 0.8;
+      animation: nx-beam 7s linear infinite;
+    }
+
+    > i:nth-child(1) { left: 22%; }
+    > i:nth-child(2) { left: 58%; animation-duration: 9s; animation-delay: -3s; background: linear-gradient(to bottom, transparent, var(--nx-lapis-400), transparent); }
+    > i:nth-child(3) { left: 81%; animation-duration: 6s; animation-delay: -5s; background: linear-gradient(to bottom, transparent, var(--nx-gold-400), transparent); }
+  }
+
+  @keyframes nx-beam { to { translate: 0 330%; } }
+
+  /* Dots: a quiet field that fades toward the edges. */
+  .nx-backdrop[data-variant="dots"] {
+    background-image: radial-gradient(color-mix(in oklab, var(--nx-text) 18%, transparent) 1px, transparent 1.5px);
+    background-size: 22px 22px;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 20%, transparent 75%);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-backdrop, .nx-backdrop > i { animation: none !important; }
+  }
+}

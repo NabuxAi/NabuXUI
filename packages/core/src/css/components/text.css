@@ -1,0 +1,251 @@
+/*
+ * Text
+ *
+ * Split text (reveal, wave) renders the readable sentence once for assistive
+ * technology and the animated pieces beside it, hidden from it:
+ *
+ *   <span class="nx-text-reveal" data-by="word" data-nx-reveal>
+ *     <span class="nx-visually-hidden">The whole sentence</span>
+ *     <span class="nx-text-pieces" aria-hidden="true">
+ *       <span class="nx-text-piece" style="--nx-i: 0">The</span> …
+ *     </span>
+ *   </span>
+ *
+ * Arabic-script text is always split by word: wrapping single letters would
+ * break the joining between them.
+ */
+@layer nx.components {
+  .nx-gradient-text {
+    background: var(--nx-gradient-text);
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+
+    &[data-variant="gold"] { background-image: var(--nx-gradient-gold); }
+    &[data-variant="brand"] { background-image: var(--nx-gradient-brand); }
+    &[data-animate] { animation: nx-gradient-flow 6s var(--nx-ease-in-out) infinite alternate; }
+  }
+
+  @keyframes nx-gradient-flow { to { background-position: 100% 0; } }
+
+  /* Shimmer: a band of light passing over muted text. */
+  .nx-shimmer {
+    --_base: var(--nx-text-subtle);
+    --_shine: var(--nx-text);
+    background: linear-gradient(100deg, var(--_base) 35%, var(--_shine) 50%, var(--_base) 65%) 0 0 / 250% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: nx-sheen var(--nx-shimmer-duration, 2.4s) linear infinite;
+
+    &[data-variant="wave"] {
+      background: none;
+      color: var(--_base);
+      animation: none;
+    }
+  }
+
+  .nx-shimmer[data-variant="wave"] .nx-text-piece {
+    display: inline-block;
+    white-space: pre;
+    animation: nx-wave var(--nx-shimmer-duration, 2.4s) var(--nx-ease-in-out) infinite;
+    animation-delay: calc(var(--nx-i, 0) * 70ms);
+  }
+
+  @keyframes nx-wave {
+    0%, 60%, 100% { translate: 0; color: var(--_base); }
+    30% { translate: 0 calc(-0.18em * var(--nx-motion)); color: var(--_shine); }
+  }
+
+  /* Reveal by piece: the container carries [data-nx-reveal]; each piece staggers. */
+  .nx-text-reveal {
+    /* The container stays put; its pieces do the moving. */
+    &[data-nx-reveal] {
+      transition: none;
+      opacity: 1;
+      translate: none;
+      filter: none;
+    }
+
+    .nx-text-piece {
+      display: inline-block;
+      white-space: pre;
+      transition:
+        opacity var(--nx-dur-slower) var(--nx-ease-out),
+        translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+        filter var(--nx-dur-slower) var(--nx-ease-out);
+      transition-delay: calc(var(--nx-i, 0) * var(--nx-text-stagger, 35ms) + var(--nx-delay, 0ms));
+    }
+
+    &[data-by="char"] .nx-text-piece { --nx-text-stagger: 18ms; }
+  }
+
+  :where(.nx-js) .nx-text-reveal[data-nx-reveal]:not([data-nx-revealed]) .nx-text-piece {
+    opacity: 0;
+    translate: 0 calc(0.45em * var(--nx-motion));
+    filter: blur(calc(8px * var(--nx-motion)));
+  }
+
+  /* Scroll-linked reveal: each word brightens as the paragraph scrolls through the view. */
+  @supports ((animation-timeline: view()) and (animation-range: entry)) {
+    .nx-text-reveal[data-trigger="scroll"] {
+      view-timeline: --nx-text-scroll block;
+
+      .nx-text-piece {
+        opacity: 1;
+        filter: none;
+        translate: none;
+        transition: none;
+        animation: nx-word-light linear both;
+        animation-timeline: --nx-text-scroll;
+        animation-range: cover calc(10% + var(--nx-i) * var(--nx-scroll-step, 1.5%)) cover calc(30% + var(--nx-i) * var(--nx-scroll-step, 1.5%));
+      }
+    }
+  }
+
+  @keyframes nx-word-light { from { opacity: 0.18; } }
+
+  /* Scramble: glyphs cycle before settling on the real text. */
+  .nx-scramble {
+    font-variant-numeric: tabular-nums;
+
+    [data-scrambling] { color: var(--nx-scramble-color, var(--nx-accent-text)); }
+  }
+
+  /* Rotating words: the width follows the current word. */
+  .nx-word-rotate {
+    display: inline-grid;
+    vertical-align: bottom;
+    inline-size: var(--nx-word-width, auto);
+    transition: inline-size var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+    overflow: clip;
+    overflow-clip-margin: 0.2em;
+  }
+
+  .nx-word-rotate-word {
+    grid-area: 1 / 1;
+    white-space: nowrap;
+    color: var(--nx-word-color, inherit);
+
+    &[data-state="enter"] {
+      animation: nx-word-in var(--nx-spring-gentle-duration) var(--nx-spring-gentle) both;
+    }
+
+    &[data-state="exit"] {
+      animation: nx-word-out var(--nx-dur-slow) var(--nx-ease-in) both;
+    }
+  }
+
+  @keyframes nx-word-in {
+    from { opacity: 0; translate: 0 calc(0.7em * var(--nx-motion)); filter: blur(calc(6px * var(--nx-motion))); }
+  }
+  @keyframes nx-word-out {
+    to { opacity: 0; translate: 0 calc(-0.7em * var(--nx-motion)); filter: blur(calc(6px * var(--nx-motion))); }
+  }
+
+  /*
+   * Rolling numbers.
+   *   <span class="nx-number"><span class="nx-visually-hidden">1,284</span>
+   *     <span class="nx-number-roll" aria-hidden="true">
+   *       <span class="nx-digit" style="--d: 1"><span class="nx-digit-track"><span>0</span>…<span>9</span></span></span>
+   *       <span class="nx-number-sep">,</span> …
+   * Each digit is a column of 0–9 moved to its value, so a changing number rolls
+   * instead of flickering — in any numbering system the locale uses.
+   */
+  .nx-number {
+    display: inline-flex;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+
+  .nx-number-roll {
+    display: inline-flex;
+    direction: ltr;
+  }
+
+  .nx-digit {
+    display: inline-block;
+    block-size: 1.1em;
+    overflow: clip;
+    text-align: center;
+  }
+
+  .nx-digit-track {
+    display: flex;
+    flex-direction: column;
+    translate: 0 calc(var(--d, 0) * -1.1em);
+    transition: translate var(--nx-number-duration, var(--nx-spring-gentle-duration)) var(--nx-spring-gentle);
+    transition-delay: calc(var(--nx-p, 0) * 40ms);
+
+    > span { block-size: 1.1em; }
+  }
+
+  :where(.nx-js) [data-nx-reveal]:not([data-nx-revealed]) .nx-digit-track,
+  :where(.nx-js) .nx-number[data-nx-reveal]:not([data-nx-revealed]) .nx-digit-track {
+    translate: 0 0;
+  }
+
+  .nx-number[data-nx-reveal] {
+    opacity: 1;
+    translate: none;
+  }
+
+  /* Hand-drawn marks that draw themselves when revealed. */
+  .nx-highlight {
+    position: relative;
+    display: inline-block;
+    white-space: nowrap;
+    isolation: isolate;
+    --_color: var(--nx-highlight-color, var(--nx-gold));
+  }
+
+  .nx-highlight-mark {
+    position: absolute;
+    inset-inline-start: -4%;
+    inset-block-end: -0.28em;
+    inline-size: 108%;
+    block-size: 0.5em;
+    overflow: visible;
+    z-index: -1;
+    fill: none;
+    stroke: var(--_color);
+    stroke-width: 3.5;
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 900ms var(--nx-ease-out) calc(var(--nx-delay, 0ms) + 150ms);
+  }
+
+  .nx-highlight[data-variant="circle"] .nx-highlight-mark {
+    inset-block: -18% auto;
+    inset-inline-start: -8%;
+    inline-size: 116%;
+    block-size: 136%;
+    stroke-width: 2.5;
+  }
+
+  .nx-highlight[data-variant="marker"] {
+    .nx-highlight-mark { display: none; }
+
+    background: linear-gradient(var(--nx-gold-soft), var(--nx-gold-soft)) no-repeat 0 85% / 100% 45%;
+    transition: background-size 800ms var(--nx-ease-out) calc(var(--nx-delay, 0ms) + 150ms);
+  }
+
+  :where(.nx-js) .nx-highlight[data-nx-reveal]:not([data-nx-revealed]) {
+    opacity: 1;
+    translate: none;
+
+    .nx-highlight-mark { stroke-dashoffset: 1; }
+    &[data-variant="marker"] { background-size: 0% 45%; }
+  }
+
+  :where([dir="rtl"]) .nx-highlight[data-variant="marker"] { background-position: 100% 85%; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-shimmer, .nx-gradient-text[data-animate], .nx-shimmer[data-variant="wave"] .nx-text-piece { animation: none; }
+    .nx-shimmer { color: var(--_base); background: none; }
+  }
+}

@@ -1,0 +1,337 @@
+/*
+ * Overlays: dialog, drawer, sheet, popover and the command palette.
+ *
+ * All of them are native top-layer elements (<dialog>.showModal(), [popover]),
+ * so focus containment, Escape, inertness of the page behind and stacking come
+ * from the browser. Entry uses @starting-style; exit transitions `display` and
+ * `overlay` with allow-discrete so the element stays painted while it leaves.
+ *
+ *   <dialog class="nx-dialog" data-size="sm|md|lg|xl|full" [data-variant="drawer|sheet"] [data-side="start|end|bottom"]>
+ *     <header class="nx-dialog-header"> <h2 class="nx-dialog-title">…</h2> <p class="nx-dialog-description">…</p> </header>
+ *     <div class="nx-dialog-body">…</div>
+ *     <footer class="nx-dialog-footer">…</footer>
+ *     <button class="nx-dialog-close" aria-label="Close">×</button>
+ *   </dialog>
+ */
+@layer nx.components {
+  /* The page behind a modal does not scroll (and does not shift when its scrollbar goes). */
+  :root:has(.nx-dialog:modal) {
+    overflow: hidden;
+    scrollbar-gutter: stable;
+  }
+
+  .nx-dialog {
+    --_width: 32rem;
+    --_from-x: 0px;
+    --_from-y: calc(12px * var(--nx-motion));
+    --_from-scale: calc(1 - 0.04 * var(--nx-motion));
+
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    inline-size: min(var(--_width), calc(100vw - 2rem));
+    max-block-size: min(85dvh, 52rem);
+    margin: auto;
+    padding: 0;
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-2xl);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    box-shadow: var(--nx-shadow-xl), inset 0 1px 0 var(--nx-highlight);
+    overflow: hidden;
+    opacity: 0;
+    scale: var(--_from-scale);
+    translate: var(--_from-x) var(--_from-y);
+    transition:
+      opacity var(--nx-dur-base) var(--nx-ease-out),
+      scale var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      display var(--nx-dur-base) allow-discrete,
+      overlay var(--nx-dur-base) allow-discrete;
+
+    &:not([open]) { display: none; }
+
+    &[data-size="sm"] { --_width: 24rem; }
+    &[data-size="lg"] { --_width: 44rem; }
+    &[data-size="xl"] { --_width: 60rem; }
+    &[data-size="full"] { --_width: 100vw; inline-size: calc(100vw - 2rem); max-block-size: calc(100dvh - 2rem); block-size: 100%; }
+
+    &::backdrop {
+      background: transparent;
+      -webkit-backdrop-filter: blur(0);
+      backdrop-filter: blur(0);
+      transition:
+        background-color var(--nx-dur-slow) var(--nx-ease-out),
+        backdrop-filter var(--nx-dur-slow) var(--nx-ease-out),
+        display var(--nx-dur-slow) allow-discrete,
+        overlay var(--nx-dur-slow) allow-discrete;
+    }
+  }
+
+  .nx-dialog[open] {
+    opacity: 1;
+    scale: 1;
+    translate: 0 0;
+
+    @starting-style {
+      opacity: 0;
+      scale: var(--_from-scale);
+      translate: var(--_from-x) var(--_from-y);
+    }
+
+    &::backdrop {
+      background: var(--nx-backdrop, rgb(0 0 0 / 0.45));
+      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px);
+    }
+  }
+
+  @starting-style {
+    .nx-dialog[open]::backdrop {
+      background: transparent;
+      -webkit-backdrop-filter: blur(0);
+      backdrop-filter: blur(0);
+    }
+  }
+
+  /* Drawer: slides in from the inline end (or start). */
+  .nx-dialog[data-variant="drawer"] {
+    --_width: 26rem;
+    --_from-x: calc(100% * var(--nx-dir));
+    --_from-y: 0px;
+    --_from-scale: 1;
+
+    inline-size: min(var(--_width), 100vw);
+    block-size: 100dvh;
+    max-block-size: 100dvh;
+    margin: 0;
+    margin-inline-start: auto;
+    border-block: 0;
+    border-inline-end: 0;
+    border-radius: 0;
+    border-start-start-radius: var(--nx-radius-2xl);
+    border-end-start-radius: var(--nx-radius-2xl);
+    transition-duration: var(--nx-dur-slow), var(--nx-spring-soft-duration), var(--nx-spring-soft-duration), var(--nx-dur-slow), var(--nx-dur-slow);
+    transition-timing-function: var(--nx-ease-out), var(--nx-spring-soft), var(--nx-spring-soft), linear, linear;
+
+    &[data-side="start"] {
+      --_from-x: calc(-100% * var(--nx-dir));
+      margin-inline: 0 auto;
+      border-inline-end: 1px solid var(--nx-border);
+      border-inline-start: 0;
+      border-radius: 0;
+      border-start-end-radius: var(--nx-radius-2xl);
+      border-end-end-radius: var(--nx-radius-2xl);
+    }
+  }
+
+  /* Sheet: rises from the bottom edge, with a grab handle. */
+  .nx-dialog[data-variant="sheet"] {
+    --_from-x: 0px;
+    --_from-y: 100%;
+    --_from-scale: 1;
+
+    inline-size: min(var(--_width, 40rem), 100vw);
+    max-block-size: 90dvh;
+    margin: auto auto 0;
+    border-block-end: 0;
+    border-radius: var(--nx-radius-2xl) var(--nx-radius-2xl) 0 0;
+    transition-timing-function: var(--nx-ease-out), var(--nx-spring-soft), var(--nx-spring-soft), linear, linear;
+
+    &::before {
+      content: "";
+      align-self: center;
+      flex: none;
+      inline-size: 2.5rem;
+      block-size: 0.3rem;
+      margin-block-start: var(--nx-space-2);
+      border-radius: var(--nx-radius-full);
+      background: var(--nx-border-strong);
+    }
+  }
+
+  .nx-dialog-header {
+    display: grid;
+    gap: var(--nx-space-1);
+    padding: var(--nx-space-6) var(--nx-space-6) var(--nx-space-2);
+    padding-inline-end: var(--nx-space-12);
+  }
+
+  .nx-dialog-title { margin: 0; font: 650 var(--nx-text-xl) / 1.3 var(--nx-font-display); }
+  .nx-dialog-description { margin: 0; font-size: var(--nx-text-sm); color: var(--nx-text-muted); }
+
+  .nx-dialog-body {
+    flex: 1;
+    padding: var(--nx-space-4) var(--nx-space-6);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .nx-dialog-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--nx-space-3);
+    padding: var(--nx-space-4) var(--nx-space-6) var(--nx-space-6);
+  }
+
+  .nx-dialog-close {
+    position: absolute;
+    inset-block-start: var(--nx-space-4);
+    inset-inline-end: var(--nx-space-4);
+    display: grid;
+    place-items: center;
+    inline-size: 2rem;
+    block-size: 2rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface-2);
+    color: var(--nx-text-muted);
+    cursor: pointer;
+    transition: background-color var(--nx-dur-fast), color var(--nx-dur-fast), rotate var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+
+    &:hover { background: var(--nx-surface-3); color: var(--nx-text); rotate: calc(90deg * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+    .nx-icon { inline-size: 1rem; block-size: 1rem; }
+  }
+
+  /* ---- Popover (generic floating panel) ------------------------------------ */
+  .nx-popover {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    inline-size: max-content;
+    max-inline-size: min(22rem, calc(100vw - 1rem));
+    padding: var(--nx-space-4);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    box-shadow: var(--nx-shadow-xl);
+    z-index: var(--nx-z-dropdown);
+    transform-origin: var(--nx-origin, top center);
+    opacity: 0;
+    scale: 0.96;
+    transition:
+      opacity var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+      display var(--nx-dur-fast) allow-discrete,
+      overlay var(--nx-dur-fast) allow-discrete;
+  }
+
+  .nx-popover:where(:popover-open, [data-open]) {
+    opacity: 1;
+    scale: 1;
+
+    @starting-style { opacity: 0; scale: 0.96; }
+  }
+
+  .nx-popover:not([popover]):not([data-open]) { display: none; }
+
+  /* ---- Command palette ------------------------------------------------------ */
+  .nx-command {
+    --_width: 38rem;
+
+    margin-block-start: 12vh;
+    max-block-size: min(70dvh, 34rem);
+  }
+
+  .nx-command-search {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-3);
+    padding: var(--nx-space-4) var(--nx-space-5);
+    border-block-end: 1px solid var(--nx-border);
+    color: var(--nx-text-subtle);
+
+    .nx-icon { inline-size: 1.25rem; block-size: 1.25rem; }
+  }
+
+  .nx-command-input {
+    flex: 1;
+    min-inline-size: 0;
+    border: 0;
+    background: transparent;
+    color: var(--nx-text);
+    font: 400 var(--nx-text-lg) / 1.5 var(--nx-font-sans);
+
+    &:focus-visible { outline: none; }
+    &::placeholder { color: var(--nx-text-subtle); }
+  }
+
+  .nx-command-list {
+    position: relative;
+    isolation: isolate;
+    flex: 1;
+    padding: var(--nx-space-2);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scroll-padding-block: var(--nx-space-8);
+
+    .nx-indicator {
+      z-index: -1;
+      border-radius: var(--nx-radius-md);
+      background: var(--nx-surface-2);
+      box-shadow: inset 0 0 0 1px var(--nx-border);
+    }
+  }
+
+  .nx-command-group + .nx-command-group { margin-block-start: var(--nx-space-2); }
+
+  .nx-command-group-label {
+    padding: var(--nx-space-2) var(--nx-space-3) var(--nx-space-1);
+    color: var(--nx-text-subtle);
+    font-size: var(--nx-text-xs);
+    font-weight: 600;
+  }
+
+  .nx-command-item {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-3);
+    min-block-size: 2.75rem;
+    padding: 0 var(--nx-space-3);
+    border-radius: var(--nx-radius-md);
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+    cursor: pointer;
+    animation: nx-rise 280ms var(--nx-ease-out) both;
+    animation-delay: calc(min(var(--nx-i, 0), 12) * 16ms);
+
+    .nx-icon { color: var(--nx-text-subtle); }
+    .nx-kbd { margin-inline-start: auto; }
+
+    &[aria-selected="true"] { color: var(--nx-text); }
+    &[aria-selected="true"] .nx-icon { color: var(--nx-accent-text); }
+    &[aria-disabled="true"] { opacity: 0.45; cursor: not-allowed; }
+  }
+
+  .nx-command-item-hint { margin-inline-start: auto; font-size: var(--nx-text-xs); color: var(--nx-text-subtle); }
+
+  .nx-command-empty {
+    margin: 0;
+    padding: var(--nx-space-10) var(--nx-space-4);
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+    text-align: center;
+  }
+
+  .nx-command-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--nx-space-4);
+    padding: var(--nx-space-3) var(--nx-space-5);
+    border-block-start: 1px solid var(--nx-border);
+    background: var(--nx-bg-subtle);
+    color: var(--nx-text-subtle);
+    font-size: var(--nx-text-xs);
+
+    span { display: inline-flex; align-items: center; gap: var(--nx-space-1); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-dialog, .nx-dialog[data-variant] { transition-duration: var(--nx-dur-fast); }
+    .nx-command-item { animation: none; }
+  }
+}

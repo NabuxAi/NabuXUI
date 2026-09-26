@@ -1,0 +1,6 @@
+packages:
+  - packages/core
+  - packages/react
+  - packages/inertia
+  - packages/livewire
+  - apps/*

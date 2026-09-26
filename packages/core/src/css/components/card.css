@@ -1,0 +1,355 @@
+/*
+ * Cards
+ *
+ *   <article class="nx-card" data-variant="default|glass|outline|gradient|inverse"
+ *            [data-interactive] [data-spotlight] [data-nx-tilt]>
+ *     <div class="nx-card-header"> <span class="nx-card-icon">…</span>
+ *       <h3 class="nx-card-title">…</h3> <p class="nx-card-description">…</p> </div>
+ *     <div class="nx-card-body">…</div>
+ *     <div class="nx-card-footer">…</div>
+ *   </article>
+ *
+ * The spotlight behaviour writes --nx-px / --nx-py (pointer position in px).
+ */
+@layer nx.components {
+  .nx-card {
+    --_pad: var(--nx-card-padding, var(--nx-space-6));
+
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    gap: var(--nx-space-4);
+    padding: var(--_pad);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-xl);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    box-shadow: var(--nx-shadow-sm), inset 0 1px 0 var(--nx-highlight);
+    transition:
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      scale var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      box-shadow var(--nx-dur-slow) var(--nx-ease-out),
+      border-color var(--nx-dur-base) var(--nx-ease-out),
+      transform var(--nx-transform-duration, var(--nx-spring-gentle-duration)) var(--nx-transform-ease, var(--nx-spring-gentle));
+
+    &[data-size="sm"] { --_pad: var(--nx-space-4); border-radius: var(--nx-radius-lg); gap: var(--nx-space-3); }
+    &[data-size="lg"] { --_pad: var(--nx-space-8); border-radius: var(--nx-radius-2xl); }
+
+    &[data-variant="glass"] {
+      background: var(--nx-glass);
+      border-color: var(--nx-glass-border);
+      -webkit-backdrop-filter: blur(18px) saturate(150%);
+      backdrop-filter: blur(18px) saturate(150%);
+    }
+
+    &[data-variant="outline"] { background: transparent; box-shadow: none; }
+
+    &[data-variant="inverse"] {
+      --nx-text-muted: color-mix(in oklab, var(--nx-text-inverse) 70%, transparent);
+      background: var(--nx-surface-inverse);
+      color: var(--nx-text-inverse);
+      border-color: transparent;
+    }
+
+    &[data-variant="gradient"] {
+      border-color: transparent;
+      background:
+        linear-gradient(var(--nx-surface), var(--nx-surface)) padding-box,
+        linear-gradient(140deg, var(--nx-accent-border), transparent 40%, transparent 60%, color-mix(in oklab, var(--nx-gold) 50%, transparent)) border-box;
+    }
+
+    &:is([data-interactive], a, button):is(:hover, :focus-visible) {
+      translate: 0 calc(-4px * var(--nx-motion));
+      box-shadow: var(--nx-shadow-lg), inset 0 1px 0 var(--nx-highlight);
+      border-color: var(--nx-accent-border);
+    }
+
+    &:is([data-interactive], a, button):active { scale: calc(1 - 0.01 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 3px; }
+  }
+
+  :is(a, button).nx-card {
+    text-align: start;
+    text-decoration: none;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  /* Pointer spotlight: a soft light inside and a lit edge that follows the cursor. */
+  .nx-card[data-spotlight]::before,
+  .nx-card[data-spotlight]::after,
+  .nx-spotlight::before,
+  .nx-spotlight::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--nx-dur-slow) var(--nx-ease-out);
+  }
+
+  .nx-card[data-spotlight]::before,
+  .nx-spotlight::before {
+    z-index: -1;
+    background: radial-gradient(28rem circle at var(--nx-px, 50%) var(--nx-py, 50%), var(--nx-accent-soft), transparent 42%);
+  }
+
+  .nx-card[data-spotlight]::after,
+  .nx-spotlight::after {
+    inset: -1px;
+    padding: 1px;
+    background: radial-gradient(16rem circle at var(--nx-px, 50%) var(--nx-py, 50%), color-mix(in oklab, var(--nx-accent) 85%, var(--nx-glow)), transparent 60%);
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  }
+
+  :is(.nx-card[data-spotlight], .nx-spotlight):is(:hover, :focus-within)::before,
+  :is(.nx-card[data-spotlight], .nx-spotlight):is(:hover, :focus-within)::after {
+    opacity: 1;
+  }
+
+  .nx-spotlight { position: relative; isolation: isolate; }
+
+  /* Tilted cards catch the light where the pointer is. */
+  .nx-card[data-nx-tilt][data-nx-pointer] {
+    box-shadow: var(--nx-shadow-xl);
+  }
+
+  .nx-card-header {
+    display: grid;
+    gap: var(--nx-space-2);
+  }
+
+  .nx-card-icon {
+    display: grid;
+    place-items: center;
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
+    margin-block-end: var(--nx-space-2);
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-accent-soft);
+    color: var(--nx-accent-text);
+    transition: scale var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy), rotate var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy);
+
+    .nx-icon { inline-size: 1.35rem; block-size: 1.35rem; }
+  }
+
+  .nx-card:is([data-interactive], a, button):hover .nx-card-icon {
+    scale: calc(1 + 0.08 * var(--nx-motion));
+    rotate: calc(-6deg * var(--nx-motion) * var(--nx-dir));
+  }
+
+  .nx-card-title {
+    margin: 0;
+    font: 650 var(--nx-text-lg) / 1.3 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tight);
+    text-wrap: balance;
+  }
+
+  .nx-card-description {
+    margin: 0;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+    line-height: 1.6;
+    text-wrap: pretty;
+  }
+
+  .nx-card-body { flex: 1; }
+
+  .nx-card-footer {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-3);
+    padding-block-start: var(--nx-space-4);
+    border-block-start: 1px solid var(--nx-border);
+  }
+
+  /* ---- Flip card ------------------------------------------------------------ */
+  .nx-flip {
+    display: grid;
+    perspective: 1400px;
+  }
+
+  .nx-flip-inner {
+    display: grid;
+    transform-style: preserve-3d;
+    transition: rotate var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+  }
+
+  .nx-flip-face {
+    grid-area: 1 / 1;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  .nx-flip-back { rotate: y 180deg; }
+
+  .nx-flip[data-flipped] .nx-flip-inner,
+  .nx-flip[data-trigger="hover"]:is(:hover, :focus-within) .nx-flip-inner {
+    rotate: y calc(180deg * var(--nx-dir));
+  }
+
+  /* Reduced motion: a cross-fade instead of a turn. */
+  @media (prefers-reduced-motion: reduce) {
+    .nx-flip-inner { transition: none; rotate: none !important; }
+    .nx-flip-face { transition: opacity var(--nx-dur-base); }
+    .nx-flip-back { rotate: none; opacity: 0; }
+    .nx-flip:is([data-flipped], [data-trigger="hover"]:is(:hover, :focus-within)) {
+      .nx-flip-front { opacity: 0; }
+      .nx-flip-back { opacity: 1; }
+    }
+  }
+
+  /* ---- Stack: overlapping cards that fan out on hover ----------------------- */
+  .nx-stack {
+    --_overlap: var(--nx-stack-overlap, -55%);
+
+    display: flex;
+    justify-content: center;
+    margin: 0;
+    padding: var(--nx-space-6) 0;
+    list-style: none;
+  }
+
+  .nx-stack-item {
+    --_spread: calc((var(--i) - (var(--nx-count, 3) - 1) / 2));
+
+    position: relative;
+    flex: none;
+    rotate: calc(var(--_spread) * 4deg * var(--nx-motion) * var(--nx-dir));
+    transition:
+      margin var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      rotate var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      scale var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      filter var(--nx-dur-slow) var(--nx-ease-out);
+
+    & + & { margin-inline-start: var(--_overlap); }
+  }
+
+  .nx-stack:is(:hover, :focus-within) {
+    .nx-stack-item { rotate: 0deg; }
+    .nx-stack-item + .nx-stack-item { margin-inline-start: var(--nx-space-3); }
+  }
+
+  .nx-stack-item:is(:hover, :focus-within) {
+    z-index: 2;
+    translate: 0 calc(-10px * var(--nx-motion));
+    scale: calc(1 + 0.04 * var(--nx-motion));
+  }
+
+  .nx-stack:has(.nx-stack-item:hover) .nx-stack-item:not(:hover) { filter: saturate(0.7) brightness(0.92); }
+
+  /* ---- Swipe stack ----------------------------------------------------------- */
+  .nx-swipe-stack {
+    position: relative;
+    display: grid;
+    padding-block-end: calc(var(--nx-space-3) * 3);
+    touch-action: pan-y;
+  }
+
+  .nx-swipe-card {
+    grid-area: 1 / 1;
+    translate: 0 calc(var(--i, 0) * 12px * var(--nx-motion));
+    scale: calc(1 - var(--i, 0) * 0.05);
+    transform-origin: 50% 100%;
+    opacity: clamp(0, 1.6 - var(--i, 0) * 0.4, 1);
+    z-index: calc(10 - var(--i, 0));
+    transition:
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      scale var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      rotate var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      opacity var(--nx-dur-slow) var(--nx-ease-out);
+    user-select: none;
+
+    &[data-state="top"] {
+      translate: var(--nx-dx, 0px) var(--nx-dy, 0px);
+      rotate: var(--nx-drag-rotate, 0deg);
+      cursor: grab;
+    }
+
+    &[data-dragging] { transition: none; cursor: grabbing; }
+
+    &[data-state="leaving"] {
+      translate: calc(var(--nx-exit-x, 1) * 130%) var(--nx-dy, 0px);
+      rotate: calc(var(--nx-exit-x, 1) * 18deg);
+      opacity: 0;
+      pointer-events: none;
+      transition-duration: var(--nx-dur-slower);
+      transition-timing-function: var(--nx-ease-out);
+    }
+  }
+
+  /* Verdict stamps fade in with the drag. */
+  .nx-swipe-hint {
+    position: absolute;
+    inset-block-start: var(--nx-space-6);
+    padding: var(--nx-space-1) var(--nx-space-3);
+    border: 2px solid currentColor;
+    border-radius: var(--nx-radius-sm);
+    font-weight: 800;
+    letter-spacing: var(--nx-tracking-wider);
+    text-transform: uppercase;
+    opacity: 0;
+    pointer-events: none;
+
+    &[data-side="accept"] { left: var(--nx-space-6); color: var(--nx-success-text); rotate: -12deg; opacity: clamp(0, var(--nx-drag-progress, 0), 1); }
+    &[data-side="reject"] { right: var(--nx-space-6); color: var(--nx-danger-text); rotate: 12deg; opacity: clamp(0, calc(var(--nx-drag-progress, 0) * -1), 1); }
+  }
+
+  .nx-swipe-actions {
+    display: flex;
+    justify-content: center;
+    gap: var(--nx-space-4);
+    margin-block-start: var(--nx-space-4);
+  }
+
+  /* ---- Stat ---------------------------------------------------------------- */
+  .nx-stat {
+    display: grid;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-5);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-xl);
+    background: var(--nx-surface);
+    box-shadow: var(--nx-shadow-sm), inset 0 1px 0 var(--nx-highlight);
+  }
+
+  .nx-stat-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--nx-space-2);
+  }
+
+  .nx-stat-label {
+    font-size: var(--nx-text-sm);
+    font-weight: 500;
+    color: var(--nx-text-muted);
+  }
+
+  .nx-stat-value {
+    font: 700 var(--nx-text-3xl) / 1.1 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tighter);
+  }
+
+  .nx-stat-caption {
+    margin: 0;
+    font-size: var(--nx-text-xs);
+    color: var(--nx-text-subtle);
+  }
+
+  .nx-delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15rem;
+    font-size: var(--nx-text-xs);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+
+    &[data-trend="up"] { color: var(--nx-success-text); }
+    &[data-trend="down"] { color: var(--nx-danger-text); }
+    .nx-icon { inline-size: 0.9rem; block-size: 0.9rem; }
+  }
+}

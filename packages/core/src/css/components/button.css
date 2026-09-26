@@ -1,0 +1,379 @@
+/*
+ * Buttons
+ *
+ *   <button class="nx-button nx-focus-ring" data-variant="primary" data-size="md"
+ *           data-status="idle" [data-shape="pill"] [data-effect="shine|slide"]
+ *           [data-icon-only] [data-block]>
+ *     <span class="nx-button-label" [data-text="Label"]>…</span>
+ *     <span class="nx-button-status" aria-hidden="true">spinner | check | cross</span>
+ *   </button>
+ *
+ * data-status (idle | loading | success | error) morphs the label into its status
+ * without changing the button's width; `[data-loading]` and aria-busy="true" (set
+ * by Livewire's wire:loading) count as loading too.
+ */
+@layer nx.components {
+  .nx-button {
+    --_h: 2.5rem;
+    --_px: 1rem;
+    --_fs: var(--nx-text-sm);
+    --_radius: var(--nx-radius-md);
+    --_bg: var(--nx-surface-2);
+    --_bg-hover: var(--nx-surface-3);
+    --_fg: var(--nx-text);
+    --_border: var(--nx-border);
+    --_shadow: var(--nx-shadow-xs);
+
+    position: relative;
+    isolation: isolate;
+    display: inline-grid;
+    grid-template-areas: "stack";
+    place-items: center;
+    min-block-size: var(--_h);
+    padding-inline: var(--_px);
+    border: 1px solid var(--_border);
+    border-radius: var(--_radius);
+    background: var(--_bg);
+    color: var(--_fg);
+    box-shadow: var(--_shadow);
+    font: 600 var(--_fs) / 1.2 var(--nx-font-sans);
+    letter-spacing: var(--nx-tracking-tight);
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    overflow: clip;
+    transition:
+      background-color var(--nx-dur-fast) var(--nx-ease-out),
+      border-color var(--nx-dur-fast) var(--nx-ease-out),
+      color var(--nx-dur-fast) var(--nx-ease-out),
+      box-shadow var(--nx-dur-base) var(--nx-ease-out),
+      translate var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+      transform var(--nx-transform-duration, var(--nx-spring-gentle-duration)) var(--nx-transform-ease, var(--nx-spring-gentle));
+
+    &:focus-visible {
+      outline: 2px solid var(--nx-ring);
+      outline-offset: 2px;
+    }
+
+    &:hover:not(:disabled, [aria-disabled="true"]) {
+      background: var(--_bg-hover);
+    }
+
+    &:active:not(:disabled, [aria-disabled="true"]) {
+      scale: calc(1 - 0.03 * var(--nx-motion));
+    }
+
+    &:is(:disabled, [aria-disabled="true"]) {
+      cursor: not-allowed;
+      opacity: 0.5;
+      box-shadow: none;
+    }
+
+    &[data-block] { display: grid; inline-size: 100%; }
+    &[data-shape="pill"] { --_radius: var(--nx-radius-full); }
+    &[data-shape="square"] { --_radius: var(--nx-radius-xs); }
+
+    /* Sizes */
+    &[data-size="xs"] { --_h: 1.75rem; --_px: 0.625rem; --_fs: var(--nx-text-xs); --_radius: var(--nx-radius-sm); }
+    &[data-size="sm"] { --_h: 2.125rem; --_px: 0.8rem; --_fs: var(--nx-text-sm); --_radius: var(--nx-radius-sm); }
+    &[data-size="lg"] { --_h: 3rem; --_px: 1.4rem; --_fs: var(--nx-text-md); --_radius: var(--nx-radius-lg); }
+    &[data-size="xl"] { --_h: 3.5rem; --_px: 1.75rem; --_fs: var(--nx-text-lg); --_radius: var(--nx-radius-lg); }
+    &[data-shape="pill"][data-size] { --_radius: var(--nx-radius-full); }
+
+    &[data-icon-only] {
+      --_px: 0;
+      inline-size: var(--_h);
+    }
+
+    /* Variants */
+    &[data-variant="primary"] {
+      --_bg: linear-gradient(180deg, color-mix(in oklab, var(--nx-accent) 86%, white), var(--nx-accent));
+      --_bg-hover: linear-gradient(180deg, color-mix(in oklab, var(--nx-accent-hover) 84%, white), var(--nx-accent-hover));
+      --_fg: var(--nx-accent-contrast);
+      --_border: color-mix(in oklab, var(--nx-accent) 70%, black);
+      --_shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), 0 1px 2px rgb(0 0 0 / 0.12), 0 6px 16px -6px color-mix(in oklab, var(--nx-accent) 70%, transparent);
+    }
+
+    &[data-variant="secondary"] {
+      --_bg: var(--nx-surface);
+      --_bg-hover: var(--nx-surface-2);
+      --_shadow: var(--nx-shadow-sm), inset 0 1px 0 var(--nx-highlight);
+    }
+
+    &[data-variant="outline"] {
+      --_bg: transparent;
+      --_bg-hover: var(--nx-accent-soft);
+      --_border: var(--nx-border-strong);
+      --_shadow: none;
+    }
+
+    &[data-variant="ghost"] {
+      --_bg: transparent;
+      --_bg-hover: var(--nx-surface-2);
+      --_border: transparent;
+      --_shadow: none;
+    }
+
+    &[data-variant="danger"] {
+      --_bg: var(--nx-danger);
+      --_bg-hover: var(--nx-danger-hover);
+      --_fg: #fff;
+      --_border: transparent;
+      --_shadow: inset 0 1px 0 rgb(255 255 255 / 0.18), 0 6px 16px -6px color-mix(in oklab, var(--nx-danger) 70%, transparent);
+    }
+
+    &[data-variant="gold"] {
+      --_bg: var(--nx-gradient-gold);
+      --_bg-hover: var(--nx-gradient-gold);
+      --_fg: var(--nx-gold-contrast);
+      --_border: color-mix(in oklab, var(--nx-gold) 70%, black);
+      --_shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 6px 18px -6px color-mix(in oklab, var(--nx-gold) 80%, transparent);
+    }
+
+    &[data-variant="inverse"] {
+      --_bg: var(--nx-surface-inverse);
+      --_bg-hover: color-mix(in oklab, var(--nx-surface-inverse) 88%, var(--nx-accent));
+      --_fg: var(--nx-text-inverse);
+      --_border: transparent;
+    }
+
+    &[data-variant="link"] {
+      --_bg: transparent;
+      --_bg-hover: transparent;
+      --_fg: var(--nx-accent-text);
+      --_border: transparent;
+      --_shadow: none;
+      --_px: 0;
+      min-block-size: auto;
+
+      &:hover .nx-button-label { text-decoration: underline; text-underline-offset: 0.2em; }
+    }
+
+    /* A light that travels around the border. */
+    &[data-variant="glow"] {
+      --_beam: conic-gradient(from var(--nx-angle), transparent 15%, var(--nx-cyan-400), var(--nx-lapis-500), var(--nx-violet-500), transparent 85%) border-box;
+      --_bg: linear-gradient(var(--nx-surface), var(--nx-surface)) padding-box, var(--_beam);
+      --_bg-hover: linear-gradient(var(--nx-surface-2), var(--nx-surface-2)) padding-box, var(--_beam);
+      --_border: transparent;
+      --_shadow: var(--nx-shadow-glow);
+      border-width: 1.5px;
+      animation: nx-turn 3.2s linear infinite;
+    }
+
+    /* Lift on hover for the filled variants. */
+    &:is([data-variant="primary"], [data-variant="danger"], [data-variant="gold"], [data-variant="glow"], [data-variant="inverse"]):hover:not(:disabled, [aria-disabled="true"]) {
+      translate: 0 calc(-1px * var(--nx-motion));
+    }
+  }
+
+  .nx-button-label,
+  .nx-button-status {
+    grid-area: stack;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    transition:
+      opacity var(--nx-dur-base) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+      filter var(--nx-dur-base) var(--nx-ease-out),
+      translate var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+  }
+
+  .nx-button-status {
+    opacity: 0;
+    scale: 0.6;
+    filter: blur(4px);
+    pointer-events: none;
+
+    .nx-icon { inline-size: 1.25em; block-size: 1.25em; }
+    > * { grid-area: 1 / 1; display: none; }
+  }
+
+  .nx-button:is([data-status="loading"], [data-status="success"], [data-status="error"], [data-loading], [aria-busy="true"]) {
+    .nx-button-label { opacity: 0; scale: 0.85; filter: blur(4px); }
+    .nx-button-status { opacity: 1; scale: 1; filter: none; }
+  }
+
+  .nx-button:is([data-status="loading"], [data-loading], [aria-busy="true"]) {
+    cursor: progress;
+
+    .nx-button-status > .nx-spinner { display: inline-block; }
+  }
+
+  .nx-button[data-status="success"] {
+    --_bg: var(--nx-success);
+    --_bg-hover: var(--nx-success);
+    --_fg: #fff;
+    --_border: transparent;
+
+    .nx-button-status > .nx-status-check { display: block; }
+  }
+
+  .nx-button[data-status="error"] {
+    animation: nx-shake 420ms var(--nx-ease-out);
+
+    .nx-button-status > .nx-status-cross { display: block; }
+  }
+
+  /* Status icons draw themselves in. */
+  .nx-button-status .nx-status-check,
+  .nx-button-status .nx-status-cross {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+  .nx-button[data-status="success"] .nx-status-check,
+  .nx-button[data-status="error"] .nx-status-cross {
+    animation: nx-draw 420ms var(--nx-ease-out) 80ms forwards;
+  }
+
+  /* Effect: a sheen sweeps across on hover. */
+  .nx-button[data-effect="shine"]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(115deg, transparent 30%, rgb(255 255 255 / 0.35) 45%, rgb(255 255 255 / 0.05) 55%, transparent 70%) no-repeat;
+    background-size: 250% 100%;
+    background-position: 150% 0;
+    pointer-events: none;
+  }
+  .nx-button[data-effect="shine"]:hover::after {
+    background-position: -100% 0;
+    transition: background-position 900ms var(--nx-ease-out);
+  }
+
+  /* Effect: the label slides away and its copy slides in. */
+  .nx-button[data-effect="slide"] .nx-button-label {
+    position: relative;
+    overflow: clip;
+
+    > * { transition: translate var(--nx-spring-snappy-duration) var(--nx-spring-snappy); }
+
+    &::after {
+      content: attr(data-text) / "";
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      translate: 0 110%;
+      transition: translate var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+    }
+  }
+  .nx-button[data-effect="slide"] .nx-button-label > .nx-button-text { display: inline-block; }
+  .nx-button[data-effect="slide"]:hover .nx-button-label {
+    > * { translate: 0 calc(-110% * var(--nx-motion)); }
+    &::after { translate: 0 calc(110% - 110% * var(--nx-motion)); }
+  }
+
+  /* Ripple (added by the ripple behaviour at the pointer). */
+  .nx-ripple {
+    position: absolute;
+    z-index: -1;
+    inline-size: var(--nx-ripple-size);
+    block-size: var(--nx-ripple-size);
+    inset-block-start: var(--nx-ripple-y);
+    left: var(--nx-ripple-x);
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.18;
+    translate: -50% -50%;
+    scale: 0;
+    pointer-events: none;
+    animation: nx-ripple 650ms var(--nx-ease-out) forwards;
+  }
+  @keyframes nx-ripple { to { scale: 1; opacity: 0; } }
+
+  /* Copy: the two icons trade places. */
+  .nx-copy {
+    .nx-copy-icons { display: inline-grid; }
+    .nx-copy-icons > * {
+      grid-area: 1 / 1;
+      transition: opacity var(--nx-dur-base) var(--nx-ease-out), scale var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy), filter var(--nx-dur-base) var(--nx-ease-out);
+    }
+    .nx-copy-done { opacity: 0; scale: 0.4; filter: blur(3px); color: var(--nx-success-text); }
+
+    &[data-copied] {
+      .nx-copy-idle { opacity: 0; scale: 0.4; filter: blur(3px); }
+      .nx-copy-done { opacity: 1; scale: 1; filter: none; }
+    }
+  }
+
+  /* Like: the heart fills with a pop and throws particles. */
+  .nx-like {
+    .nx-like-heart {
+      fill: transparent;
+      transition: fill var(--nx-dur-fast) var(--nx-ease-out);
+    }
+
+    &[aria-pressed="true"] {
+      color: var(--nx-danger);
+
+      .nx-like-heart {
+        fill: currentColor;
+        animation: nx-pop 560ms var(--nx-spring-bouncy);
+      }
+    }
+  }
+
+  .nx-burst {
+    position: absolute;
+    inset: 50% auto auto 50%;
+    pointer-events: none;
+  }
+
+  .nx-burst-particle {
+    position: absolute;
+    inline-size: 6px;
+    block-size: 6px;
+    border-radius: 50%;
+    background: var(--nx-burst-color, var(--nx-danger));
+    translate: -50% -50%;
+    animation: nx-burst 640ms var(--nx-ease-out) forwards;
+  }
+
+  @keyframes nx-burst {
+    0% { opacity: 1; transform: rotate(var(--nx-angle-deg, 0deg)) translateY(0) scale(1); }
+    100% { opacity: 0; transform: rotate(var(--nx-angle-deg, 0deg)) translateY(calc(-26px * var(--nx-motion))) scale(0.2); }
+  }
+
+  /* Theme toggle: the sun sets as the moon rises. Keyed on the page's own theme,
+     so it is right from the first paint without waiting for JavaScript. */
+  .nx-theme-icons {
+    display: inline-grid;
+
+    > .nx-icon {
+      grid-area: 1 / 1;
+      transition:
+        opacity var(--nx-dur-base) var(--nx-ease-out),
+        rotate var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy),
+        scale var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy);
+    }
+
+    > .nx-theme-moon { opacity: 0; rotate: -90deg; scale: 0.4; }
+  }
+
+  :root:is([data-theme="dark"], .dark) .nx-theme-icons {
+    > .nx-theme-sun { opacity: 0; rotate: 90deg; scale: 0.4; }
+    > .nx-theme-moon { opacity: 1; rotate: 0deg; scale: 1; }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme], .light, .dark) .nx-theme-icons {
+      > .nx-theme-sun { opacity: 0; rotate: 90deg; scale: 0.4; }
+      > .nx-theme-moon { opacity: 1; rotate: 0deg; scale: 1; }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-button[data-variant="glow"] { animation: none; }
+    .nx-button[data-effect="shine"]::after { display: none; }
+  }
+
+  @media (forced-colors: active) {
+    .nx-button { border-color: ButtonText; }
+  }
+}

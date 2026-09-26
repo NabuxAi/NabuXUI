@@ -1,0 +1,93 @@
+@layer nx.base {
+  /* Page defaults at zero specificity: any rule in the app overrides them. */
+  :where(html) {
+    font-family: var(--nx-font-sans);
+    line-height: 1.6;
+    color: var(--nx-text);
+    background-color: var(--nx-bg);
+    accent-color: var(--nx-accent);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-size-adjust: 100%;
+    scrollbar-color: var(--nx-border-strong) transparent;
+  }
+
+  /* Sizes on NabuXUI parts include their padding and border (a full-width padded
+     button must not overflow). Scoped to NabuXUI elements — never the app's own. */
+  :where([class^="nx-"], [class*=" nx-"]),
+  :where([class^="nx-"], [class*=" nx-"])::before,
+  :where([class^="nx-"], [class*=" nx-"])::after {
+    box-sizing: border-box;
+  }
+
+  /* Persian and Arabic read best when Vazirmatn also sets the Latin punctuation around them. */
+  :where(:lang(fa), :lang(ar), :lang(ur)) {
+    --nx-font-sans: "Vazirmatn", "Inter", ui-sans-serif, system-ui, sans-serif;
+    --nx-font-display: "Vazirmatn", "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+    /* Never track a joining script: spacing pulls the letters apart. */
+    --nx-tracking-tightest: 0;
+    --nx-tracking-tighter: 0;
+    --nx-tracking-tight: 0;
+    --nx-tracking-wide: 0;
+    --nx-tracking-wider: 0;
+  }
+
+  :where(html:lang(fa), html:lang(ar), html:lang(ur)) { line-height: 1.8; }
+
+  /* Direction as a number, for motion that has to travel toward inline-start or inline-end. */
+  :where(html) { --nx-dir: 1; }
+  :where([dir="rtl"]) { --nx-dir: -1; }
+  :where([dir="ltr"]) { --nx-dir: 1; }
+
+  ::selection {
+    background-color: var(--nx-accent-soft);
+    color: inherit;
+  }
+
+  :where(.nx-visually-hidden):where(:not(:focus-within, :active)) {
+    position: absolute !important;
+    clip-path: inset(50%) !important;
+    overflow: hidden !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    border: 0 !important;
+    white-space: nowrap !important;
+  }
+
+  .nx-icon {
+    inline-size: 1.15em;
+    block-size: 1.15em;
+    flex: none;
+    stroke-width: 1.75;
+  }
+
+  /* Arrows and chevrons point the way the text reads. */
+  :where([dir="rtl"]) .nx-icon[data-directional] {
+    scale: -1 1;
+  }
+
+  /* One focus ring for every interactive NabuXUI part. */
+  :where(.nx-focus-ring):focus-visible {
+    outline: 2px solid var(--nx-ring);
+    outline-offset: 2px;
+  }
+
+  :where(.nx-skip-link) {
+    position: fixed;
+    inset-block-start: var(--nx-space-3);
+    inset-inline-start: var(--nx-space-3);
+    z-index: var(--nx-z-tooltip);
+    padding: var(--nx-space-2) var(--nx-space-4);
+    border-radius: var(--nx-radius-sm);
+    background: var(--nx-surface-inverse);
+    color: var(--nx-text-inverse);
+  }
+
+  @media (forced-colors: active) {
+    :where(.nx-focus-ring):focus-visible {
+      outline-color: Highlight;
+    }
+  }
+}

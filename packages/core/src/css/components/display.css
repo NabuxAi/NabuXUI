@@ -1,0 +1,390 @@
+/*
+ * Display: avatars, keys, rating, steps, marquee, grid and bento.
+ */
+@layer nx.components {
+  /* ---- Avatar --------------------------------------------------------------- */
+  .nx-avatar {
+    --_size: 2.5rem;
+
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    inline-size: var(--_size);
+    block-size: var(--_size);
+    border-radius: 50%;
+    background: var(--nx-gradient-brand);
+    color: #fff;
+    font-size: calc(var(--_size) * 0.38);
+    font-weight: 600;
+    line-height: 1;
+    user-select: none;
+
+    &[data-size="xs"] { --_size: 1.5rem; }
+    &[data-size="sm"] { --_size: 2rem; }
+    &[data-size="lg"] { --_size: 3.25rem; }
+    &[data-size="xl"] { --_size: 4.5rem; }
+    &[data-shape="square"] { border-radius: var(--nx-radius-md); }
+
+    &[data-status]::after {
+      content: "";
+      position: absolute;
+      inset-block-end: 2%;
+      inset-inline-end: 2%;
+      inline-size: 28%;
+      block-size: 28%;
+      border: 2px solid var(--nx-surface);
+      border-radius: 50%;
+      background: var(--nx-text-subtle);
+    }
+
+    &[data-status="online"]::after { background: var(--nx-success); }
+    &[data-status="busy"]::after { background: var(--nx-danger); }
+    &[data-status="away"]::after { background: var(--nx-warning); }
+  }
+
+  .nx-avatar-image {
+    inline-size: 100%;
+    block-size: 100%;
+    border-radius: inherit;
+    object-fit: cover;
+  }
+
+  .nx-avatar-group {
+    display: inline-flex;
+    align-items: center;
+
+    .nx-avatar {
+      box-shadow: 0 0 0 2px var(--nx-surface);
+      transition: translate var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy), scale var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy);
+    }
+
+    .nx-avatar + .nx-avatar { margin-inline-start: calc(var(--_size, 2.5rem) * -0.3); }
+
+    .nx-avatar:is(:hover, :focus-visible) {
+      z-index: 1;
+      translate: 0 calc(-4px * var(--nx-motion));
+      scale: calc(1 + 0.08 * var(--nx-motion));
+    }
+
+    .nx-avatar:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+  }
+
+  .nx-avatar-more {
+    background: var(--nx-surface-3);
+    color: var(--nx-text-muted);
+    font-size: calc(var(--_size) * 0.32);
+  }
+
+  /* ---- Keyboard key ---------------------------------------------------------- */
+  .nx-kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15em;
+    min-inline-size: 1.6em;
+    padding: 0.1em 0.4em;
+    border: 1px solid var(--nx-border);
+    border-block-end-width: 2px;
+    border-radius: var(--nx-radius-xs);
+    background: var(--nx-surface-2);
+    color: var(--nx-text-muted);
+    font: 500 0.75em / 1.4 var(--nx-font-mono);
+    white-space: nowrap;
+  }
+
+  /* ---- Rating: native radios, painted and previewed by :has() --------------- */
+  .nx-rating {
+    display: inline-flex;
+    gap: 0.15rem;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    direction: ltr;
+  }
+
+  .nx-rating-star {
+    position: relative;
+    display: inline-grid;
+    color: var(--nx-border-strong);
+    cursor: pointer;
+    transition: color var(--nx-dur-fast) var(--nx-ease-out), scale var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy);
+
+    svg { inline-size: var(--nx-rating-size, 1.5rem); block-size: var(--nx-rating-size, 1.5rem); fill: currentColor; }
+    &:has(:focus-visible) { outline: 2px solid var(--nx-ring); outline-offset: 2px; border-radius: var(--nx-radius-xs); }
+  }
+
+  .nx-rating-input {
+    appearance: none;
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  /* Filled up to the chosen star… */
+  .nx-rating-star:has(.nx-rating-input:checked),
+  .nx-rating-star:has(~ .nx-rating-star .nx-rating-input:checked) {
+    color: var(--nx-gold);
+  }
+
+  .nx-rating-star:has(.nx-rating-input:checked) svg { animation: nx-pop 460ms var(--nx-spring-bouncy); }
+
+  /* …unless the pointer is previewing another choice. */
+  .nx-rating:has(.nx-rating-star:hover) .nx-rating-star { color: var(--nx-border-strong); }
+  .nx-rating:has(.nx-rating-star:hover) .nx-rating-star:hover,
+  .nx-rating:has(.nx-rating-star:hover) .nx-rating-star:has(~ .nx-rating-star:hover) {
+    color: var(--nx-gold);
+  }
+  .nx-rating:has(.nx-rating-star:hover) .nx-rating-star:hover { scale: calc(1 + 0.15 * var(--nx-motion)); }
+  .nx-rating:has(:disabled) { pointer-events: none; opacity: 0.6; }
+
+  /* ---- Steps --------------------------------------------------------------- */
+  .nx-steps {
+    display: flex;
+    gap: var(--nx-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: nx-step;
+
+    &[data-orientation="vertical"] { flex-direction: column; gap: var(--nx-space-6); }
+  }
+
+  .nx-step {
+    position: relative;
+    display: flex;
+    flex: 1;
+    align-items: flex-start;
+    gap: var(--nx-space-3);
+    min-inline-size: 0;
+    counter-increment: nx-step;
+
+    /* The connector: a track, and a fill that grows as the step completes. */
+    &:not(:last-child)::before,
+    &:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      inset-block-start: calc(1rem - 1px);
+      inset-inline-start: calc(2rem + var(--nx-space-2));
+      inset-inline-end: var(--nx-space-2);
+      block-size: 2px;
+      border-radius: 1px;
+      background: var(--nx-border);
+    }
+
+    &:not(:last-child)::after {
+      background: var(--nx-accent);
+      scale: 0 1;
+      transform-origin: left;
+      transition: scale 700ms var(--nx-ease-out);
+    }
+
+    &[data-status="complete"]:not(:last-child)::after { scale: 1 1; }
+  }
+
+  :where([dir="rtl"]) .nx-step:not(:last-child)::after { transform-origin: right; }
+
+  .nx-steps[data-orientation="vertical"] .nx-step:not(:last-child)::before,
+  .nx-steps[data-orientation="vertical"] .nx-step:not(:last-child)::after {
+    inset-block: calc(2rem + var(--nx-space-2)) calc(var(--nx-space-6) * -1 + var(--nx-space-2));
+    inset-inline: calc(1rem - 1px) auto;
+    inline-size: 2px;
+    block-size: auto;
+  }
+
+  .nx-steps[data-orientation="vertical"] .nx-step:not(:last-child)::after { scale: 1 0; transform-origin: top; }
+  .nx-steps[data-orientation="vertical"] .nx-step[data-status="complete"]:not(:last-child)::after { scale: 1 1; }
+
+  .nx-step-marker {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 2rem;
+    block-size: 2rem;
+    border: 2px solid var(--nx-border);
+    border-radius: 50%;
+    background: var(--nx-surface);
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+    font-weight: 700;
+    transition: background-color var(--nx-dur-base), border-color var(--nx-dur-base), color var(--nx-dur-base), scale var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy);
+
+    &:empty::before { content: counter(nx-step); }
+    .nx-icon { inline-size: 1rem; block-size: 1rem; }
+  }
+
+  .nx-step[data-status="current"] .nx-step-marker {
+    border-color: var(--nx-accent);
+    color: var(--nx-accent-text);
+    box-shadow: 0 0 0 4px var(--nx-accent-soft);
+    scale: calc(1 + 0.06 * var(--nx-motion));
+  }
+
+  .nx-step[data-status="complete"] .nx-step-marker {
+    border-color: var(--nx-accent);
+    background: var(--nx-accent);
+    color: var(--nx-accent-contrast);
+  }
+
+  .nx-step-text { display: grid; gap: 0.1rem; padding-block-start: 0.3rem; min-inline-size: 0; }
+  .nx-step-title { font-size: var(--nx-text-sm); font-weight: 600; }
+  .nx-step[data-status="upcoming"] .nx-step-title { color: var(--nx-text-muted); }
+  .nx-step-description { font-size: var(--nx-text-xs); color: var(--nx-text-muted); }
+
+  /* ---- Marquee -------------------------------------------------------------- */
+  .nx-marquee {
+    --_gap: var(--nx-marquee-gap, var(--nx-space-10));
+
+    position: relative;
+    display: flex;
+    min-inline-size: 0;
+    /* Its track is as wide as all its items twice over; that must never widen
+       the layout around it (overflow: clip alone does not stop that). */
+    contain: inline-size;
+    overflow: clip;
+    mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  }
+
+  .nx-marquee-track {
+    display: flex;
+    flex: none;
+    animation: nx-marquee var(--nx-duration, 40s) linear infinite;
+  }
+
+  .nx-marquee[data-direction="reverse"] .nx-marquee-track { animation-direction: reverse; }
+
+  .nx-marquee:is(:hover, :focus-within, [data-paused]) .nx-marquee-track { animation-play-state: paused; }
+
+  .nx-marquee-group {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: var(--_gap);
+    margin: 0;
+    padding: 0;
+    padding-inline-end: var(--_gap);
+    list-style: none;
+  }
+
+  @keyframes nx-marquee { to { translate: calc(-50% * var(--nx-dir)) 0; } }
+
+  .nx-marquee-toggle {
+    position: absolute;
+    inset-block-end: var(--nx-space-2);
+    inset-inline-end: var(--nx-space-2);
+    display: grid;
+    place-items: center;
+    inline-size: 2rem;
+    block-size: 2rem;
+    padding: 0;
+    border: 1px solid var(--nx-border);
+    border-radius: 50%;
+    background: var(--nx-surface);
+    color: var(--nx-text-muted);
+    opacity: 0;
+    cursor: pointer;
+    transition: opacity var(--nx-dur-fast);
+
+    .nx-icon { inline-size: 0.9rem; block-size: 0.9rem; }
+    &:focus-visible { opacity: 1; outline: 2px solid var(--nx-ring); }
+  }
+
+  .nx-marquee:hover .nx-marquee-toggle { opacity: 1; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-marquee { overflow-x: auto; mask-image: none; }
+    .nx-marquee-track { animation: none; }
+    .nx-marquee-group[aria-hidden="true"], .nx-marquee-toggle { display: none; }
+  }
+
+  /* ---- Grid ----------------------------------------------------------------- */
+  .nx-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--nx-grid-min, 16rem)), 1fr));
+    gap: var(--nx-grid-gap, var(--nx-space-6));
+  }
+
+  /* ---- Bento ---------------------------------------------------------------- */
+  .nx-bento {
+    display: grid;
+    grid-template-columns: repeat(var(--nx-cols, 3), minmax(0, 1fr));
+    grid-auto-rows: minmax(var(--nx-row, 12rem), auto);
+    grid-auto-flow: dense;
+    gap: var(--nx-bento-gap, var(--nx-space-4));
+  }
+
+  .nx-bento-item {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    gap: var(--nx-space-2);
+    grid-column: span var(--nx-col-span, 1);
+    grid-row: span var(--nx-row-span, 1);
+    padding: var(--nx-space-6);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-2xl);
+    background: var(--nx-surface);
+    box-shadow: var(--nx-shadow-sm), inset 0 1px 0 var(--nx-highlight);
+    overflow: clip;
+    transition: translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle), box-shadow var(--nx-dur-slow), border-color var(--nx-dur-base);
+
+    &:is(a, [data-interactive]):hover {
+      translate: 0 calc(-3px * var(--nx-motion));
+      box-shadow: var(--nx-shadow-lg);
+      border-color: var(--nx-accent-border);
+    }
+
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 3px; }
+  }
+
+  :is(a).nx-bento-item { color: inherit; text-decoration: none; }
+
+  .nx-bento-media {
+    flex: 1;
+    display: grid;
+    place-items: center;
+    min-block-size: 6rem;
+    margin: calc(var(--nx-space-6) * -1) calc(var(--nx-space-6) * -1) var(--nx-space-2);
+    overflow: clip;
+
+    > img, > video { inline-size: 100%; block-size: 100%; object-fit: cover; }
+  }
+
+  .nx-bento-title { margin: 0; font: 650 var(--nx-text-lg) / 1.3 var(--nx-font-display); }
+  .nx-bento-description { margin: 0; font-size: var(--nx-text-sm); color: var(--nx-text-muted); }
+
+  @media (max-width: 56rem) {
+    .nx-bento { grid-template-columns: repeat(min(var(--nx-cols, 3), 2), minmax(0, 1fr)); }
+    .nx-bento-item { grid-column: span min(var(--nx-col-span, 1), 2); }
+  }
+
+  @media (max-width: 36rem) {
+    .nx-bento { grid-template-columns: minmax(0, 1fr); }
+    .nx-bento-item { grid-column: span 1; grid-row: span 1; }
+  }
+
+  /* ---- Divider -------------------------------------------------------------- */
+  .nx-divider {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-3);
+    margin: var(--nx-space-6) 0;
+    border: 0;
+    color: var(--nx-text-subtle);
+    font-size: var(--nx-text-xs);
+
+    &::before, &::after {
+      content: "";
+      flex: 1;
+      block-size: 1px;
+      background: var(--nx-border);
+    }
+
+    &:empty { gap: 0; }
+  }
+}

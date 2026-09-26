@@ -1,0 +1,38 @@
+{
+  "name": "@nabuxai/ui-core",
+  "version": "0.1.0",
+  "description": "NabuXUI core: design tokens, component CSS and framework-agnostic motion behaviours",
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./css": "./dist/nabuxui.css",
+    "./nabuxui.css": "./dist/nabuxui.css",
+    "./nabuxui.min.css": "./dist/nabuxui.min.css",
+    "./tokens.css": "./src/css/tokens.css",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "src/css"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "happy-dom": "^20.0.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}

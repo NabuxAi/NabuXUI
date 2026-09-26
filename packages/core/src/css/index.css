@@ -1,0 +1,24 @@
+/*
+ * NabuXUI — one stylesheet for Livewire, Inertia and React.
+ *
+ * Everything lives in the `nx` cascade layer, so any unlayered rule in the
+ * application (or a later layer such as Tailwind's utilities) wins without
+ * !important. Import this before the app's own CSS.
+ */
+@layer nx.tokens, nx.base, nx.components, nx.utilities;
+
+@import "./tokens.css";
+@import "./base.css";
+@import "./motion.css";
+@import "./components/text.css";
+@import "./components/button.css";
+@import "./components/form.css";
+@import "./components/card.css";
+@import "./components/chart.css";
+@import "./components/hero.css";
+@import "./components/pricing.css";
+@import "./components/feedback.css";
+@import "./components/display.css";
+@import "./components/navigation.css";
+@import "./components/overlay.css";
+@import "./components/header.css";

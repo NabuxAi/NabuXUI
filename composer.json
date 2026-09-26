@@ -1,0 +1,48 @@
+{
+    "name": "nabuxai/nabuxui",
+    "description": "NabuXUI for Laravel: animated, accessible Blade components for Livewire, on the shared NabuXUI core",
+    "type": "library",
+    "license": "proprietary",
+    "keywords": ["laravel", "livewire", "blade", "alpine", "design-system", "nabuxui"],
+    "require": {
+        "php": "^8.2",
+        "illuminate/support": "^11.0|^12.0|^13.0",
+        "illuminate/view": "^11.0|^12.0|^13.0"
+    },
+    "require-dev": {
+        "livewire/livewire": "^3.5|^4.0",
+        "orchestra/testbench": "^9.0|^10.0|^11.0",
+        "phpunit/phpunit": "^11.0|^12.0"
+    },
+    "suggest": {
+        "livewire/livewire": "Toasts from components, wire:model on every control, wire:navigate page transitions"
+    },
+    "autoload": {
+        "psr-4": {
+            "NabuXUI\\": "packages/livewire/src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "NabuXUI\\Tests\\": "packages/livewire/tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "NabuXUI\\NabuXUIServiceProvider"
+            ],
+            "aliases": {
+                "NabuXUI": "NabuXUI\\NabuXUI"
+            }
+        }
+    },
+    "scripts": {
+        "test": "phpunit -c packages/livewire/phpunit.xml"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true
+    }
+}

@@ -1,0 +1,25 @@
+node_modules/
+dist/
+!packages/livewire/dist/
+*.tsbuildinfo
+.DS_Store
+.vite/
+coverage/
+
+# PHP
+/vendor/
+packages/livewire/vendor/
+.phpunit.cache/
+composer.lock
+
+# Laravel playground (the skeleton is committed; its installs are not)
+playground/vendor/
+playground/node_modules/
+playground/public/build/
+playground/public/hot
+playground/storage/*.key
+playground/storage/logs/*
+playground/storage/framework/**/*
+!playground/storage/framework/**/.gitignore
+playground/database/*.sqlite
+playground/.env
