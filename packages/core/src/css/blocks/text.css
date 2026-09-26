@@ -1,0 +1,1024 @@
+/*
+ * Blocks: Text & hero motion.
+ *
+ * Text hero — letters spring up one by one, stickers pop in around them:
+ *   <section class="nx-hero nx-text-hero" data-nx-reveal style="--_n: 23; --_m: 13">
+ *     <div class="nx-hero-content">
+ *       <div class="nx-text-hero-heading">
+ *         <h1 class="nx-hero-title nx-text-hero-title">
+ *           <span class="nx-visually-hidden">Write in every language</span>
+ *           <span aria-hidden="true" dir="ltr">
+ *             <span class="nx-glyph-word"><span class="nx-text-hero-char" style="--nx-i: 0">W</span>…</span> …
+ *             (highlight letters: data-mark style="--_k: 0")
+ *           </span>
+ *         </h1>
+ *         <span class="nx-text-hero-sticker" data-shape="star" data-position="top-start" data-tone="gold" aria-hidden="true"><svg>…</svg></span>
+ *       </div>
+ *       <p class="nx-hero-subtitle nx-text-hero-subtitle">…</p> <div class="nx-hero-actions nx-text-hero-actions">…</div>
+ *     </div>
+ *   </section>
+ *
+ * Scroll text reveal — a tall section whose sticky stage holds an outlined and a
+ * filled copy of the text; --nx-progress (0 → 1) gathers the scattered letters
+ * and wipes the fill in. A view timeline drives it; the core stickyProgress()
+ * writes it where scroll-driven animations are missing:
+ *   <section class="nx-scroll-reveal" style="--nx-scroll-height: 240vh">
+ *     <div class="nx-scroll-reveal-stage">
+ *       <p class="nx-scroll-reveal-eyebrow">…</p>
+ *       <h2 class="nx-scroll-reveal-title"><span class="nx-visually-hidden">…</span>
+ *         <span class="nx-scroll-reveal-art" aria-hidden="true" style="--_n: 26">
+ *           <span class="nx-scroll-reveal-layer" data-layer="outline" dir="ltr">…letters…</span>
+ *           <span class="nx-scroll-reveal-layer" data-layer="fill" dir="ltr">…letters…</span>
+ *         </span></h2>
+ *   letters: <span class="nx-scroll-reveal-char" style="--nx-i: 0; --_x: -523; --_y: 871; --_r: 44">E</span>
+ *
+ * Hover reveal — large links; the hovered one glows, the others fade and drift:
+ *   <ul class="nx-hover-reveal" role="list"><li class="nx-hover-reveal-item">
+ *     <a class="nx-hover-reveal-link" href="…"><span class="nx-hover-reveal-label">Design</span>
+ *       <span class="nx-hover-reveal-description">…</span>
+ *       <span class="nx-hover-reveal-icon" aria-hidden="true"><svg class="nx-icon nx-hover-reveal-rest"/><svg class="nx-icon nx-hover-reveal-active"/></span></a></li></ul>
+ *
+ * Scroll scramble — the headline decodes with the scroll; chips fly from a pile into a row:
+ *   <section class="nx-scroll-scramble"><div class="nx-scroll-scramble-stage">
+ *     <h2 class="nx-scroll-scramble-title"><span class="nx-visually-hidden">…</span>
+ *       <span class="nx-scroll-scramble-sizer" aria-hidden="true">…</span><span class="nx-scroll-scramble-text" aria-hidden="true">…</span></h2>
+ *     <ul class="nx-scroll-scramble-chips" style="--_n: 12"><li class="nx-scroll-scramble-chip" style="--nx-i: 0">…</li></ul>
+ *
+ * Roll text — each letter rolls up and out while its copy rolls in from below:
+ *   <a class="nx-roll-text" href="…"><span class="nx-visually-hidden">Work</span>
+ *     <span class="nx-roll-text-pieces" aria-hidden="true" dir="ltr"><span class="nx-glyph-word">
+ *       <span class="nx-roll-text-piece" style="--nx-i: 0"><span>W</span><span>W</span></span>…
+ *
+ * Pulse button — a round call to action with rings, pulled toward the pointer:
+ *   <a class="nx-pulse-button" href="…"><span class="nx-pulse-button-disc" data-nx-magnetic>
+ *     <span class="nx-pulse-button-rings" aria-hidden="true"><i></i><i></i><i></i></span>
+ *     <span class="nx-pulse-button-face"><svg class="nx-icon"/></span></span>
+ *     <span class="nx-pulse-button-label">Play reel</span></a>
+ *
+ * Backdrops (the .nx-backdrop system from hero.css): mesh, stripes, and dither
+ * (a canvas the core dither() paints: <canvas class="nx-backdrop-canvas">).
+ */
+@layer nx.components {
+  /* ---- Split letters ------------------------------------------------------------
+   * Letters are inline-blocks, and a line may break between any two of them:
+   * each word is kept whole, and a word written the other way gets its own dir. */
+  .nx-glyph-word {
+    display: inline-block;
+    white-space: nowrap;
+
+    /* Chinese and Japanese wrap between any two letters. */
+    &[data-loose] {
+      display: inline;
+      white-space: normal;
+    }
+  }
+
+  /* ---- Text hero ------------------------------------------------------------------ */
+  .nx-text-hero {
+    /* Type sizes follow the hero's own width, so it works full-bleed or in a card. */
+    container-type: inline-size;
+    --_stagger: 34ms;
+    /* How long the title takes to land: the subtitle, actions and stickers follow it. */
+    --_title: calc(var(--_n, 12) * var(--_stagger));
+
+    /* Shaped scripts arrive word by word, so each piece waits a little longer. */
+    &[data-shaped] { --_stagger: 72ms; }
+  }
+
+  /* The section stays put; its letters, stickers and lines do the moving. */
+  .nx-text-hero[data-nx-reveal] {
+    opacity: 1;
+    translate: none;
+    transition: none;
+  }
+
+  .nx-text-hero-heading {
+    position: relative;
+    inline-size: fit-content;
+    max-inline-size: 100%;
+    font-size: clamp(2.5rem, 0.9rem + 7.2cqi, 6.5rem);
+  }
+
+  .nx-text-hero-title {
+    font-size: 1em;
+    font-weight: 800;
+    line-height: 1.04;
+    letter-spacing: var(--nx-tracking-tightest);
+    text-wrap: balance;
+  }
+
+  /* Persian, Arabic and Indic type needs room for its ascenders and dots. */
+  .nx-text-hero[data-shaped] .nx-text-hero-title { line-height: 1.4; }
+
+  .nx-text-hero-char {
+    display: inline-block;
+    white-space: pre;
+    transform-origin: 50% 90%;
+    transition:
+      opacity 280ms var(--nx-ease-out),
+      translate var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy),
+      rotate var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy);
+    transition-delay: calc(var(--nx-i, 0) * var(--_stagger) + 60ms);
+
+    /* One gradient across the highlight, cut into a slice per piece. */
+    &[data-mark] {
+      background: var(--nx-gradient-brand) calc(var(--_k, 0) / max(1, var(--_m, 1) - 1) * 100%) 50% / calc(var(--_m, 1) * 100%) 100% no-repeat;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+  }
+
+  /* A little variety in how far each letter falls and which way it leans. */
+  .nx-text-hero-char:nth-child(3n + 1) { --_rise: 0.62em; --_tilt: -10deg; }
+  .nx-text-hero-char:nth-child(3n + 2) { --_rise: 0.8em; --_tilt: 7deg; }
+  .nx-text-hero-char:nth-child(3n) { --_rise: 0.5em; --_tilt: -5deg; }
+
+  :where(.nx-js) .nx-text-hero[data-nx-reveal]:not([data-nx-revealed]) .nx-text-hero-char {
+    opacity: 0;
+    translate: 0 calc(var(--_rise, 0.6em) * var(--nx-motion));
+    rotate: calc(var(--_tilt, -8deg) * var(--nx-motion));
+  }
+
+  .nx-text-hero-subtitle,
+  .nx-text-hero-actions {
+    transition:
+      opacity 280ms var(--nx-ease-out),
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+    transition-delay: calc(var(--_title) * 0.6 + 180ms);
+  }
+
+  .nx-text-hero-actions { transition-delay: calc(var(--_title) * 0.6 + 260ms); }
+
+  :where(.nx-js) .nx-text-hero[data-nx-reveal]:not([data-nx-revealed]) :is(.nx-text-hero-subtitle, .nx-text-hero-actions) {
+    opacity: 0;
+    translate: 0 calc(14px * var(--nx-motion));
+  }
+
+  /* Stickers: sized and placed in ems of the title, so they scale with it. */
+  .nx-text-hero-sticker {
+    --_tone: var(--nx-gold);
+    position: absolute;
+    z-index: 1;
+    inline-size: clamp(2.25rem, 0.62em, 4.5rem);
+    aspect-ratio: 1;
+    pointer-events: none;
+    animation: nx-text-hero-float 5.6s var(--nx-ease-in-out) infinite;
+    animation-delay: calc(var(--nx-i, 0) * -1.1s);
+
+    &[data-tone="accent"] { --_tone: var(--nx-accent); }
+    &[data-tone="violet"] { --_tone: var(--nx-violet-500); }
+    /* The glow token is cyan that holds up on both themes (deeper on light pages). */
+    &[data-tone="cyan"] { --_tone: var(--nx-glow); }
+    &[data-tone="pink"] { --_tone: var(--nx-chart-2); }
+
+    &[data-position="top-start"] { inset-block-start: -0.42em; inset-inline-start: -0.5em; --_rest: -12deg; }
+    &[data-position="top-end"] { inset-block-start: -0.48em; inset-inline-end: -0.42em; --_rest: 14deg; }
+    &[data-position="bottom-start"] { inset-block-end: -0.36em; inset-inline-start: -0.3em; --_rest: 10deg; }
+    &[data-position="bottom-end"] { inset-block-end: -0.42em; inset-inline-end: -0.5em; --_rest: -8deg; }
+    &[data-position="start"] { inset-block-start: calc(50% - 0.3em); inset-inline-start: -0.95em; --_rest: -6deg; }
+    &[data-position="end"] { inset-block-start: calc(50% - 0.3em); inset-inline-end: -0.95em; --_rest: 8deg; }
+
+    /* The arrow points at the title: toward inline-end from the start side, back from the end side. */
+    &[data-shape="arrow"] { scale: var(--nx-dir) 1; }
+    &[data-shape="arrow"]:is([data-position$="end"]) { scale: calc(-1 * var(--nx-dir)) 1; }
+
+    > svg {
+      display: block;
+      inline-size: 100%;
+      block-size: 100%;
+      overflow: visible;
+      rotate: var(--_rest, 0deg);
+      filter: drop-shadow(0 0.05em 0.06em color-mix(in oklab, var(--nx-ink-950) 24%, transparent));
+    }
+
+    /* A die-cut sticker: the shape in its tone, a light border around it. */
+    [data-part="body"] {
+      fill: var(--_tone);
+      stroke: var(--nx-clay-50);
+      stroke-width: 5;
+      stroke-linejoin: round;
+      paint-order: stroke;
+    }
+
+    [data-part="outline"],
+    [data-part="line"] {
+      fill: none;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    [data-part="outline"] { stroke: var(--nx-clay-50); stroke-width: 12; }
+    [data-part="line"] { stroke: var(--_tone); stroke-width: 6; }
+
+    [data-part="ink"] {
+      fill: none;
+      stroke: var(--nx-ink-900);
+      stroke-width: 4.5;
+      stroke-linecap: round;
+    }
+
+    [data-part="shine"] {
+      fill: none;
+      stroke: var(--nx-clay-50);
+      stroke-width: 2.6;
+      stroke-linecap: round;
+      opacity: 0.75;
+    }
+  }
+
+  /* In a narrow hero the side stickers tuck in rather than hang off the edge. */
+  @container (inline-size < 36rem) {
+    .nx-text-hero-sticker[data-position="start"] { inset-inline-start: -0.35em; }
+    .nx-text-hero-sticker[data-position="end"] { inset-inline-end: -0.35em; }
+  }
+
+  @keyframes nx-text-hero-float {
+    50% {
+      translate: 0 calc(-0.08em * var(--nx-motion));
+      rotate: calc(5deg * var(--nx-motion));
+    }
+  }
+
+  /* The pop: in from 95% and transparent, overshoot, settle — a damped spring in keyframes. */
+  @keyframes nx-text-hero-pop {
+    0% { opacity: 0; scale: calc(1 - 0.05 * var(--nx-motion)); rotate: calc(var(--_rest, 0deg) - 32deg * var(--nx-motion)); }
+    35% { opacity: 1; scale: calc(1 + 0.16 * var(--nx-motion)); rotate: calc(var(--_rest, 0deg) + 9deg * var(--nx-motion)); }
+    62% { scale: calc(1 - 0.04 * var(--nx-motion)); rotate: calc(var(--_rest, 0deg) - 4deg * var(--nx-motion)); }
+    82% { scale: calc(1 + 0.015 * var(--nx-motion)); rotate: calc(var(--_rest, 0deg) + 1deg * var(--nx-motion)); }
+    100% { opacity: 1; scale: 1; rotate: var(--_rest, 0deg); }
+  }
+
+  :where(.nx-js) .nx-text-hero[data-nx-reveal]:not([data-nx-revealed]) .nx-text-hero-sticker > svg {
+    opacity: 0;
+    scale: calc(1 - 0.05 * var(--nx-motion));
+  }
+
+  :where(.nx-js) .nx-text-hero[data-nx-revealed] .nx-text-hero-sticker > svg {
+    animation: nx-text-hero-pop 760ms var(--nx-ease-out) both;
+    animation-delay: calc(var(--_title) + 200ms + var(--nx-i, 0) * 80ms);
+  }
+
+  /* If the script never marks the page live, show everything rather than a blank hero. */
+  @keyframes nx-text-hero-failsafe { to { opacity: 1; translate: none; scale: none; rotate: var(--_rest, 0deg); } }
+
+  :where(.nx-js:not(.nx-live)) .nx-text-hero[data-nx-reveal]:not([data-nx-revealed]) :is(.nx-text-hero-char, .nx-text-hero-sticker > svg, .nx-text-hero-subtitle, .nx-text-hero-actions) {
+    animation: nx-text-hero-failsafe 1ms 2.5s forwards;
+  }
+
+  /* ---- Scroll text reveal ------------------------------------------------------------- */
+  @property --_scroll-reveal-p {
+    syntax: "<number>";
+    inherits: false;
+    initial-value: 0;
+  }
+
+  .nx-scroll-reveal {
+    /* Without JavaScript or scroll timelines: the finished text. */
+    --nx-progress: 1;
+    position: relative;
+    block-size: var(--nx-scroll-height, 240vh);
+  }
+
+  /* With JavaScript, stickyProgress() writes it — until then, the start. */
+  :where(.nx-js) .nx-scroll-reveal { --nx-progress: 0; }
+
+  /* The section's own view timeline, over the stretch where its stage is pinned
+     (contain), animates one registered number that every letter reads. */
+  @supports ((animation-timeline: view()) and (animation-range: entry)) {
+    .nx-scroll-reveal {
+      --nx-progress: var(--_scroll-reveal-p);
+      view-timeline: --nx-scroll-reveal block;
+      animation: nx-scroll-reveal-progress auto linear both;
+      animation-timeline: --nx-scroll-reveal;
+      animation-range: contain 0% contain 100%;
+    }
+  }
+
+  @keyframes nx-scroll-reveal-progress { to { --_scroll-reveal-p: 1; } }
+
+  .nx-scroll-reveal-stage,
+  .nx-scroll-scramble-stage {
+    position: sticky;
+    inset-block-start: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: var(--nx-space-5);
+    block-size: 100svh;
+    padding-inline: var(--nx-space-6);
+    overflow: clip;
+    text-align: center;
+  }
+
+  .nx-scroll-reveal-eyebrow {
+    margin: 0;
+    color: var(--nx-text-subtle);
+    font: 600 var(--nx-text-sm) / 1.4 var(--nx-font-sans);
+    letter-spacing: var(--nx-tracking-wider);
+    text-transform: uppercase;
+    opacity: calc(0.35 + 0.65 * min(1, var(--nx-progress) * 4));
+  }
+
+  .nx-scroll-reveal-title {
+    margin: 0;
+    font: 800 clamp(3rem, 0.8rem + 9vw, 10.5rem) / 0.98 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tightest);
+    text-wrap: balance;
+
+    &[data-shaped] { line-height: 1.35; }
+  }
+
+  .nx-scroll-reveal-art { display: grid; }
+
+  .nx-scroll-reveal-layer {
+    grid-area: 1 / 1;
+
+    &[data-layer="outline"] {
+      color: transparent;
+      -webkit-text-stroke: max(1px, 0.012em) var(--nx-border-strong);
+    }
+
+    /* The fill wipes in along the reading direction once the letters have gathered. */
+    &[data-layer="fill"] {
+      --_wipe: calc((var(--nx-progress) - 0.42) * 240% - 10%);
+      color: var(--nx-text);
+      -webkit-mask-image: linear-gradient(calc(90deg * var(--nx-dir)), #000 calc(var(--_wipe) - 12%), transparent calc(var(--_wipe) + 12%));
+      mask-image: linear-gradient(calc(90deg * var(--nx-dir)), #000 calc(var(--_wipe) - 12%), transparent calc(var(--_wipe) + 12%));
+    }
+  }
+
+  .nx-scroll-reveal-char {
+    /* Each letter has its own 0 → 1 inside the section's progress, in reading order… */
+    --_t: clamp(0, (var(--nx-progress) - var(--nx-i, 0) / var(--_n, 1) * 0.3) / 0.4, 1);
+    /* …eased out (cubic), so it glides the last part of the way. */
+    --_away: calc((1 - var(--_t)) * (1 - var(--_t)) * (1 - var(--_t)));
+    display: inline-block;
+    white-space: pre;
+    translate:
+      calc(var(--_x, 0) * 0.0017em * var(--_away) * var(--nx-motion))
+      calc(var(--_y, 0) * 0.0026em * var(--_away) * var(--nx-motion));
+    rotate: calc(var(--_r, 0) * 0.07deg * var(--_away) * var(--nx-motion));
+    opacity: calc(1 - 0.7 * var(--_away));
+  }
+
+  /* ---- Hover reveal ---------------------------------------------------------------------- */
+  @property --_hover-reveal-glow {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 0px;
+  }
+
+  @property --_hover-reveal-wx {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 0px;
+  }
+
+  @property --_hover-reveal-wy {
+    syntax: "<length>";
+    inherits: false;
+    initial-value: 0px;
+  }
+
+  .nx-hover-reveal {
+    container-type: inline-size;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-block-start: 1px solid var(--nx-border);
+  }
+
+  .nx-hover-reveal-item {
+    /* Coming back when the pointer leaves: quicker and softer than going. */
+    transition:
+      opacity 150ms var(--nx-ease-out),
+      filter 150ms var(--nx-ease-out),
+      translate var(--nx-spring-soft-duration) var(--nx-spring-soft);
+  }
+
+  .nx-hover-reveal-link {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: var(--nx-space-6);
+    row-gap: var(--nx-space-1);
+    padding-block: clamp(0.85rem, 0.5rem + 1.4cqi, 1.4rem);
+    padding-inline: var(--nx-space-2);
+    border-block-end: 1px solid var(--nx-border);
+    color: var(--nx-text);
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+
+    &:has(.nx-hover-reveal-description) { grid-template-columns: minmax(0, 1fr) minmax(0, 15rem) auto; }
+
+    &:focus-visible {
+      outline: 2px solid var(--nx-ring);
+      outline-offset: 2px;
+      border-radius: var(--nx-radius-sm);
+    }
+  }
+
+  .nx-hover-reveal-label {
+    /* The glow's centre: the pointer (hoverReveal writes --nx-px/--nx-py here) plus a slow
+       wander. Declared on the label so a spotlight on an ancestor cannot leak in. */
+    --nx-px: 30%;
+    --nx-py: 50%;
+    --_gx: calc(var(--nx-px) + var(--_hover-reveal-wx));
+    --_gy: calc(var(--nx-py) + var(--_hover-reveal-wy));
+    justify-self: start;
+    font: 700 clamp(1.75rem, 0.9rem + 4.4cqi, 4.25rem) / 1.1 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tighter);
+    background: radial-gradient(
+      circle at var(--_gx) var(--_gy),
+      var(--nx-glow),
+      var(--nx-accent) calc(var(--_hover-reveal-glow) * 0.42),
+      var(--nx-violet-500) calc(var(--_hover-reveal-glow) * 0.72),
+      var(--nx-text) var(--_hover-reveal-glow)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    /* Presses shrink toward the start of the word. */
+    transform-origin: calc(50% - 50% * var(--nx-dir)) 50%;
+    transition:
+      --_hover-reveal-glow 150ms var(--nx-ease-out),
+      translate var(--nx-spring-soft-duration) var(--nx-spring-soft),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+  }
+
+  .nx-hover-reveal-description {
+    color: var(--nx-text-subtle);
+    font-size: var(--nx-text-sm);
+    line-height: 1.5;
+    text-wrap: pretty;
+    transition: color 200ms var(--nx-ease-out);
+  }
+
+  .nx-hover-reveal-icon {
+    display: inline-grid;
+    place-items: center;
+    inline-size: 2.75rem;
+    aspect-ratio: 1;
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    color: var(--nx-text-muted);
+    transition:
+      background-color 200ms var(--nx-ease-out),
+      border-color 200ms var(--nx-ease-out),
+      color 200ms var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+
+    /* The icon swap: both icons stay in the DOM, the new one grows in from a quarter, unblurring. */
+    > .nx-icon {
+      grid-area: 1 / 1;
+      inline-size: 1.25rem;
+      block-size: 1.25rem;
+      transition:
+        opacity 300ms cubic-bezier(0.2, 0, 0, 1),
+        scale 300ms cubic-bezier(0.2, 0, 0, 1),
+        filter 300ms cubic-bezier(0.2, 0, 0, 1),
+        rotate var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy);
+    }
+
+    /* Both arrows point toward inline-end (mirrored in right-to-left text). */
+    > .nx-hover-reveal-rest { scale: var(--nx-dir) 1; }
+
+    > .nx-hover-reveal-active {
+      opacity: 0;
+      scale: calc(0.25 * var(--nx-dir)) 0.25;
+      filter: blur(4px);
+      rotate: calc(-45deg * var(--nx-dir) * var(--nx-motion));
+    }
+  }
+
+  /* Active: hovered, or reached from the keyboard. Colour and icon change for both. */
+  .nx-hover-reveal-link:is(:hover, :focus-visible) {
+    .nx-hover-reveal-label { --_hover-reveal-glow: 10em; }
+    .nx-hover-reveal-description { color: var(--nx-text-muted); }
+
+    .nx-hover-reveal-icon {
+      border-color: transparent;
+      background: var(--nx-accent);
+      color: var(--nx-accent-contrast);
+
+      /* ↗ turns into →, spinning out while the arrow springs in. */
+      > .nx-hover-reveal-rest {
+        opacity: 0;
+        scale: calc(0.25 * var(--nx-dir)) 0.25;
+        filter: blur(4px);
+        rotate: calc(45deg * var(--nx-dir) * var(--nx-motion));
+      }
+
+      > .nx-hover-reveal-active {
+        opacity: 1;
+        scale: var(--nx-dir) 1;
+        filter: blur(0);
+        rotate: 0deg;
+      }
+    }
+  }
+
+  /* Keyboard: moving through the list many times should feel instant — a quick fade, no travel. */
+  .nx-hover-reveal-link:focus-visible:not(:hover) .nx-hover-reveal-icon > .nx-icon {
+    transition: opacity 150ms var(--nx-ease-out);
+  }
+
+  .nx-hover-reveal:has(.nx-hover-reveal-link:focus-visible) .nx-hover-reveal-item:not(:has(.nx-hover-reveal-link:focus-visible)) {
+    opacity: 0.35;
+  }
+
+  /* The pointer path: the word glows and leans in, the others blur and drift away. */
+  @media (hover: hover) and (pointer: fine) {
+    .nx-hover-reveal-link:hover .nx-hover-reveal-label {
+      translate: calc(0.14em * var(--nx-dir) * var(--nx-motion)) 0;
+      transition-duration: 280ms, var(--nx-spring-soft-duration), var(--nx-spring-snappy-duration);
+      animation: nx-hover-reveal-wander 3.6s var(--nx-ease-in-out) infinite;
+    }
+
+    .nx-hover-reveal:not([data-static]) .nx-hover-reveal-link:hover .nx-hover-reveal-icon {
+      scale: calc(1 + 0.08 * var(--nx-motion));
+    }
+
+    .nx-hover-reveal:has(.nx-hover-reveal-link:hover) .nx-hover-reveal-item:not(:has(.nx-hover-reveal-link:hover)) {
+      opacity: 0.3;
+      filter: blur(2px);
+      transition-duration: 250ms, 250ms, var(--nx-spring-gentle-duration);
+      transition-timing-function: var(--nx-ease-out), var(--nx-ease-out), var(--nx-spring-gentle);
+    }
+
+    .nx-hover-reveal-item:has(~ .nx-hover-reveal-item .nx-hover-reveal-link:hover) {
+      translate: 0 calc(-0.4rem * var(--nx-motion));
+    }
+
+    .nx-hover-reveal-item:has(.nx-hover-reveal-link:hover) ~ .nx-hover-reveal-item {
+      translate: 0 calc(0.4rem * var(--nx-motion));
+    }
+  }
+
+  /* The glow never sits still: its centre wanders around the pointer. */
+  @keyframes nx-hover-reveal-wander {
+    0%, 100% { --_hover-reveal-wx: 0px; --_hover-reveal-wy: 0px; }
+    25% { --_hover-reveal-wx: calc(0.5em * var(--nx-motion)); --_hover-reveal-wy: calc(-0.25em * var(--nx-motion)); }
+    50% { --_hover-reveal-wx: calc(-0.2em * var(--nx-motion)); --_hover-reveal-wy: calc(0.3em * var(--nx-motion)); }
+    75% { --_hover-reveal-wx: calc(-0.45em * var(--nx-motion)); --_hover-reveal-wy: calc(-0.15em * var(--nx-motion)); }
+  }
+
+  .nx-hover-reveal:not([data-static]) .nx-hover-reveal-link:active :is(.nx-hover-reveal-label, .nx-hover-reveal-icon) {
+    scale: calc(1 - 0.04 * var(--nx-motion));
+  }
+
+  @container (inline-size < 34rem) {
+    .nx-hover-reveal-link:has(.nx-hover-reveal-description) { grid-template-columns: minmax(0, 1fr) auto; }
+    .nx-hover-reveal-description { grid-row: 2; grid-column: 1; }
+    .nx-hover-reveal-link:has(.nx-hover-reveal-description) .nx-hover-reveal-icon { grid-row: 1 / span 2; grid-column: 2; }
+  }
+
+  /* ---- Scroll scramble --------------------------------------------------------------------- */
+  .nx-scroll-scramble {
+    --nx-progress: 1;
+    position: relative;
+    block-size: var(--nx-scroll-height, 220vh);
+  }
+
+  :where(.nx-js) .nx-scroll-scramble { --nx-progress: 0; }
+
+  .nx-scroll-scramble-stage { gap: var(--nx-space-10); }
+
+  .nx-scroll-scramble-title {
+    position: relative;
+    margin: 0;
+    font: 800 clamp(2.4rem, 0.9rem + 5.6vw, 6.5rem) / 1.02 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tighter);
+    text-wrap: balance;
+
+    &[data-shaped] { line-height: 1.4; }
+  }
+
+  /* The real text holds the space; the decoding copy lies over it, so glyphs of
+     another width never push the layout around. */
+  .nx-scroll-scramble-sizer {
+    display: block;
+    visibility: hidden;
+  }
+
+  .nx-scroll-scramble-text {
+    position: absolute;
+    inset: 0;
+  }
+
+  .nx-scroll-scramble-pending { color: var(--nx-accent-text); }
+
+  .nx-scroll-scramble-chips {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--nx-space-3);
+    max-inline-size: 44rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nx-scroll-scramble-chip {
+    /* Where it sits in the pile, measured by scrollScramble(). */
+    --_dx: 0px;
+    --_dy: 0px;
+    --_r: 0;
+    /* Its own 0 → 1, one chip after another… */
+    --_t: clamp(0, (var(--nx-progress) - 0.3 - var(--nx-i, 0) / var(--_n, 1) * 0.3) / 0.35, 1);
+    --_u: calc(1 - var(--_t));
+    /* …eased out with a little overshoot (back), so each one lands and settles. */
+    --_away: calc(var(--_u) * var(--_u) * (2.2 * var(--_u) - 1.2));
+    display: inline-flex;
+    align-items: center;
+    padding: 0.55rem 1.05rem;
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface);
+    box-shadow: var(--nx-shadow-sm);
+    /* In the pile they are quiet; landed, they read at full strength. */
+    color: color-mix(in oklab, var(--nx-text) calc(var(--_t) * 100%), var(--nx-text-subtle));
+    font: 600 var(--nx-text-md) / 1.2 var(--nx-font-sans);
+    white-space: nowrap;
+    translate:
+      calc(var(--_dx) * var(--_away) * var(--nx-motion))
+      calc(var(--_dy) * var(--_away) * var(--nx-motion));
+    rotate: calc(var(--_r) * 0.018deg * var(--_away) * var(--nx-motion));
+    scale: calc(1 - 0.1 * var(--_u) * var(--nx-motion));
+  }
+
+  /* ---- Roll text ------------------------------------------------------------------------------ */
+  .nx-roll-text {
+    display: inline-block;
+    color: inherit;
+    font: inherit;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+
+    &:is(button) {
+      padding: 0;
+      border: 0;
+      background: none;
+      cursor: pointer;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--nx-ring);
+      outline-offset: 2px;
+      border-radius: var(--nx-radius-xs);
+    }
+
+    &:is(a, button):active:not([data-static]) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+  }
+
+  /* Inside a button the button's own colour change is the cue. */
+  .nx-button .nx-roll-text { --nx-roll-color: currentColor; }
+
+  .nx-roll-text-piece {
+    display: inline-grid;
+    overflow: clip;
+    /* The copies carry padding for descenders; the negative margin gives it back to the line. */
+    margin-block: -0.12em;
+    white-space: pre;
+
+    > span {
+      grid-area: 1 / 1;
+      padding-block: 0.12em;
+      transition:
+        translate var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+        opacity 200ms var(--nx-ease-out),
+        color 200ms var(--nx-ease-out);
+      transition-delay: calc(var(--nx-i, 0) * 30ms);
+    }
+
+    /* The copy waits below, in the roll colour — so the change is not motion alone. */
+    > span + span {
+      opacity: 0;
+      color: var(--nx-roll-color, var(--nx-accent-text));
+      translate: 0 calc(100% * var(--nx-motion));
+    }
+  }
+
+  /* Keyboard focus: the copy fades in where it stands, quickly (lists are walked often). */
+  :is(.nx-roll-text:focus-visible, :is(a, button):focus-visible .nx-roll-text) .nx-roll-text-piece {
+    > span {
+      transition:
+        opacity 150ms var(--nx-ease-out),
+        color 150ms var(--nx-ease-out);
+      transition-delay: 0ms;
+    }
+
+    > span:first-child { opacity: 0; }
+
+    > span + span {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+
+  /* Pointer: each letter rolls up and out, its copy rolls in from below, in reading order. */
+  @media (hover: hover) and (pointer: fine) {
+    :is(.nx-roll-text:hover, :is(a, button):hover .nx-roll-text) .nx-roll-text-piece {
+      > span:first-child {
+        opacity: 0;
+        translate: 0 calc(-100% * var(--nx-motion));
+      }
+
+      > span + span {
+        opacity: 1;
+        translate: 0 0;
+      }
+    }
+  }
+
+  /* ---- Pulse button ----------------------------------------------------------------------------- */
+  .nx-pulse-button {
+    --_size: 5.5rem;
+    --_tone: var(--nx-accent);
+    --_on-tone: var(--nx-accent-contrast);
+    display: inline-grid;
+    justify-items: center;
+    gap: var(--nx-space-3);
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--nx-text-muted);
+    font: 600 var(--nx-text-sm) / 1.3 var(--nx-font-sans);
+    letter-spacing: var(--nx-tracking-wide);
+    text-decoration: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 200ms var(--nx-ease-out);
+
+    &[data-size="sm"] { --_size: 4rem; }
+    &[data-size="lg"] { --_size: 7rem; }
+    &[data-tone="gold"] { --_tone: var(--nx-gold); --_on-tone: var(--nx-gold-contrast); }
+    &[data-tone="inverse"] { --_tone: var(--nx-surface-inverse); --_on-tone: var(--nx-text-inverse); }
+
+    &:is(:hover, :focus-visible) { color: var(--nx-text); }
+    /* The ring goes on the disc, where the eye is. */
+    &:focus-visible { outline: none; }
+
+    &:is(:disabled, [aria-disabled="true"]) {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+  }
+
+  .nx-pulse-button-disc {
+    position: relative;
+    display: grid;
+    inline-size: var(--_size);
+    aspect-ratio: 1;
+
+    /* The magnetic pull starts a little before the pointer reaches the button. */
+    &::before {
+      content: "";
+      position: absolute;
+      inset: -14px;
+      border-radius: 50%;
+    }
+  }
+
+  .nx-pulse-button-rings,
+  .nx-pulse-button-face {
+    grid-area: 1 / 1;
+    border-radius: 50%;
+  }
+
+  .nx-pulse-button-rings {
+    position: relative;
+    pointer-events: none;
+
+    > i {
+      position: absolute;
+      inset: 0;
+      border: 1px solid color-mix(in oklab, var(--_tone) 55%, transparent);
+      border-radius: inherit;
+      background: color-mix(in oklab, var(--_tone) 16%, transparent);
+      opacity: 0;
+      animation: nx-pulse-button-ring 2.7s var(--nx-ease-out) infinite;
+    }
+
+    > i:nth-child(2) { animation-delay: 0.9s; }
+    > i:nth-child(3) { animation-delay: 1.8s; }
+  }
+
+  @keyframes nx-pulse-button-ring {
+    0% { opacity: 0.7; scale: 1; }
+    100% { opacity: 0; scale: calc(1 + 0.85 * var(--nx-motion)); }
+  }
+
+  .nx-pulse-button-face {
+    display: grid;
+    place-items: center;
+    background: radial-gradient(circle at 30% 25%, color-mix(in oklab, var(--_tone) 72%, white), var(--_tone) 62%);
+    color: var(--_on-tone);
+    box-shadow:
+      0 1px 2px color-mix(in oklab, var(--_tone) 30%, transparent),
+      0 14px 34px -12px color-mix(in oklab, var(--_tone) 75%, transparent),
+      inset 0 1px 0 color-mix(in oklab, white 28%, transparent);
+    transition:
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+      filter 200ms var(--nx-ease-out);
+
+    .nx-icon {
+      inline-size: 34%;
+      block-size: 34%;
+    }
+  }
+
+  .nx-pulse-button:hover .nx-pulse-button-face { filter: brightness(1.08) saturate(1.1); }
+
+  .nx-pulse-button:focus-visible .nx-pulse-button-face {
+    outline: 2px solid var(--nx-ring);
+    outline-offset: 3px;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .nx-pulse-button:hover:not([data-static]) .nx-pulse-button-face { scale: calc(1 + 0.06 * var(--nx-motion)); }
+  }
+
+  .nx-pulse-button:active:not([data-static], :disabled, [aria-disabled="true"]) .nx-pulse-button-face {
+    scale: calc(1 - 0.04 * var(--nx-motion));
+  }
+
+  /* ---- Backdrops: mesh ---------------------------------------------------------------------------
+   * Lights drifting and blending (lapis, violet, cyan, gold) under a faint
+   * wireframe floor that runs toward the viewer. */
+  .nx-backdrop[data-variant="mesh"] {
+    --_alpha: calc(var(--nx-backdrop-intensity) * 1.9);
+    background: radial-gradient(ellipse 90% 70% at 50% 110%, color-mix(in oklab, var(--nx-violet-500) 14%, transparent), transparent 70%);
+
+    > i,
+    &::before {
+      border-radius: 50%;
+      opacity: var(--_alpha);
+      animation: nx-mesh-drift 22s var(--nx-ease-in-out) infinite alternate;
+    }
+
+    > i:nth-child(1) {
+      inset-block: -40% 30%;
+      inset-inline: -20% 35%;
+      background: radial-gradient(closest-side, var(--nx-lapis-500), color-mix(in oklab, var(--nx-lapis-500) 35%, transparent) 55%, transparent);
+    }
+
+    > i:nth-child(2) {
+      inset-block: -30% 40%;
+      inset-inline: 38% -22%;
+      background: radial-gradient(closest-side, var(--nx-violet-500), color-mix(in oklab, var(--nx-violet-500) 35%, transparent) 55%, transparent);
+      animation-duration: 27s;
+      animation-delay: -9s;
+    }
+
+    > i:nth-child(3) {
+      inset-block: 35% -45%;
+      inset-inline: 8% 32%;
+      background: radial-gradient(closest-side, var(--nx-cyan-400), color-mix(in oklab, var(--nx-cyan-400) 30%, transparent) 55%, transparent);
+      animation-duration: 31s;
+      animation-delay: -15s;
+    }
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset-block: 30% -35%;
+      inset-inline: 50% -25%;
+      background: radial-gradient(closest-side, var(--nx-gold-400), color-mix(in oklab, var(--nx-gold-400) 30%, transparent) 55%, transparent);
+      opacity: calc(var(--_alpha) * 0.85);
+      animation-duration: 25s;
+      animation-delay: -4s;
+      animation-direction: alternate-reverse;
+    }
+
+    /* The floor: a grid tipped back in perspective, the horizon at its top edge. */
+    &::after {
+      --_line: color-mix(in oklab, var(--nx-text) 12%, transparent);
+      content: "";
+      position: absolute;
+      inset-block-start: 52%;
+      inset-inline: -50%;
+      block-size: 540px;
+      background:
+        linear-gradient(var(--_line) 1px, transparent 1px) 50% 0 / 56px 56px,
+        linear-gradient(90deg, var(--_line) 1px, transparent 1px) 50% 0 / 56px 56px;
+      transform-origin: 50% 0;
+      transform: perspective(600px) rotateX(62deg);
+      -webkit-mask-image: linear-gradient(to bottom, transparent, #000 30%, #000 60%, transparent 95%);
+      mask-image: linear-gradient(to bottom, transparent, #000 30%, #000 60%, transparent 95%);
+      animation: nx-mesh-floor 2.8s linear infinite;
+    }
+  }
+
+  @keyframes nx-mesh-drift {
+    0% { translate: 0 0; rotate: 0deg; scale: 1; }
+    50% {
+      translate: calc(12% * var(--nx-motion)) calc(8% * var(--nx-motion));
+      rotate: calc(28deg * var(--nx-motion));
+      scale: calc(1 + 0.1 * var(--nx-motion));
+    }
+    100% {
+      translate: calc(-8% * var(--nx-motion)) calc(14% * var(--nx-motion));
+      rotate: calc(-18deg * var(--nx-motion));
+      scale: calc(1 - 0.06 * var(--nx-motion));
+    }
+  }
+
+  /* One cell toward the viewer, then repeat: an endless run. */
+  @keyframes nx-mesh-floor {
+    to { transform: perspective(600px) rotateX(62deg) translateY(56px); }
+  }
+
+  /* ---- Backdrops: stripes -------------------------------------------------------------------------
+   * Vertical stripes, centred so they mirror cleanly in right-to-left pages, with
+   * pulses of light running down some of them at their own speeds. */
+  .nx-backdrop[data-variant="stripes"] {
+    --_w: var(--nx-stripe-width, 72px);
+    --_line: color-mix(in oklab, var(--nx-text) 9%, transparent);
+    --_band: color-mix(in oklab, var(--nx-text) 2.5%, transparent);
+    background:
+      linear-gradient(90deg, transparent calc(50% - 0.5px), var(--_line) 0 calc(50% + 0.5px), transparent 0) 50% 0 / var(--_w) 100%,
+      linear-gradient(90deg, var(--_band) 50%, transparent 0) calc(50% + var(--_w)) 0 / calc(var(--_w) * 2) 100%;
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 72%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 72%, transparent);
+
+    > i,
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      inset-block-start: -30%;
+      inline-size: 1px;
+      block-size: 30%;
+      background: linear-gradient(to bottom, transparent, var(--_pulse));
+      box-shadow: 0 0 12px 1px color-mix(in oklab, var(--_pulse) 55%, transparent);
+      animation: nx-stripes-pulse 4.2s linear infinite;
+    }
+
+    > i:nth-child(1) { --_pulse: var(--nx-glow); inset-inline-start: calc(50% - 3 * var(--_w) - 0.5px); animation-duration: 3.8s; }
+    > i:nth-child(2) { --_pulse: var(--nx-accent); inset-inline-start: calc(50% + var(--_w) - 0.5px); animation-duration: 5.6s; animation-delay: -2.1s; }
+    > i:nth-child(3) { --_pulse: var(--nx-gold); inset-inline-start: calc(50% + 4 * var(--_w) - 0.5px); animation-duration: 7.2s; animation-delay: -4.4s; }
+    &::before { --_pulse: var(--nx-violet-400); inset-inline-start: calc(50% - var(--_w) - 0.5px); animation-duration: 6.4s; animation-delay: -1.2s; }
+    &::after { --_pulse: var(--nx-cyan-300); inset-inline-start: calc(50% + 2 * var(--_w) - 0.5px); animation-duration: 4.6s; animation-delay: -3.3s; }
+  }
+
+  @keyframes nx-stripes-pulse { to { translate: 0 calc(480% * var(--nx-motion)); } }
+
+  /* ---- Backdrops: dither (the core dither() paints the canvas) --------------------------------------- */
+  .nx-backdrop[data-variant="dither"] {
+    /* Until the first frame (or without JavaScript): the same glow, smooth. */
+    background: radial-gradient(ellipse 70% 50% at 50% 58%, var(--nx-accent-soft), transparent 70%);
+  }
+
+  .nx-backdrop-canvas {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    image-rendering: pixelated;
+    opacity: calc(var(--nx-backdrop-intensity) * 1.9);
+    -webkit-mask-image: radial-gradient(ellipse 90% 80% at 50% 58%, #000 35%, transparent 85%);
+    mask-image: radial-gradient(ellipse 90% 80% at 50% 58%, #000 35%, transparent 85%);
+  }
+
+  /* ---- Reduced motion -------------------------------------------------------------------------------- */
+  @media (prefers-reduced-motion: reduce) {
+    .nx-text-hero-sticker { animation: none; }
+
+    /* The scroll sections show their finished state, without the long scroll. */
+    .nx-scroll-reveal,
+    .nx-scroll-scramble {
+      block-size: auto;
+      animation: none;
+    }
+
+    .nx-scroll-reveal-stage,
+    .nx-scroll-scramble-stage {
+      --nx-progress: 1;
+      position: relative;
+      block-size: auto;
+      padding-block: var(--nx-space-24);
+    }
+
+    .nx-hover-reveal-link:hover .nx-hover-reveal-label { animation: none; }
+
+    /* The rings rest as a single halo. */
+    .nx-pulse-button-rings > i { animation: none; }
+
+    .nx-pulse-button-rings > i:first-child {
+      opacity: 0.45;
+      scale: 1.2;
+    }
+
+    .nx-backdrop[data-variant="mesh"]::before,
+    .nx-backdrop[data-variant="mesh"]::after,
+    .nx-backdrop[data-variant="stripes"]::before,
+    .nx-backdrop[data-variant="stripes"]::after {
+      animation: none;
+    }
+  }
+}

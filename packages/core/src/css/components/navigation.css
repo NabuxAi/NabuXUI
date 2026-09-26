@@ -35,7 +35,8 @@
    *       <button class="nx-tab" role="tab" aria-selected aria-controls tabindex>…</button> </div>
    *     <div class="nx-tab-panel" role="tabpanel" aria-labelledby tabindex="0">…</div>
    * ------------------------------------------------------------------------- */
-  .nx-tabs { display: grid; gap: var(--nx-space-4); }
+  /* One column that never grows past the container: wide panels (code, tables) scroll instead. */
+  .nx-tabs { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--nx-space-4); }
 
   .nx-tab-list {
     position: relative;

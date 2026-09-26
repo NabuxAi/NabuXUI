@@ -11,6 +11,13 @@ import { installForms } from './alpine/forms';
 import { installNavigation } from './alpine/navigation';
 import { installOverlays } from './alpine/overlays';
 import type { AlpineLike } from './alpine/types';
+import { installTextBlocks } from './alpine/blocks/text';
+import { installActionsBlocks } from './alpine/blocks/actions';
+import { installCardsBlocks } from './alpine/blocks/cards';
+import { installDataBlocks } from './alpine/blocks/data';
+import { installMenusBlocks } from './alpine/blocks/menus';
+import { installGlassBlocks } from './alpine/blocks/glass';
+
 
 declare global {
   interface Window {
@@ -32,6 +39,12 @@ function install(Alpine: AlpineLike | undefined) {
   installNavigation(Alpine);
   installForms(Alpine);
   installDisplay(Alpine);
+  installTextBlocks(Alpine);
+  installActionsBlocks(Alpine);
+  installCardsBlocks(Alpine);
+  installDataBlocks(Alpine);
+  installMenusBlocks(Alpine);
+  installGlassBlocks(Alpine);
 }
 
 if (window.Alpine) install(window.Alpine);

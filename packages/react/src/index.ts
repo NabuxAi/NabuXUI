@@ -21,5 +21,12 @@ export * from './components/navigation';
 export * from './components/overlay';
 export * from './components/header';
 
+export * from './blocks/text';
+export * from './blocks/actions';
+export * from './blocks/cards';
+export * from './blocks/data';
+export * from './blocks/menus';
+export * from './blocks/glass';
+
 // The framework-agnostic helpers, for pages that need them directly.
 export { theme, transition, toasts, type ToastInput, type ToastTone } from '@nabuxai/ui-core';

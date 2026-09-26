@@ -1,0 +1,738 @@
+/*
+ * Liquid glass
+ *
+ * One material and one lens, over the refraction engine in js/glass.ts:
+ *
+ *   .nx-glass        a surface: tint, frost, rim light, soft depth. In Chromium
+ *                    glassPane() bends its backdrop at the rim (--nx-refract);
+ *                    other engines keep the frosted look.
+ *   .nx-lens         a moving lens: rim, sheen and shadow. liquidLens() bends
+ *                    the content under it (every engine). --nx-lens-power
+ *                    (0–1) sets how hard it bends, and transitions.
+ *
+ * Every rim reads one light angle, --nx-light (0deg = from the top, clockwise).
+ * sweepLight() sends it around once; followLight() turns it toward the pointer.
+ */
+@property --nx-light {
+  syntax: "<angle>";
+  inherits: true;
+  initial-value: 315deg;
+}
+
+@property --nx-lens-power {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 1;
+}
+
+@layer nx.components {
+  /* ---- Material ------------------------------------------------------------ */
+
+  .nx-glass {
+    --_frost: 10px;
+    --_sat: 1.7;
+    --_tint: var(--nx-glass-tint);
+    --_rim: 1.25px;
+    --_radius: var(--nx-radius-2xl);
+    position: relative;
+    isolation: isolate;
+    border-radius: var(--_radius);
+    color: var(--nx-text);
+    background-color: var(--_tint);
+    background-image: linear-gradient(180deg, var(--nx-glass-sheen), transparent 42%);
+    -webkit-backdrop-filter: blur(var(--_frost)) saturate(var(--_sat));
+    backdrop-filter: var(--nx-refract,) blur(var(--_frost)) saturate(var(--_sat));
+    box-shadow:
+      inset 0 0 0 1px var(--nx-glass-rim-soft),
+      inset 0 1px 0 var(--nx-glass-rim),
+      0 0 0 0.5px var(--nx-glass-edge),
+      0 1px 2px var(--nx-glass-shade),
+      0 16px 36px -16px var(--nx-glass-shade);
+
+    &[data-preset="clear"] { --_frost: 1px; --_sat: 1.4; --_tint: transparent; }
+    &[data-preset="frost"] { --_frost: 24px; --_tint: var(--nx-glass-tint-hover); }
+    &[data-preset="thick"] {
+      --_frost: 4px;
+      --_rim: 2px;
+      box-shadow:
+        inset 0 0 0 1px var(--nx-glass-rim-soft),
+        inset 0 2px 1px var(--nx-glass-rim),
+        inset 0 -8px 18px -12px var(--nx-glass-rim),
+        0 0 0 0.5px var(--nx-glass-edge),
+        0 2px 4px var(--nx-glass-shade),
+        0 28px 56px -20px var(--nx-glass-shade);
+    }
+  }
+
+  /* The rim catches the light where it faces --nx-light, and faintly opposite. */
+  .nx-glass::before,
+  .nx-lens::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: var(--_rim, 1.25px);
+    /* Bright where the rim faces the light, faint opposite, a little shade
+       across the sides so the edge still reads on a white page. */
+    background: conic-gradient(
+      from var(--nx-light),
+      var(--nx-glass-rim) 0deg,
+      transparent 58deg,
+      var(--nx-glass-edge) 90deg,
+      transparent 122deg,
+      var(--nx-glass-rim-soft) 180deg,
+      transparent 238deg,
+      var(--nx-glass-edge) 270deg,
+      transparent 302deg,
+      var(--nx-glass-rim) 360deg
+    );
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+    pointer-events: none;
+  }
+
+  /* A thin film of colour along the rim, turning with the light. */
+  .nx-glass[data-iridescent]::after,
+  .nx-lens[data-iridescent]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 2px;
+    background: conic-gradient(
+      from calc(var(--nx-light) + 30deg),
+      var(--nx-violet-300),
+      var(--nx-cyan-300),
+      var(--nx-gold-200),
+      var(--nx-lapis-300),
+      var(--nx-violet-300)
+    );
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+    filter: blur(1px);
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  /* Pressable glass: tint lifts on hover, the pane gives under the finger. */
+  .nx-glass[data-interactive] {
+    cursor: pointer;
+    transition:
+      background-color var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy);
+
+    &:active:not([data-static], :disabled, [aria-disabled="true"]) {
+      scale: calc(1 - 0.04 * var(--nx-motion));
+      transition-duration: var(--nx-dur-fast), 120ms;
+      transition-timing-function: var(--nx-ease-out), var(--nx-ease-out);
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .nx-glass[data-interactive]:hover:not(:disabled, [aria-disabled="true"]) { --_tint: var(--nx-glass-tint-hover); }
+  }
+
+  .nx-glass-button {
+    --_radius: var(--nx-radius-full);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-space-2);
+    min-block-size: 2.75rem;
+    padding-block: 0;
+    padding-inline: var(--nx-space-5);
+    border: 0;
+    font: inherit;
+    font-weight: 600;
+    font-size: var(--nx-text-sm);
+    letter-spacing: var(--nx-tracking-tight);
+    text-decoration: none;
+    white-space: nowrap;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+
+    /* A trailing icon reads heavier than text: give its side 2px less. */
+    &:has(> .nx-icon:last-child):not(:has(> .nx-icon:first-child)) { padding-inline-end: calc(var(--nx-space-5) - 2px); }
+    &:has(> .nx-icon:first-child):not(:has(> .nx-icon:last-child)) { padding-inline-start: calc(var(--nx-space-5) - 2px); }
+
+    &[data-size="sm"] { min-block-size: 2.25rem; padding-inline: var(--nx-space-4); font-size: var(--nx-text-xs); }
+    &[data-size="lg"] { min-block-size: 3.25rem; padding-inline: var(--nx-space-6); font-size: var(--nx-text-base); }
+    &[data-icon-only] { padding-inline: 0; aspect-ratio: 1; min-inline-size: 2.75rem; }
+    &[data-icon-only][data-size="sm"] { min-inline-size: 2.25rem; }
+    &[data-icon-only][data-size="lg"] { min-inline-size: 3.25rem; }
+
+    &:focus-visible {
+      outline: 2px solid var(--nx-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  .nx-glass-panel {
+    display: block;
+    padding: var(--nx-space-6);
+  }
+
+  /* ---- Lens ------------------------------------------------------------------ */
+
+  .nx-lens {
+    --_rim: 1.25px;
+    --_tint: transparent;
+    position: absolute;
+    border-radius: var(--nx-radius-full);
+    background-color: var(--_tint);
+    background-image: radial-gradient(120% 80% at 50% 0%, var(--nx-glass-sheen), transparent 62%);
+    box-shadow:
+      inset 0 0 0 1px var(--nx-glass-rim-soft),
+      inset 0 1px 1px var(--nx-glass-rim),
+      inset 0 -2px 4px -2px var(--nx-glass-rim-soft),
+      inset 0 0 12px -5px var(--nx-glass-shade),
+      0 0 0 0.5px var(--nx-glass-edge),
+      0 2px 4px -2px var(--nx-glass-shade),
+      0 10px 22px -10px var(--nx-glass-shade);
+    pointer-events: none;
+  }
+
+  /* ---- Segmented control: the selection is a lens -------------------------- */
+
+  .nx-glass-seg {
+    --_pad: 4px;
+    --_h: 2.25rem;
+    --_radius: var(--nx-radius-full);
+    display: inline-grid;
+    padding: var(--_pad);
+    touch-action: pan-y;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .nx-glass-seg-track {
+    position: relative;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+  }
+
+  .nx-glass-seg-option {
+    position: relative;
+    display: grid;
+    place-items: center;
+    gap: var(--nx-space-1);
+    grid-auto-flow: column;
+    min-block-size: var(--_h);
+    padding-inline: var(--nx-space-4);
+    border-radius: var(--nx-radius-full);
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    transition: color var(--nx-dur-fast) var(--nx-ease-out);
+
+    & input {
+      position: absolute;
+      inset: 0;
+      margin: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    &:has(input:checked) { color: var(--nx-text); }
+    &:has(input:focus-visible) { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+    &:has(input:disabled) { opacity: 0.45; cursor: not-allowed; }
+  }
+
+  .nx-glass-seg-lens {
+    --nx-lens-power: 1;
+    --_tint: var(--nx-glass-tint);
+    z-index: 1;
+    transition:
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      inline-size var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      block-size var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      scale var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy),
+      --nx-lens-power var(--nx-dur-base) var(--nx-ease-out),
+      opacity var(--nx-dur-fast) var(--nx-ease-out);
+  }
+
+  /* Held or dragged, the lens swells and bends harder: it is the thing you hold. */
+  .nx-glass-seg[data-pressed] .nx-glass-seg-lens {
+    --nx-lens-power: 1.7;
+    scale: calc(1 + 0.1 * var(--nx-motion)) calc(1 + 0.16 * var(--nx-motion));
+  }
+
+  .nx-glass-seg[data-dragging] .nx-glass-seg-lens {
+    transition:
+      scale var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy),
+      --nx-lens-power var(--nx-dur-base) var(--nx-ease-out);
+  }
+
+  /* ---- Dock: a lens glides to the item under the pointer ------------------- */
+
+  .nx-glass-dock {
+    --_item: 3rem;
+    --_gap: var(--nx-space-2);
+    --_pad: var(--nx-space-2);
+    --_tile-radius: 0.875rem;
+    --_radius: calc(var(--_tile-radius) + var(--_pad));
+    display: inline-flex;
+    padding: var(--_pad);
+  }
+
+  .nx-glass-dock-items {
+    position: relative;
+    display: flex;
+    gap: var(--_gap);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nx-glass-dock-item {
+    position: relative;
+    display: grid;
+    place-items: center;
+    inline-size: var(--_item);
+    block-size: var(--_item);
+    border: 0;
+    border-radius: var(--_tile-radius);
+    padding: 0;
+    color: var(--nx-text);
+    background: var(--_tile, var(--nx-surface-2));
+    font: inherit;
+    text-decoration: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: scale var(--nx-dur-fast) var(--nx-ease-out);
+
+    & .nx-icon { inline-size: 1.375rem; block-size: 1.375rem; }
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 3px; }
+
+    &[data-tone] { color: var(--nx-ink-50); }
+    &[data-tone="lapis"] { --_tile: linear-gradient(160deg, var(--nx-lapis-400), var(--nx-lapis-700)); }
+    &[data-tone="violet"] { --_tile: linear-gradient(160deg, var(--nx-violet-400), var(--nx-violet-700)); }
+    &[data-tone="cyan"] { --_tile: linear-gradient(160deg, var(--nx-cyan-300), var(--nx-cyan-600)); }
+    &[data-tone="gold"] { --_tile: linear-gradient(160deg, var(--nx-gold-300), var(--nx-gold-600)); color: var(--nx-ink-900); }
+    &[data-tone="ink"] { --_tile: linear-gradient(160deg, var(--nx-ink-600), var(--nx-ink-900)); }
+    &[data-tone="rose"] { --_tile: linear-gradient(160deg, var(--nx-chart-2), color-mix(in oklab, var(--nx-chart-2) 60%, var(--nx-ink-900))); }
+    &[data-tone="green"] { --_tile: linear-gradient(160deg, var(--nx-chart-7), color-mix(in oklab, var(--nx-chart-7) 60%, var(--nx-ink-900))); }
+
+    /* The running app: a dot under the tile. */
+    &[aria-current]::after {
+      content: "";
+      position: absolute;
+      inset-block-end: -6px;
+      inline-size: 4px;
+      block-size: 4px;
+      border-radius: 50%;
+      background: var(--nx-text-muted);
+    }
+  }
+
+  .nx-glass-dock-lens {
+    --nx-lens-power: 1;
+    --_rim: 1.5px;
+    border-radius: calc(var(--_tile-radius) + 4px);
+    margin: -4px;
+    inline-size: calc(var(--nx-ind-w, 0px) + 8px);
+    block-size: calc(var(--nx-ind-h, 0px) + 8px);
+    z-index: 1;
+    transition:
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      scale var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy),
+      --nx-lens-power var(--nx-dur-base) var(--nx-ease-out),
+      opacity var(--nx-dur-base) var(--nx-ease-out);
+  }
+
+  .nx-glass-dock:not([data-active]) .nx-glass-dock-lens { opacity: 0; --nx-lens-power: 0; }
+  .nx-glass-dock[data-pressed] .nx-glass-dock-lens { scale: calc(1 + 0.08 * var(--nx-motion)); --nx-lens-power: 1.5; }
+
+  .nx-glass-dock-tip {
+    position: absolute;
+    inset-block-end: calc(100% + var(--_pad) + var(--nx-space-2));
+    left: 0;
+    translate: calc(var(--nx-ind-x, 0px) + var(--nx-ind-w, 0px) / 2 - 50%) calc(4px * var(--nx-motion));
+    padding: var(--nx-space-1) var(--nx-space-2);
+    border-radius: var(--nx-radius-sm);
+    background: var(--nx-text);
+    color: var(--nx-bg);
+    font-size: var(--nx-text-xs);
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      opacity var(--nx-dur-fast) var(--nx-ease-out);
+  }
+
+  .nx-glass-dock[data-active] .nx-glass-dock-tip {
+    opacity: 1;
+    translate: calc(var(--nx-ind-x, 0px) + var(--nx-ind-w, 0px) / 2 - 50%) 0;
+  }
+
+  /* ---- Switch: the knob turns to glass while you hold it ------------------- */
+
+  .nx-glass-switch {
+    --_w: 3.5rem;
+    --_h: 2rem;
+    --_knob: 1.625rem;
+    --_gap: 3px;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-3);
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .nx-glass-switch-control {
+    position: relative;
+    flex: none;
+    inline-size: var(--_w);
+    block-size: var(--_h);
+  }
+
+  .nx-glass-switch-input {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .nx-glass-switch-track {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface-3);
+    box-shadow: inset 0 1px 2px var(--nx-glass-edge);
+    transition: background-color var(--nx-dur-base) var(--nx-ease-out);
+  }
+
+  /* The fill pours in from the start edge, so the lens has an edge to bend. */
+  .nx-glass-switch-fill {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--nx-accent), color-mix(in oklab, var(--nx-accent) 70%, var(--nx-cyan-400)));
+    clip-path: inset(0 100% 0 0 round var(--nx-radius-full));
+    transition: clip-path var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+  }
+
+  :dir(rtl) .nx-glass-switch-fill { clip-path: inset(0 0 0 100% round var(--nx-radius-full)); }
+
+  .nx-glass-switch-control:has(:checked) .nx-glass-switch-fill { clip-path: inset(0 0 0 0 round var(--nx-radius-full)); }
+
+  .nx-glass-switch-thumb {
+    --nx-lens-power: 0;
+    --_tint: var(--nx-ink-50);
+    --_travel: calc(var(--_w) - var(--_knob) - var(--_gap) * 2);
+    inset-block-start: var(--_gap);
+    inset-inline-start: var(--_gap);
+    inline-size: var(--_knob);
+    block-size: var(--_knob);
+    background-color: var(--_tint);
+    transition:
+      translate var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy),
+      inline-size var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy),
+      scale var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy),
+      background-color var(--nx-dur-base) var(--nx-ease-out),
+      --nx-lens-power var(--nx-dur-base) var(--nx-ease-out);
+  }
+
+  .nx-glass-switch-control:has(:checked) .nx-glass-switch-thumb { translate: calc(var(--_travel) * var(--nx-dir)) 0; }
+
+  /* Held: the knob widens toward the travel side, clears to glass and bends the track. */
+  .nx-glass-switch-control:has(:active:not(:disabled)) .nx-glass-switch-thumb {
+    --nx-lens-power: 1;
+    --_tint: color-mix(in oklab, var(--nx-surface) 12%, transparent);
+    inline-size: calc(var(--_knob) + 0.625rem);
+    scale: calc(1 + 0.22 * var(--nx-motion));
+  }
+
+  .nx-glass-switch-control:has(:checked:active:not(:disabled)) .nx-glass-switch-thumb {
+    translate: calc((var(--_travel) - 0.625rem) * var(--nx-dir)) 0;
+  }
+
+  .nx-glass-switch-control:has(:focus-visible) {
+    outline: 2px solid var(--nx-ring);
+    outline-offset: 2px;
+    border-radius: var(--nx-radius-full);
+  }
+
+  .nx-glass-switch:has(:disabled) { opacity: 0.5; cursor: not-allowed; }
+
+  /* ---- Slider: the thumb turns to a magnifier while you drag --------------- */
+
+  .nx-glass-slider {
+    --_thumb: 1.75rem;
+    --_track: 0.375rem;
+    --p: 0.5;
+    position: relative;
+    display: block;
+    block-size: 2.75rem;
+    touch-action: pan-y;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .nx-glass-slider-bed {
+    position: absolute;
+    inset-block: 0;
+    inset-inline: 0;
+  }
+
+  .nx-glass-slider-track {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-start: 50%;
+    block-size: var(--_track);
+    translate: 0 -50%;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface-3);
+    overflow: hidden;
+  }
+
+  .nx-glass-slider-fill {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    inline-size: calc(var(--_thumb) / 2 + var(--p) * (100% - var(--_thumb)));
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--nx-accent), color-mix(in oklab, var(--nx-accent) 65%, var(--nx-cyan-400)));
+  }
+
+  :dir(rtl) .nx-glass-slider-fill { background: linear-gradient(270deg, var(--nx-accent), color-mix(in oklab, var(--nx-accent) 65%, var(--nx-cyan-400))); }
+
+  /* Tick marks above and below: what the magnifier has to bend. */
+  .nx-glass-slider-ticks {
+    position: absolute;
+    inset-inline: calc(var(--_thumb) / 2);
+    inset-block: 0.35rem;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+
+    & > span {
+      inline-size: 1px;
+      background: linear-gradient(var(--nx-border-strong) 0 28%, transparent 28% 72%, var(--nx-border-strong) 72%);
+    }
+  }
+
+  .nx-glass-slider-thumb {
+    --nx-lens-power: 0;
+    --_tint: var(--nx-ink-50);
+    inset-block-start: 50%;
+    inset-inline-start: calc(var(--p) * (100% - var(--_thumb)));
+    inline-size: var(--_thumb);
+    block-size: var(--_thumb);
+    translate: 0 -50%;
+    transition:
+      scale var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy),
+      background-color var(--nx-dur-base) var(--nx-ease-out),
+      --nx-lens-power var(--nx-dur-base) var(--nx-ease-out);
+  }
+
+  .nx-glass-slider[data-dragging] .nx-glass-slider-thumb {
+    --nx-lens-power: 1;
+    --_tint: color-mix(in oklab, var(--nx-surface) 10%, transparent);
+    scale: calc(1 + 0.5 * var(--nx-motion));
+  }
+
+  .nx-glass-slider-input {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+    appearance: none;
+    background: transparent;
+
+    &::-webkit-slider-thumb {
+      appearance: none;
+      inline-size: var(--_thumb);
+      block-size: var(--_thumb);
+    }
+
+    &::-moz-range-thumb {
+      inline-size: var(--_thumb);
+      block-size: var(--_thumb);
+      border: 0;
+    }
+  }
+
+  .nx-glass-slider:has(.nx-glass-slider-input:focus-visible) .nx-glass-slider-thumb {
+    outline: 2px solid var(--nx-ring);
+    outline-offset: 2px;
+  }
+
+  .nx-glass-slider-value {
+    position: absolute;
+    inset-block-end: calc(100% + var(--nx-space-1));
+    inset-inline-start: calc(var(--_thumb) / 2 + var(--p) * (100% - var(--_thumb)));
+    translate: calc(-50% * var(--nx-dir)) calc(6px * var(--nx-motion));
+    padding: 2px var(--nx-space-2);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-text);
+    color: var(--nx-bg);
+    font-size: var(--nx-text-xs);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      translate var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+      opacity var(--nx-dur-fast) var(--nx-ease-out);
+  }
+
+  .nx-glass-slider[data-dragging] .nx-glass-slider-value {
+    opacity: 1;
+    translate: calc(-50% * var(--nx-dir)) calc(-0.625rem * var(--nx-motion));
+  }
+
+  /* ---- Tab bar: a floating glass bar that shrinks while you read ------------ */
+
+  .nx-glass-tabbar {
+    --_pad: 5px;
+    --_radius: var(--nx-radius-full);
+    display: inline-flex;
+    padding: var(--_pad);
+    transition: padding var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+  }
+
+  .nx-glass-tabbar-items {
+    position: relative;
+    display: flex;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nx-glass-tab {
+    position: relative;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    justify-items: center;
+    align-content: center;
+    min-inline-size: 4.25rem;
+    min-block-size: 2.75rem;
+    padding: var(--nx-space-1) var(--nx-space-3);
+    border: 0;
+    border-radius: var(--nx-radius-full);
+    color: var(--nx-text-muted);
+    background: none;
+    font: inherit;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      color var(--nx-dur-fast) var(--nx-ease-out),
+      min-inline-size var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      grid-template-rows var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      padding var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+
+    & .nx-icon { inline-size: 1.375rem; block-size: 1.375rem; }
+    & > span {
+      max-inline-size: 10rem;
+      overflow: hidden;
+      white-space: nowrap;
+      transition:
+        opacity var(--nx-dur-fast) var(--nx-ease-out),
+        max-inline-size var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+    }
+
+    &:is([aria-current="page"], [aria-selected="true"]) { color: var(--nx-accent-text); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+  }
+
+  .nx-glass-tabbar[data-compact] {
+    --_pad: 4px;
+
+    & .nx-glass-tab {
+      grid-template-rows: auto 0fr;
+      min-inline-size: 2.75rem;
+      padding-inline: var(--nx-space-2);
+    }
+
+    & .nx-glass-tab > span { opacity: 0; max-inline-size: 0; }
+  }
+
+  .nx-glass-tabbar-lens {
+    --nx-lens-power: 1;
+    --_tint: color-mix(in oklab, var(--nx-accent) 9%, transparent);
+    z-index: 1;
+    transition:
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      inline-size var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      block-size var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      scale var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy),
+      --nx-lens-power var(--nx-dur-base) var(--nx-ease-out),
+      opacity var(--nx-dur-fast) var(--nx-ease-out);
+  }
+
+  .nx-glass-tabbar[data-pressed] .nx-glass-tabbar-lens {
+    --nx-lens-power: 1.6;
+    scale: calc(1 + 0.08 * var(--nx-motion)) calc(1 + 0.12 * var(--nx-motion));
+  }
+
+  /* ---- Reading glass: a lens you can pick up and throw --------------------- */
+
+  .nx-reading-glass {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .nx-reading-glass-content {
+    background: var(--nx-bg);
+  }
+
+  .nx-reading-glass-lens {
+    --nx-lens-power: 1;
+    --_rim: 1.5px;
+    --_size: 9rem;
+    top: 0;
+    left: 0;
+    inline-size: var(--_size);
+    block-size: var(--_size);
+    padding: 0;
+    border: 0;
+    z-index: 2;
+    translate: var(--nx-lens-x, 0px) var(--nx-lens-y, 0px);
+    pointer-events: auto;
+    cursor: grab;
+    touch-action: none;
+    transition:
+      scale var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy),
+      --nx-lens-power var(--nx-dur-base) var(--nx-ease-out);
+
+    &[data-shape="pill"] { inline-size: calc(var(--_size) * 1.7); }
+    &[data-shape="rounded"] { border-radius: calc(var(--_size) * 0.28); }
+
+    &[data-held] {
+      cursor: grabbing;
+      scale: calc(1 + 0.06 * var(--nx-motion));
+      --nx-lens-power: 1.25;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--nx-ring);
+      outline-offset: 4px;
+    }
+  }
+
+  /* ---- Ripple ---------------------------------------------------------------- */
+
+  .nx-liquid-ripple {
+    position: relative;
+    display: block;
+  }
+}

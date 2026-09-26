@@ -2,7 +2,15 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
-    "declaration": false
+    "declaration": false,
+    "baseUrl": ".",
+    "paths": {
+      "@nabuxai/ui-core": [
+        "../core/src/js/index.ts"
+      ]
+    }
   },
-  "include": ["resources/js/**/*.ts"]
+  "include": [
+    "resources/js/**/*.ts"
+  ]
 }

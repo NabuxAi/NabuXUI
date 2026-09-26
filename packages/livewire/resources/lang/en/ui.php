@@ -44,4 +44,5 @@ return [
     'uploaded' => 'Uploaded',
     'failed' => 'Failed',
     'chartHint' => 'Use the arrow keys to read each value',
+    'magnifier' => 'Magnifier. Drag it, or move it with the arrow keys',
 ];

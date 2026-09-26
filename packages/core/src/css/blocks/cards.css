@@ -1,0 +1,1833 @@
+/*
+ * Blocks: cards, sliders & carousels.
+ *
+ * Stacked scroll cards, ring carousel, expandable stack, orbit showcase, team
+ * cards, depth carousel, cycle stack, elastic grid, workflow card, feature
+ * cards, pit slider and precision slider. The behaviours in
+ * js/blocks/cards.ts only write custom properties and data attributes; every
+ * look and every transition is here.
+ *
+ * Tones: data-tone="lapis|violet|cyan|gold" on a card, or --nx-tone set to
+ * any colour, tints it.
+ */
+@layer nx.components {
+  :where(.nx-stacked-card, .nx-xstack-card, .nx-team-card, .nx-feature, .nx-orbit-screen, .nx-ring-face, .nx-depth-card, .nx-cycle-card) {
+    &[data-tone="lapis"] { --nx-tone: var(--nx-lapis-500); }
+    &[data-tone="violet"] { --nx-tone: var(--nx-violet-500); }
+    &[data-tone="cyan"] { --nx-tone: var(--nx-cyan-500); }
+    &[data-tone="gold"] { --nx-tone: var(--nx-gold-500); }
+  }
+
+  /* Images inside the blocks get a hairline so they hold their edge on any surface. */
+  :is(.nx-stacked-media, .nx-ring-cover, .nx-xstack-media, .nx-orbit-cover, .nx-depth-media, .nx-elastic-cover) img {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+    outline: 1px solid color-mix(in oklab, var(--nx-text) 10%, transparent);
+    outline-offset: -1px;
+  }
+
+  /* ---- Stacked scroll cards ------------------------------------------------ *
+   *   <section class="nx-stacked" style="--nx-count: 4">
+   *     <ol class="nx-stacked-list">
+   *       <li class="nx-stacked-item" style="--nx-i: 0">
+   *         <article class="nx-stacked-card" data-tone="lapis">
+   *           <div class="nx-stacked-body">eyebrow, title, description</div>
+   *           <div class="nx-stacked-media">…</div>
+   *
+   * Cards stick one lower than the last; each covered card shrinks, leans back
+   * and dims. A scroll timeline drives it where the browser has one; elsewhere
+   * stackedScroll() writes --nx-progress (the card on top sliding over, 0–1)
+   * and --nx-depth (cards on top) per item.
+   * ----------------------------------------------------------------------- */
+  .nx-stacked {
+    --_top: var(--nx-stacked-top, var(--nx-space-24));
+    --_offset: var(--nx-stacked-offset, var(--nx-space-5));
+    --_h: var(--nx-stacked-height, min(26rem, 70svh));
+    --_gap: var(--nx-stacked-gap, var(--nx-space-16));
+    --_hold: var(--nx-stacked-hold, 18svh);
+    /* Scroll between one card sticking and the next. */
+    --_slot: calc(var(--_h) + var(--_gap) - var(--_offset));
+    --_shrink: 0.045;
+    --_tilt: 9deg;
+
+    container: nx-stacked / inline-size;
+  }
+
+  .nx-stacked-list {
+    display: flow-root;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nx-stacked-item {
+    position: sticky;
+    inset-block-start: calc(var(--_top) + var(--nx-i, 0) * var(--_offset));
+    block-size: var(--_h);
+    margin-block-end: var(--_gap);
+    perspective: 1600px;
+
+    &:last-child { margin-block-end: var(--_hold); }
+  }
+
+  .nx-stacked-card {
+    --_tone: var(--nx-tone, var(--nx-accent));
+    --_radius: var(--nx-radius-2xl);
+    --_inset: var(--nx-space-2);
+
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    gap: var(--nx-space-2);
+    block-size: 100%;
+    padding: var(--_inset);
+    overflow: clip;
+    border: 1px solid color-mix(in oklab, var(--_tone) 22%, var(--nx-border));
+    border-radius: var(--_radius);
+    background:
+      radial-gradient(120% 90% at 0% 0%, color-mix(in oklab, var(--_tone) 16%, transparent), transparent 62%),
+      linear-gradient(180deg, color-mix(in oklab, var(--_tone) 6%, var(--nx-surface)), var(--nx-surface));
+    color: var(--nx-text);
+    box-shadow: var(--nx-shadow-lg), inset 0 1px 0 var(--nx-highlight);
+    transform-origin: 50% 0%;
+    /* The fallback's values; the scroll timeline animates the same properties. */
+    scale: calc(1 - var(--_shrink) * var(--nx-depth, 0) * var(--nx-motion));
+    rotate: x calc(var(--nx-progress, 0) * var(--_tilt) * -1 * var(--nx-motion));
+    filter: brightness(calc(1 - var(--nx-progress, 0) * 0.3));
+  }
+
+  .nx-stacked-body {
+    display: grid;
+    align-content: space-between;
+    gap: var(--nx-space-4);
+    padding: var(--nx-space-6);
+    min-block-size: 0;
+  }
+
+  .nx-stacked-eyebrow {
+    display: block;
+    margin-block-end: var(--nx-space-3);
+    color: color-mix(in oklab, var(--_tone) 70%, var(--nx-text));
+    font: 600 var(--nx-text-sm) / 1 var(--nx-font-mono);
+  }
+
+  .nx-stacked-title {
+    margin: 0;
+    font: 700 var(--nx-text-4xl) / 1.08 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tighter);
+    text-wrap: balance;
+  }
+
+  .nx-stacked-description {
+    margin: var(--nx-space-3) 0 0;
+    max-inline-size: 34ch;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-md);
+    line-height: 1.6;
+    text-wrap: pretty;
+  }
+
+  .nx-stacked-media {
+    position: relative;
+    min-block-size: 0;
+    overflow: clip;
+    /* Concentric: the card's radius less the inset around the media. */
+    border-radius: calc(var(--_radius) - var(--_inset));
+    background: color-mix(in oklab, var(--_tone) 14%, var(--nx-surface-2));
+  }
+
+  @container nx-stacked (width < 40rem) {
+    .nx-stacked-card { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+    .nx-stacked-body { padding: var(--nx-space-4); }
+    .nx-stacked-title { font-size: var(--nx-text-2xl); }
+    .nx-stacked-description { font-size: var(--nx-text-sm); }
+  }
+
+  @supports ((animation-timeline: view()) and (animation-range: entry)) {
+    /* The list's view timeline, measured from where the first card sticks. */
+    .nx-stacked-list {
+      view-timeline: --nx-stacked block;
+      view-timeline-inset: var(--_top) 0px;
+    }
+
+    .nx-stacked-item:not(:last-child) > .nx-stacked-card {
+      --_depth: calc(var(--nx-count, 2) - 1 - var(--nx-i, 0));
+
+      animation: nx-stacked-cover linear both, nx-stacked-sink linear both;
+      animation-timeline: --nx-stacked, --nx-stacked;
+      /* Leaning back: while the next card slides over. Shrinking: until the last card lands. */
+      animation-range:
+        exit-crossing calc(var(--nx-i, 0) * var(--_slot) + var(--_gap)) exit-crossing calc((var(--nx-i, 0) + 1) * var(--_slot)),
+        exit-crossing calc(var(--nx-i, 0) * var(--_slot) + var(--_gap)) exit-crossing calc((var(--nx-count, 2) - 1) * var(--_slot));
+    }
+  }
+
+  @keyframes nx-stacked-cover {
+    to {
+      rotate: x calc(var(--_tilt) * -1 * var(--nx-motion));
+      filter: brightness(0.7);
+    }
+  }
+
+  @keyframes nx-stacked-sink {
+    to { scale: calc(1 - var(--_shrink) * var(--_depth, 1) * var(--nx-motion)); }
+  }
+
+  /* ---- Ring carousel ---------------------------------------------------------- *
+   *   <section class="nx-ring" style="--nx-count: 8">
+   *     <div class="nx-ring-stage" tabindex="0"><div class="nx-ring-track">
+   *       <div class="nx-ring-card" style="--i: 0" [data-active]>
+   *         <a class="nx-ring-face">…cover, caption…</a> …
+   *     <div class="nx-ring-label">two titles that morph through a goo filter</div>
+   *     <div class="nx-ring-controls">prev · count · next</div>
+   *
+   * ringCarousel() writes --nx-turn (in items); each card works out its angle
+   * from the front and dims with depth.
+   * ------------------------------------------------------------------------- */
+  .nx-ring {
+    --_w: var(--nx-ring-card-width, 12.5rem);
+    --_h: var(--nx-ring-card-height, 16.5rem);
+    --_gap: var(--nx-ring-gap, var(--nx-space-5));
+    --_step: calc(360deg / var(--nx-count, 8));
+    /* The ring's radius: the cards stand edge to edge with a gap between. */
+    --_r: calc((var(--_w) + var(--_gap)) / 2 / tan(var(--_step) / 2));
+
+    display: grid;
+    justify-items: center;
+    gap: var(--nx-space-4);
+  }
+
+  .nx-ring-stage {
+    position: relative;
+    inline-size: 100%;
+    block-size: calc(var(--_h) + var(--nx-space-16));
+    overflow: clip;
+    perspective: var(--nx-ring-perspective, 1500px);
+    perspective-origin: 50% 42%;
+    touch-action: pan-y;
+    user-select: none;
+    cursor: grab;
+    border-radius: var(--nx-radius-2xl);
+    mask-image: linear-gradient(90deg, transparent, var(--nx-ink-950) 14%, var(--nx-ink-950) 86%, transparent);
+
+    &[data-dragging] { cursor: grabbing; }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; mask-image: none; }
+  }
+
+  .nx-ring-track {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    translate: 0 0 calc(var(--_r) * -1);
+    rotate: y calc(var(--nx-turn, 0) * var(--_step) * var(--nx-dir) * -1);
+  }
+
+  .nx-ring-card {
+    /* 1 facing front, 0 facing away. */
+    --_near: calc((1 + cos((var(--i, 0) - var(--nx-turn, 0)) * var(--_step))) / 2);
+
+    position: absolute;
+    inset: 0;
+    inline-size: var(--_w);
+    block-size: var(--_h);
+    margin: auto;
+    transform: rotateY(calc(var(--i, 0) * var(--_step) * var(--nx-dir))) translateZ(var(--_r));
+    backface-visibility: hidden;
+  }
+
+  .nx-ring-face {
+    --_tone: var(--nx-tone, var(--nx-accent));
+    --_radius: var(--nx-radius-xl);
+    --_inset: var(--nx-space-2);
+    --_press: 1;
+
+    position: relative;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: var(--nx-space-2);
+    block-size: 100%;
+    padding: var(--_inset);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--_radius);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    text-decoration: none;
+    box-shadow: var(--nx-shadow-md);
+    opacity: calc(0.3 + 0.7 * var(--_near));
+    filter: brightness(calc(0.5 + 0.5 * var(--_near))) blur(calc((1 - var(--_near)) * 2.5px));
+    scale: var(--_press);
+    transition:
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+      box-shadow var(--nx-dur-base) var(--nx-ease-out),
+      border-color var(--nx-dur-base) var(--nx-ease-out);
+    -webkit-user-drag: none;
+
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+    &:active { --_press: calc(1 - 0.04 * var(--nx-motion)); }
+  }
+
+  /* The front card is lit: a tinted edge and a glow under it. */
+  .nx-ring-card[data-active] .nx-ring-face {
+    border-color: color-mix(in oklab, var(--_tone) 45%, var(--nx-border));
+    box-shadow: var(--nx-shadow-xl), 0 18px 48px -18px color-mix(in oklab, var(--_tone) 70%, transparent);
+  }
+
+  .nx-ring-cover {
+    min-block-size: 0;
+    overflow: clip;
+    border-radius: calc(var(--_radius) - var(--_inset));
+    background: color-mix(in oklab, var(--_tone) 18%, var(--nx-surface-2));
+  }
+
+  .nx-ring-caption {
+    display: grid;
+    gap: 0.1rem;
+    padding: var(--nx-space-1) var(--nx-space-2) var(--nx-space-2);
+    font-size: var(--nx-text-sm);
+    font-weight: 600;
+    line-height: 1.3;
+
+    small { color: var(--nx-text-muted); font-size: var(--nx-text-xs); font-weight: 500; }
+  }
+
+  .nx-ring-label {
+    display: grid;
+    place-items: center;
+    min-block-size: 4.25rem;
+    text-align: center;
+  }
+
+  .nx-ring-titles {
+    display: grid;
+    place-items: center;
+    font: 700 var(--nx-text-3xl) / 1.15 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tight);
+  }
+
+  /* The goo: blurred titles pass an alpha threshold, so they melt into each other. */
+  .nx-ring-label[data-morphing] .nx-ring-titles { filter: var(--_goo, none) blur(0.3px); }
+
+  .nx-ring-title {
+    grid-area: 1 / 1;
+    white-space: nowrap;
+    transition:
+      opacity var(--nx-dur-slow) var(--nx-ease-out),
+      filter var(--nx-dur-slow) var(--nx-ease-out);
+
+    &[data-state="out"] { opacity: 0; filter: blur(calc(9px * var(--nx-motion))); }
+  }
+
+  .nx-ring-subtitle {
+    margin: 0;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+    transition: opacity var(--nx-dur-base) var(--nx-ease-out);
+  }
+
+  .nx-ring-label[data-morphing] .nx-ring-subtitle { opacity: 0.35; }
+
+  .nx-ring-goo {
+    position: absolute;
+    inline-size: 0;
+    block-size: 0;
+  }
+
+  .nx-ring-controls,
+  .nx-depth-controls,
+  .nx-cycle-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-space-3);
+  }
+
+  .nx-ring-count,
+  .nx-cycle-count {
+    min-inline-size: 4.5ch;
+    color: var(--nx-text-muted);
+    font: 500 var(--nx-text-sm) / 1 var(--nx-font-mono);
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
+
+  /* ---- Expandable stack -------------------------------------------------------- *
+   *   <div class="nx-xstack" [data-expanded]>
+   *     <ul class="nx-xstack-list">
+   *       <li class="nx-xstack-item" style="--nx-i: 0"><article class="nx-xstack-card">…</article></li> …
+   *     <button class="nx-button" aria-expanded>…</button>
+   *
+   * Collapsed: a fanned pile in one grid cell. Expanded: a grid. flip() plays
+   * the items from one layout to the other; the fan itself unwinds on the cards.
+   * ------------------------------------------------------------------------- */
+  .nx-xstack {
+    --_w: var(--nx-xstack-card-width, 15rem);
+    --_h: var(--nx-xstack-card-height, 16rem);
+    --_fan: 1;
+
+    display: grid;
+    justify-items: center;
+    gap: var(--nx-space-5);
+  }
+
+  .nx-xstack-list {
+    display: grid;
+    grid-template-columns: min(var(--_w), 100%);
+    grid-auto-rows: var(--_h);
+    justify-content: center;
+    gap: var(--nx-space-4);
+    inline-size: 100%;
+    margin: 0;
+    padding: var(--nx-space-6) 0 var(--nx-space-2);
+    list-style: none;
+  }
+
+  .nx-xstack-item {
+    position: relative;
+    z-index: calc(var(--nx-count, 1) - var(--nx-i, 0));
+    block-size: var(--_h);
+  }
+
+  .nx-xstack-card {
+    --_tone: var(--nx-tone, var(--nx-accent));
+    --_radius: var(--nx-radius-xl);
+    --_inset: var(--nx-space-2);
+
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: var(--nx-space-3);
+    block-size: 100%;
+    padding: var(--_inset);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--_radius);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    box-shadow: var(--nx-shadow-md), inset 0 1px 0 var(--nx-highlight);
+    transition:
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      rotate var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      scale var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      opacity var(--nx-dur-base) var(--nx-ease-out),
+      box-shadow var(--nx-dur-slow) var(--nx-ease-out);
+  }
+
+  .nx-xstack-media {
+    min-block-size: 0;
+    overflow: clip;
+    border-radius: calc(var(--_radius) - var(--_inset));
+    background: color-mix(in oklab, var(--_tone) 18%, var(--nx-surface-2));
+  }
+
+  .nx-xstack-text {
+    display: grid;
+    gap: var(--nx-space-1);
+    padding: 0 var(--nx-space-2) var(--nx-space-2);
+  }
+
+  .nx-xstack-title { margin: 0; font: 650 var(--nx-text-md) / 1.3 var(--nx-font-display); }
+  .nx-xstack-description { margin: 0; color: var(--nx-text-muted); font-size: var(--nx-text-sm); line-height: 1.5; }
+
+  /* Collapsed: everything shares the first cell and fans out behind the top card. */
+  .nx-xstack:not([data-expanded]) {
+    .nx-xstack-list { cursor: pointer; }
+    .nx-xstack-item { grid-area: 1 / 1; }
+
+    .nx-xstack-card {
+      translate: calc(var(--nx-i, 0) * 12px * var(--_fan) * var(--nx-dir) * var(--nx-motion)) calc(var(--nx-i, 0) * -7px * var(--_fan) * var(--nx-motion));
+      rotate: calc(var(--nx-i, 0) * 4deg * var(--_fan) * var(--nx-dir) * var(--nx-motion));
+      scale: calc(1 - var(--nx-i, 0) * 0.03);
+    }
+
+    .nx-xstack-item:nth-child(n + 2) .nx-xstack-card { box-shadow: var(--nx-shadow-sm); }
+    .nx-xstack-item:nth-child(n + 5) .nx-xstack-card { opacity: 0; }
+  }
+
+  .nx-xstack[data-expanded] .nx-xstack-list {
+    grid-template-columns: repeat(auto-fill, min(var(--_w), 100%));
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    /* The pile opens a little under the pointer: it can be opened. */
+    .nx-xstack:not([data-expanded]) .nx-xstack-list:hover { --_fan: 1.7; }
+    .nx-xstack[data-expanded] .nx-xstack-card:hover { box-shadow: var(--nx-shadow-lg), inset 0 1px 0 var(--nx-highlight); }
+  }
+
+  .nx-xstack-toggle .nx-icon {
+    transition: rotate var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+  }
+
+  .nx-xstack[data-expanded] .nx-xstack-toggle .nx-icon { rotate: 180deg; }
+
+  /* ---- Orbit showcase ----------------------------------------------------------- *
+   *   <section class="nx-orbit" style="--nx-count: 6">
+   *     <div class="nx-orbit-stage"><div class="nx-orbit-scene">
+   *       <span class="nx-orbit-path"></span> <div class="nx-orbit-center">…orb…</div>
+   *       <div class="nx-orbit-item" style="--i: 0" [data-front]><a class="nx-orbit-screen">…</a></div> …
+   *     <button class="nx-orbit-toggle">pause / play</button>
+   *
+   * orbitShowcase() writes --nx-orbit (the orbit's turn, in items). Items ride
+   * a tilted ring and keep facing the viewer; the far side shrinks, blurs and dims.
+   * ------------------------------------------------------------------------- */
+  .nx-orbit {
+    --_step: calc(360deg / var(--nx-count, 6));
+    --_tilt: var(--nx-orbit-tilt, -16deg);
+
+    position: relative;
+    container-type: inline-size;
+  }
+
+  .nx-orbit-stage {
+    --_w: var(--nx-orbit-item-width, clamp(6.5rem, 30cqi, 10.5rem));
+    --_h: var(--nx-orbit-item-height, calc(var(--_w) * 0.78));
+    --_r: var(--nx-orbit-radius, min(36cqi, 20rem));
+
+    position: relative;
+    block-size: var(--nx-orbit-height, clamp(17rem, 60cqi, 25rem));
+    overflow: clip;
+    perspective: 1400px;
+    perspective-origin: 50% 30%;
+  }
+
+  .nx-orbit-scene {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    rotate: x var(--_tilt);
+  }
+
+  .nx-orbit-path {
+    position: absolute;
+    inset: 0;
+    inline-size: calc(var(--_r) * 2);
+    block-size: calc(var(--_r) * 2);
+    margin: auto;
+    border: 1px dashed color-mix(in oklab, var(--nx-text) 18%, transparent);
+    border-radius: 50%;
+    /* A floor under the screens (laid flat, then lowered below them) so no screen is cut by it. */
+    translate: 0 calc(var(--_h) / 2 + var(--nx-space-4));
+    rotate: x 90deg;
+    pointer-events: none;
+  }
+
+  .nx-orbit-center {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    inline-size: var(--nx-orbit-center-size, min(8.5rem, 24cqi));
+    block-size: var(--nx-orbit-center-size, min(8.5rem, 24cqi));
+    margin: auto;
+    /* Faces the viewer through the scene's tilt. */
+    rotate: x calc(var(--_tilt) * -1);
+  }
+
+  .nx-orbit-orb {
+    position: relative;
+    inline-size: 100%;
+    block-size: 100%;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 34% 28%, var(--nx-lapis-50), transparent 22%),
+      radial-gradient(circle at 40% 36%, var(--nx-cyan-300), var(--nx-lapis-500) 46%, var(--nx-violet-700) 78%, var(--nx-lapis-950));
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--nx-lapis-300) 40%, transparent),
+      0 0 48px 6px color-mix(in oklab, var(--nx-accent) 45%, transparent),
+      0 0 120px 30px color-mix(in oklab, var(--nx-glow) 18%, transparent);
+    animation: nx-orbit-breathe 5.5s var(--nx-ease-in-out) infinite;
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: -18%;
+      border-radius: 50%;
+      background: radial-gradient(circle, color-mix(in oklab, var(--nx-glow) 22%, transparent), transparent 62%);
+      z-index: -1;
+    }
+  }
+
+  @keyframes nx-orbit-breathe {
+    50% {
+      scale: calc(1 + 0.04 * var(--nx-motion));
+      box-shadow:
+        0 0 0 1px color-mix(in oklab, var(--nx-lapis-300) 55%, transparent),
+        0 0 64px 10px color-mix(in oklab, var(--nx-accent) 55%, transparent),
+        0 0 150px 40px color-mix(in oklab, var(--nx-glow) 24%, transparent);
+    }
+  }
+
+  .nx-orbit-item {
+    --_theta: calc((var(--i, 0) - var(--nx-orbit, 0)) * var(--_step) * var(--nx-dir));
+    /* 1 in front of the centre, 0 behind it. */
+    --_near: calc((1 + cos(var(--_theta))) / 2);
+
+    position: absolute;
+    inset: 0;
+    inline-size: var(--_w);
+    block-size: var(--_h);
+    margin: auto;
+    /* Out along the ring, then turned back so the screen always faces the viewer. */
+    transform: rotateY(var(--_theta)) translateZ(var(--_r)) rotateY(calc(var(--_theta) * -1)) rotateX(calc(var(--_tilt) * -1));
+  }
+
+  .nx-orbit-screen {
+    --_tone: var(--nx-tone, var(--nx-accent));
+    --_radius: var(--nx-radius-lg);
+    --_inset: 0.3rem;
+    --_press: 1;
+
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: var(--_inset);
+    inline-size: 100%;
+    block-size: 100%;
+    padding: var(--_inset);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--_radius);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    font: inherit;
+    text-align: start;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: var(--nx-shadow-lg);
+    scale: calc((0.78 + 0.22 * var(--_near)) * var(--_press));
+    opacity: calc(0.45 + 0.55 * var(--_near));
+    filter: brightness(calc(0.55 + 0.45 * var(--_near))) blur(calc((1 - var(--_near)) * 2px));
+    transition:
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+      border-color var(--nx-dur-base) var(--nx-ease-out),
+      box-shadow var(--nx-dur-base) var(--nx-ease-out);
+
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 3px; }
+    &:active { --_press: calc(1 - 0.04 * var(--nx-motion)); }
+  }
+
+  .nx-orbit-item[data-front] .nx-orbit-screen {
+    border-color: color-mix(in oklab, var(--_tone) 50%, var(--nx-border));
+    box-shadow: var(--nx-shadow-xl), 0 16px 40px -14px color-mix(in oklab, var(--_tone) 75%, transparent);
+  }
+
+  .nx-orbit-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.15rem 0.3rem 0;
+
+    > i {
+      inline-size: 0.35rem;
+      block-size: 0.35rem;
+      border-radius: 50%;
+      background: var(--nx-border-strong);
+    }
+
+    > span {
+      margin-inline-start: auto;
+      overflow: hidden;
+      font-size: 0.625rem;
+      font-weight: 600;
+      color: var(--nx-text-muted);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .nx-orbit-cover {
+    position: relative;
+    min-block-size: 0;
+    overflow: clip;
+    border-radius: calc(var(--_radius) - var(--_inset));
+    background: color-mix(in oklab, var(--_tone) 22%, var(--nx-surface-2));
+  }
+
+  .nx-orbit-caption {
+    display: grid;
+    justify-items: center;
+    gap: 0.15rem;
+    min-block-size: 3rem;
+    margin-block-start: calc(var(--nx-space-2) * -1);
+    text-align: center;
+  }
+
+  .nx-orbit-caption strong { font: 650 var(--nx-text-lg) / 1.25 var(--nx-font-display); }
+  .nx-orbit-caption span { color: var(--nx-text-muted); font-size: var(--nx-text-sm); }
+
+  .nx-orbit-toggle {
+    position: absolute;
+    inset-block-end: var(--nx-space-3);
+    inset-inline-end: var(--nx-space-3);
+    z-index: 2;
+  }
+
+  /* ---- Team cards --------------------------------------------------------------- *
+   *   <div class="nx-team" style="--nx-count: 5"><ul class="nx-team-list">
+   *     <li class="nx-team-item"><article class="nx-team-card" data-theme="dark" data-tone="violet" tabindex="0">
+   *       <div class="nx-team-text"><h3 class="nx-team-name">…</h3><p class="nx-team-role">…</p></div>
+   *       <span class="nx-avatar">…</span>
+   *
+   * Tall dark cards overlap side by side. The hovered or focused one rises on a
+   * bouncy spring and its glow climbs; its neighbours slide out of the way.
+   * ------------------------------------------------------------------------- */
+  .nx-team {
+    /* The page's focus colour, taken before each card switches to its dark scope. */
+    --_ring: var(--nx-ring);
+
+    container-type: inline-size;
+  }
+
+  .nx-team-list {
+    --_n: var(--nx-count, 4);
+    --_overlap: 0.26;
+    /* As wide as fits: n cards less their overlaps fill the row, within limits. */
+    --_w: clamp(5.5rem, 100cqi / (var(--_n) - var(--_overlap) * (var(--_n) - 1)), var(--nx-team-card-width, 13rem));
+    --_h: calc(var(--_w) * 1.5);
+    --_push: calc(var(--_w) * 0.2);
+
+    display: flex;
+    justify-content: safe center;
+    margin: 0;
+    padding: var(--nx-space-8) var(--nx-space-2) var(--nx-space-8);
+    /* Many people on a narrow screen: the row scrolls instead of spilling out. */
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    list-style: none;
+  }
+
+  @container (width < 36rem) {
+    .nx-team-list { --_overlap: 0.42; }
+    .nx-team-card { padding: var(--nx-space-3); }
+    .nx-team-name { font-size: var(--nx-text-sm); }
+    .nx-team-role { font-size: var(--nx-text-xs); }
+  }
+
+  .nx-team-item {
+    position: relative;
+    flex: none;
+    inline-size: var(--_w);
+    transition: translate var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy);
+
+    & + & { margin-inline-start: calc(var(--_w) * var(--_overlap) * -1); }
+  }
+
+  .nx-team-card {
+    --_color: var(--nx-tone, var(--nx-accent));
+    --_lift: 0;
+    --_press: 1;
+
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: var(--nx-space-4);
+    block-size: var(--_h);
+    padding: var(--nx-space-5) var(--nx-space-4);
+    overflow: clip;
+    border: 1px solid color-mix(in oklab, var(--nx-text) 10%, transparent);
+    border-radius: var(--nx-radius-2xl);
+    background: linear-gradient(180deg, var(--nx-surface-2), var(--nx-bg));
+    color: var(--nx-text);
+    text-decoration: none;
+    box-shadow: var(--nx-shadow-lg), inset 0 1px 0 var(--nx-highlight);
+    cursor: default;
+    translate: 0 calc(var(--_lift) * -14px * var(--nx-motion));
+    scale: calc((1 + var(--_lift) * 0.05 * var(--nx-motion)) * var(--_press));
+    transition:
+      translate var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy),
+      scale var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy),
+      border-color var(--nx-dur-base) var(--nx-ease-out),
+      box-shadow var(--nx-dur-slow) var(--nx-ease-out);
+    -webkit-tap-highlight-color: transparent;
+
+    /* The glow: the member's colour rising from the bottom edge. */
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background:
+        radial-gradient(120% 70% at 50% 112%, color-mix(in oklab, var(--_color) 85%, transparent), transparent 70%),
+        radial-gradient(70% 45% at 88% 104%, color-mix(in oklab, var(--_color) 45%, var(--nx-glow) 25%), transparent 70%);
+      opacity: calc(0.5 + var(--_lift) * 0.5);
+      translate: 0 calc((1 - var(--_lift)) * 16% * var(--nx-motion));
+      transition:
+        opacity var(--nx-dur-slow) var(--nx-ease-out),
+        translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+    }
+
+    &:focus-visible { outline: 2px solid var(--_ring, var(--nx-ring)); outline-offset: 3px; }
+    &:active { --_press: calc(1 - 0.04 * var(--nx-motion)); }
+    &:is(a, [href]) { cursor: pointer; }
+  }
+
+  .nx-team-text { display: grid; gap: 0.2rem; }
+
+  .nx-team-name {
+    margin: 0;
+    font: 650 var(--nx-text-lg) / 1.25 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tight);
+    overflow-wrap: anywhere;
+  }
+
+  .nx-team-role {
+    margin: 0;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+  }
+
+  .nx-team-card .nx-avatar {
+    align-self: flex-start;
+    box-shadow: 0 0 0 2px color-mix(in oklab, var(--_color) 55%, transparent), var(--nx-shadow-md);
+    transition: scale var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy);
+  }
+
+  /* Rising: the focused (tapped) card, and the hovered one where there is a pointer. */
+  .nx-team-item:focus-within {
+    z-index: 3;
+
+    .nx-team-card { --_lift: 1; border-color: color-mix(in oklab, var(--_color) 45%, transparent); box-shadow: var(--nx-shadow-xl), 0 24px 60px -24px color-mix(in oklab, var(--_color) 80%, transparent); }
+    .nx-avatar { scale: calc(1 + 0.08 * var(--nx-motion)); }
+  }
+
+  .nx-team-item:focus-within ~ .nx-team-item { translate: calc(var(--_push) * var(--nx-dir) * var(--nx-motion)) 0; }
+  .nx-team-item:has(~ .nx-team-item:focus-within) { translate: calc(var(--_push) * -1 * var(--nx-dir) * var(--nx-motion)) 0; }
+
+  @media (hover: hover) and (pointer: fine) {
+    .nx-team-item:hover {
+      z-index: 3;
+
+      .nx-team-card { --_lift: 1; border-color: color-mix(in oklab, var(--_color) 45%, transparent); box-shadow: var(--nx-shadow-xl), 0 24px 60px -24px color-mix(in oklab, var(--_color) 80%, transparent); }
+      .nx-avatar { scale: calc(1 + 0.08 * var(--nx-motion)); }
+    }
+
+    .nx-team-item:hover ~ .nx-team-item { translate: calc(var(--_push) * var(--nx-dir) * var(--nx-motion)) 0; }
+    .nx-team-item:has(~ .nx-team-item:hover) { translate: calc(var(--_push) * -1 * var(--nx-dir) * var(--nx-motion)) 0; }
+  }
+
+  /* ---- Depth carousel ------------------------------------------------------------- *
+   *   <section class="nx-depth">
+   *     <div class="nx-depth-stage" tabindex="0">
+   *       <div class="nx-depth-card" style="--_o: -1; --_d: 1" [data-active]><div class="nx-depth-content">…</div></div> …
+   *     <div class="nx-depth-controls">prev · dots · next</div>
+   *
+   * --_o is the card's signed distance from the active one, --_d its absolute
+   * value. swipe() on the stage writes --nx-dx while dragging.
+   * ------------------------------------------------------------------------- */
+  .nx-depth {
+    --_w: var(--nx-depth-card-width, min(22rem, 74%));
+    --_h: var(--nx-depth-card-height, 17rem);
+    --_spread: var(--nx-depth-spread, 58%);
+
+    display: grid;
+    gap: var(--nx-space-5);
+  }
+
+  .nx-depth-stage {
+    /* Past the first or last card the drag gives way (rubber band). */
+    --_drag: var(--nx-dx, 0px);
+
+    position: relative;
+    display: grid;
+    padding-block: var(--nx-space-4);
+    overflow-x: clip;
+    perspective: 1200px;
+    touch-action: pan-y;
+    user-select: none;
+    border-radius: var(--nx-radius-2xl);
+
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+    &[data-at-start] { --_drag: calc(var(--nx-dir) * min(var(--nx-dx, 0px) * var(--nx-dir), var(--nx-dx, 0px) * var(--nx-dir) * 0.3)); }
+    &[data-at-end] { --_drag: calc(var(--nx-dir) * max(var(--nx-dx, 0px) * var(--nx-dir), var(--nx-dx, 0px) * var(--nx-dir) * 0.3)); }
+    &[data-at-start][data-at-end] { --_drag: calc(var(--nx-dx, 0px) * 0.3); }
+  }
+
+  .nx-depth-card {
+    --_tone: var(--nx-tone, var(--nx-accent));
+    --_press: 1;
+
+    grid-area: 1 / 1;
+    justify-self: center;
+    inline-size: var(--_w);
+    block-size: var(--_h);
+    z-index: calc(10 - var(--_d, 0));
+    translate: calc(var(--_o, 0) * var(--_spread) * var(--nx-dir) + var(--_drag)) 0 calc(var(--_d, 0) * -90px * var(--nx-motion));
+    scale: calc((1 - min(var(--_d, 0), 2) * 0.1 * var(--nx-motion)) * var(--_press));
+    opacity: clamp(0, 2.7 - var(--_d, 0), 1);
+    filter: blur(calc(min(var(--_d, 0), 2) * 1.5px)) brightness(calc(1 - min(var(--_d, 0), 2) * 0.2));
+    transition:
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      scale var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      filter var(--nx-dur-slow) var(--nx-ease-out),
+      opacity var(--nx-dur-slow) var(--nx-ease-out);
+
+    &:not([data-active]) { cursor: pointer; }
+    &:not([data-active]):active { --_press: calc(1 - 0.04 * var(--nx-motion)); }
+  }
+
+  .nx-depth-stage[data-dragging] .nx-depth-card { transition-property: filter, opacity; }
+
+  .nx-depth-content {
+    block-size: 100%;
+    border-radius: var(--nx-radius-2xl);
+    box-shadow: var(--nx-shadow-lg);
+    transition: box-shadow var(--nx-dur-slow) var(--nx-ease-out);
+  }
+
+  .nx-depth-card[data-active] .nx-depth-content { box-shadow: var(--nx-shadow-xl); }
+
+  /* The built-in slide: cover art with text over a scrim. */
+  .nx-depth-slide {
+    --_radius: var(--nx-radius-2xl);
+
+    position: relative;
+    display: grid;
+    align-content: end;
+    gap: var(--nx-space-1);
+    block-size: 100%;
+    padding: var(--nx-space-6);
+    overflow: clip;
+    border-radius: var(--_radius);
+    background: color-mix(in oklab, var(--_tone) 30%, var(--nx-surface-3));
+    color: var(--nx-ink-50);
+    text-decoration: none;
+
+    > :not(.nx-depth-media) { position: relative; }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 3px; }
+  }
+
+  .nx-depth-media {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(to top, color-mix(in oklab, var(--nx-ink-950) 72%, transparent), transparent 62%);
+    }
+  }
+
+  .nx-depth-title { margin: 0; font: 700 var(--nx-text-2xl) / 1.15 var(--nx-font-display); letter-spacing: var(--nx-tracking-tight); }
+  .nx-depth-description { margin: 0; color: color-mix(in oklab, var(--nx-ink-50) 80%, transparent); font-size: var(--nx-text-sm); line-height: 1.5; }
+
+  .nx-depth-dots {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+  }
+
+  .nx-depth-dot {
+    position: relative;
+    inline-size: 0.5rem;
+    block-size: 0.5rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-border-strong);
+    cursor: pointer;
+    transition:
+      inline-size var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+      background-color var(--nx-dur-base) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+
+    /* A comfortable hit area around a small dot. */
+    &::before { content: ""; position: absolute; inset: -0.5rem -0.25rem; }
+    &[aria-current="true"] { inline-size: 1.5rem; background: var(--nx-accent); }
+    &:hover:not([aria-current="true"]) { background: var(--nx-text-muted); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 3px; }
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+  }
+
+  /* ---- Cycle stack ------------------------------------------------------------------ *
+   *   <div class="nx-cycle">
+   *     <div class="nx-cycle-deck">
+   *       <article class="nx-cycle-card" style="--_d: 0" data-state="top">…</article> …
+   *     <div class="nx-cycle-controls">count · next</div>
+   *
+   * The top card drags down (or is clicked) and tucks behind the others: it
+   * drops (data-state="tucking"), then rises into the back slot as they step up.
+   * ------------------------------------------------------------------------- */
+  .nx-cycle {
+    --_peek: var(--nx-cycle-peek, 0.8rem);
+
+    display: grid;
+    justify-items: center;
+    gap: var(--nx-space-5);
+  }
+
+  .nx-cycle-deck {
+    display: grid;
+    inline-size: min(100%, var(--nx-cycle-width, 24rem));
+    padding-block-start: calc(var(--_peek) * 3);
+  }
+
+  .nx-cycle-card {
+    --_tone: var(--nx-tone, var(--nx-accent));
+    --_press: 1;
+
+    grid-area: 1 / 1;
+    z-index: calc(20 - var(--_d, 0));
+    transform-origin: 50% 0%;
+    translate: 0 calc(var(--_d, 0) * var(--_peek) * -1 * var(--nx-motion));
+    scale: calc((1 - min(var(--_d, 0), 4) * 0.055) * var(--_press));
+    opacity: clamp(0, 3.4 - var(--_d, 0), 1);
+    filter: brightness(calc(1 - min(var(--_d, 0), 3) * 0.07));
+    user-select: none;
+    transition:
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      scale var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      opacity var(--nx-dur-slow) var(--nx-ease-out),
+      filter var(--nx-dur-slow) var(--nx-ease-out);
+    /* Layered: deeper cards follow a beat later. */
+    transition-delay: calc(min(var(--_d, 0), 4) * 35ms);
+
+    &[data-state="top"] {
+      /* Down follows the finger; up gives way. */
+      translate: 0 max(var(--nx-dy, 0px), var(--nx-dy, 0px) * 0.25);
+      touch-action: pan-x;
+      cursor: grab;
+      transition-delay: 0ms;
+
+      &:active { --_press: calc(1 - 0.04 * var(--nx-motion)); }
+    }
+
+    &[data-dragging] { transition-property: opacity, filter; cursor: grabbing; }
+
+    &[data-state="tucking"] {
+      /* Still in front while it drops; it goes behind once it is low, then rises there. */
+      z-index: 30;
+      translate: 0 calc(62% * var(--nx-motion));
+      scale: 0.92;
+      opacity: calc(0.35 + 0.65 * var(--nx-motion));
+      transition-delay: 0ms;
+      transition-duration: var(--nx-spring-snappy-duration), var(--nx-spring-snappy-duration), var(--nx-dur-base), var(--nx-dur-base);
+      transition-timing-function: var(--nx-spring-snappy), var(--nx-spring-snappy), var(--nx-ease-out), var(--nx-ease-out);
+    }
+  }
+
+  /* The built-in card body. */
+  .nx-cycle-face {
+    --_radius: var(--nx-radius-2xl);
+
+    display: grid;
+    gap: var(--nx-space-2);
+    min-block-size: var(--nx-cycle-height, 11rem);
+    padding: var(--nx-space-6);
+    border: 1px solid color-mix(in oklab, var(--_tone) 24%, var(--nx-border));
+    border-radius: var(--_radius);
+    background:
+      radial-gradient(90% 80% at 100% 0%, color-mix(in oklab, var(--_tone) 18%, transparent), transparent 70%),
+      var(--nx-surface);
+    color: var(--nx-text);
+    box-shadow: var(--nx-shadow-lg), inset 0 1px 0 var(--nx-highlight);
+  }
+
+  .nx-cycle-icon {
+    display: grid;
+    place-items: center;
+    inline-size: 2.5rem;
+    block-size: 2.5rem;
+    border-radius: var(--nx-radius-md);
+    background: color-mix(in oklab, var(--_tone) 16%, transparent);
+    color: color-mix(in oklab, var(--_tone) 75%, var(--nx-text));
+  }
+
+  .nx-cycle-title { margin: 0; font: 650 var(--nx-text-lg) / 1.3 var(--nx-font-display); }
+  .nx-cycle-description { margin: 0; color: var(--nx-text-muted); font-size: var(--nx-text-sm); line-height: 1.55; }
+  .nx-cycle-meta { margin-block-start: auto; color: var(--nx-text-subtle); font: 500 var(--nx-text-xs) / 1.4 var(--nx-font-mono); }
+
+  /* ---- Elastic grid ---------------------------------------------------------------- *
+   *   <div class="nx-elastic" style="--nx-columns: 3">
+   *     <div class="nx-elastic-col"><figure class="nx-elastic-cell">…</figure> …</div> …
+   *
+   * elasticGrid() writes --nx-shift per column: each trails the scroll on its
+   * own spring and settles when the scroll stops.
+   * ------------------------------------------------------------------------- */
+  .nx-elastic {
+    display: grid;
+    grid-template-columns: repeat(var(--nx-columns, 3), minmax(0, 1fr));
+    align-items: start;
+    gap: var(--nx-elastic-gap, var(--nx-space-4));
+  }
+
+  .nx-elastic-col {
+    display: grid;
+    gap: var(--nx-elastic-gap, var(--nx-space-4));
+    translate: 0 var(--nx-shift, 0px);
+    will-change: translate;
+
+    &:nth-child(even) { margin-block-start: var(--nx-space-12); }
+  }
+
+  .nx-elastic-cell {
+    --_radius: var(--nx-radius-xl);
+
+    position: relative;
+    margin: 0;
+    overflow: clip;
+    border-radius: var(--_radius);
+    background: var(--nx-surface-2);
+    box-shadow: var(--nx-shadow-sm);
+  }
+
+  .nx-elastic-cover {
+    display: block;
+    aspect-ratio: var(--nx-ratio, 4 / 5);
+    border-radius: inherit;
+    background: color-mix(in oklab, var(--nx-accent) 16%, var(--nx-surface-3));
+  }
+
+  .nx-elastic-col > :nth-child(3n + 2) .nx-elastic-cover { aspect-ratio: var(--nx-ratio, 1); }
+  .nx-elastic-col > :nth-child(3n) .nx-elastic-cover { aspect-ratio: var(--nx-ratio, 3 / 4); }
+
+  .nx-elastic-caption {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    display: grid;
+    gap: 0.1rem;
+    padding: var(--nx-space-8) var(--nx-space-4) var(--nx-space-3);
+    border-radius: 0 0 var(--_radius) var(--_radius);
+    background: linear-gradient(to top, color-mix(in oklab, var(--nx-ink-950) 70%, transparent), transparent);
+    color: var(--nx-ink-50);
+    font-size: var(--nx-text-sm);
+    font-weight: 600;
+
+    small { color: color-mix(in oklab, var(--nx-ink-50) 75%, transparent); font-size: var(--nx-text-xs); font-weight: 500; }
+  }
+
+  /* ---- Workflow card ------------------------------------------------------------------- *
+   *   <article class="nx-workflow" tabindex="0" [data-expanded]>
+   *     <div class="nx-workflow-head">icon · title/description · status</div>
+   *     <div class="nx-workflow-details"><div><dl class="nx-workflow-meta">…</dl></div></div>
+   *     <div class="nx-workflow-foot">avatars · <div class="nx-workflow-actions">icon buttons</div></div>
+   *
+   * Opens on hover (with a pointer), on focus (keyboard, tap) or when pinned
+   * with data-expanded: the details grow from 0fr to 1fr and the actions slide
+   * in one after another.
+   * ------------------------------------------------------------------------- */
+  .nx-workflow {
+    --_radius: var(--nx-radius-xl);
+    --_pad: var(--nx-space-5);
+
+    display: grid;
+    gap: var(--nx-space-4);
+    padding: var(--_pad);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--_radius);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    box-shadow: var(--nx-shadow-sm), inset 0 1px 0 var(--nx-highlight);
+    transition:
+      box-shadow var(--nx-dur-slow) var(--nx-ease-out),
+      border-color var(--nx-dur-base) var(--nx-ease-out),
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 3px; }
+  }
+
+  .nx-workflow-head {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: start;
+    gap: var(--nx-space-3);
+  }
+
+  .nx-workflow-icon {
+    display: grid;
+    place-items: center;
+    inline-size: 2.5rem;
+    block-size: 2.5rem;
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-accent-soft);
+    color: var(--nx-accent-text);
+    transition: rotate var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy), scale var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy);
+
+    .nx-icon { inline-size: 1.25rem; block-size: 1.25rem; }
+  }
+
+  .nx-workflow-title { margin: 0; font: 650 var(--nx-text-md) / 1.35 var(--nx-font-display); }
+  .nx-workflow-description { margin: 0.15rem 0 0; color: var(--nx-text-muted); font-size: var(--nx-text-sm); line-height: 1.5; }
+
+  .nx-workflow-details {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows var(--nx-spring-soft-duration) var(--nx-spring-soft);
+
+    > div {
+      min-block-size: 0;
+      overflow: hidden;
+      opacity: 0;
+      translate: 0 calc(-6px * var(--nx-motion));
+      transition:
+        opacity var(--nx-dur-fast) var(--nx-ease-out),
+        translate var(--nx-dur-base) var(--nx-ease-out);
+    }
+  }
+
+  .nx-workflow-meta {
+    display: grid;
+    gap: var(--nx-space-2);
+    margin: 0;
+    padding-block-start: var(--nx-space-3);
+    border-block-start: 1px dashed var(--nx-border);
+  }
+
+  .nx-workflow-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--nx-space-3);
+    font-size: var(--nx-text-sm);
+
+    dt { color: var(--nx-text-muted); }
+    dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; text-align: end; }
+  }
+
+  .nx-workflow-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--nx-space-3);
+    min-block-size: 2.25rem;
+  }
+
+  .nx-workflow-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-1);
+    margin-inline-start: auto;
+
+    > * {
+      opacity: 0;
+      translate: calc(10px * var(--nx-dir) * var(--nx-motion)) 0;
+      /* Leaving: quick and all together. */
+      transition:
+        opacity var(--nx-dur-fast) var(--nx-ease-out),
+        translate var(--nx-dur-base) var(--nx-ease-out),
+        scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+    }
+
+    > :nth-child(2) { --_ai: 1; }
+    > :nth-child(3) { --_ai: 2; }
+    > :nth-child(4) { --_ai: 3; }
+    > :nth-child(5) { --_ai: 4; }
+    > :nth-child(n + 6) { --_ai: 5; }
+  }
+
+  .nx-workflow:is(:focus-within, [data-expanded]) {
+    border-color: var(--nx-accent-border);
+    box-shadow: var(--nx-shadow-lg), inset 0 1px 0 var(--nx-highlight);
+
+    .nx-workflow-details { grid-template-rows: 1fr; }
+    .nx-workflow-details > div { opacity: 1; translate: none; transition-duration: var(--nx-dur-slow), var(--nx-spring-gentle-duration); transition-timing-function: var(--nx-ease-out), var(--nx-spring-gentle); }
+    .nx-workflow-icon { rotate: calc(-8deg * var(--nx-dir) * var(--nx-motion)); }
+
+    .nx-workflow-actions > * {
+      opacity: 1;
+      translate: none;
+      transition:
+        opacity var(--nx-dur-base) var(--nx-ease-out) calc(var(--_ai, 0) * 45ms + 60ms),
+        translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle) calc(var(--_ai, 0) * 45ms + 60ms),
+        scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .nx-workflow:hover {
+      border-color: var(--nx-accent-border);
+      box-shadow: var(--nx-shadow-lg), inset 0 1px 0 var(--nx-highlight);
+      translate: 0 calc(-3px * var(--nx-motion));
+
+      .nx-workflow-details { grid-template-rows: 1fr; }
+      .nx-workflow-details > div { opacity: 1; translate: none; transition-duration: var(--nx-dur-slow), var(--nx-spring-gentle-duration); transition-timing-function: var(--nx-ease-out), var(--nx-spring-gentle); }
+      .nx-workflow-icon { rotate: calc(-8deg * var(--nx-dir) * var(--nx-motion)); }
+
+      .nx-workflow-actions > * {
+        opacity: 1;
+        translate: none;
+        transition:
+          opacity var(--nx-dur-base) var(--nx-ease-out) calc(var(--_ai, 0) * 45ms + 60ms),
+          translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle) calc(var(--_ai, 0) * 45ms + 60ms),
+          scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+      }
+    }
+  }
+
+  /* ---- Feature cards -------------------------------------------------------------------- *
+   *   <article class="nx-feature" data-tone="cyan">
+   *     <div class="nx-feature-visual" data-visual="inbox|summary|processing|team" aria-hidden="true">…</div>
+   *     <div class="nx-feature-body"><h3 class="nx-feature-title">…</h3><p class="nx-feature-description">…</p></div>
+   *
+   * Each visual is a small CSS loop; with reduced motion it rests on its
+   * clearest frame.
+   * ------------------------------------------------------------------------- */
+  .nx-feature {
+    --_tone: var(--nx-tone, var(--nx-accent));
+    --_radius: var(--nx-radius-2xl);
+    --_inset: var(--nx-space-2);
+    --_press: 1;
+
+    display: grid;
+    align-content: start;
+    gap: var(--nx-space-4);
+    padding: var(--_inset) var(--_inset) var(--nx-space-6);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--_radius);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    text-decoration: none;
+    box-shadow: var(--nx-shadow-sm), inset 0 1px 0 var(--nx-highlight);
+    scale: var(--_press);
+    transition:
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      box-shadow var(--nx-dur-slow) var(--nx-ease-out),
+      border-color var(--nx-dur-base) var(--nx-ease-out);
+
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 3px; }
+    &:is(a, button):active { --_press: calc(1 - 0.04 * var(--nx-motion)); }
+    &:is(a, button) { cursor: pointer; }
+    &:is(a, button):focus-visible { border-color: color-mix(in oklab, var(--_tone) 40%, var(--nx-border)); }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .nx-feature:is(a, button):hover {
+      translate: 0 calc(-4px * var(--nx-motion));
+      border-color: color-mix(in oklab, var(--_tone) 40%, var(--nx-border));
+      box-shadow: var(--nx-shadow-lg), inset 0 1px 0 var(--nx-highlight);
+    }
+  }
+
+  .nx-feature-visual {
+    --_row: 2.35rem;
+
+    position: relative;
+    display: grid;
+    place-items: center;
+    block-size: var(--nx-feature-visual-height, 11.5rem);
+    overflow: clip;
+    border-radius: calc(var(--_radius) - var(--_inset));
+    background:
+      radial-gradient(90% 80% at 50% 0%, color-mix(in oklab, var(--_tone) 16%, transparent), transparent 70%),
+      var(--nx-surface-2);
+    isolation: isolate;
+  }
+
+  .nx-feature-body {
+    display: grid;
+    gap: var(--nx-space-2);
+    padding-inline: var(--nx-space-4);
+  }
+
+  .nx-feature-title { margin: 0; font: 650 var(--nx-text-lg) / 1.3 var(--nx-font-display); letter-spacing: var(--nx-tracking-tight); }
+  .nx-feature-description { margin: 0; color: var(--nx-text-muted); font-size: var(--nx-text-sm); line-height: 1.6; text-wrap: pretty; }
+
+  /* Shared pieces: a skeleton line and a round "person". */
+  .nx-fv-line {
+    display: block;
+    block-size: 0.45rem;
+    border-radius: var(--nx-radius-full);
+    background: color-mix(in oklab, var(--nx-text) 12%, transparent);
+  }
+
+  /* Inbox: a new mail lands on top, the rest shift down, the last is archived. */
+  .nx-fv-inbox {
+    position: relative;
+    inline-size: min(82%, 17rem);
+    block-size: calc(var(--_row) * 4);
+  }
+
+  .nx-fv-row {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-start: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    block-size: calc(var(--_row) - 0.4rem);
+    padding-inline: var(--nx-space-2);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-surface);
+    box-shadow: var(--nx-shadow-xs);
+    translate: 0 calc(var(--nx-i, 0) * var(--_row));
+    animation: nx-fv-inbox 8s var(--nx-ease-in-out) infinite;
+    animation-delay: calc(var(--nx-i, 0) * -2s);
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border: 1px solid color-mix(in oklab, var(--_tone) 55%, transparent);
+      border-radius: inherit;
+      background: color-mix(in oklab, var(--_tone) 12%, transparent);
+      opacity: 0;
+      animation: nx-fv-inbox-new 8s linear infinite;
+      animation-delay: inherit;
+    }
+
+    > b {
+      flex: none;
+      inline-size: 1.1rem;
+      block-size: 1.1rem;
+      border-radius: 50%;
+      background: var(--nx-chart-1);
+    }
+
+    &:nth-child(2) > b { background: var(--nx-chart-2); }
+    &:nth-child(3) > b { background: var(--nx-chart-4); }
+    &:nth-child(4) > b { background: var(--nx-chart-3); }
+
+    > span { display: grid; flex: 1; gap: 0.3rem; }
+    > span > .nx-fv-line:last-child { inline-size: 60%; }
+  }
+
+  @keyframes nx-fv-inbox {
+    0% { translate: calc(-30% * var(--nx-dir)) 0; opacity: 0; }
+    5%, 22% { translate: 0 0; opacity: 1; }
+    27%, 47% { translate: 0 calc(var(--_row) * 1); }
+    52%, 72% { translate: 0 calc(var(--_row) * 2); }
+    77%, 93% { translate: 0 calc(var(--_row) * 3); opacity: 1; }
+    100% { translate: calc(30% * var(--nx-dir)) calc(var(--_row) * 3); opacity: 0; }
+  }
+
+  @keyframes nx-fv-inbox-new {
+    0%, 6% { opacity: 1; }
+    24%, 100% { opacity: 0; }
+  }
+
+  /* Summary: lines shimmer as they are read, then fold into one summary pill. */
+  .nx-fv-summary {
+    position: relative;
+    display: grid;
+    gap: 0.55rem;
+    inline-size: min(76%, 15rem);
+
+    > .nx-fv-line {
+      block-size: 0.55rem;
+      background:
+        linear-gradient(90deg, transparent 30%, color-mix(in oklab, var(--_tone) 45%, transparent) 50%, transparent 70%) 0 0 / 250% 100%,
+        color-mix(in oklab, var(--nx-text) 12%, transparent);
+      transform-origin: 50% 50%;
+      animation:
+        nx-sheen 1.6s linear infinite,
+        nx-fv-fold 6s var(--nx-ease-in-out) infinite;
+      animation-delay: calc(var(--nx-i, 0) * -0.2s), calc(var(--nx-i, 0) * 60ms);
+    }
+
+    > :nth-child(2) { inline-size: 88%; }
+    > :nth-child(3) { inline-size: 94%; }
+    > :nth-child(4) { inline-size: 64%; }
+  }
+
+  .nx-fv-pill {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    inline-size: fit-content;
+    block-size: fit-content;
+    margin: auto;
+    padding: var(--nx-space-2) var(--nx-space-4);
+    border: 1px solid color-mix(in oklab, var(--_tone) 45%, transparent);
+    border-radius: var(--nx-radius-full);
+    background: color-mix(in oklab, var(--_tone) 14%, var(--nx-surface));
+    color: color-mix(in oklab, var(--_tone) 75%, var(--nx-text));
+    box-shadow: var(--nx-shadow-md), 0 0 24px -6px color-mix(in oklab, var(--_tone) 60%, transparent);
+    opacity: 0;
+    animation: nx-fv-pill 6s var(--nx-ease-out) infinite;
+
+    .nx-icon { inline-size: 1.1rem; block-size: 1.1rem; }
+    > span { display: grid; gap: 0.3rem; inline-size: 5.5rem; }
+    > span > .nx-fv-line { background: color-mix(in oklab, var(--_tone) 35%, transparent); }
+    > span > .nx-fv-line:last-child { inline-size: 65%; }
+  }
+
+  @keyframes nx-fv-fold {
+    0%, 42% { opacity: 1; scale: 1; translate: 0 0; }
+    56%, 88% { opacity: 0; scale: 0.4 0.6; translate: 0 calc((1.5 - var(--nx-i, 0)) * 0.9rem); }
+    100% { opacity: 1; scale: 1; translate: 0 0; }
+  }
+
+  @keyframes nx-fv-pill {
+    0%, 52% { opacity: 0; scale: 0.95; filter: blur(4px); }
+    62%, 84% { opacity: 1; scale: 1; filter: blur(0); }
+    92%, 100% { opacity: 0; scale: 0.97; filter: blur(2px); }
+  }
+
+  /* Processing: a bolt with rings going out and a bar filling. */
+  .nx-fv-processing {
+    position: relative;
+    display: grid;
+    place-items: center;
+    gap: var(--nx-space-5);
+    inline-size: 100%;
+  }
+
+  .nx-fv-core {
+    position: relative;
+    display: grid;
+    place-items: center;
+    inline-size: 3.5rem;
+    block-size: 3.5rem;
+  }
+
+  .nx-fv-ring {
+    position: absolute;
+    inset: 0;
+    border: 1.5px solid color-mix(in oklab, var(--_tone) 60%, transparent);
+    border-radius: 50%;
+    opacity: 0;
+    animation: nx-fv-ring 2.7s var(--nx-ease-out) infinite;
+    animation-delay: calc(var(--nx-i, 0) * 0.9s);
+  }
+
+  @keyframes nx-fv-ring {
+    0% { opacity: 0.8; scale: 0.95; }
+    100% { opacity: 0; scale: 2.3; }
+  }
+
+  .nx-fv-bolt {
+    position: relative;
+    display: grid;
+    place-items: center;
+    inline-size: 100%;
+    block-size: 100%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, color-mix(in oklab, var(--_tone) 55%, var(--nx-surface)), color-mix(in oklab, var(--_tone) 85%, var(--nx-ink-950)));
+    color: var(--nx-ink-50);
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--_tone) 18%, transparent), 0 8px 26px -8px color-mix(in oklab, var(--_tone) 80%, transparent);
+    animation: nx-fv-bolt 2.7s var(--nx-ease-in-out) infinite;
+
+    .nx-icon { inline-size: 1.5rem; block-size: 1.5rem; fill: currentColor; }
+  }
+
+  @keyframes nx-fv-bolt {
+    0%, 100% { scale: 1; }
+    12% { scale: calc(1 + 0.08 * var(--nx-motion)); }
+    30% { scale: 1; }
+  }
+
+  .nx-fv-bar {
+    position: relative;
+    inline-size: min(70%, 12rem);
+    block-size: 0.4rem;
+    overflow: clip;
+    border-radius: var(--nx-radius-full);
+    background: color-mix(in oklab, var(--nx-text) 10%, transparent);
+
+    > i {
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(calc(90deg * var(--nx-dir)), color-mix(in oklab, var(--_tone) 70%, transparent), var(--_tone));
+      transform-origin: calc(50% - 50% * var(--nx-dir)) 50%;
+      animation: nx-fv-fill 2.7s var(--nx-ease-in-out) infinite;
+    }
+  }
+
+  @keyframes nx-fv-fill {
+    0% { scale: 0 1; opacity: 1; }
+    78% { scale: 1 1; opacity: 1; }
+    100% { scale: 1 1; opacity: 0; }
+  }
+
+  /* Team: people move from the pool into assignment slots, one after another. */
+  .nx-fv-team {
+    position: relative;
+    inline-size: 12rem;
+    block-size: 8rem;
+  }
+
+  .nx-fv-slot,
+  .nx-fv-person {
+    position: absolute;
+    inset: 0;
+    inline-size: 2.6rem;
+    block-size: 2.6rem;
+    margin: auto;
+    border-radius: 50%;
+  }
+
+  .nx-fv-slot {
+    translate: calc((var(--nx-i, 0) - 1) * 3.6rem) -1.4rem;
+    border: 1.5px dashed color-mix(in oklab, var(--nx-text) 25%, transparent);
+    animation: nx-fv-slot 6s var(--nx-ease-out) infinite;
+    animation-delay: calc(var(--nx-i, 0) * 0.3s);
+  }
+
+  @keyframes nx-fv-slot {
+    0%, 20% { border-style: dashed; border-color: color-mix(in oklab, var(--nx-text) 25%, transparent); scale: 1; }
+    30%, 80% { border-style: solid; border-color: var(--_tone); scale: 1.12; }
+    90%, 100% { border-style: dashed; border-color: color-mix(in oklab, var(--nx-text) 25%, transparent); scale: 1; }
+  }
+
+  .nx-fv-person {
+    display: grid;
+    place-items: center;
+    inline-size: 2.2rem;
+    block-size: 2.2rem;
+    border: 2px solid var(--nx-surface);
+    background: var(--nx-chart-1);
+    color: var(--nx-ink-50);
+    box-shadow: var(--nx-shadow-md);
+    translate: calc((var(--nx-i, 0) - 1) * 3.6rem) -1.4rem;
+    animation: nx-fv-person 6s var(--nx-spring-bouncy) infinite;
+    animation-delay: calc(var(--nx-i, 0) * 0.3s);
+
+    &:nth-child(5) { background: var(--nx-chart-2); }
+    &:nth-child(6) { background: var(--nx-chart-4); }
+    .nx-icon { inline-size: 1rem; block-size: 1rem; }
+  }
+
+  @keyframes nx-fv-person {
+    0%, 12% { translate: calc((var(--nx-i, 0) - 1) * 2.5rem) 2.2rem; scale: 0.95; }
+    26%, 82% { translate: calc((var(--nx-i, 0) - 1) * 3.6rem) -1.4rem; scale: 1; }
+    94%, 100% { translate: calc((var(--nx-i, 0) - 1) * 2.5rem) 2.2rem; scale: 0.95; }
+  }
+
+  /* ---- Pit slider --------------------------------------------------------------------- *
+   *   <div class="nx-pit" data-theme="dark" style="--nx-frac: .4; --nx-pct: 40%">
+   *     <div class="nx-pit-head"><label>…</label><output>…</output></div>
+   *     <div class="nx-pit-track">
+   *       <div class="nx-pit-bars" aria-hidden="true"><span class="nx-pit-bar" style="--p: 0"></span> …</div>
+   *       <span class="nx-pit-thumb"></span> <output class="nx-pit-value">…</output>
+   *       <input type="range" class="nx-pit-input">
+   *
+   * A transparent native range over a row of sticks. pitSlider() writes each
+   * stick's height (--h) while the thumb is held; the fill follows --nx-frac.
+   * ------------------------------------------------------------------------- */
+  .nx-pit {
+    --_thumb: 1.5rem;
+    --_track: var(--nx-pit-height, 3.25rem);
+    /* 0 at rest, up to 1 while held: the sticks stand taller (never under reduced motion). */
+    --_rise: 0;
+    --_grow: calc(0.58 + var(--_rise) * 0.16 * var(--nx-motion));
+
+    position: relative;
+    display: grid;
+    gap: var(--nx-space-3);
+    padding: var(--nx-space-4) var(--nx-space-4) var(--nx-space-3);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-xl);
+    background: linear-gradient(180deg, var(--nx-surface-2), var(--nx-surface));
+    color: var(--nx-text);
+    box-shadow: var(--nx-shadow-md), inset 0 1px 0 var(--nx-highlight);
+
+    /* The accent reads on light and dark pages alike (the panel may carry its own dark scope). */
+    &:has(.nx-pit-input:focus-visible) { outline: 2px solid var(--nx-accent); outline-offset: 2px; }
+    &:has(.nx-pit-input:disabled) { opacity: 0.55; }
+    &:is([data-dragging], [data-pit]) { --_rise: 1; }
+  }
+
+  .nx-pit-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--nx-space-3);
+    font-size: var(--nx-text-sm);
+  }
+
+  .nx-pit-label { color: var(--nx-text-muted); font-weight: 500; }
+  .nx-pit-readout { font: 600 var(--nx-text-sm) / 1 var(--nx-font-mono); font-variant-numeric: tabular-nums; }
+
+  .nx-pit-track {
+    position: relative;
+    block-size: var(--_track);
+  }
+
+  .nx-pit-bars {
+    position: absolute;
+    inset-block: 0;
+    /* The sticks span exactly the thumb's travel. */
+    inset-inline: calc(var(--_thumb) / 2);
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    pointer-events: none;
+  }
+
+  .nx-pit-bar {
+    /* 1 for sticks at or before the thumb. */
+    --_on: clamp(0, (var(--nx-frac, 0) - var(--p, 0)) * 1000 + 1, 1);
+
+    inline-size: 2px;
+    block-size: 100%;
+    border-radius: 2px;
+    background: color-mix(in oklab, var(--nx-accent-text) calc(var(--_on) * 100%), color-mix(in oklab, var(--nx-text) 22%, transparent));
+    transform-origin: 50% 100%;
+    scale: 1 calc(var(--h, 1) * var(--_grow));
+    transition:
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+      background-color var(--nx-dur-fast) var(--nx-ease-out);
+  }
+
+  .nx-pit-thumb,
+  .nx-pit-value {
+    position: absolute;
+    inset-inline-start: calc(var(--_thumb) / 2 + var(--nx-frac, 0) * (100% - var(--_thumb)));
+    translate: calc(-50% * var(--nx-dir)) 0;
+    pointer-events: none;
+  }
+
+  .nx-pit-thumb {
+    inset-block-end: 0;
+    inline-size: 3px;
+    block-size: calc(100% + 0.35rem);
+    border-radius: 3px;
+    background: var(--nx-text);
+    box-shadow: 0 0 12px 1px color-mix(in oklab, var(--nx-accent) 60%, transparent);
+    transition: block-size var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+  }
+
+  .nx-pit[data-dragging] .nx-pit-thumb { block-size: calc(100% + 0.7rem); }
+
+  .nx-pit-value {
+    inset-block-end: calc(100% + 0.75rem);
+    padding: 0.2rem 0.5rem;
+    border-radius: var(--nx-radius-sm);
+    background: var(--nx-surface-inverse);
+    color: var(--nx-text-inverse);
+    font: 600 var(--nx-text-xs) / 1.3 var(--nx-font-mono);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    opacity: 0;
+    scale: 0.95;
+    transform-origin: 50% 100%;
+    transition:
+      opacity var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy);
+  }
+
+  .nx-pit:is([data-dragging], [data-pit], :has(.nx-pit-input:focus-visible)) .nx-pit-value { opacity: 1; scale: 1; }
+
+  .nx-pit-input {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    margin: 0;
+    appearance: none;
+    background: transparent;
+    opacity: 0;
+    cursor: grab;
+    touch-action: pan-y;
+
+    &:active { cursor: grabbing; }
+    &:disabled { cursor: not-allowed; }
+    &::-webkit-slider-thumb { appearance: none; inline-size: var(--_thumb); block-size: var(--_track); }
+    &::-moz-range-thumb { inline-size: var(--_thumb); block-size: var(--_track); border: 0; }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .nx-pit:has(.nx-pit-input:hover):not([data-dragging], [data-pit]) { --_rise: 0.6; }
+    .nx-pit:has(.nx-pit-input:hover) .nx-pit-value { opacity: 1; scale: 1; }
+  }
+
+  /* ---- Precision slider ------------------------------------------------------------------- *
+   *   <div class="nx-precision">
+   *     <div class="nx-precision-head"><label>…</label><div class="nx-precision-readout">(rolling number) unit</div></div>
+   *     <div class="nx-precision-ticks" aria-hidden="true"><i style="--p: 0"></i> …</div>
+   *     <div class="nx-slider">…native range…</div>
+   *     <div class="nx-precision-scale" aria-hidden="true"><span>min</span><span>max</span></div>
+   * ------------------------------------------------------------------------- */
+  .nx-precision {
+    display: grid;
+    gap: var(--nx-space-2);
+
+    .nx-slider { --_thumb: 1.25rem; padding-block: var(--nx-space-1); }
+    .nx-slider-value { display: none; }
+  }
+
+  .nx-precision-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--nx-space-2) var(--nx-space-4);
+  }
+
+  .nx-precision-label {
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+    font-weight: 600;
+  }
+
+  .nx-precision-readout {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.3rem;
+    font: 700 var(--nx-text-5xl) / 1 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tighter);
+    font-variant-numeric: tabular-nums;
+
+    .nx-number { --nx-number-duration: 520ms; }
+  }
+
+  .nx-precision-affix {
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-xl);
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+
+  .nx-precision-ticks {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    block-size: 0.9rem;
+    margin-inline: calc(1.25rem / 2);
+    margin-block-end: calc(var(--nx-space-1) * -1);
+
+    > i {
+      --_on: clamp(0, (var(--nx-frac, 0) - var(--p, 0)) * 1000 + 1, 1);
+
+      inline-size: 1px;
+      block-size: 45%;
+      background: color-mix(in oklab, var(--nx-accent) calc(var(--_on) * 100%), var(--nx-border-strong));
+      transition: background-color var(--nx-dur-fast) var(--nx-ease-out);
+
+      &[data-major] { block-size: 100%; inline-size: 1.5px; }
+    }
+  }
+
+  .nx-precision-scale {
+    display: flex;
+    justify-content: space-between;
+    color: var(--nx-text-subtle);
+    font: 500 var(--nx-text-xs) / 1 var(--nx-font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---- Reduced motion: loops rest, the goo stays out, springs are already short -------- */
+  @media (prefers-reduced-motion: reduce) {
+    .nx-orbit-orb,
+    .nx-fv-row,
+    .nx-fv-row::before,
+    .nx-fv-summary > .nx-fv-line,
+    .nx-fv-pill,
+    .nx-fv-ring,
+    .nx-fv-bolt,
+    .nx-fv-bar > i,
+    .nx-fv-slot,
+    .nx-fv-person {
+      animation: none;
+    }
+
+    /* Resting frames: the inbox sorted, the summary read, the team assigned. */
+    .nx-fv-row:first-child::before { opacity: 1; }
+    .nx-fv-summary > .nx-fv-line { opacity: 0.3; }
+    .nx-fv-pill { opacity: 1; }
+    .nx-fv-ring:first-child { opacity: 0.5; scale: 1.5; }
+    .nx-fv-bar > i { scale: 0.7 1; }
+    .nx-fv-slot { border-style: solid; border-color: var(--_tone); }
+    .nx-ring-label[data-morphing] .nx-ring-titles { filter: none; }
+    /* The depth carousel cross-fades: cards take their places at once. */
+    .nx-depth-card { transition-property: filter, opacity; }
+  }
+}

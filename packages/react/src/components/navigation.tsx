@@ -16,30 +16,14 @@ import {
   createTypeahead,
   dock as dockBehavior,
   focusableItems,
-  indicator,
   place,
   roveFocus,
 } from '@nabuxai/ui-core';
-import { cx, mergeRefs, useBehavior, useControllable, useIsoLayoutEffect } from '../internal/hooks';
+import { cx, mergeRefs, useBehavior, useControllable, useIndicator, useIsoLayoutEffect } from '../internal/hooks';
 import { Icon } from '../internal/icon';
 import { SmartLink, useT } from '../internal/provider';
 import { Kbd } from './display';
 
-type Indicator = ReturnType<typeof indicator>;
-
-/** Keep a moving highlight on `target()` inside `container`. */
-function useIndicator(container: React.RefObject<HTMLElement | null>) {
-  const ctrl = useRef<Indicator | null>(null);
-  useIsoLayoutEffect(() => {
-    if (!container.current) return;
-    ctrl.current = indicator(container.current);
-    return () => {
-      ctrl.current?.destroy();
-      ctrl.current = null;
-    };
-  }, [container]);
-  return ctrl;
-}
 
 const idSafe = (value: string) => value.replace(/[^\w-]/g, '_');
 

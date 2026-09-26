@@ -46,6 +46,7 @@ export const messages = {
     uploaded: 'Uploaded',
     failed: 'Failed',
     chartHint: 'Use the arrow keys to read each value',
+    magnifier: 'Magnifier. Drag it, or move it with the arrow keys',
   },
   fa: {
     close: 'بستن',
@@ -89,6 +90,7 @@ export const messages = {
     uploaded: 'بارگذاری شد',
     failed: 'ناموفق',
     chartHint: 'با کلیدهای جهت‌نما هر مقدار را بخوانید',
+    magnifier: 'ذره‌بین. بکشید یا با کلیدهای جهت‌نما جابه‌جا کنید',
   },
   ar: {
     close: 'إغلاق',
@@ -132,6 +134,7 @@ export const messages = {
     uploaded: 'تم الرفع',
     failed: 'فشل',
     chartHint: 'استخدم مفاتيح الأسهم لقراءة كل قيمة',
+    magnifier: 'عدسة مكبّرة. اسحبها أو حرّكها بمفاتيح الأسهم',
   },
 } as const;
 

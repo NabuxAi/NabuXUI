@@ -17,6 +17,7 @@ body {
 
 .sc-section {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--nx-space-8);
   scroll-margin-block-start: 6rem;
 }
@@ -192,3 +193,208 @@ body {
   min-block-size: 7rem;
   background: radial-gradient(circle at 30% 20%, var(--nx-accent-soft), transparent 60%), radial-gradient(circle at 80% 70%, var(--nx-gold-soft), transparent 55%);
 }
+
+/* ---- Glass stages ---------------------------------------------------------- */
+
+.sc-glass-stage {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  min-block-size: 20rem;
+  display: grid;
+  background: var(--nx-bg);
+}
+
+.sc-glass-stage[data-tone="night"] { background: var(--nx-ink-950); color-scheme: dark; }
+
+.sc-glass-blobs {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  filter: blur(28px) saturate(1.2);
+}
+
+.sc-glass-blobs i {
+  position: absolute;
+  inline-size: 46%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  opacity: 0.85;
+  animation: sc-drift 18s ease-in-out infinite alternate;
+}
+
+.sc-glass-blobs i:nth-child(1) { inset-block-start: -12%; inset-inline-start: -6%; background: var(--nx-lapis-500); }
+.sc-glass-blobs i:nth-child(2) { inset-block-end: -18%; inset-inline-start: 22%; background: var(--nx-violet-500); animation-delay: -6s; }
+.sc-glass-blobs i:nth-child(3) { inset-block-start: 8%; inset-inline-end: -8%; background: var(--nx-cyan-400); animation-delay: -11s; }
+.sc-glass-blobs i:nth-child(4) { inset-block-end: -6%; inset-inline-end: 12%; inline-size: 28%; background: var(--nx-gold-400); animation-delay: -3s; }
+
+@keyframes sc-drift {
+  from { translate: 0 0; scale: 1; }
+  to { translate: calc(9% * var(--nx-motion)) calc(-7% * var(--nx-motion)); scale: calc(1 + 0.12 * var(--nx-motion)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-glass-blobs i { animation: none; }
+}
+
+.sc-glass-words {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: 50%;
+  translate: 0 -50%;
+  z-index: -1;
+  margin: 0;
+  padding-inline: var(--nx-space-6);
+  font-family: var(--nx-font-display);
+  font-size: clamp(2.5rem, 7vw, 5.5rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: var(--nx-tracking-tight);
+  color: color-mix(in oklab, var(--nx-ink-50) 88%, transparent);
+  text-wrap: balance;
+  text-align: center;
+  pointer-events: none;
+}
+
+.sc-glass-content {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: var(--nx-space-8) var(--nx-space-5);
+}
+
+.sc-glass-hero { display: grid; place-items: center; inline-size: 100%; }
+
+.sc-glass-card {
+  display: grid;
+  gap: var(--nx-space-3);
+  inline-size: min(100%, 30rem);
+  justify-items: start;
+}
+
+.sc-glass-card h3 { margin: 0; font-size: var(--nx-text-2xl); }
+.sc-glass-card p { margin: 0; color: var(--nx-text-muted); }
+
+.sc-glass-presets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: var(--nx-space-4);
+  inline-size: min(100%, 44rem);
+}
+
+.sc-glass-chip {
+  display: grid;
+  gap: var(--nx-space-1);
+  padding: var(--nx-space-5);
+  text-transform: capitalize;
+}
+
+.sc-glass-chip span { color: var(--nx-text-muted); font-size: var(--nx-text-sm); text-transform: none; }
+
+.sc-glass-center { display: grid; justify-items: center; gap: var(--nx-space-4); }
+
+.sc-glass-note {
+  margin: 0;
+  font-size: var(--nx-text-sm);
+  font-weight: 600;
+  color: var(--nx-ink-50);
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
+}
+
+.sc-glass-controls {
+  display: grid;
+  gap: var(--nx-space-5);
+  padding: var(--nx-space-6);
+  inline-size: min(100%, 22rem);
+}
+
+.sc-glass-slider-row { display: grid; gap: var(--nx-space-2); font-size: var(--nx-text-sm); font-weight: 600; }
+
+.sc-glass-phone {
+  position: relative;
+  block-size: 26rem;
+  margin: var(--nx-space-5) auto;
+  inline-size: min(calc(100% - 2.5rem), 20rem);
+  border-radius: 2.5rem;
+  overflow: clip;
+  background: var(--nx-bg);
+  box-shadow: 0 0 0 8px var(--nx-ink-900), var(--nx-shadow-lg);
+}
+
+.sc-glass-phone-scroll { position: absolute; inset: 0; overflow-y: auto; overscroll-behavior: contain; }
+
+.sc-glass-feed { display: grid; gap: var(--nx-space-3); padding: var(--nx-space-4) var(--nx-space-4) 7rem; }
+
+.sc-glass-post {
+  display: grid;
+  align-items: end;
+  block-size: 9rem;
+  padding: var(--nx-space-4);
+  border-radius: var(--nx-radius-xl);
+  color: var(--nx-ink-50);
+  font-weight: 700;
+  background: linear-gradient(
+    calc(120deg + var(--i) * 40deg),
+    var(--nx-lapis-500),
+    color-mix(in oklab, var(--nx-violet-500) calc(40% + var(--i) * 6%), var(--nx-cyan-400))
+  );
+}
+
+.sc-glass-phone-bar {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: var(--nx-space-4);
+  display: grid;
+  justify-items: center;
+  pointer-events: none;
+}
+
+.sc-glass-phone-bar > * { pointer-events: auto; }
+
+.sc-glass-reading { border-radius: var(--nx-radius-2xl); overflow: clip; }
+
+.sc-glass-article { display: grid; gap: var(--nx-space-4); padding: var(--nx-space-8); }
+.sc-glass-article h3 { margin: 0; font-size: var(--nx-text-2xl); }
+.sc-glass-article p { margin: 0; max-inline-size: 60ch; font-size: var(--nx-text-lg); color: var(--nx-text-muted); }
+
+.sc-glass-bars {
+  display: flex;
+  align-items: end;
+  gap: 6px;
+  block-size: 6rem;
+}
+
+.sc-glass-bars i { flex: 1; border-radius: 4px 4px 0 0; background: linear-gradient(var(--nx-chart-1), var(--nx-chart-4)); }
+
+.sc-glass-ripple { padding: var(--nx-space-6); display: grid; gap: var(--nx-space-4); justify-items: center; background: var(--nx-surface); }
+
+.sc-glass-ripple .sc-glass-note { color: var(--nx-text-muted); text-shadow: none; }
+
+.sc-glass-ripple-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--nx-space-3);
+  inline-size: 100%;
+}
+
+.sc-glass-person {
+  display: flex;
+  align-items: center;
+  gap: var(--nx-space-3);
+  padding: var(--nx-space-3);
+  border-radius: var(--nx-radius-lg);
+  background: var(--nx-surface-2);
+  font-weight: 600;
+}
+
+.sc-glass-avatar {
+  display: grid;
+  place-items: center;
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+  border-radius: 50%;
+  color: var(--nx-ink-50);
+  background: linear-gradient(135deg, var(--nx-lapis-500), var(--nx-violet-500));
+}
+
+.sc-demo[data-bare] > .sc-demo-title { padding: var(--nx-space-4) var(--nx-space-5) 0; }

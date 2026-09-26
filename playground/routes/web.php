@@ -8,3 +8,4 @@ Route::get('/', function () {
 
 Route::get('/livewire', \App\Livewire\Showcase::class);
 Route::get('/livewire/second', \App\Livewire\Second::class);
+Route::get('/blocks/{group}', \App\Livewire\Blocks::class);

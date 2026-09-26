@@ -5,6 +5,12 @@ import { ButtonsSection, InputsSection } from './sections/actions';
 import { CardsSection, ChartsSection, GridSection, PricingSection } from './sections/content';
 import { LoadingSection, MicroSection, NavigationSection, NotificationsSection, TransitionsSection } from './sections/system';
 import { type Lang, LangContext } from './lang';
+import { TextBlocks } from './blocks/text';
+import { ActionsBlocks } from './blocks/actions';
+import { CardsBlocks } from './blocks/cards';
+import { DataBlocks } from './blocks/data';
+import { MenusBlocks } from './blocks/menus';
+import { GlassBlocks } from './blocks/glass';
 
 const SECTIONS: Array<{ id: string; fa: string; en: string; icon: NonNullable<NavItem['children']>[number]['icon'] }> = [
   { id: 'text', fa: 'متن', en: 'Text', icon: 'edit' },
@@ -106,11 +112,16 @@ export function App() {
         />
         <main id="main" className="sc-main" tabIndex={-1}>
           <HeroSection />
+          <GlassBlocks />
           <TextSection />
+          <TextBlocks />
           <ButtonsSection />
+          <ActionsBlocks />
           <InputsSection />
           <CardsSection />
+          <CardsBlocks />
           <ChartsSection />
+          <DataBlocks />
           <PricingSection />
           <NotificationsSection />
           <MicroSection />
@@ -118,6 +129,7 @@ export function App() {
           <LoadingSection />
           <GridSection />
           <NavigationSection />
+          <MenusBlocks />
         </main>
         <footer className="sc-footer">
           <div className="sc-container">

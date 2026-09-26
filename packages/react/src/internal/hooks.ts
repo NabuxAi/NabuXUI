@@ -9,7 +9,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import type { Cleanup } from '@nabuxai/ui-core';
+import { type Cleanup, type IndicatorController, indicator } from '@nabuxai/ui-core';
 
 /** Join class names, skipping falsy parts. */
 export function cx(...parts: Array<string | false | null | undefined>): string {
@@ -108,4 +108,18 @@ export function useWidth(ref: RefObject<Element | null>, fallback = 0): number {
     return () => observer.disconnect();
   }, [ref, fallback]);
   return width;
+}
+
+/** The moving highlight (core `indicator`) on `container`, for as long as it is mounted. */
+export function useIndicator(container: RefObject<HTMLElement | null>): RefObject<IndicatorController | null> {
+  const ctrl = useRef<IndicatorController | null>(null);
+  useIsoLayoutEffect(() => {
+    if (!container.current) return;
+    ctrl.current = indicator(container.current);
+    return () => {
+      ctrl.current?.destroy();
+      ctrl.current = null;
+    };
+  }, [container]);
+  return ctrl;
 }
