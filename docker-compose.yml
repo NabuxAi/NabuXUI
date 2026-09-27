@@ -4,7 +4,7 @@ services:
   app:
     build: ./playground
     ports:
-      - "8000:8000"
+      - "${APP_PORT:-8000}:8000"
     environment:
       PHP_CLI_SERVER_WORKERS: 4
     volumes:
@@ -16,7 +16,7 @@ services:
     working_dir: /app/playground
     command: sh -c "npm install --no-audit --no-fund && npm run dev -- --host 0.0.0.0"
     ports:
-      - "5173:5173"
+      - "${VITE_PORT:-5173}:5173"
     volumes:
       - .:/app
       - playground_node_modules:/app/playground/node_modules
