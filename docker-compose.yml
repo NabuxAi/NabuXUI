@@ -1,0 +1,45 @@
+name: nabuxui
+
+services:
+  app:
+    build: ./playground
+    ports:
+      - "8000:8000"
+    environment:
+      PHP_CLI_SERVER_WORKERS: 4
+    volumes:
+      - .:/app
+    init: true
+
+  vite:
+    image: node:22-alpine
+    working_dir: /app/playground
+    command: sh -c "npm install --no-audit --no-fund && npm run dev -- --host 0.0.0.0"
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - playground_node_modules:/app/playground/node_modules
+    init: true
+
+  mysql:
+    image: mysql:8.4
+    profiles: ["mysql"]
+    environment:
+      MYSQL_DATABASE: nabuxui
+      MYSQL_USER: nabuxui
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: secret
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-psecret"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  playground_node_modules:
+  mysql_data:
