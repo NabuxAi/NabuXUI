@@ -10,7 +10,10 @@ coverage/
 /vendor/
 packages/livewire/vendor/
 .phpunit.cache/
-composer.lock
+/composer.lock
+
+# Docker: local-only dev overrides must never reach the deploy artifact
+docker-compose.override.yml
 
 # Laravel playground (the skeleton is committed; its installs are not)
 playground/vendor/

@@ -1,0 +1,14 @@
+.git
+.zcodeignore
+node_modules
+**/node_modules
+**/vendor
+playground/.env
+playground/public/hot
+playground/public/build
+playground/storage/framework/cache/data/*
+playground/storage/framework/sessions/*
+playground/storage/framework/views/*
+playground/storage/logs/*
+apps/showcase/public/_lab
+apps/showcase/lab.html
