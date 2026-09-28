@@ -21,7 +21,10 @@ WORKDIR /app/playground
 COPY --from=assets /app/playground/public/build ./public/build
 COPY . /app
 
-RUN composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
+# Git doesn't track the storage/framework subdirectories (only .gitignore
+# placeholders), so create them before artisan boots during composer install.
+RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/testing storage/framework/views storage/logs bootstrap/cache \
+    && composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader
 
 EXPOSE 8000
 
