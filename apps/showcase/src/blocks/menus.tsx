@@ -8,12 +8,16 @@ import {
   Button,
   DockPanels,
   FoldMenu,
+  LanguageMenu,
   MemberSelector,
   MorphMenu,
   MorphTabs,
+  MultiChainSelector,
+  PromoBar,
   RegistrationCard,
   StackMenu,
   StackedAccordion,
+  ThemeSwitch,
   VoiceRecorder,
   toast,
 } from '@nabuxai/ui-react';
@@ -47,6 +51,24 @@ const ARRIVALS: Array<Pick<ActivityItem, 'actor' | 'text' | 'target'>> = [
   { actor: { name: 'Zhang Wei' }, text: 'assigned you', target: '支持工单 #482' },
 ];
 
+const CHAINS = [
+  { id: 'ethereum', name: 'Ethereum', symbol: 'ETH', tag: 'L1', icon: 'zap' as const, tone: 'lapis' as const },
+  { id: 'polygon', name: 'Polygon', symbol: 'POL', tag: 'L2', icon: 'layers' as const, tone: 'violet' as const },
+  { id: 'arbitrum', name: 'Arbitrum', symbol: 'ETH', tag: 'L2', icon: 'cpu' as const, tone: 'cyan' as const },
+  { id: 'optimism', name: 'Optimism', symbol: 'OP', tag: 'L2', icon: 'trend-up' as const, tone: 'gold' as const },
+  { id: 'base', name: 'Base', symbol: 'ETH', tag: 'L2', icon: 'globe' as const, tone: 'lapis' as const },
+  { id: 'solana', name: 'Solana', symbol: 'SOL', tag: 'L1', icon: 'chart' as const, tone: 'violet' as const },
+];
+
+const LANGUAGES = [
+  { id: 'en', name: 'English', short: 'EN' },
+  { id: 'fa', name: 'فارسی', short: 'FA' },
+  { id: 'ar', name: 'العربية', short: 'AR' },
+  { id: 'es', name: 'Español', short: 'ES' },
+  { id: 'de', name: 'Deutsch', short: 'DE' },
+  { id: 'ja', name: '日本語', short: 'JA' },
+];
+
 const tall: CSSProperties = { minBlockSize: '22rem', alignContent: 'start' };
 
 export function MenusBlocks() {
@@ -55,6 +77,8 @@ export function MenusBlocks() {
   const [tab, setTab] = useState('home');
   const [members, setMembers] = useState(['kenji', 'maria', 'amara']);
   const [roles, setRoles] = useState<Record<string, string>>({ kenji: 'admin', maria: 'editor', amara: 'viewer' });
+  const [chain, setChain] = useState('ethereum');
+  const [locale, setLocale] = useState('en');
   const [activity, setActivity] = useState(ACTIVITY);
   const [open, setOpen] = useState<string[]>(['shipping']);
   const [listeners, setListeners] = useState(1284);
@@ -86,6 +110,7 @@ export function MenusBlocks() {
 <AudioRoom title="Design crit" members={[{ name: 'Kenji Sato', speaking: true }]} listeners={1284} />
 <ActivityDropdown items={activity} onMarkAllRead={markAllRead} />
 <MemberSelector members={people} value={ids} onValueChange={setIds} roles={roles} onRolesChange={setRoles} />
+<MultiChainSelector chains={chains} value={chain} onValueChange={setChain} />
 <RegistrationCard event={{ title: 'Nabu Summit' }} tickets={tickets} currency="EUR" onSubmit={register} />
 <VoiceRecorder level={micLevel} onStop={({ duration }) => save(duration)} />`,
         blade: `<x-nx::fold-menu :sections="[['title' => 'Explore', 'links' => [['label' => 'Home', 'href' => '/', 'icon' => 'home']]]]" />
@@ -99,6 +124,7 @@ export function MenusBlocks() {
 <x-nx::audio-room title="Design crit" :members="$speakers" :listeners="$listeners" x-on:nx-room-leave="$wire.leave()" />
 <x-nx::activity-dropdown :items="$activity" x-on:nx-mark-all-read="$wire.markAllRead()" />
 <x-nx::member-selector :members="$people" wire:model.live="members" roles-model="roles" />
+<x-nx::chain-selector name="chain" :value="$chain" wire:model.live="chain" :chains="$chains" />
 <x-nx::registration-card model="registration" wire:submit="register" :success="$registered" :event="$event" :tickets="$tickets" />
 <x-nx::voice-recorder x-on:nx-record-stop="$wire.saveNote($event.detail.duration)" />`,
       }}
@@ -224,6 +250,13 @@ export function MenusBlocks() {
           <MemberSelector members={PEOPLE} value={members} onValueChange={setMembers} roles={roles} onRolesChange={setRoles} max={4} />
           <p className="sc-demo-title">
             {members.map((id) => `${PEOPLE.find((p) => p.id === id)?.name} (${roles[id] ?? 'viewer'})`).join(' · ')}
+          </p>
+        </Demo>
+
+        <Demo title={tr('انتخاب شبکه', 'Chain selector')} center>
+          <MultiChainSelector chains={CHAINS} value={chain} onValueChange={setChain} />
+          <p className="sc-demo-title">
+            {tr('فعلاً روی', 'Currently on')} <strong>{CHAINS.find((c) => c.id === chain)?.name}</strong>
           </p>
         </Demo>
 

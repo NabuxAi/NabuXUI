@@ -119,6 +119,57 @@
         <p style="margin:0">Members: <code>{{ json_encode($state['members'] ?? ['kenji', 'maria', 'amara']) }}</code></p>
         <p style="margin:0">Roles: <code>{{ json_encode($state['roles'] ?? []) }}</code></p>
     </div>
+
+    <div class="pg-box">
+        <h2 class="pg-title">Chain selector</h2>
+        <p style="margin:0;color:var(--nx-text-muted)">The trigger glyph morphs into the network you pick. <code>wire:model.live</code>.</p>
+        <div class="pg-row" style="min-block-size: 20rem; align-items: start">
+            <x-nx::chain-selector name="chain" :value="$state['chain'] ?? 'ethereum'" wire:model.live="state.chain" :chains="[
+                ['id' => 'ethereum', 'name' => 'Ethereum', 'symbol' => 'ETH', 'tag' => 'L1', 'icon' => 'zap', 'tone' => 'lapis'],
+                ['id' => 'polygon', 'name' => 'Polygon', 'symbol' => 'POL', 'tag' => 'L2', 'icon' => 'layers', 'tone' => 'violet'],
+                ['id' => 'arbitrum', 'name' => 'Arbitrum', 'symbol' => 'ETH', 'tag' => 'L2', 'icon' => 'cpu', 'tone' => 'cyan'],
+                ['id' => 'optimism', 'name' => 'Optimism', 'symbol' => 'OP', 'tag' => 'L2', 'icon' => 'trend-up', 'tone' => 'gold'],
+                ['id' => 'base', 'name' => 'Base', 'symbol' => 'ETH', 'tag' => 'L2', 'icon' => 'globe', 'tone' => 'lapis'],
+                ['id' => 'solana', 'name' => 'Solana', 'symbol' => 'SOL', 'tag' => 'L1', 'icon' => 'chart', 'tone' => 'violet'],
+            ]" />
+        </div>
+        <p style="margin:0">Chain: <code>{{ $state['chain'] ?? 'ethereum' }}</code></p>
+    </div>
+
+    <div class="pg-box">
+        <h2 class="pg-title">Language menu</h2>
+        <p style="margin:0;color:var(--nx-text-muted)">The trigger's code rolls into the language you pick. <code>wire:model.live</code>.</p>
+        <div class="pg-row" style="min-block-size: 18rem; align-items: start">
+            <x-nx::language-menu name="locale" :value="$state['locale'] ?? 'en'" wire:model.live="state.locale" :languages="[
+                ['id' => 'en', 'name' => 'English', 'short' => 'EN'],
+                ['id' => 'fa', 'name' => 'فارسی', 'short' => 'FA'],
+                ['id' => 'ar', 'name' => 'العربية', 'short' => 'AR'],
+                ['id' => 'es', 'name' => 'Español', 'short' => 'ES'],
+                ['id' => 'ja', 'name' => '日本語', 'short' => 'JA'],
+            ]" />
+        </div>
+        <p style="margin:0">Locale: <code>{{ $state['locale'] ?? 'en' }}</code></p>
+    </div>
+
+    <div class="pg-box">
+        <h2 class="pg-title">Theme switch</h2>
+        <p style="margin:0;color:var(--nx-text-muted)">Light, system, dark — the same preference the header toggle flips.</p>
+        <div class="pg-row">
+            <x-nx::theme-switch x-on:nx-change="$wire.ping('Theme: ' + $event.detail.preference)" />
+        </div>
+    </div>
+
+    <div class="pg-box">
+        <h2 class="pg-title">Promo bar</h2>
+        <p style="margin:0;color:var(--nx-text-muted)">Dismiss folds it away; the choice is remembered for the session. <code>:persist="false"</code> brings it back on reload.</p>
+        <div class="pg-row">
+            <x-nx::promo-bar id="playground-launch" :persist="false" badge="NEW" href="#menus-blocks" link-label="See what's new"
+                x-on:nx-dismiss="$wire.ping('Promo dismissed')">95% off every template — this week only</x-nx::promo-bar>
+        </div>
+        <div class="pg-row" style="margin-block-start: .75rem">
+            <button type="button" class="nx-button" data-variant="ghost" x-data @click="sessionStorage.removeItem('nabuxui.promo.playground-launch'); $wire.ping('Reset — reload to see it again')">Reset dismissal</button>
+        </div>
+    </div>
 </section>
 
 <section class="pg-grid">

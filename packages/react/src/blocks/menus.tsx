@@ -51,12 +51,13 @@ import {
   rmsLevel,
   roveFocus,
   searchMenuTree,
+  theme,
   ticketTotal,
   timeOf,
   toggleSelection,
   voiceLevel,
 } from '@nabuxai/ui-core';
-import { cx, mergeRefs, useControllable, useEvent, useIsoLayoutEffect } from '../internal/hooks';
+import { cx, mergeRefs, useControllable, useEvent, useIndicator, useIsoLayoutEffect, useMounted } from '../internal/hooks';
 import { Icon } from '../internal/icon';
 import { SmartLink, useLocale, useT } from '../internal/provider';
 import { Button } from '../components/button';
@@ -2261,5 +2262,370 @@ export function VoiceRecorder({
         />
       )}
     </div>
+  );
+}
+
+/* ---- Chain selector ----------------------------------------------------------------------------- */
+
+export interface ChainOption {
+  id: string;
+  name: string;
+  symbol?: string;
+  tag?: string;
+  icon?: IconName;
+  tone?: 'lapis' | 'violet' | 'cyan' | 'gold';
+}
+
+interface MultiChainSelectorProps {
+  chains: ChainOption[];
+  value?: string;
+  defaultValue?: string;
+  onValueChange?: (value: string) => void;
+  name?: string;
+  label?: string;
+  placeholder?: string;
+  emptyText?: string;
+  side?: Side;
+  align?: Align;
+  className?: string;
+}
+
+/** A network picker whose trigger glyph morphs into the chosen chain. */
+export function MultiChainSelector({
+  chains,
+  value,
+  defaultValue = chains[0]?.id ?? '',
+  onValueChange,
+  name,
+  label = 'Network',
+  placeholder = 'Search networks…',
+  emptyText = 'No networks match',
+  side = 'bottom',
+  align = 'start',
+  className,
+}: MultiChainSelectorProps) {
+  const id = useBaseId('nx-chains');
+  const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useControllable(value, defaultValue, onValueChange);
+  const [query, setQuery] = useState('');
+  const trigger = useRef<HTMLButtonElement>(null);
+  const panel = useRef<HTMLDivElement>(null);
+  const { onTriggerClick } = usePopover({ id, open, setOpen, trigger, panel, side, align, offset: 8 });
+
+  const current = chains.find((chain) => chain.id === selected) ?? chains[0] ?? null;
+  const q = foldSearchText(query.trim());
+
+  // Let the morph play before the panel folds away.
+  const choose = (chain: ChainOption) => {
+    setSelected(chain.id);
+    onValueChange?.(chain.id);
+    window.setTimeout(() => panel.current?.hidePopover?.(), 240);
+  };
+
+  return (
+    <>
+      <button
+        ref={trigger}
+        type="button"
+        className={cx('nx-chain-selector-trigger', className)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={id}
+        aria-label={`${label}: ${current?.name ?? ''}`}
+        onClick={onTriggerClick}
+      >
+        <span className="nx-chain-selector-glyph" data-tone={current?.tone ?? 'lapis'} aria-hidden>
+          {chains.map((chain) => (
+            <span key={chain.id} className="nx-chain-selector-morph" data-current={chain.id === selected ? '' : undefined}>
+              <Icon name={chain.icon ?? 'globe'} />
+            </span>
+          ))}
+        </span>
+        <span className="nx-chain-selector-who">
+          <span className="nx-chain-selector-name">{current?.name ?? '—'}</span>
+          <span className="nx-chain-selector-tag">{[current?.tag, current?.symbol].filter(Boolean).join(' · ')}</span>
+        </span>
+      </button>
+      <div ref={panel} id={id} className="nx-chain-selector" role="listbox" aria-label={label} {...{ popover: 'auto' }}>
+        <div className="nx-chain-selector-search">
+          <Icon name="search" />
+          <input
+            type="search"
+            className="nx-chain-selector-input"
+            placeholder={placeholder}
+            aria-label={placeholder}
+            aria-controls={`${id}-list`}
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+        </div>
+        <ul id={`${id}-list`} className="nx-chain-selector-list" aria-label={label}>
+          {chains.map((chain) => {
+            const selectedNow = chain.id === selected;
+            const visible = !q || foldSearchText(`${chain.name} ${chain.symbol ?? ''} ${chain.tag ?? ''}`).includes(q);
+            return (
+              <li key={chain.id} className="nx-chain-selector-row" data-selected={selectedNow ? '' : undefined} hidden={!visible}>
+                <button type="button" className="nx-chain-selector-choice" role="option" aria-selected={selectedNow} onClick={() => choose(chain)}>
+                  <span className="nx-chain-selector-glyph" data-tone={chain.tone ?? 'lapis'} aria-hidden>
+                    <span className="nx-chain-selector-morph" data-current>
+                      <Icon name={chain.icon ?? 'globe'} />
+                    </span>
+                  </span>
+                  <span className="nx-chain-selector-what">
+                    <span className="nx-chain-selector-name">{chain.name}</span>
+                    {(chain.tag || chain.symbol) && (
+                      <span className="nx-chain-selector-tag">{[chain.tag, chain.symbol].filter(Boolean).join(' · ')}</span>
+                    )}
+                  </span>
+                  <span className="nx-chain-selector-mark">
+                    <Icon name="check" />
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+        <p className="nx-chain-selector-empty" hidden={!chains.every((chain) => q && !foldSearchText(`${chain.name} ${chain.symbol ?? ''} ${chain.tag ?? ''}`).includes(q))}>
+          {emptyText}
+        </p>
+        {name && <input type="hidden" name={name} value={selected ?? ''} />}
+      </div>
+    </>
+  );
+}
+
+/* ---- Language menu --------------------------------------------------------------------------- */
+
+export interface LanguageOption {
+  id: string;
+  /** The language's own name, as the list shows it (English, فارسی, العربية…). */
+  name: string;
+  /** The short code the trigger shows (EN, FA…); defaults to the id uppercased. */
+  short?: string;
+}
+
+interface LanguageMenuProps {
+  languages: LanguageOption[];
+  value?: string;
+  defaultValue?: string;
+  onValueChange?: (value: string) => void;
+  name?: string;
+  label?: string;
+  side?: Side;
+  align?: Align;
+  className?: string;
+}
+
+/** A locale switcher whose trigger code rolls into the chosen language, wedoflow-style. */
+export function LanguageMenu({
+  languages,
+  value,
+  defaultValue,
+  onValueChange,
+  name,
+  label,
+  side = 'bottom',
+  align = 'end',
+  className,
+}: LanguageMenuProps) {
+  const w = useWords();
+  const id = useBaseId('nx-language');
+  const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useControllable(value, defaultValue ?? languages[0]?.id ?? '', onValueChange);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const panel = useRef<HTMLDivElement>(null);
+  const { onTriggerClick } = usePopover({ id, open, setOpen, trigger, panel, side, align, offset: 8 });
+
+  const current = languages.find((language) => language.id === selected) ?? languages[0] ?? null;
+
+  // Let the code finish rolling before the panel folds away.
+  const choose = (language: LanguageOption) => {
+    setSelected(language.id);
+    onValueChange?.(language.id);
+    window.setTimeout(() => panel.current?.hidePopover?.(), 200);
+  };
+
+  return (
+    <>
+      <button
+        ref={trigger}
+        type="button"
+        className={cx('nx-language-trigger', className)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={id}
+        aria-label={`${label ?? w('language')}: ${current?.name ?? ''}`}
+        onClick={onTriggerClick}
+      >
+        <span className="nx-language-globe" aria-hidden="true">
+          <Icon name="globe" />
+        </span>
+        <span className="nx-language-codes" aria-hidden="true">
+          {languages.map((language) => (
+            <span key={language.id} className="nx-language-code" data-current={language.id === selected ? '' : undefined}>
+              {language.short ?? language.id.toUpperCase()}
+            </span>
+          ))}
+        </span>
+        <span className="nx-language-chevron" aria-hidden="true">
+          <Icon name="chevron-down" />
+        </span>
+      </button>
+      <div ref={panel} id={id} className="nx-language" role="listbox" aria-label={label ?? w('language')} {...{ popover: 'auto' }}>
+        <ul className="nx-language-list">
+          {languages.map((language) => {
+            const selectedNow = language.id === selected;
+            return (
+              <li key={language.id} className="nx-language-row" data-selected={selectedNow ? '' : undefined}>
+                <button type="button" className="nx-language-choice" role="option" aria-selected={selectedNow} onClick={() => choose(language)}>
+                  {language.name}
+                  <span className="nx-language-short">{language.short ?? language.id.toUpperCase()}</span>
+                  <span className="nx-language-mark">
+                    <Icon name="check" />
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+        {name && <input type="hidden" name={name} value={selected ?? ''} />}
+      </div>
+    </>
+  );
+}
+
+/* ---- Theme switch ------------------------------------------------------------------------------ */
+
+export type ThemeSwitchValue = 'light' | 'system' | 'dark';
+
+interface ThemeSwitchProps {
+  value?: ThemeSwitchValue;
+  defaultValue?: ThemeSwitchValue;
+  onValueChange?: (value: ThemeSwitchValue) => void;
+  name?: string;
+  label?: string;
+  className?: string;
+}
+
+const THEME_CHOICES: ThemeSwitchValue[] = ['light', 'system', 'dark'];
+
+/** Light / system / dark triad with a spring-loaded thumb; writes the core theme preference. */
+export function ThemeSwitch({ value, defaultValue, onValueChange, name, label, className }: ThemeSwitchProps) {
+  const w = useWords();
+  const mounted = useMounted();
+  const group = name ?? `nx-theme${useId().replace(/:/g, '')}`;
+  const [pref, setPref] = useControllable(value, defaultValue ?? 'system', onValueChange);
+  const root = useRef<HTMLDivElement>(null);
+  const ind = useIndicator(root);
+  const controlled = useRef(value !== undefined);
+  controlled.current = value !== undefined;
+  // Until mounted, render the system choice so server and client agree.
+  const shown = mounted ? pref : 'system';
+
+  useEffect(() => {
+    if (!controlled.current) setPref(theme.preference());
+    return theme.watch(() => {
+      if (!controlled.current) setPref(theme.preference());
+    });
+  }, [setPref]);
+
+  useIsoLayoutEffect(() => {
+    ind.current?.update(root.current?.querySelector('.nx-theme-switch-option:has(:checked)') ?? null);
+  }, [ind, shown]);
+
+  return (
+    <div ref={root} className={cx('nx-theme-switch', className)} role="radiogroup" aria-label={label ?? w('theme')}>
+      <span className="nx-indicator" aria-hidden="true" />
+      {THEME_CHOICES.map((choice) => (
+        <label key={choice} className="nx-theme-switch-option" aria-label={w(choice)}>
+          <input
+            className="nx-theme-switch-input"
+            type="radio"
+            name={group}
+            value={choice}
+            checked={shown === choice}
+            onChange={() => {
+              theme.set(choice);
+              setPref(choice);
+            }}
+          />
+          {choice === 'light' && <Icon name="sun" />}
+          {choice === 'system' && <span className="nx-theme-switch-half" aria-hidden="true" />}
+          {choice === 'dark' && <Icon name="moon" />}
+        </label>
+      ))}
+    </div>
+  );
+}
+
+/* ---- Promo bar --------------------------------------------------------------------------------- */
+
+interface PromoBarProps {
+  /** Remembers the dismissal under this key for the browsing session. */
+  id?: string;
+  children?: ReactNode;
+  href?: string;
+  linkLabel?: ReactNode;
+  badge?: ReactNode;
+  /** Persist the dismissal in sessionStorage (default true). */
+  persist?: boolean;
+  onDismiss?: () => void;
+  className?: string;
+}
+
+/** An announcement strip that collapses away when dismissed, wedoflow-style. */
+export function PromoBar({ id = 'promo', children, href, linkLabel, badge, persist = true, onDismiss, className }: PromoBarProps) {
+  const t = useT();
+  const w = useWords();
+  const [state, setState] = useState<'open' | 'closing' | 'gone'>('open');
+
+  useIsoLayoutEffect(() => {
+    if (!persist) return;
+    try {
+      if (sessionStorage.getItem(`nabuxui.promo.${id}`)) setState('gone');
+    } catch {
+      /* storage refused: show the bar */
+    }
+  }, [persist, id]);
+
+  if (state === 'gone') return null;
+
+  const dismiss = () => {
+    onDismiss?.();
+    if (persist) {
+      try {
+        sessionStorage.setItem(`nabuxui.promo.${id}`, '1');
+      } catch {
+        /* not persisted, still dismissed */
+      }
+    }
+    setState('closing');
+  };
+
+  return (
+    <aside
+      className={cx('nx-promo-bar', className)}
+      role="region"
+      aria-label={w('announcement')}
+      data-closing={state === 'closing' ? '' : undefined}
+      onTransitionEnd={(event) => {
+        if (state === 'closing' && event.target === event.currentTarget) setState('gone');
+      }}
+    >
+      <div className="nx-promo-bar-inner">
+        <p className="nx-promo-bar-text">
+          {children}
+          {href && (
+            <SmartLink className="nx-promo-bar-link" href={href}>
+              {linkLabel} <Icon name="arrow-right" />
+            </SmartLink>
+          )}
+        </p>
+        {badge != null && <span className="nx-promo-bar-badge">{badge}</span>}
+      </div>
+      <button type="button" className="nx-promo-bar-close" aria-label={t('dismiss')} onClick={dismiss}>
+        <Icon name="x" />
+      </button>
+    </aside>
   );
 }

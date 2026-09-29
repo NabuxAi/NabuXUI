@@ -17,6 +17,7 @@ import {
   foldSearchText,
   formatClock,
   iconSvg,
+  indicator,
   levelMeter,
   lightDismiss,
   localeDigits,
@@ -26,6 +27,7 @@ import {
   place,
   roveFocus,
   searchMenuTree,
+  theme,
   ticketTotal,
   toggleSelection,
   voiceLevel,
@@ -39,6 +41,7 @@ type Self<T> = T & Magics;
 interface Wire {
   $watch?: (name: string, callback: (value: unknown) => void) => void;
   $get?: (name: string) => unknown;
+  $set?: (name: string, value: unknown) => unknown;
   $call?: (method: string, ...params: unknown[]) => unknown;
 }
 
@@ -1056,6 +1059,183 @@ export function installMenusBlocks(Alpine: AlpineLike): void {
 
     clockText(value: number) {
       return formatClock(value);
+    },
+  }));
+
+  /* ---- Chain selector -------------------------------------------------------------------------------- */
+  interface ChainJson {
+    id: string;
+    name: string;
+    symbol?: string;
+    tag?: string;
+    icon?: string;
+    tone?: 'lapis' | 'violet' | 'cyan' | 'gold';
+  }
+
+  Alpine.data('nxChainSelector', (chains: ChainJson[] = [], value: string | null = null, model: string | null = null) => ({
+    chains,
+    selected: value ?? chains[0]?.id ?? null,
+    open: false,
+    query: '',
+    part: null as PopoverPart | null,
+
+    init(this: Self<{ selected: string | null; open: boolean; query: string; part: PopoverPart | null }>) {
+      const wire = wireOf(this);
+      if (model && typeof wire?.$get === 'function') this.selected = (wire.$get(model) as string | null) ?? this.selected;
+      if (model && typeof wire?.$watch === 'function')
+        wire.$watch(model, (next) => (this.selected = typeof next === 'string' ? next : this.selected));
+      this.part = popoverPart(this.$refs.trigger, this.$refs.panel, { side: 'bottom', align: 'start', offset: 8 }, (open) => {
+        this.open = open;
+        if (open) requestAnimationFrame(() => this.$refs.search?.focus({ preventScroll: true }));
+        else this.query = '';
+      });
+    },
+
+    destroy(this: { part: PopoverPart | null }) {
+      this.part?.destroy();
+    },
+
+    get current(): ChainJson | null {
+      const self = this as unknown as { chains: ChainJson[]; selected: string | null };
+      return self.chains.find((chain) => chain.id === self.selected) ?? self.chains[0] ?? null;
+    },
+
+    get visible(): ChainJson[] {
+      const self = this as unknown as { chains: ChainJson[]; matches: (text: string) => boolean };
+      return self.chains.filter((chain) => self.matches(`${chain.name} ${chain.symbol ?? ''} ${chain.tag ?? ''}`));
+    },
+
+    get empty(): boolean {
+      const self = this as unknown as { visible: ChainJson[] };
+      return self.visible.length === 0;
+    },
+
+    matches(this: { query: string }, text: string) {
+      const q = foldSearchText(this.query.trim());
+      return !q || foldSearchText(text).includes(q);
+    },
+
+    /** Pick a chain: the trigger glyph morphs into it, then the panel folds away. */
+    choose(this: { selected: string | null; open: boolean; part: PopoverPart | null }, id: string) {
+      const wire = wireOf(this);
+      this.selected = id;
+      if (model && typeof wire?.$set === 'function') wire.$set(model, id);
+      window.setTimeout(() => {
+        if (this.open) this.part?.hide();
+      }, 240);
+    },
+  }));
+
+  /* ---- Language menu -------------------------------------------------------------------------------- */
+  interface LanguageJson {
+    id: string;
+    name: string;
+    short?: string;
+  }
+
+  Alpine.data('nxLanguageMenu', (languages: LanguageJson[] = [], value: string | null = null, model: string | null = null) => ({
+    languages,
+    selected: value ?? languages[0]?.id ?? null,
+    open: false,
+    part: null as PopoverPart | null,
+
+    init(this: Self<{ selected: string | null; open: boolean; part: PopoverPart | null }>) {
+      const wire = wireOf(this);
+      if (model && typeof wire?.$get === 'function') this.selected = (wire.$get(model) as string | null) ?? this.selected;
+      if (model && typeof wire?.$watch === 'function')
+        wire.$watch(model, (next) => (this.selected = typeof next === 'string' ? next : this.selected));
+      this.part = popoverPart(this.$refs.trigger, this.$refs.panel, { side: 'bottom', align: 'end', offset: 8 }, (open) => {
+        this.open = open;
+      });
+    },
+
+    destroy(this: { part: PopoverPart | null }) {
+      this.part?.destroy();
+    },
+
+    get current(): LanguageJson | null {
+      const self = this as unknown as { languages: LanguageJson[]; selected: string | null };
+      return self.languages.find((language) => language.id === self.selected) ?? self.languages[0] ?? null;
+    },
+
+    /** Pick a language: the trigger code rolls into it, then the panel folds away. */
+    choose(this: Self<{ selected: string | null; open: boolean; part: PopoverPart | null }>, id: string) {
+      const wire = wireOf(this);
+      this.selected = id;
+      if (model && typeof wire?.$set === 'function') wire.$set(model, id);
+      this.$dispatch('nx-change', { id });
+      window.setTimeout(() => {
+        if (this.open) this.part?.hide();
+      }, 200);
+    },
+  }));
+
+  /* ---- Theme switch: light / system / dark, on the core theme store --------------------------------- */
+  Alpine.data('nxThemeSwitch', (value: string | null = null) => ({
+    pref: (value === 'light' || value === 'dark' || value === 'system' ? value : theme.preference()) as 'light' | 'system' | 'dark',
+    ind: null as ReturnType<typeof indicator> | null,
+
+    init(this: Self<{ ind: ReturnType<typeof indicator> | null; move: () => void; follow: () => void }>) {
+      this.ind = indicator(this.$root);
+      this.move();
+      this.$root.addEventListener('change', () => this.move());
+      // The theme may change through the header's toggle or another tab.
+      theme.watch(() => this.follow());
+    },
+
+    destroy(this: { ind: ReturnType<typeof indicator> | null }) {
+      this.ind?.destroy();
+    },
+
+    move(this: Self<{ ind: ReturnType<typeof indicator> | null }>) {
+      this.ind?.update(this.$root.querySelector('.nx-theme-switch-option:has(:checked)'));
+    },
+
+    /** Catch up with a preference changed elsewhere (another toggle, another tab). */
+    follow(this: Self<{ pref: 'light' | 'system' | 'dark'; move: () => void }>) {
+      const next = theme.preference();
+      if (next === this.pref) return;
+      this.pref = next;
+      const input = this.$root.querySelector<HTMLInputElement>(`.nx-theme-switch-input[value="${next}"]`);
+      if (input) input.checked = true;
+      this.move();
+    },
+
+    choose(this: Self<{ pref: 'light' | 'system' | 'dark' }>, next: 'light' | 'system' | 'dark') {
+      theme.set(next);
+      this.pref = next;
+      this.$dispatch('nx-change', { preference: next });
+    },
+  }));
+
+  /* ---- Promo bar: an announcement strip that folds away and stays away ------------------------------ */
+  Alpine.data('nxPromoBar', (id: string = 'promo', persist: boolean = true) => ({
+    state: 'open' as 'open' | 'closing' | 'gone',
+
+    init(this: Self<{ state: 'open' | 'closing' | 'gone' }>) {
+      if (!persist) return;
+      try {
+        if (sessionStorage.getItem(`nabuxui.promo.${id}`)) this.state = 'gone';
+      } catch {
+        /* storage refused: show the bar */
+      }
+    },
+
+    dismiss(this: Self<{ state: 'open' | 'closing' | 'gone' }>) {
+      if (this.state !== 'open') return;
+      if (persist) {
+        try {
+          sessionStorage.setItem(`nabuxui.promo.${id}`, '1');
+        } catch {
+          /* not persisted, still dismissed */
+        }
+      }
+      this.$dispatch('nx-dismiss');
+      this.state = 'closing';
+    },
+
+    end(this: { state: 'open' | 'closing' | 'gone' }) {
+      if (this.state === 'closing') this.state = 'gone';
     },
   }));
 }

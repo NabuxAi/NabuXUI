@@ -7,6 +7,7 @@ import {
   ElasticGrid,
   ExpandableStack,
   FeatureCard,
+  InfiniteGrid,
   OrbitShowcase,
   PitSlider,
   PrecisionSlider,
@@ -344,6 +345,27 @@ export function CardsBlocks() {
 <PrecisionSlider label="Budget" prefix="$" min={0} max={5000} step={50} />`}
             blade={`<x-nx::precision-slider label="Temperature" min="0" max="2" step="0.01" decimals="2" wire:model.live="temperature" />
 <x-nx::precision-slider label="Budget" prefix="$" min="0" max="5000" step="50" value="1200" />`}
+          />
+        </Demo>
+
+        <Demo title={tr('گرید بی‌نهایت نقطه‌چین', 'Infinite dot grid')} wide>
+          <InfiniteGrid>
+            <h2 style={{ margin: 0, font: '700 var(--nx-text-display)/1.15 var(--nx-font-display)' }}>
+              {tr('شبکه‌ای که تمامی ندارد', 'Built on a grid that never stops')}
+            </h2>
+            <p style={{ margin: 0 }}>
+              {tr('نشانگر را حرکت بده: نقطه‌هایی که لمس می‌کند روشن می‌شوند؛ تراکم را هم با دکمه‌های گوشه کم و زیاد کن.', 'Move the pointer: the dots it touches light up; use the corner buttons to change the dot density.')}
+            </p>
+          </InfiniteGrid>
+          <Snippet
+            react={`<InfiniteGrid cell={28} min={12} max={48} step={4}>
+  <h2>Built on a grid that never stops</h2>
+  <p>Move the pointer: the dots it touches light up.</p>
+</InfiniteGrid>`}
+            blade={`<x-nx::infinite-grid cell="28" min="12" max="48" step="4">
+  <h2>Built on a grid that never stops</h2>
+  <p>Move the pointer: the dots it touches light up.</p>
+</x-nx::infinite-grid>`}
           />
         </Demo>
       </div>

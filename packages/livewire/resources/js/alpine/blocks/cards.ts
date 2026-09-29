@@ -14,6 +14,7 @@ import {
   orbitShowcase,
   pitSlider,
   ringCarousel,
+  spotlight,
   stackedScroll,
   swipe,
   textDirection,
@@ -490,4 +491,34 @@ export function installCardsBlocks(Alpine: AlpineLike): void {
       },
     };
   });
+  Alpine.data('nxInfiniteGrid', (cell = 28, min = 12, max = 48, step = 4) => ({
+    cell,
+    min,
+    max,
+    step,
+    stop: null as ReturnType<typeof spotlight> | null,
+
+    init(this: Self<{ stop: ReturnType<typeof spotlight> | null }>) {
+      if (this.$refs.root) this.stop = spotlight(this.$refs.root);
+    },
+
+    destroy(this: { stop: ReturnType<typeof spotlight> | null }) {
+      this.stop?.();
+      this.stop = null;
+    },
+
+    get canShrink() {
+      const self = this as unknown as { cell: number; min: number; step: number };
+      return self.cell - self.step >= self.min;
+    },
+
+    get canGrow() {
+      const self = this as unknown as { cell: number; max: number; step: number };
+      return self.cell + self.step <= self.max;
+    },
+
+    nudge(this: { cell: number; min: number; max: number; step: number }, direction: number) {
+      this.cell = Math.min(this.max, Math.max(this.min, this.cell + direction * this.step));
+    },
+  }));
 }

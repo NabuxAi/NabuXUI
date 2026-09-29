@@ -2644,11 +2644,630 @@
     .nx-voice-recorder-wave > i { transition: none; }
   }
 
+  /* ============================================================================
+   * Chain selector: a network picker whose trigger glyph morphs between chains.
+   *
+   *   <button class="nx-chain-selector-trigger" aria-haspopup="listbox" aria-expanded aria-controls popovertarget>
+   *     <span class="nx-chain-selector-glyph" data-tone="lapis">
+   *       <span class="nx-chain-selector-morph" data-current><svg class="nx-icon">…</svg></span> …</span>
+   *     <span class="nx-chain-selector-who"><span class="nx-chain-selector-name">Ethereum</span>
+   *       <span class="nx-chain-selector-tag">L1 · ETH</span></span></button>
+   *   <div class="nx-chain-selector" popover="auto" role="listbox">
+   *     <div class="nx-chain-selector-search">…</div>
+   *     <ul class="nx-chain-selector-list">
+   *       <li class="nx-chain-selector-row" [data-selected]>
+   *         <button class="nx-chain-selector-choice"><span class="nx-chain-selector-glyph">…</span>
+   *           name · tag · <span class="nx-chain-selector-mark"><svg class="nx-icon">check</svg></span></button></li>
+   * ========================================================================== */
+  .nx-chain-selector-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    min-block-size: 2.75rem;
+    padding: 0.25rem var(--nx-space-3) 0.25rem 0.25rem;
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    font: 600 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    box-shadow: var(--nx-shadow-xs);
+    cursor: pointer;
+    transition-property: scale, background-color, border-color;
+    transition-duration: var(--nx-spring-snappy-duration), var(--nx-dur-fast), var(--nx-dur-fast);
+    transition-timing-function: var(--nx-spring-snappy), var(--nx-ease-out), var(--nx-ease-out);
+
+    &:hover { background: var(--nx-surface-2); }
+    &:active:not([data-static]) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+    &[aria-expanded="true"] { border-color: var(--nx-accent-border); }
+  }
+
+  .nx-chain-selector-who {
+    display: grid;
+    justify-items: start;
+    min-inline-size: 0;
+    text-align: start;
+  }
+
+  .nx-chain-selector-name { font-size: var(--nx-text-sm); }
+
+  .nx-chain-selector-tag {
+    color: var(--nx-text-subtle);
+    font: 500 var(--nx-text-xs) / 1.2 var(--nx-font-sans);
+    letter-spacing: var(--nx-tracking-wide);
+  }
+
+  .nx-chain-selector-glyph {
+    --nx-tone: var(--nx-lapis-500);
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    border-radius: 50%;
+    background: color-mix(in oklab, var(--nx-tone) 16%, transparent);
+    color: var(--nx-tone);
+
+    &[data-tone="lapis"] { --nx-tone: var(--nx-lapis-500); }
+    &[data-tone="violet"] { --nx-tone: var(--nx-violet-500); }
+    &[data-tone="cyan"] { --nx-tone: var(--nx-cyan-500); }
+    &[data-tone="gold"] { --nx-tone: var(--nx-gold-500); }
+  }
+
+  /* The morph: every chain's glyph is stacked; the current one snaps in from a
+   * blurred speck while the old one shrinks away — both stay in the DOM so the
+   * crossfade is seamless. Under reduced motion only the opacity moves. */
+  .nx-chain-selector-morph {
+    grid-area: 1 / 1;
+    display: grid;
+    place-items: center;
+
+    > .nx-icon { inline-size: 1.1rem; block-size: 1.1rem; }
+
+    opacity: 0;
+    scale: 0.25;
+    rotate: calc(-30deg * var(--nx-motion));
+    filter: blur(4px);
+    transition:
+      opacity 300ms cubic-bezier(0.2, 0, 0, 1),
+      scale 300ms cubic-bezier(0.2, 0, 0, 1),
+      rotate 300ms cubic-bezier(0.2, 0, 0, 1),
+      filter 300ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .nx-chain-selector-glyph > [data-current] {
+    opacity: 1;
+    scale: 1;
+    rotate: 0deg;
+    filter: blur(0);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-chain-selector-morph {
+      rotate: 0deg;
+      scale: 1;
+      filter: none;
+      transition: opacity 150ms var(--nx-ease-out);
+    }
+  }
+
+  .nx-chain-selector .nx-chain-selector-glyph { inline-size: 1.75rem; block-size: 1.75rem; }
+  .nx-chain-selector .nx-chain-selector-morph > .nx-icon { inline-size: 0.9rem; block-size: 0.9rem; }
+
+  .nx-chain-selector {
+    position: fixed;
+    inset: auto;
+    z-index: var(--nx-z-dropdown);
+    display: grid;
+    inline-size: min(var(--nx-chain-selector-width, 20rem), calc(100vw - 1rem));
+    max-block-size: min(26rem, 80vh);
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-xl);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    box-shadow: var(--nx-shadow-xl), inset 0 1px 0 var(--nx-highlight);
+    overflow: clip;
+    transform-origin: var(--nx-origin, top center);
+    opacity: 0;
+    scale: 0.95;
+    transition:
+      opacity var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+      display var(--nx-dur-fast) allow-discrete,
+      overlay var(--nx-dur-fast) allow-discrete;
+  }
+
+  .nx-chain-selector:where(:popover-open, [data-open]) {
+    opacity: 1;
+    scale: 1;
+
+    @starting-style { opacity: 0; scale: 0.95; }
+  }
+
+  .nx-chain-selector:not([popover]):not([data-open]) { display: none; }
+
+  .nx-chain-selector-search {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-2) var(--nx-space-3);
+    border-block-end: 1px solid var(--nx-border);
+    color: var(--nx-text-subtle);
+
+    .nx-icon { inline-size: 1rem; block-size: 1rem; }
+    &:has(:focus-visible) { box-shadow: inset 0 -2px 0 var(--nx-ring); }
+  }
+
+  .nx-chain-selector-input {
+    inline-size: 100%;
+    padding-block: var(--nx-space-2);
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: 500 var(--nx-text-sm) / 1.4 var(--nx-font-sans);
+    outline: none;
+
+    &::placeholder { color: var(--nx-text-subtle); }
+  }
+
+  .nx-chain-selector-list {
+    margin: 0;
+    padding: var(--nx-space-1);
+    list-style: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .nx-chain-selector-row {
+    border-radius: var(--nx-radius-lg);
+
+    & + & { margin-block-start: 2px; }
+  }
+
+  .nx-chain-selector-choice {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-3);
+    inline-size: 100%;
+    padding: var(--nx-space-2);
+    border: 0;
+    border-radius: inherit;
+    background: transparent;
+    color: inherit;
+    font: 500 var(--nx-text-sm) / 1.3 var(--nx-font-sans);
+    text-align: start;
+    cursor: pointer;
+    transition-property: background-color;
+    transition-duration: var(--nx-dur-fast);
+    transition-timing-function: var(--nx-ease-out);
+
+    &:hover { background: var(--nx-surface-2); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: -2px; }
+    &:active .nx-chain-selector-glyph { scale: calc(1 - 0.04 * var(--nx-motion)); }
+  }
+
+  .nx-chain-selector-row[data-selected] .nx-chain-selector-choice {
+    background: var(--nx-accent-soft);
+    color: var(--nx-accent-text);
+  }
+
+  .nx-chain-selector-what {
+    display: grid;
+    justify-items: start;
+    min-inline-size: 0;
+    margin-inline-end: auto;
+  }
+
+  .nx-chain-selector-mark {
+    display: grid;
+    place-items: center;
+    inline-size: 1.25rem;
+    block-size: 1.25rem;
+    border-radius: 50%;
+    background: var(--nx-accent);
+    color: var(--nx-accent-text);
+    opacity: 0;
+    scale: 0.25;
+    transition:
+      opacity var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+      scale var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy);
+
+    .nx-icon { inline-size: 0.75rem; block-size: 0.75rem; }
+  }
+
+  .nx-chain-selector-row[data-selected] .nx-chain-selector-mark { opacity: 1; scale: 1; }
+
+  .nx-chain-selector-empty {
+    margin: 0;
+    padding: var(--nx-space-4) var(--nx-space-3);
+    color: var(--nx-text-subtle);
+    font-size: var(--nx-text-sm);
+    text-align: center;
+  }
+
+  /* ============================================================================
+   * Language menu: a globe pill whose code label morphs between languages.
+   *
+   *   <button class="nx-language-trigger" aria-haspopup="listbox" aria-expanded aria-controls popovertarget>
+   *     <span class="nx-language-globe"><svg class="nx-icon">globe</svg></span>
+   *     <span class="nx-language-codes">
+   *       <span class="nx-language-code" data-current>EN</span>
+   *       <span class="nx-language-code">FA</span> …</span>
+   *     <span class="nx-language-chevron"><svg class="nx-icon">chevron-down</svg></span></button>
+   *   <div class="nx-language" popover="auto" role="listbox">
+   *     <ul class="nx-language-list">
+   *       <li class="nx-language-row" [data-selected]>
+   *         <button class="nx-language-choice" role="option">name <span class="nx-language-short">EN</span>
+   *           <span class="nx-language-mark"><svg class="nx-icon">check</svg></span></button></li> …
+   *
+   * Every language's code is stacked in the trigger; the chosen one rolls in
+   * (up from a blur) while the panel folds away. Rows highlight like the
+   * chain selector's, and the check springs in on the picked language.
+   * ========================================================================== */
+  .nx-language-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    min-block-size: 2.5rem;
+    padding-inline: var(--nx-space-3);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    font: 600 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    box-shadow: var(--nx-shadow-xs);
+    cursor: pointer;
+    transition-property: scale, background-color, border-color;
+    transition-duration: var(--nx-spring-snappy-duration), var(--nx-dur-fast), var(--nx-dur-fast);
+    transition-timing-function: var(--nx-spring-snappy), var(--nx-ease-out), var(--nx-ease-out);
+
+    &:hover { background: var(--nx-surface-2); }
+    &:active:not([data-static]) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+    &[aria-expanded="true"] { border-color: var(--nx-accent-border); }
+  }
+
+  .nx-language-globe {
+    display: grid;
+    place-items: center;
+    color: var(--nx-text-subtle);
+
+    .nx-icon { inline-size: 1rem; block-size: 1rem; }
+  }
+
+  /* Every language's code stacked; the current one rolls up into place. */
+  .nx-language-codes {
+    display: inline-grid;
+    place-items: center;
+    min-inline-size: 2ch;
+  }
+
+  .nx-language-code {
+    grid-area: 1 / 1;
+    letter-spacing: var(--nx-tracking-wide);
+    opacity: 0;
+    translate: 0 calc(0.7em * var(--nx-motion));
+    filter: blur(calc(2px * var(--nx-motion)));
+    transition:
+      opacity 300ms cubic-bezier(0.2, 0, 0, 1),
+      translate 300ms cubic-bezier(0.2, 0, 0, 1),
+      filter 300ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .nx-language-codes > [data-current] {
+    opacity: 1;
+    translate: 0 0;
+    filter: blur(0);
+  }
+
+  .nx-language-chevron {
+    display: inline-flex;
+    color: var(--nx-text-subtle);
+    transition: rotate var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+
+    .nx-icon { inline-size: 1rem; block-size: 1rem; }
+  }
+
+  [aria-expanded="true"] > .nx-language-chevron { rotate: 180deg; }
+
+  .nx-language {
+    position: fixed;
+    inset: auto;
+    z-index: var(--nx-z-dropdown);
+    display: grid;
+    inline-size: min(var(--nx-language-width, 15rem), calc(100vw - 1rem));
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-xl);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    box-shadow: var(--nx-shadow-xl), inset 0 1px 0 var(--nx-highlight);
+    overflow: clip;
+    transform-origin: var(--nx-origin, top center);
+    opacity: 0;
+    scale: 0.95;
+    transition:
+      opacity var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+      display var(--nx-dur-fast) allow-discrete,
+      overlay var(--nx-dur-fast) allow-discrete;
+  }
+
+  .nx-language:where(:popover-open, [data-open]) {
+    opacity: 1;
+    scale: 1;
+
+    @starting-style { opacity: 0; scale: 0.95; }
+  }
+
+  .nx-language:not([popover]):not([data-open]) { display: none; }
+
+  .nx-language-list {
+    display: grid;
+    margin: 0;
+    padding: var(--nx-space-1);
+    list-style: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .nx-language-row {
+    border-radius: var(--nx-radius-lg);
+
+    & + & { margin-block-start: 2px; }
+  }
+
+  .nx-language-choice {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-3);
+    inline-size: 100%;
+    padding: var(--nx-space-2) var(--nx-space-3);
+    border: 0;
+    border-radius: inherit;
+    background: transparent;
+    color: inherit;
+    font: 500 var(--nx-text-sm) / 1.3 var(--nx-font-sans);
+    text-align: start;
+    cursor: pointer;
+    transition-property: background-color;
+    transition-duration: var(--nx-dur-fast);
+    transition-timing-function: var(--nx-ease-out);
+
+    &:hover { background: var(--nx-surface-2); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: -2px; }
+  }
+
+  .nx-language-short {
+    margin-inline-start: auto;
+    color: var(--nx-text-subtle);
+    font-size: var(--nx-text-xs);
+    font-weight: 600;
+    letter-spacing: var(--nx-tracking-wide);
+  }
+
+  .nx-language-row[data-selected] .nx-language-choice { background: var(--nx-accent-soft); color: var(--nx-accent-text); }
+  .nx-language-row[data-selected] .nx-language-short { color: var(--nx-accent-text); }
+
+  .nx-language-mark {
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 1.25rem;
+    block-size: 1.25rem;
+    border-radius: 50%;
+    background: var(--nx-accent);
+    color: var(--nx-accent-text);
+    opacity: 0;
+    scale: 0.25;
+    transition:
+      opacity var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+      scale var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy);
+
+    .nx-icon { inline-size: 0.75rem; block-size: 0.75rem; }
+  }
+
+  .nx-language-row[data-selected] .nx-language-mark { opacity: 1; scale: 1; }
+
+  /* ============================================================================
+   * Theme switch: a light / system / dark triad with a spring-loaded thumb.
+   *
+   *   <div class="nx-theme-switch" role="radiogroup" data-nx-indicator="ready">
+   *     <span class="nx-indicator" aria-hidden="true"></span>
+   *     <label class="nx-theme-switch-option"><input class="nx-theme-switch-input" type="radio" value="light">
+   *       <svg class="nx-icon">sun</svg></label>
+   *     <label … value="system"><span class="nx-theme-switch-half" aria-hidden="true"></span></label>
+   *     <label … value="dark"><svg class="nx-icon">moon</svg></label>
+   *
+   * The core `indicator` behaviour slides the thumb between the options; the
+   * system glyph is a half-filled dial, so the three states read at a glance.
+   * ========================================================================== */
+  .nx-theme-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: var(--nx-space-1);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface-2);
+    box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.06), inset 0 0 0 1px var(--nx-border);
+  }
+
+  .nx-theme-switch .nx-indicator {
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface);
+    box-shadow: var(--nx-shadow-sm), inset 0 1px 0 var(--nx-highlight), 0 0 0 1px color-mix(in oklab, var(--nx-border) 70%, transparent);
+  }
+
+  .nx-theme-switch-option {
+    position: relative;
+    z-index: 1;
+    display: inline-grid;
+    place-items: center;
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    border-radius: var(--nx-radius-full);
+    color: var(--nx-text-subtle);
+    cursor: pointer;
+    transition: color var(--nx-dur-base) var(--nx-ease-out);
+
+    .nx-icon { inline-size: 1.15rem; block-size: 1.15rem; }
+    &:hover { color: var(--nx-text); }
+    &:has(:checked) { color: var(--nx-text); }
+    &:has(:focus-visible) { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+  }
+
+  .nx-theme-switch-input {
+    appearance: none;
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    border-radius: inherit;
+    opacity: 0;
+    cursor: inherit;
+  }
+
+  /* System: a half-filled dial, the classic contrast glyph. */
+  .nx-theme-switch-half {
+    inline-size: 1.15rem;
+    block-size: 1.15rem;
+    border-radius: 50%;
+    border: 1.5px solid currentColor;
+    background: linear-gradient(to right, currentColor 50%, transparent 50%);
+  }
+
+  :where([dir="rtl"]) .nx-theme-switch-half { background: linear-gradient(to left, currentColor 50%, transparent 50%); }
+
+  /* ============================================================================
+   * Promo bar: an announcement strip that collapses away when dismissed.
+   *
+   *   <aside class="nx-promo-bar" role="region" aria-label="Announcement">
+   *     <div class="nx-promo-bar-inner">
+   *       <p class="nx-promo-bar-text">message
+   *         <a class="nx-promo-bar-link" href="…">label <svg class="nx-icon">arrow-right</svg></a></p>
+   *       <span class="nx-promo-bar-badge">NEW</span>
+   *     </div>
+   *     <button class="nx-promo-bar-close" aria-label="Dismiss"><svg class="nx-icon">x</svg></button>
+   *
+   * Dismissal folds the bar away (grid-template-rows 1fr → 0fr) and, when the
+   * block asks for it, the choice is remembered for the session.
+   * ========================================================================== */
+  .nx-promo-bar {
+    position: relative;
+    display: grid;
+    grid-template-rows: 1fr;
+    background: var(--nx-accent);
+    color: var(--nx-accent-contrast);
+    text-align: center;
+    transition-property: grid-template-rows, opacity, translate;
+    transition-duration: var(--nx-spring-gentle-duration), var(--nx-dur-base), var(--nx-dur-base);
+    transition-timing-function: var(--nx-spring-gentle), var(--nx-ease-in), var(--nx-ease-in);
+    animation: nx-promo-in var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+
+    &[data-closing] {
+      grid-template-rows: 0fr;
+      opacity: 0;
+      translate: 0 calc(-0.75rem * var(--nx-motion));
+    }
+
+    &[data-gone] { display: none; }
+  }
+
+  @keyframes nx-promo-in {
+    from {
+      opacity: 0;
+      translate: 0 calc(-100% * var(--nx-motion));
+    }
+  }
+
+  .nx-promo-bar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-space-3);
+    min-block-size: 0;
+    overflow: hidden;
+    padding: var(--nx-space-2) calc(var(--nx-space-10) + var(--nx-space-2));
+    font: 600 var(--nx-text-sm) / 1.4 var(--nx-font-sans);
+  }
+
+  .nx-promo-bar-text {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem var(--nx-space-2);
+    margin: 0;
+  }
+
+  .nx-promo-bar-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+
+    .nx-icon { inline-size: 1rem; block-size: 1rem; transition: translate var(--nx-spring-snappy-duration) var(--nx-spring-snappy); }
+    &:hover .nx-icon { translate: calc(0.15rem * var(--nx-dir)) 0; }
+    &:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; border-radius: var(--nx-radius-sm); }
+  }
+
+  .nx-promo-bar-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--nx-radius-sm);
+    background: var(--nx-surface);
+    color: var(--nx-accent-text);
+    font: 700 var(--nx-text-xs) / 1.4 var(--nx-font-sans);
+    letter-spacing: var(--nx-tracking-wide);
+    text-transform: uppercase;
+    rotate: calc(-4deg * var(--nx-motion));
+    box-shadow: var(--nx-shadow-sm);
+  }
+
+  .nx-promo-bar-close {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-end: var(--nx-space-2);
+    display: grid;
+    place-items: center;
+    inline-size: 2rem;
+    block-size: 2rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--nx-radius-full);
+    background: transparent;
+    color: inherit;
+    opacity: 0.75;
+    translate: 0 -50%;
+    cursor: pointer;
+    transition-property: scale, opacity, background-color;
+    transition-duration: var(--nx-spring-snappy-duration), var(--nx-dur-fast), var(--nx-dur-fast);
+    transition-timing-function: var(--nx-spring-snappy), var(--nx-ease-out), var(--nx-ease-out);
+
+    .nx-icon { inline-size: 1rem; block-size: 1rem; }
+    &:hover { opacity: 1; background: color-mix(in oklab, currentColor 14%, transparent); }
+    &:active:not([data-static]) { scale: calc(1 - 0.06 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-promo-bar { animation: none; }
+    .nx-promo-bar[data-closing] { translate: none; }
+  }
+
   @media (forced-colors: active) {
     .nx-morph-menu-shell,
     .nx-dock-panels-shell,
     .nx-audio-room-shell,
     .nx-voice-recorder { border: 1px solid CanvasText; }
     .nx-morph-tabs-pill { outline: 2px solid Highlight; }
+    .nx-promo-bar-badge { border: 1px solid CanvasText; }
   }
 }

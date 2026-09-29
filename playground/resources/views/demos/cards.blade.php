@@ -156,3 +156,11 @@
         <p style="margin:0">Temperature on the server: <code>{{ $state['temperature'] ?? '—' }}</code></p>
     </div>
 </section>
+
+<section class="pg-box">
+    <h2 class="pg-title">Infinite grid</h2>
+    <x-nx::infinite-grid>
+        <h2 style="margin:0;font:700 var(--nx-text-display)/1.15 var(--nx-font-display)">شبکه‌ای که تمامی ندارد</h2>
+        <p style="margin:0">نشانگر را حرکت بده: نقطه‌هایی که لمس می‌کند روشن می‌شوند؛ تراکم را هم با دکمه‌های گوشه کم و زیاد کن.</p>
+    </x-nx::infinite-grid>
+</section>

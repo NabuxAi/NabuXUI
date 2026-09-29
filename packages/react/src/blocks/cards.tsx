@@ -23,6 +23,7 @@ import {
   orbitShowcase,
   pitSlider,
   ringCarousel,
+  spotlight,
   stackedScroll,
   swipe,
   textDirection,
@@ -1392,6 +1393,48 @@ export function PrecisionSlider({
       <div className="nx-precision-scale" aria-hidden="true">
         <span>{text(min)}</span>
         <span>{text(max)}</span>
+      </div>
+    </div>
+  );
+}
+
+/* ---- Infinite grid ------------------------------------------------------------------------------ */
+
+interface InfiniteGridProps extends Omit<HTMLAttributes<HTMLDivElement>, 'children'> {
+  /** Dot grid cell size in px (the density the stepper changes). */
+  cell?: number;
+  min?: number;
+  max?: number;
+  step?: number;
+  children?: ReactNode;
+}
+
+/** A drifting dot field with a pointer spotlight and a density stepper. */
+export function InfiniteGrid({ cell = 28, min = 12, max = 48, step = 4, className, style, children, ...rest }: InfiniteGridProps) {
+  const [size, setSize] = useState(cell);
+  const root = useRef<HTMLDivElement>(null);
+  useBehavior(root, spotlight, undefined);
+
+  const nudge = (direction: number) => setSize((value) => Math.min(max, Math.max(min, value + direction * step)));
+
+  return (
+    <div
+      {...rest}
+      ref={root}
+      className={cx('nx-infinite-grid', className)}
+      style={{ ...style, '--_cell': `${size}px` } as CSSProperties}
+    >
+      <div className="nx-infinite-grid-field" aria-hidden />
+      <div className="nx-infinite-grid-glow" aria-hidden />
+      <div className="nx-infinite-grid-veil" aria-hidden />
+      {children && <div className="nx-infinite-grid-body">{children}</div>}
+      <div className="nx-infinite-grid-controls" role="group" aria-label="Dot density">
+        <button type="button" disabled={size - step < min} onClick={() => nudge(-1)} aria-label="Fewer dots">
+          <Icon name="minus" />
+        </button>
+        <button type="button" disabled={size + step > max} onClick={() => nudge(1)} aria-label="More dots">
+          <Icon name="plus" />
+        </button>
       </div>
     </div>
   );

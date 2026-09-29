@@ -1804,6 +1804,107 @@
     font-variant-numeric: tabular-nums;
   }
 
+  /* ---- Infinite grid: drifting dots, pointer spotlight, density stepper --------------- */
+  .nx-infinite-grid {
+    --_cell: 28px;
+    --_dot: color-mix(in oklab, var(--nx-text) 15%, transparent);
+    position: relative;
+    display: grid;
+    place-items: center;
+    isolation: isolate;
+    overflow: clip;
+    min-block-size: 22rem;
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-xl);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+  }
+
+  .nx-infinite-grid-field,
+  .nx-infinite-grid-glow {
+    position: absolute;
+    /* One cell of overhang on every side so the drift loop never shows its edge. */
+    inset: calc(var(--_cell) * -1);
+    pointer-events: none;
+  }
+
+  .nx-infinite-grid-field {
+    background-image: radial-gradient(circle, var(--_dot) 1.25px, transparent 1.4px);
+    background-size: var(--_cell) var(--_cell);
+    animation: nx-infinite-grid-drift 7s linear infinite;
+  }
+
+  /* The spotlight: the same dots again, accent-lit, revealed through a radial
+   * mask that rides the pointer via --nx-px/--nx-py (core spotlight()). */
+  .nx-infinite-grid-glow {
+    background-image: radial-gradient(circle, var(--nx-accent) 1.5px, transparent 1.65px);
+    background-size: var(--_cell) var(--_cell);
+    opacity: 0;
+    transition: opacity var(--nx-dur-slow) var(--nx-ease-out);
+    -webkit-mask-image: radial-gradient(10rem circle at var(--nx-px, 50%) var(--nx-py, 50%), #000, transparent 72%);
+    mask-image: radial-gradient(10rem circle at var(--nx-px, 50%) var(--nx-py, 50%), #000, transparent 72%);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .nx-infinite-grid:hover .nx-infinite-grid-glow { opacity: 1; }
+  }
+
+  @keyframes nx-infinite-grid-drift {
+    to { translate: calc(var(--_cell) * var(--nx-dir)) var(--_cell); }
+  }
+
+  .nx-infinite-grid-veil {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(ellipse 78% 66% at 50% 46%, transparent 52%, var(--nx-surface));
+  }
+
+  .nx-infinite-grid-body {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    justify-items: center;
+    gap: var(--nx-space-3);
+    padding: var(--nx-space-6);
+    text-align: center;
+  }
+
+  .nx-infinite-grid-controls {
+    position: absolute;
+    inset-block-end: var(--nx-space-3);
+    inset-inline-end: var(--nx-space-3);
+    z-index: 1;
+    display: inline-flex;
+    gap: 2px;
+    padding: 2px;
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface);
+    box-shadow: var(--nx-shadow-xs);
+
+    > button {
+      display: grid;
+      place-items: center;
+      inline-size: 1.9rem;
+      block-size: 1.9rem;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      color: var(--nx-text-muted);
+      cursor: pointer;
+      transition-property: scale, background-color, color;
+      transition-duration: var(--nx-spring-snappy-duration), var(--nx-dur-fast), var(--nx-dur-fast);
+      transition-timing-function: var(--nx-spring-snappy), var(--nx-ease-out), var(--nx-ease-out);
+
+      .nx-icon { inline-size: 0.95rem; block-size: 0.95rem; }
+      &:hover:not(:disabled) { background: var(--nx-surface-2); color: var(--nx-text); }
+      &:active:not([data-static]) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+      &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 1px; }
+      &:disabled { opacity: 0.35; cursor: default; }
+    }
+  }
+
   /* ---- Reduced motion: loops rest, the goo stays out, springs are already short -------- */
   @media (prefers-reduced-motion: reduce) {
     .nx-orbit-orb,
@@ -1829,5 +1930,7 @@
     .nx-ring-label[data-morphing] .nx-ring-titles { filter: none; }
     /* The depth carousel cross-fades: cards take their places at once. */
     .nx-depth-card { transition-property: filter, opacity; }
+    /* The dot field rests; the spotlight keeps following the pointer. */
+    .nx-infinite-grid-field { animation: none; }
   }
 }
