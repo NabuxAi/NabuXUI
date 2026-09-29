@@ -170,6 +170,46 @@
             <button type="button" class="nx-button" data-variant="ghost" x-data @click="sessionStorage.removeItem('nabuxui.promo.playground-launch'); $wire.ping('Reset — reload to see it again')">Reset dismissal</button>
         </div>
     </div>
+
+    <div class="pg-box">
+        <h2 class="pg-title">Chip filter</h2>
+        <p style="margin:0;color:var(--nx-text-muted)">Trending tags — the accent thumb springs under the checked chip. <code>x-on:nx-change</code>.</p>
+        <div class="pg-row">
+            <x-nx::chip-filter label="فیلتر · Filter" x-on:nx-change="$wire.ping('فیلتر: ' + $event.detail.value)" :options="[
+                'all' => 'همه · All',
+                'landing' => ['label' => 'لندینگ · Landing', 'icon' => 'globe'],
+                'dashboard' => ['label' => 'داشبورد · Dashboard', 'icon' => 'grid'],
+                'shop' => ['label' => 'فروشگاه · Shop', 'icon' => 'layers'],
+                'portfolio' => ['label' => 'پورتفولیو · Portfolio', 'icon' => 'image'],
+                'blog' => ['label' => 'بلاگ · Blog', 'icon' => 'edit'],
+            ]" :counts="['landing' => 320, 'dashboard' => 214, 'shop' => 96, 'portfolio' => 58]" />
+        </div>
+    </div>
+
+    <div class="pg-box">
+        <h2 class="pg-title">Stat strip</h2>
+        <p style="margin:0;color:var(--nx-text-muted)">Server-rendered figures that roll up once when they scroll into view.</p>
+        <div class="pg-row">
+            <x-nx::stat-strip label="آمار · Stats" :stats="[
+                ['label' => 'طرح‌ها · Designs', 'value' => 2400, 'icon' => 'layers', 'caption' => '+120 این ماه · this month'],
+                ['label' => 'طراحان · Designers', 'value' => 1400, 'icon' => 'users'],
+                ['label' => 'دسته‌ها · Categories', 'value' => 40, 'icon' => 'grid'],
+                ['label' => 'پلتفرم‌ها · Platforms', 'value' => 5, 'icon' => 'globe'],
+            ]" />
+        </div>
+    </div>
+
+    <div class="pg-box">
+        <h2 class="pg-title">Sort pill</h2>
+        <p style="margin:0;color:var(--nx-text-muted)">The chosen label rolls into the trigger while the panel folds away. <code>x-on:nx-change</code>.</p>
+        <div class="pg-row" x-on:nx-change="$wire.ping('مرتب‌سازی: ' + $event.detail.value)">
+            <x-nx::sort-pill label="مرتب‌سازی · Sort" :options="[
+                'featured' => ['label' => 'منتخب · Featured', 'icon' => 'star'],
+                'recent' => ['label' => 'تازه‌ها · Recent', 'icon' => 'sparkles'],
+                'top' => ['label' => 'بالاترین امتیاز · Top rated', 'icon' => 'trend-up'],
+            ]" />
+        </div>
+    </div>
 </section>
 
 <section class="pg-grid">

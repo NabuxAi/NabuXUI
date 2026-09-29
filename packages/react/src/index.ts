@@ -26,6 +26,9 @@ export * from './blocks/actions';
 export * from './blocks/cards';
 export * from './blocks/data';
 export * from './blocks/menus';
+export * from './blocks/chip-filter';
+export * from './blocks/stat-strip';
+export * from './blocks/sort-pill';
 export * from './blocks/glass';
 
 // The framework-agnostic helpers, for pages that need them directly.

@@ -16,6 +16,9 @@ import { installActionsBlocks } from './alpine/blocks/actions';
 import { installCardsBlocks } from './alpine/blocks/cards';
 import { installDataBlocks } from './alpine/blocks/data';
 import { installMenusBlocks } from './alpine/blocks/menus';
+import { installChipFilterBlocks } from './alpine/blocks/chip-filter';
+import { installStatStripBlocks } from './alpine/blocks/stat-strip';
+import { installSortPillBlocks } from './alpine/blocks/sort-pill';
 import { installGlassBlocks } from './alpine/blocks/glass';
 
 
@@ -44,6 +47,9 @@ function install(Alpine: AlpineLike | undefined) {
   installCardsBlocks(Alpine);
   installDataBlocks(Alpine);
   installMenusBlocks(Alpine);
+  installChipFilterBlocks(Alpine);
+  installStatStripBlocks(Alpine);
+  installSortPillBlocks(Alpine);
   installGlassBlocks(Alpine);
 }
 

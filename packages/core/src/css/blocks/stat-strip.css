@@ -1,0 +1,110 @@
+/*
+ * Blocks: the stat strip.
+ *
+ * A compact horizontal band of stats — small-caps terms over big display
+ * figures with hairlines between, the kind of strip that fronts a landing
+ * page ("Designs 2.4k | Designers 1.4k | Categories 40 | Platforms 5").
+ * The count-up itself lives in the rolling numbers: every figure holds its
+ * digits at zero until it scrolls into view, then rolls up once (the core
+ * reveal marks it, the digits follow their columns).
+ */
+@layer nx.components {
+  /* ============================================================================
+   * Stat strip: a row of stats that count up when they are seen.
+   *
+   *   <dl class="nx-stat-strip" data-nx-reveal="group">
+   *     <div class="nx-stat-strip-item" style="--nx-i: 0">
+   *       <span class="nx-stat-strip-icon">…</span>                 ← optional
+   *       <div class="nx-stat-strip-what">
+   *         <dt class="nx-stat-strip-label">Designs</dt>
+   *         <dd class="nx-stat-strip-value">
+   *           <span class="nx-number" data-nx-reveal data-value="2400">…</span>
+   *           <span class="nx-stat-strip-caption">this month</span>  ← optional
+   *         </dd>
+   *       </div>
+   *     </div> …
+   *
+   * Every item carries a border-inline-start divider pulled one pixel over its
+   * neighbour and clipped at the strip's start: dividers land only between
+   * items, in either direction, and a row wrapped onto a narrow screen still
+   * starts clean.
+   * ========================================================================== */
+  .nx-stat-strip {
+    /* How big the figures are drawn. */
+    --nx-stat-strip-value-size: var(--nx-text-3xl);
+
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--nx-space-4) 0;
+    margin: 0;
+    padding: var(--nx-space-2) 0;
+    overflow: clip;
+  }
+
+  .nx-stat-strip-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-space-3);
+    flex: 1 1 auto;
+    margin-inline-start: -1px;
+    padding-inline: var(--nx-space-5);
+    border-inline-start: 1px solid var(--nx-border);
+  }
+
+  .nx-stat-strip-icon {
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-accent-soft);
+    color: var(--nx-accent-text);
+
+    .nx-icon { inline-size: 1.125rem; block-size: 1.125rem; }
+  }
+
+  .nx-stat-strip-what {
+    display: grid;
+    gap: 0.2rem;
+    justify-items: center;
+    min-inline-size: 0;
+    text-align: center;
+  }
+
+  .nx-stat-strip-label {
+    margin: 0;
+    color: var(--nx-text-subtle);
+    font: 600 var(--nx-text-xs) / 1.4 var(--nx-font-sans);
+    text-transform: uppercase;
+    letter-spacing: var(--nx-tracking-wider);
+  }
+
+  /* The rolling number picks the display face up by inheritance; text.css
+     keeps its own tabular-nums and line-height. */
+  .nx-stat-strip-value {
+    display: grid;
+    gap: 0.15rem;
+    justify-items: center;
+    margin: 0;
+    color: var(--nx-text);
+    font: 650 var(--nx-stat-strip-value-size) / 1.1 var(--nx-font-display);
+  }
+
+  .nx-stat-strip-caption {
+    color: var(--nx-text-muted);
+    font: 400 var(--nx-text-xs) / 1.4 var(--nx-font-sans);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    /* The figures settle instead of rolling: the value is what matters. */
+    .nx-stat-strip .nx-digit-track { transition: none; }
+  }
+
+  @media (forced-colors: active) {
+    .nx-stat-strip-item,
+    .nx-stat-strip-icon { border-color: CanvasText; }
+  }
+}
