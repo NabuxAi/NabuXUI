@@ -10,6 +10,7 @@ import { ActionsBlocks } from './blocks/actions';
 import { CardsBlocks } from './blocks/cards';
 import { DataBlocks } from './blocks/data';
 import { MenusBlocks } from './blocks/menus';
+import { NavExtrasBlocks } from './blocks/nav-extras';
 import { GlassBlocks } from './blocks/glass';
 
 const SECTIONS: Array<{ id: string; fa: string; en: string; icon: NonNullable<NavItem['children']>[number]['icon'] }> = [
@@ -130,6 +131,7 @@ export function App() {
           <GridSection />
           <NavigationSection />
           <MenusBlocks />
+          <NavExtrasBlocks />
         </main>
         <footer className="sc-footer">
           <div className="sc-container">

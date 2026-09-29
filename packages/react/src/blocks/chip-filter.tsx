@@ -36,12 +36,12 @@ export interface ChipFilterProps extends Omit<HTMLAttributes<HTMLDivElement>, 'c
 
 const reducedMotion = () => typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
-export function ChipFilter({ items, value, defaultValue = 'all', onValueChange, name, 'aria-label': label, className, ...rest }: ChipFilterProps) {
+export function ChipFilter({ items, value, defaultValue, onValueChange, name, 'aria-label': label, className, ...rest }: ChipFilterProps) {
   const locale = useLocale();
   const generated = useId();
   // Without a shared name the radios are separate groups and the arrow keys die.
   const group = name ?? `nx-chip${generated.replace(/:/g, '')}`;
-  const [current, setCurrent] = useControllable(value, defaultValue, onValueChange);
+  const [current, setCurrent] = useControllable(value, defaultValue ?? items[0]?.value ?? '', onValueChange);
   const row = useRef<HTMLDivElement>(null);
   const ind = useIndicator(row);
   const mounted = useRef(false);

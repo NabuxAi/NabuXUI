@@ -34,7 +34,9 @@
 <div style="display: contents" x-data="nxSortPill(@js($options), @js($current['value'] ?? null), @js($model), @js($align))">
     <button type="button" {{ $attributes->whereDoesntStartWith('wire:model')->class('nx-sort-pill-trigger') }} x-ref="trigger"
         popovertarget="{{ $id }}" aria-controls="{{ $id }}" aria-haspopup="listbox" aria-expanded="false"
-        x-bind:aria-expanded="open ? 'true' : 'false'" aria-label="{{ $label }}: {{ $current['label'] ?? '' }}">
+        x-bind:aria-expanded="open ? 'true' : 'false'"
+        x-bind:aria-label="@js($label) + ': ' + (options.find(o => o.value === selected)?.label ?? '')"
+        aria-label="{{ $label }}: {{ $current['label'] ?? '' }}">
         <span class="nx-sort-pill-labels" aria-hidden="true">
             @foreach ($options as $option)
                 <span class="nx-sort-pill-label" @if (($current['value'] ?? null) === $option['value']) data-current @endif
@@ -43,11 +45,11 @@
         </span>
         <span class="nx-sort-pill-chevron" aria-hidden="true">{{ NabuXUI::icon('chevron-down') }}</span>
     </button>
-    <div class="nx-sort-pill" id="{{ $id }}" x-ref="panel" popover="auto" wire:ignore.self role="listbox" aria-label="{{ $label }}"
+    <div class="nx-sort-pill" id="{{ $id }}" x-ref="panel" popover="auto" wire:ignore.self
         x-on:keydown="keyList($event)">
-        <ul class="nx-sort-pill-list" x-ref="list">
+        <ul class="nx-sort-pill-list" x-ref="list" role="listbox" aria-label="{{ $label }}">
             @foreach ($options as $option)
-                <li class="nx-sort-pill-option" @if (($current['value'] ?? null) === $option['value']) data-selected @endif
+                <li class="nx-sort-pill-option" role="presentation" @if (($current['value'] ?? null) === $option['value']) data-selected @endif
                     x-bind:data-selected="selected === @js($option['value']) ? '' : null">
                     <button type="button" class="nx-sort-pill-choice" role="option"
                         aria-selected="{{ ($current['value'] ?? null) === $option['value'] ? 'true' : 'false' }}"

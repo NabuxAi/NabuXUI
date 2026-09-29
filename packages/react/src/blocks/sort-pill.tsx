@@ -160,16 +160,15 @@ export function SortPill({ options, value, defaultValue, onValueChange, label, a
         ref={panel}
         id={id}
         className="nx-sort-pill"
-        role="listbox"
-        aria-label={label ?? 'Sort'}
         {...{ popover: 'auto' }}
         onKeyDown={(event) => roveFocus(event.nativeEvent, event.currentTarget, '.nx-sort-pill-choice', { orientation: 'vertical' })}
       >
-        <ul className="nx-sort-pill-list">
+        {/* listbox owns its options directly: the list wrapper stays presentational */}
+        <ul className="nx-sort-pill-list" role="listbox" aria-label={label ?? 'Sort'}>
           {options.map((option) => {
             const picked = option.value === selected;
             return (
-              <li key={option.value} className="nx-sort-pill-option" data-selected={picked ? '' : undefined}>
+              <li key={option.value} className="nx-sort-pill-option" role="presentation" data-selected={picked ? '' : undefined}>
                 <button type="button" className="nx-sort-pill-choice" role="option" aria-selected={picked} onClick={() => choose(option.value)}>
                   {option.icon && <Icon name={option.icon} />}
                   <span>{option.label}</span>
