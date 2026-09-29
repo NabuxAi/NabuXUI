@@ -1800,4 +1800,284 @@
     :is(.nx-flip-button-face, .nx-blob-button, .nx-tx-button, .nx-fill-button, .nx-metal-button, .nx-interest) { border: 1px solid ButtonText; }
     .nx-border-button-frame rect { stroke: ButtonText; }
   }
+
+  /* ============================================================================
+   * Gradient upload: a dropzone whose halo, icon chip and progress line all
+   * carry the brand gradient.
+   *
+   *   <div class="nx-upload" data-state="idle">
+   *     <label class="nx-upload-zone">
+   *       <input class="nx-upload-input" type="file" multiple accept="image/*,.pdf">
+   *       <span class="nx-upload-glow" aria-hidden="true"></span>
+   *       <span class="nx-upload-icon" aria-hidden="true"><svg class="nx-icon">upload</svg></span>
+   *       <span class="nx-upload-title">Drop files here or browse</span>
+   *       <span class="nx-upload-hint">PDF, PNG or JPG up to 10 MB</span>
+   *     </label>
+   *     <ul class="nx-upload-list">
+   *       <li class="nx-upload-file" data-state="uploading" style="--nx-i: 0">
+   *         <span class="nx-upload-file-icon" aria-hidden="true"><svg class="nx-icon">file</svg></span>
+   *         <span class="nx-upload-file-text">
+   *           <span class="nx-upload-file-name">Report.pdf</span>
+   *           <span class="nx-upload-file-meta">1.2 MB · Uploading</span>
+   *         </span>
+   *         <span class="nx-upload-file-progress" aria-hidden="true"><i></i></span>
+   *         <button class="nx-upload-file-remove" type="button" aria-label="Remove Report.pdf">
+   *           <svg class="nx-icon">x</svg>
+   *         </button>
+   *       </li>
+   *     </ul>
+   *   </div>
+   *
+   * The core `dropzone` behaviour writes data-state="drag" while files hover
+   * over the zone: the halo fades up, the chip lifts onto the gradient, the
+   * dashed rim turns accent. Files rise into the list one after another; the
+   * 4px line is indeterminate (a sliding sheen) while a row uploads, then the
+   * real 100% springs in when it is done. data-state per row: ready,
+   * uploading, done, error.
+   * ========================================================================== */
+  .nx-upload {
+    display: grid;
+    gap: var(--nx-space-3);
+  }
+
+  .nx-upload-zone {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-8) var(--nx-space-6);
+    border: 1.5px dashed var(--nx-border-strong);
+    border-radius: var(--nx-radius-2xl);
+    background: var(--nx-surface);
+    text-align: center;
+    cursor: pointer;
+    overflow: clip;
+    transition-property: background-color, border-color;
+    transition-duration: var(--nx-dur-fast);
+    transition-timing-function: var(--nx-ease-out);
+  }
+
+  .nx-upload-zone:hover { border-color: var(--nx-accent-border); }
+
+  .nx-upload-zone:has(.nx-upload-input:focus-visible) {
+    outline: 2px solid var(--nx-ring);
+    outline-offset: 2px;
+  }
+
+  /* The input covers the whole zone: clicking, keyboard focus and the picker
+     are the browser's own; the label is its visible face. */
+  .nx-upload-input {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .nx-upload-glow {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: var(--nx-gradient-brand);
+    opacity: 0;
+    transition: opacity 250ms var(--nx-ease-out);
+  }
+
+  .nx-upload[data-state="drag"] .nx-upload-zone {
+    border-color: var(--nx-accent-border);
+    background: var(--nx-accent-soft);
+  }
+
+  .nx-upload[data-state="drag"] .nx-upload-glow { opacity: 0.12; }
+
+  .nx-upload-icon {
+    position: relative;
+    z-index: 0;
+    display: grid;
+    place-items: center;
+    inline-size: 3rem;
+    block-size: 3rem;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-accent-soft);
+    color: var(--nx-accent-text);
+    box-shadow: var(--nx-shadow-sm);
+    transition-property: translate, scale;
+    transition-duration: var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-spring-snappy);
+
+    .nx-icon { inline-size: 1.25rem; block-size: 1.25rem; }
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      border-radius: inherit;
+      background: var(--nx-gradient-brand);
+      opacity: 0;
+      transition: opacity var(--nx-dur-fast) var(--nx-ease-out);
+    }
+  }
+
+  .nx-upload[data-state="drag"] .nx-upload-icon {
+    translate: 0 calc(-4px * var(--nx-motion));
+    scale: 1.06;
+
+    &::after { opacity: 1; }
+  }
+
+  .nx-upload-title {
+    position: relative;
+    color: var(--nx-text);
+    font: 600 var(--nx-text-base) / 1.4 var(--nx-font-sans);
+  }
+
+  .nx-upload-hint {
+    position: relative;
+    color: var(--nx-text-subtle);
+    font: 400 var(--nx-text-xs) / 1.4 var(--nx-font-sans);
+  }
+
+  .nx-upload-list {
+    display: grid;
+    gap: var(--nx-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nx-upload-file {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'icon text remove'
+      'icon progress remove';
+    column-gap: var(--nx-space-3);
+    row-gap: var(--nx-space-2);
+    align-items: center;
+    padding: var(--nx-space-2) var(--nx-space-3);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-xl);
+    background: var(--nx-surface);
+    animation: nx-rise var(--nx-dur-slow) var(--nx-ease-out) backwards;
+    animation-delay: calc(var(--nx-i, 0) * var(--nx-stagger));
+  }
+
+  .nx-upload-file-icon {
+    grid-area: icon;
+    display: grid;
+    place-items: center;
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-accent-soft);
+    color: var(--nx-accent-text);
+
+    .nx-icon { inline-size: 1.125rem; block-size: 1.125rem; }
+  }
+
+  .nx-upload-file-text {
+    grid-area: text;
+    display: grid;
+    min-inline-size: 0;
+  }
+
+  .nx-upload-file-name {
+    overflow: hidden;
+    color: var(--nx-text);
+    font: 500 var(--nx-text-sm) / 1.4 var(--nx-font-sans);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* The word says the state too — motion and colour are never the only cue. */
+  .nx-upload-file-meta {
+    color: var(--nx-text-subtle);
+    font: 400 var(--nx-text-xs) / 1.4 var(--nx-font-sans);
+  }
+
+  .nx-upload-file-progress {
+    grid-area: progress;
+    block-size: 4px;
+    border-radius: var(--nx-radius-full);
+    background: color-mix(in oklab, var(--nx-border) 55%, transparent);
+    overflow: clip;
+  }
+
+  .nx-upload-file-progress > i {
+    display: block;
+    inline-size: 0%;
+    block-size: 100%;
+    border-radius: inherit;
+    background: var(--nx-gradient-brand);
+    transition-property: inline-size, opacity;
+    transition-duration: var(--nx-spring-gentle-duration), var(--nx-dur-fast);
+    transition-timing-function: var(--nx-spring-gentle), var(--nx-ease-out);
+  }
+
+  /* While a row uploads the line is a sliding sheen (duration is unknown), so
+     nothing claims a progress nobody measured. */
+  .nx-upload-file[data-state="uploading"] .nx-upload-file-progress > i {
+    inline-size: 100%;
+    opacity: 0.45;
+    animation: nx-sheen 1.2s linear infinite;
+  }
+
+  .nx-upload-file[data-state="done"] .nx-upload-file-progress > i {
+    inline-size: 100%;
+    opacity: 1;
+  }
+
+  .nx-upload-file[data-state="done"] .nx-upload-file-icon {
+    background: var(--nx-success-soft);
+    color: var(--nx-success-text);
+  }
+
+  .nx-upload-file[data-state="error"] {
+    border-color: color-mix(in oklab, var(--nx-danger) 45%, transparent);
+    background: var(--nx-danger-soft);
+  }
+
+  .nx-upload-file[data-state="error"] .nx-upload-file-icon {
+    background: var(--nx-danger-soft);
+    color: var(--nx-danger-text);
+  }
+
+  .nx-upload-file[data-state="error"] .nx-upload-file-meta { color: var(--nx-danger-text); }
+
+  .nx-upload-file-remove {
+    grid-area: remove;
+    display: grid;
+    place-items: center;
+    inline-size: 2rem;
+    block-size: 2rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--nx-radius-full);
+    background: transparent;
+    color: var(--nx-text-subtle);
+    cursor: pointer;
+    transition-property: scale, background-color, color;
+    transition-duration: var(--nx-spring-snappy-duration), var(--nx-dur-fast), var(--nx-dur-fast);
+    transition-timing-function: var(--nx-spring-snappy), var(--nx-ease-out), var(--nx-ease-out);
+
+    .nx-icon { inline-size: 0.875rem; block-size: 0.875rem; }
+    &:hover { background: var(--nx-surface-2); color: var(--nx-text); }
+    &:active:not([data-static]) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-upload-file { animation: none; }
+    .nx-upload[data-state="drag"] .nx-upload-icon { translate: none; }
+    .nx-upload-file[data-state="uploading"] .nx-upload-file-progress > i { animation-duration: 3.6s; }
+  }
+
+  @media (forced-colors: active) {
+    .nx-upload-zone,
+    .nx-upload-file { border: 1px solid CanvasText; }
+    .nx-upload-file-progress { border: 1px solid CanvasText; }
+  }
 }

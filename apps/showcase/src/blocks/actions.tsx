@@ -5,6 +5,8 @@ import {
   BlobButton,
   BorderButton,
   Button,
+  type FileUploadProps,
+  FileUpload,
   FillButton,
   FlipButton,
   Icon,
@@ -16,6 +18,7 @@ import {
   MetalButton,
   ParametricLoader,
   PixelLoader,
+  type UploadItem,
   TransactionButton,
   toast,
 } from '@nabuxai/ui-react';
@@ -94,6 +97,37 @@ function ToastRipple() {
   );
 }
 
+const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+
+/** A stand-in request: most files land, one in three "fails" so the error row shows. */
+function fakeUpload(file: File) {
+  return new Promise<void>((resolve, reject) => {
+    window.setTimeout(file.size % 3 ? resolve : reject, 1400);
+  });
+}
+
+const summarize = (items: UploadItem[]) => items.map((item) => `${item.file.name} (${item.state})`).join(', ') || 'nothing yet';
+
+function UploadDemo() {
+  const [items, setItems] = useState<FileUploadProps['value']>([]);
+  return (
+    <>
+      <FileUpload
+        multiple
+        accept=".pdf,image/*"
+        maxBytes={MAX_UPLOAD_BYTES}
+        value={items}
+        onValueChange={setItems}
+        upload={fakeUpload}
+        hint="PDF, PNG or JPG · up to 10 MB"
+        tooLargeLabel="Too large · خیلی بزرگ"
+        unsupportedLabel="Unsupported · پشتیبانی نمی‌شود"
+      />
+      <p className="sc-demo-title">Tried: {summarize(items ?? [])} — one upload in three fails, so the error row shows.</p>
+    </>
+  );
+}
+
 export function ActionsBlocks() {
   const [border, publish] = useFakeRequest(1400, 1800);
   const [payment, pay] = useFakeRequest(1800, 2400);
@@ -120,6 +154,7 @@ export function ActionsBlocks() {
 <FillButton variant="inverse" iconEnd="arrow-right">Explore</FillButton>
 <MetalButton label="Voice input" pressed={listening} onPressedChange={setListening} />
 <InterestsPicker options={options} value={picked} onValueChange={setPicked} />
+<FileUpload multiple accept=".pdf,image/*" maxBytes={maxBytes} upload={upload} onValueChange={setFiles} />
 <LabelCreator labels={labels} onLabelsChange={setLabels} />
 <PixelLoader variant="chaos" rows={3} cols={24} label="Loading orders" />
 <ParametricLoader kind="spiro" size="lg" />`,
@@ -204,6 +239,10 @@ export function ActionsBlocks() {
         <Demo title="Interests picker: drag the rows, pick, then Clear" wide>
           <InterestsPicker label="What are you into? · ¿Qué te gusta?" options={INTERESTS} value={interests} onValueChange={setInterests} name="interests[]" />
           <p className="sc-demo-title">Picked: {interests.join(', ') || 'nothing yet'}</p>
+        </Demo>
+
+        <Demo title="Gradient upload: drag files over it, drop, or browse">
+          <UploadDemo />
         </Demo>
 
         <Demo title="Label creator (Notion-style)">

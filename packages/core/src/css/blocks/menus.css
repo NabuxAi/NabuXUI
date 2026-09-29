@@ -3086,6 +3086,8 @@
    * system glyph is a half-filled dial, so the three states read at a glance.
    * ========================================================================== */
   .nx-theme-switch {
+    position: relative;
+    isolation: isolate;
     display: inline-flex;
     align-items: center;
     gap: 2px;
@@ -3096,6 +3098,7 @@
   }
 
   .nx-theme-switch .nx-indicator {
+    z-index: -1;
     border-radius: var(--nx-radius-full);
     background: var(--nx-surface);
     box-shadow: var(--nx-shadow-sm), inset 0 1px 0 var(--nx-highlight), 0 0 0 1px color-mix(in oklab, var(--nx-border) 70%, transparent);
@@ -3260,6 +3263,277 @@
   @media (prefers-reduced-motion: reduce) {
     .nx-promo-bar { animation: none; }
     .nx-promo-bar[data-closing] { translate: none; }
+  }
+
+  /* ============================================================================
+   * Hover nav: a header bar whose dropdowns open and close with the pointer's
+   * direction.
+   *
+   *   <header class="nx-hover-nav">
+   *     <nav class="nx-hover-nav-bar" aria-label="Main">
+   *       <a class="nx-hover-nav-brand" href="/">Nabu</a>
+   *       <ul class="nx-hover-nav-list">
+   *         <li class="nx-hover-nav-item" data-nx-hover-item data-id="product" data-open>
+   *           <button class="nx-hover-nav-link" aria-expanded="true" aria-controls="p">
+   *             Products <span class="nx-hover-nav-caret"><svg class="nx-icon">chevron-down</svg></span>
+   *           </button>
+   *           <div class="nx-hover-nav-panel" id="p" popover="auto">
+   *             <ul class="nx-hover-nav-menu">
+   *               <li><a class="nx-hover-nav-choice" href="#" style="--nx-j: 0">
+   *                 <span class="nx-hover-nav-choice-icon"><svg class="nx-icon">sparkles</svg></span>
+   *                 <span class="nx-hover-nav-choice-text">
+   *                   <span class="nx-hover-nav-choice-title">Agents</span>
+   *                   <span class="nx-hover-nav-choice-desc">Support in every language</span>
+   *                 </span></a></li>
+   *             </ul>
+   *           </div>
+   *         </li>
+   *
+   * The core `hoverNav` behaviour writes data-enter / data-leave (the physical
+   * side the pointer crossed — pointer-measured, so deliberately physical) on
+   * the panel: entering plays @starting-style from that side on the snappy
+   * spring, leaving fades out faster toward the exit side. Hopping between
+   * items hands one panel's exit direction to the next one's entry. Rows
+   * stagger in by --nx-j without delaying hover colour. Keyboard and touch
+   * never hover: their clicks toggle through the framework layer.
+   * ========================================================================== */
+  .nx-hover-nav-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--nx-space-3) var(--nx-space-5);
+    padding-block: var(--nx-space-2);
+    padding-inline: var(--nx-space-4);
+    border: 1px solid var(--nx-glass-border);
+    border-radius: var(--nx-radius-xl);
+    background: var(--nx-glass);
+    box-shadow: var(--nx-shadow-sm), inset 0 1px 0 var(--nx-highlight);
+  }
+
+  .nx-hover-nav-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    color: var(--nx-text);
+    font: 700 var(--nx-text-base) / 1 var(--nx-font-display);
+    text-decoration: none;
+    transition-property: opacity;
+    transition-duration: var(--nx-dur-fast);
+    transition-timing-function: var(--nx-ease-out);
+
+    &:hover { opacity: 0.75; }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 4px; }
+  }
+
+  .nx-hover-nav-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--nx-space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nx-hover-nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-1);
+    min-block-size: 2.25rem;
+    padding: var(--nx-space-2) var(--nx-space-3);
+    border: 0;
+    border-radius: var(--nx-radius-full);
+    background: transparent;
+    color: var(--nx-text-muted);
+    font: 600 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    text-decoration: none;
+    cursor: pointer;
+    transition-property: scale, background-color, color;
+    transition-duration: var(--nx-spring-snappy-duration), var(--nx-dur-fast), var(--nx-dur-fast);
+    transition-timing-function: var(--nx-spring-snappy), var(--nx-ease-out), var(--nx-ease-out);
+
+    &:hover { background: color-mix(in oklab, var(--nx-text) 6%, transparent); color: var(--nx-text); }
+    &:active:not([data-static]) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+  }
+
+  /* The open trigger keeps a colour cue, so motion is never the only signal. */
+  .nx-hover-nav-link[aria-expanded="true"] { background: var(--nx-accent-soft); color: var(--nx-accent-text); }
+
+  .nx-hover-nav-caret {
+    display: inline-flex;
+    opacity: 0.7;
+    transition: rotate var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+
+    .nx-icon { inline-size: 0.875rem; block-size: 0.875rem; }
+  }
+
+  [aria-expanded="true"] > .nx-hover-nav-caret { rotate: 180deg; }
+
+  .nx-hover-nav-panel {
+    --_ix: 0px;
+    --_iy: calc(-10px * var(--nx-motion));
+    --_lx: 0px;
+    --_ly: calc(-8px * var(--nx-motion));
+
+    position: fixed;
+    inset: auto;
+    z-index: var(--nx-z-dropdown);
+    display: grid;
+    inline-size: max-content;
+    min-inline-size: min(var(--nx-hover-nav-width, 18rem), calc(100vw - 1rem));
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-xl);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    box-shadow: var(--nx-shadow-xl), inset 0 1px 0 var(--nx-highlight);
+    overflow: clip;
+    transform-origin: var(--nx-origin, top center);
+    opacity: 0;
+    scale: 0.95;
+    translate: var(--_lx) var(--_ly);
+    /* Exits are softer and faster than enters. */
+    transition:
+      opacity 150ms var(--nx-ease-out),
+      scale 150ms var(--nx-ease-out),
+      translate 150ms var(--nx-ease-out),
+      display 150ms allow-discrete,
+      overlay 150ms allow-discrete;
+  }
+
+  /* Where the pointer crossed decides the travel (physical on purpose). */
+  .nx-hover-nav-panel[data-enter="top"] { --_iy: calc(-10px * var(--nx-motion)); }
+  .nx-hover-nav-panel[data-enter="bottom"] { --_iy: calc(10px * var(--nx-motion)); }
+  .nx-hover-nav-panel[data-enter="left"] { --_ix: calc(-10px * var(--nx-motion)); --_iy: 0px; }
+  .nx-hover-nav-panel[data-enter="right"] { --_ix: calc(10px * var(--nx-motion)); --_iy: 0px; }
+  .nx-hover-nav-panel[data-leave="top"] { --_ly: calc(-8px * var(--nx-motion)); --_lx: 0px; }
+  .nx-hover-nav-panel[data-leave="bottom"] { --_ly: calc(8px * var(--nx-motion)); --_lx: 0px; }
+  .nx-hover-nav-panel[data-leave="left"] { --_lx: calc(-8px * var(--nx-motion)); --_ly: 0px; }
+  .nx-hover-nav-panel[data-leave="right"] { --_lx: calc(8px * var(--nx-motion)); --_ly: 0px; }
+
+  .nx-hover-nav-panel:where(:popover-open, [data-open]) {
+    opacity: 1;
+    scale: 1;
+    translate: 0 0;
+    transition:
+      opacity var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+      translate var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+      display 300ms allow-discrete,
+      overlay 300ms allow-discrete;
+
+    @starting-style {
+      opacity: 0;
+      scale: 0.95;
+      translate: var(--_ix) var(--_iy);
+    }
+  }
+
+  .nx-hover-nav-panel:not([popover]):not([data-open]) { display: none; }
+
+  .nx-hover-nav-menu {
+    display: grid;
+    gap: 2px;
+    margin: 0;
+    padding: var(--nx-space-2);
+    list-style: none;
+  }
+
+  .nx-hover-nav-choice {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-3);
+    padding: var(--nx-space-2) var(--nx-space-3);
+    border-radius: var(--nx-radius-lg);
+    color: inherit;
+    text-decoration: none;
+    opacity: 0;
+    translate: 0 calc(6px * var(--nx-motion));
+    transition-property: opacity, translate, background-color;
+    transition-duration: 200ms, 200ms, var(--nx-dur-fast);
+    transition-timing-function: var(--nx-ease-out);
+
+    &:hover { background: var(--nx-surface-2); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: -2px; }
+  }
+
+  /* Rows rise in one after another (30–80ms apart); the stagger never delays
+     the hover colour, so the list is readable while it is still settling. */
+  .nx-hover-nav-panel:where(:popover-open, [data-open]) .nx-hover-nav-choice {
+    opacity: 1;
+    translate: 0 0;
+    transition-delay: calc(var(--nx-j, 0) * var(--nx-stagger)), calc(var(--nx-j, 0) * var(--nx-stagger)), 0s;
+  }
+
+  .nx-hover-nav-choice-icon {
+    position: relative;
+    z-index: 0;
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-accent-soft);
+    color: var(--nx-accent-text);
+    transition-property: scale, translate, color;
+    transition-duration: var(--nx-spring-bouncy-duration), var(--nx-spring-bouncy-duration), var(--nx-dur-fast);
+    transition-timing-function: var(--nx-spring-bouncy);
+
+    .nx-icon { inline-size: 1.125rem; block-size: 1.125rem; }
+
+    /* The brand gradient fades in over the soft chip: colour and motion both
+       say "this row is live". */
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      border-radius: inherit;
+      background: var(--nx-gradient-brand);
+      opacity: 0;
+      transition: opacity var(--nx-dur-fast) var(--nx-ease-out);
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .nx-hover-nav-choice:hover .nx-hover-nav-choice-icon {
+      scale: 1.08;
+      translate: calc(2px * var(--nx-dir) * var(--nx-motion)) 0;
+
+      &::after { opacity: 1; }
+    }
+  }
+
+  .nx-hover-nav-choice-text {
+    display: grid;
+    gap: 2px;
+    min-inline-size: 0;
+  }
+
+  .nx-hover-nav-choice-title {
+    color: var(--nx-text);
+    font: 600 var(--nx-text-sm) / 1.3 var(--nx-font-sans);
+  }
+
+  .nx-hover-nav-choice-desc {
+    color: var(--nx-text-subtle);
+    font: 400 var(--nx-text-xs) / 1.4 var(--nx-font-sans);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-hover-nav-panel { translate: none; }
+    .nx-hover-nav-panel:where(:popover-open, [data-open]) {
+      @starting-style { translate: none; }
+    }
+    .nx-hover-nav-choice { translate: none; transition-delay: 0s; }
+  }
+
+  @media (forced-colors: active) {
+    .nx-hover-nav-bar,
+    .nx-hover-nav-panel { border: 1px solid CanvasText; }
+    .nx-hover-nav-choice-icon { border: 1px solid CanvasText; }
   }
 
   @media (forced-colors: active) {

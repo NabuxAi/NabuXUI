@@ -8,7 +8,7 @@
  * data attributes, or start short Web Animations; the look and the springs
  * live in css/blocks/menus.css, so React and Alpine get the same motion.
  */
-import { type Cleanup, isBrowser, prefersReducedMotion } from '../env';
+import { type Cleanup, canHover, isBrowser, prefersReducedMotion } from '../env';
 import { indicator } from '../indicator';
 import { type SpringEasing, type SpringName, springEasing, springs } from '../spring';
 
@@ -74,6 +74,12 @@ export const menuWords = {
     discard: 'Delete recording',
     voiceMessage: 'Voice message',
     dock: 'Dock',
+    language: 'Language',
+    theme: 'Theme',
+    light: 'Light',
+    system: 'System',
+    dark: 'Dark',
+    announcement: 'Announcement',
   },
   fa: {
     filter: 'فیلتر',
@@ -126,6 +132,12 @@ export const menuWords = {
     discard: 'حذف صدا',
     voiceMessage: 'پیام صوتی',
     dock: 'داک',
+    language: 'زبان',
+    theme: 'پوسته',
+    light: 'روشن',
+    system: 'سیستم',
+    dark: 'تیره',
+    announcement: 'اطلاعیه',
   },
   ar: {
     filter: 'تصفية',
@@ -178,6 +190,12 @@ export const menuWords = {
     discard: 'حذف التسجيل',
     voiceMessage: 'رسالة صوتية',
     dock: 'الشريط',
+    language: 'اللغة',
+    theme: 'المظهر',
+    light: 'فاتح',
+    system: 'النظام',
+    dark: 'داكن',
+    announcement: 'إعلان',
   },
 } as const;
 
@@ -720,5 +738,162 @@ export function levelMeter(bars: HTMLElement, { level, rate, onSample }: LevelMe
       cancelAnimationFrame(frame);
       frame = 0;
     },
+  };
+}
+
+/* ---- Directional hover nav ------------------------------------------------------------------ */
+
+/** One of the four physical sides a pointer can arrive at or depart through. */
+export type HoverSide = 'top' | 'right' | 'bottom' | 'left';
+
+/**
+ * Pure geometry, exported for tests: which edge of `rect` is the point nearest
+ * to? The pointer's approach angle decides which way a dropdown travels, so
+ * "came from below" opens the panel upward even under a top bar.
+ */
+export function entrySide(rect: { left: number; top: number; right: number; bottom: number }, x: number, y: number): HoverSide {
+  const top = Math.abs(y - rect.top);
+  const bottom = Math.abs(rect.bottom - y);
+  const left = Math.abs(x - rect.left);
+  const right = Math.abs(rect.right - x);
+  const nearest = Math.min(top, bottom, left, right);
+  if (nearest === top) return 'top';
+  if (nearest === bottom) return 'bottom';
+  return nearest === left ? 'left' : 'right';
+}
+
+/**
+ * Pure geometry, exported for tests: which side of box `a` faces box `b`? Used
+ * to aim the exit of a panel when the pointer hops straight to another item.
+ */
+export function facingSide(a: { left: number; top: number; right: number; bottom: number }, b: { left: number; top: number; right: number; bottom: number }): HoverSide {
+  if (b.left >= a.right) return 'right';
+  if (b.right <= a.left) return 'left';
+  return b.top >= a.bottom ? 'bottom' : 'top';
+}
+
+export interface HoverNavOptions {
+  /** Selector for the items that own a dropdown (default `[data-nx-hover-item]`). */
+  item?: string;
+  /** Grace period (ms) before a panel follows the pointer out (default 140). */
+  grace?: number;
+  /** An item's dropdown is opening — show it here (state, popover…). */
+  onOpen?: (item: HTMLElement) => void;
+  /** An item's dropdown is closing. */
+  onClose?: (item: HTMLElement, side: HoverSide) => void;
+}
+
+/**
+ * Direction-aware hover for a header navigation (`css/blocks/menus.css` has the
+ * look): entering an item opens its dropdown from the side the pointer came
+ * from, hopping to another item aims the old panel's exit at the new one, and
+ * leaving for elsewhere closes it after a short grace so the diagonal path to
+ * the panel survives. A panel entered under the pointer never closes behind it.
+ *
+ * Pointer work is gated to `(hover: hover) and (pointer: fine)`; touch and
+ * keyboard open through their own clicks, and focus leaving the bar (or Escape)
+ * closes whatever is open. The behaviour only writes `data-open` on items and
+ * `data-enter` / `data-leave` on panels — the motion is CSS.
+ */
+export function hoverNav(nav: HTMLElement, { item = '[data-nx-hover-item]', grace = 140, onOpen, onClose }: HoverNavOptions = {}): Cleanup {
+  if (!isBrowser) return () => {};
+  const items = Array.from(nav.querySelectorAll<HTMLElement>(item));
+  if (!items.length) return () => {};
+  const panelOf = (li: HTMLElement) => li.querySelector<HTMLElement>('.nx-hover-nav-panel, [data-nx-panel]');
+  const ownerOf = new Map(items.map((li) => [panelOf(li), li] as const));
+  const timers = new Map<HTMLElement, number>();
+  let open: HTMLElement | null = null;
+
+  const cancel = (li: HTMLElement) => {
+    const timer = timers.get(li);
+    if (timer !== undefined) {
+      window.clearTimeout(timer);
+      timers.delete(li);
+    }
+  };
+
+  const close = (li: HTMLElement, side: HoverSide = 'top') => {
+    cancel(li);
+    if (open === li) open = null;
+    panelOf(li)?.setAttribute('data-leave', side);
+    li.removeAttribute('data-open');
+    onClose?.(li, side);
+  };
+
+  const openItem = (li: HTMLElement, enter: HoverSide) => {
+    if (open === li) return;
+    const previous = open;
+    if (previous) close(previous, facingSide(previous.getBoundingClientRect(), li.getBoundingClientRect()));
+    const panel = panelOf(li);
+    if (panel) {
+      panel.setAttribute('data-enter', enter);
+      panel.removeAttribute('data-leave');
+    }
+    li.setAttribute('data-open', '');
+    open = li;
+    onOpen?.(li);
+  };
+
+  const closeSoon = (li: HTMLElement, side: HoverSide, wait = grace) => {
+    if (open !== li) return;
+    panelOf(li)?.setAttribute('data-leave', side);
+    cancel(li);
+    timers.set(li, window.setTimeout(() => close(li, side), wait));
+  };
+
+  if (canHover()) {
+    const onEnter = (event: PointerEvent) => {
+      if (event.pointerType === 'touch') return;
+      const li = event.currentTarget as HTMLElement;
+      openItem(li, entrySide(li.getBoundingClientRect(), event.clientX, event.clientY));
+    };
+    const onLeave = (event: PointerEvent) => {
+      const li = event.currentTarget as HTMLElement;
+      closeSoon(li, entrySide(li.getBoundingClientRect(), event.clientX, event.clientY));
+    };
+    const onPanelEnter = (event: PointerEvent) => {
+      if (event.pointerType === 'touch') return;
+      const li = ownerOf.get(event.currentTarget as HTMLElement);
+      if (li) cancel(li);
+    };
+    const onPanelLeave = (event: PointerEvent) => {
+      const li = ownerOf.get(event.currentTarget as HTMLElement);
+      if (li) closeSoon(li, entrySide((event.currentTarget as HTMLElement).getBoundingClientRect(), event.clientX, event.clientY), Math.min(grace, 80));
+    };
+    for (const li of items) {
+      li.addEventListener('pointerenter', onEnter);
+      li.addEventListener('pointerleave', onLeave);
+    }
+    for (const panel of ownerOf.keys()) {
+      if (!panel) continue;
+      panel.addEventListener('pointerenter', onPanelEnter);
+      panel.addEventListener('pointerleave', onPanelLeave);
+    }
+  }
+
+  const onFocusOut = (event: FocusEvent) => {
+    if (!open) return;
+    if (event.relatedTarget instanceof Node && nav.contains(event.relatedTarget)) return;
+    close(open, 'bottom');
+  };
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Escape' && open && !event.defaultPrevented) close(open, 'top');
+  };
+  const onOutside = (event: PointerEvent) => {
+    if (open && event.target instanceof Node && !nav.contains(event.target)) close(open, 'bottom');
+  };
+
+  nav.addEventListener('focusout', onFocusOut);
+  nav.addEventListener('keydown', onKeyDown);
+  document.addEventListener('pointerdown', onOutside, true);
+
+  return () => {
+    nav.removeEventListener('focusout', onFocusOut);
+    nav.removeEventListener('keydown', onKeyDown);
+    document.removeEventListener('pointerdown', onOutside, true);
+    for (const li of items) {
+      cancel(li);
+      li.removeAttribute('data-open');
+    }
   };
 }

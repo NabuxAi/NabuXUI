@@ -22,7 +22,10 @@ import {
   type ParametricKind,
   type ParametricOptions,
   dragScroll,
+  dropzone,
   emojiBurst,
+  fileRejection,
+  formatBytes,
   icons,
   leave,
   marchingBorder,
@@ -36,13 +39,16 @@ import {
   spotlight,
   textDirection,
 } from '@nabuxai/ui-core';
-import { cx, mergeRefs, useBehavior, useControllable, useIsoLayoutEffect } from '../internal/hooks';
+import { cx, mergeRefs, useBehavior, useControllable, useEvent, useIsoLayoutEffect } from '../internal/hooks';
 import { Icon } from '../internal/icon';
 import { SmartLink, useLocale, useT } from '../internal/provider';
 import { Button } from '../components/button';
 
 /** A built-in icon by name, or any node as it is. */
 const renderIcon = (icon: IconName | ReactNode) => (typeof icon === 'string' && icon in icons ? <Icon name={icon as IconName} /> : icon);
+
+/** Process-unique suffix for upload item ids (the same file may be added twice). */
+let uploadSeq = 0;
 
 type AnchorBits = Pick<AnchorHTMLAttributes<HTMLAnchorElement>, 'target' | 'rel' | 'download'>;
 type Size = 'sm' | 'md' | 'lg';
@@ -935,5 +941,149 @@ export function ParametricLoader({ kind = 'rose', options, size = 'md', duration
       </svg>
       <span className="nx-visually-hidden">{label ?? t('loading')}</span>
     </span>
+  );
+}
+
+/* ---- Gradient file upload ---------------------------------------------------------------- */
+
+export type UploadItemState = 'ready' | 'uploading' | 'done' | 'error';
+
+export interface UploadItem {
+  id: string;
+  file: File;
+  state: UploadItemState;
+  /** Why it was refused: wrong kind ('accept') or too large ('size'). */
+  reason?: 'accept' | 'size';
+}
+
+export interface FileUploadProps extends Omit<HTMLAttributes<HTMLDivElement>, 'defaultValue' | 'onChange' | 'title'> {
+  /** The native input's name: form posts carry the browsed files. Dropped files reach you through onValueChange — a hidden input cannot carry a File. */
+  name?: string;
+  /** Extensions (".pdf"), exact types ("image/png") or wildcards ("image/*"), comma separated or as an array. */
+  accept?: string | readonly string[];
+  multiple?: boolean;
+  /** Largest file in bytes; larger ones enter the list as errors, never as uploads. */
+  maxBytes?: number;
+  value?: UploadItem[];
+  defaultValue?: UploadItem[];
+  onValueChange?: (items: UploadItem[]) => void;
+  /** Uploads one accepted file; its row resolves to done (or error) when it settles. */
+  upload?: (file: File) => Promise<unknown>;
+  title?: ReactNode;
+  hint?: ReactNode;
+  /** The word for a file over maxBytes (comes in through props — not in the core i18n table). */
+  tooLargeLabel?: string;
+  /** The word for a file outside accept. */
+  unsupportedLabel?: string;
+}
+
+/**
+ * A dropzone dressed in the brand gradient: the halo and icon chip light up
+ * while files hover over it (the core `dropzone` behaviour), the dashed rim
+ * turns accent, and each file rises into a list whose 4px line is a sliding
+ * sheen while it uploads and springs to full when it is done. The native file
+ * input covers the zone, so picking, focusing and the picker are the
+ * browser's own; refused files still join the list as errors so nothing the
+ * reader tried is silently lost.
+ */
+export function FileUpload({
+  name,
+  accept,
+  multiple = false,
+  maxBytes = 0,
+  value,
+  defaultValue = [],
+  onValueChange,
+  upload,
+  title,
+  hint,
+  tooLargeLabel = 'Too large',
+  unsupportedLabel = 'Unsupported type',
+  className,
+  ...rest
+}: FileUploadProps) {
+  const t = useT();
+  const locale = useLocale();
+  const root = useRef<HTMLDivElement>(null);
+  const [items, setItems] = useControllable(value, defaultValue, onValueChange);
+  const itemsRef = useRef(items);
+  useIsoLayoutEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
+  const acceptList = useMemo<string[]>(() => {
+    if (typeof accept === 'string') return accept.split(',').map((part) => part.trim()).filter(Boolean);
+    return accept ? [...accept] : [];
+  }, [accept]);
+
+  const patch = useEvent((id: string, changes: Partial<UploadItem>) => {
+    setItems(itemsRef.current.map((item) => (item.id === id ? { ...item, ...changes } : item)));
+  });
+
+  const receive = useEvent((files: File[]) => {
+    const next = files.map<UploadItem>((file) => ({
+      id: `nx-upload-${(uploadSeq += 1)}`,
+      file,
+      state: fileRejection(file, { accept: acceptList, maxBytes }) ? 'error' : upload ? 'uploading' : 'done',
+    }));
+    for (const item of next) {
+      const reason = fileRejection(item.file, { accept: acceptList, maxBytes });
+      if (reason) item.reason = reason;
+      else if (upload)
+        upload(item.file).then(
+          () => patch(item.id, { state: 'done' }),
+          () => patch(item.id, { state: 'error' }),
+        );
+    }
+    setItems([...itemsRef.current, ...next]);
+  });
+
+  useBehavior(root, dropzone, { accept: acceptList, maxBytes, onFiles: (files) => receive(files) });
+
+  const metaOf = (item: UploadItem) => {
+    const size = formatBytes(item.file.size, locale);
+    if (item.state === 'error') return `${size} · ${item.reason === 'size' ? tooLargeLabel : unsupportedLabel}`;
+    if (item.state === 'uploading') return `${size} · ${t('uploading')}…`;
+    if (item.state === 'done') return `${size} · ${t('uploaded')}`;
+    return size;
+  };
+
+  return (
+    <div ref={root} className={cx('nx-upload', className)} data-state="idle" {...rest}>
+      <label className="nx-upload-zone">
+        <input className="nx-upload-input" type="file" name={name} multiple={multiple} accept={acceptList.join(',') || undefined} aria-label={t('attach')} />
+        <span className="nx-upload-glow" aria-hidden="true" />
+        <span className="nx-upload-icon" aria-hidden="true">
+          <Icon name="upload" />
+        </span>
+        <span className="nx-upload-title">{title ?? t('dropFiles', { browse: t('browse') })}</span>
+        {hint != null && <span className="nx-upload-hint">{hint}</span>}
+      </label>
+      {items.length > 0 && (
+        <ul className="nx-upload-list">
+          {items.map((item, index) => (
+            <li key={item.id} className="nx-upload-file" data-state={item.state} style={{ '--nx-i': index } as CSSProperties}>
+              <span className="nx-upload-file-icon" aria-hidden="true">
+                <Icon name={item.state === 'error' ? 'alert-circle' : item.state === 'done' ? 'check-circle' : item.file.type.startsWith('image/') ? 'image' : 'file'} />
+              </span>
+              <span className="nx-upload-file-text">
+                <span className="nx-upload-file-name">{item.file.name}</span>
+                <span className="nx-upload-file-meta">{metaOf(item)}</span>
+              </span>
+              <span className="nx-upload-file-progress" aria-hidden="true">
+                <i />
+              </span>
+              <button
+                type="button"
+                className="nx-upload-file-remove"
+                aria-label={t('remove', { name: item.file.name })}
+                onClick={() => setItems(itemsRef.current.filter((other) => other.id !== item.id))}
+              >
+                <Icon name="x" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }

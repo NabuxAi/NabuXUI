@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   activityTime,
   downsampleLevels,
+  entrySide,
+  facingSide,
   foldSearchText,
   formatClock,
   menuGlyphs,
@@ -177,5 +179,28 @@ describe('levels', () => {
     expect(downsampleLevels([0.5], 3)).toEqual([0.5, 0.5, 0.5]);
     expect(downsampleLevels([], 2)).toEqual([0, 0]);
     expect(downsampleLevels([0.3, 0.6], 0)).toEqual([]);
+  });
+});
+
+describe('directional hover nav geometry', () => {
+  const rect = { left: 0, top: 0, right: 100, bottom: 40 };
+
+  it('names the edge the pointer arrived through', () => {
+    expect(entrySide(rect, 50, -4)).toBe('top');
+    expect(entrySide(rect, 50, 44)).toBe('bottom');
+    expect(entrySide(rect, -6, 20)).toBe('left');
+    expect(entrySide(rect, 106, 20)).toBe('right');
+  });
+
+  it('breaks corner ties toward the horizontal edges (a dropdown under a top bar)', () => {
+    expect(entrySide(rect, -6, -4)).toBe('top');
+    expect(entrySide(rect, 106, 44)).toBe('bottom');
+  });
+
+  it('aims the exit of one item at the item the pointer hopped to', () => {
+    expect(facingSide(rect, { left: 140, top: 0, right: 240, bottom: 40 })).toBe('right');
+    expect(facingSide(rect, { left: -100, top: 0, right: -20, bottom: 40 })).toBe('left');
+    expect(facingSide(rect, { left: 30, top: 80, right: 130, bottom: 120 })).toBe('bottom');
+    expect(facingSide(rect, { left: 30, top: -80, right: 130, bottom: -40 })).toBe('top');
   });
 });

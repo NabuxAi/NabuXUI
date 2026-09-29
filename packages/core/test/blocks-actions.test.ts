@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parametricPath, pixelLoaderCells, pixelNoise } from '../src/js/blocks/actions';
+import { fileRejection, formatBytes, matchesAccept, parametricPath, pixelLoaderCells, pixelNoise } from '../src/js/blocks/actions';
 
 /** Every coordinate pair of an M/L path. */
 const coordinates = (d: string) => Array.from(d.matchAll(/[ML](-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/g), (m) => [Number(m[1]), Number(m[2])] as const);
@@ -103,5 +103,36 @@ describe('pixel loader cells', () => {
   it('survives degenerate sizes', () => {
     expect(pixelLoaderCells(1, 1)).toEqual([{ x: 0, y: 0, d: 0, r: pixelNoise(0, 1), s: pixelNoise(0, 2) }]);
     expect(pixelLoaderCells(0, 0)).toHaveLength(1);
+  });
+});
+
+describe('gradient upload', () => {
+  const png = { name: 'shot.png', size: 2048, type: 'image/png' };
+
+  it('matches extensions, exact types and wildcards', () => {
+    expect(matchesAccept(png, ['.png', '.jpg'])).toBe(true);
+    expect(matchesAccept(png, ['image/*'])).toBe(true);
+    expect(matchesAccept(png, ['image/png'])).toBe(true);
+    expect(matchesAccept(png, ['.pdf'])).toBe(false);
+    expect(matchesAccept(png, ['text/plain'])).toBe(false);
+    expect(matchesAccept(png, [])).toBe(true);
+    // Case and padding in the author's accept list never reject a file.
+    expect(matchesAccept({ name: 'REPORT.PDF', size: 1 }, [' .Pdf '])).toBe(true);
+  });
+
+  it('refuses files over the byte limit before asking about their kind', () => {
+    expect(fileRejection(png, { maxBytes: 1024 })).toBe('size');
+    expect(fileRejection(png, { accept: ['.pdf'], maxBytes: 0 })).toBe('accept');
+    expect(fileRejection(png, { accept: ['.png'], maxBytes: 4096 })).toBeNull();
+    expect(fileRejection(png, {})).toBeNull();
+  });
+
+  it('speaks sizes the way people do, in the locale digits', () => {
+    expect(formatBytes(512, 'en-US')).toMatch(/^512\s*(B|byte)$/i);
+    expect(formatBytes(2048, 'en-US')).toMatch(/^2\s*k?B$/i);
+    expect(formatBytes(1_234_567, 'en-US')).toMatch(/^1\.2\s*MB$/i);
+    expect(formatBytes(12_582_912, 'en-US')).toMatch(/^12\s*MB$/i);
+    // Persian digits, Latin unit — what fa-IR's Intl really says.
+    expect(formatBytes(1_234_567, 'fa-IR')).toMatch(/^[۰-۹]+[٫.][۰-۹]+\s*(MB|مگابایت)/);
   });
 });

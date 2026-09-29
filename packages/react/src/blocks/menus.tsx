@@ -39,6 +39,8 @@ import {
   focusableItems,
   foldSearchText,
   formatClock,
+  hoverNav,
+  icons,
   levelMeter,
   lightDismiss,
   localeDigits,
@@ -57,7 +59,7 @@ import {
   toggleSelection,
   voiceLevel,
 } from '@nabuxai/ui-core';
-import { cx, mergeRefs, useControllable, useEvent, useIndicator, useIsoLayoutEffect, useMounted } from '../internal/hooks';
+import { cx, mergeRefs, useBehavior, useControllable, useEvent, useIndicator, useIsoLayoutEffect, useMounted } from '../internal/hooks';
 import { Icon } from '../internal/icon';
 import { SmartLink, useLocale, useT } from '../internal/provider';
 import { Button } from '../components/button';
@@ -2627,5 +2629,173 @@ export function PromoBar({ id = 'promo', children, href, linkLabel, badge, persi
         <Icon name="x" />
       </button>
     </aside>
+  );
+}
+
+/* ---- Directional hover nav --------------------------------------------------------------------- */
+
+export interface HoverNavLink {
+  label: ReactNode;
+  href?: string;
+  icon?: IconName | ReactNode;
+  description?: ReactNode;
+  onSelect?: () => void;
+}
+
+export interface HoverNavItem {
+  id: string;
+  label: ReactNode;
+  href?: string;
+  /** When present the item owns a directional dropdown. */
+  links?: HoverNavLink[];
+}
+
+export interface HoverNavProps extends Omit<HTMLAttributes<HTMLElement>, 'children'> {
+  /** The wordmark at the inline start. */
+  brand?: ReactNode;
+  brandHref?: string;
+  /** The bar's accessible name ("Main", "Website"…). */
+  label?: string;
+  items: HoverNavItem[];
+}
+
+/** A built-in icon by name, or any node as it is. */
+const navIcon = (icon: IconName | ReactNode | undefined, fallback: IconName) =>
+  icon === undefined ? <Icon name={fallback} /> : typeof icon === 'string' && icon in icons ? <Icon name={icon as IconName} /> : icon;
+
+/**
+ * A header navigation whose dropdowns open and close with the pointer's
+ * direction: the panel springs in from the side the pointer crossed, hops
+ * between items aim the previous panel's exit at the new one, and a short
+ * grace keeps the panel open along the diagonal path to it. The pointer work
+ * is the core `hoverNav` behaviour; clicks toggle for touch and keyboard, the
+ * panel is a native popover (Escape and outside presses come from the
+ * browser), and focus leaving the bar closes whatever is open.
+ */
+export function HoverNav({ brand = 'Nabu', brandHref = '/', label, items, className, ...rest }: HoverNavProps) {
+  const idBase = useBaseId('nx-hover-nav');
+  const [openId, setOpenId] = useState<string | null>(null);
+  const bar = useRef<HTMLElement>(null);
+  const triggers = useRef(new Map<string, HTMLElement>());
+  const panels = useRef(new Map<string, HTMLElement>());
+
+  const remember = (store: typeof triggers, id: string) => (el: HTMLElement | null) => {
+    if (el) store.current.set(id, el);
+    else store.current.delete(id);
+  };
+
+  const change = useEvent((item: HTMLElement | null) => setOpenId(item?.getAttribute('data-id') ?? null));
+  useBehavior(bar, hoverNav, { item: '[data-nx-hover-item]', grace: 140, onOpen: change, onClose: () => change(null) });
+
+  // Reflect open state onto the native popovers (or data-open without them).
+  useIsoLayoutEffect(() => {
+    for (const [id, panel] of panels.current) {
+      const wanted = id === openId;
+      if (!supportsPopover()) {
+        panel.toggleAttribute('data-open', wanted);
+        continue;
+      }
+      const shown = panel.matches(':popover-open');
+      try {
+        if (wanted && !shown) panel.showPopover();
+        if (!wanted && shown) panel.hidePopover();
+      } catch {
+        /* not connected yet */
+      }
+    }
+  }, [openId]);
+
+  // The browser can close a popover on its own (Escape, outside press, another
+  // popover opening): fold those back into state so aria stays truthful.
+  useEffect(() => {
+    const onToggle = (event: Event) => {
+      const id = (event.currentTarget as HTMLElement).getAttribute('data-id');
+      if (!id) return;
+      if ((event as ToggleEvent).newState === 'open') setOpenId(id);
+      else setOpenId((current) => (current === id ? null : current));
+    };
+    for (const panel of panels.current.values()) panel.addEventListener('toggle', onToggle);
+    return () => {
+      for (const panel of panels.current.values()) panel.removeEventListener('toggle', onToggle);
+    };
+  }, [items]);
+
+  useIsoLayoutEffect(() => {
+    if (!openId) return;
+    const trigger = triggers.current.get(openId);
+    const panel = panels.current.get(openId);
+    if (!trigger || !panel) return;
+    return place(trigger, panel, { side: 'bottom', align: 'start', offset: 10 });
+  }, [openId]);
+
+  return (
+    <header className={cx('nx-hover-nav', className)} {...rest}>
+      <nav
+        className="nx-hover-nav-bar"
+        aria-label={label}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') setOpenId(null);
+        }}
+      >
+        <SmartLink className="nx-hover-nav-brand" href={brandHref}>
+          {brand}
+        </SmartLink>
+        <ul className="nx-hover-nav-list">
+          {items.map((item) => {
+            const droppable = Boolean(item.links?.length);
+            const open = droppable && openId === item.id;
+            const panelId = `${idBase}-${idSafe(item.id)}`;
+            return (
+              <li key={item.id} className="nx-hover-nav-item" data-nx-hover-item="" data-id={item.id} data-open={open ? '' : undefined}>
+                {droppable ? (
+                  <button
+                    type="button"
+                    ref={remember(triggers, item.id)}
+                    className="nx-hover-nav-link"
+                    aria-haspopup="true"
+                    aria-expanded={Boolean(open)}
+                    aria-controls={panelId}
+                    onClick={() => setOpenId((current) => (current === item.id ? null : item.id))}
+                  >
+                    {item.label}
+                    <span className="nx-hover-nav-caret" aria-hidden="true">
+                      <Icon name="chevron-down" />
+                    </span>
+                  </button>
+                ) : (
+                  <SmartLink ref={remember(triggers, item.id)} className="nx-hover-nav-link" href={item.href ?? '#'}>
+                    {item.label}
+                  </SmartLink>
+                )}
+                {droppable && (
+                  <div ref={remember(panels, item.id)} id={panelId} className="nx-hover-nav-panel" data-id={item.id} {...{ popover: 'auto' }}>
+                    <ul className="nx-hover-nav-menu">
+                      {item.links!.map((link, index) => (
+                        <li key={index}>
+                          <SmartLink
+                            className="nx-hover-nav-choice"
+                            href={link.href ?? '#'}
+                            style={{ '--nx-j': index } as CSSProperties}
+                            onClick={link.onSelect}
+                          >
+                            <span className="nx-hover-nav-choice-icon" aria-hidden="true">
+                              {navIcon(link.icon, 'sparkles')}
+                            </span>
+                            <span className="nx-hover-nav-choice-text">
+                              <span className="nx-hover-nav-choice-title">{link.label}</span>
+                              {link.description != null && <span className="nx-hover-nav-choice-desc">{link.description}</span>}
+                            </span>
+                          </SmartLink>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+    </header>
   );
 }

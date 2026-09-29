@@ -8,6 +8,7 @@ import {
   Button,
   DockPanels,
   FoldMenu,
+  HoverNav,
   LanguageMenu,
   MemberSelector,
   MorphMenu,
@@ -102,6 +103,7 @@ export function MenusBlocks() {
       )}
       code={{
         react: `<FoldMenu sections={[{ title: 'Explore', links: [{ label: 'Home', href: '/', icon: 'home' }] }]} />
+<HoverNav brand="Nabu" items={[{ id: 'product', label: 'Products', links: [{ label: 'Agents', href: '/agents', icon: 'sparkles', description: 'Support in every language' }] }]} />
 <DockPanels items={[{ id: 'music', label: 'Now playing', icon: 'play', content: <NowPlaying /> }]} />
 <MorphMenu options={[{ value: 'design', label: 'Design' }]} value={filters} onValueChange={setFilters} />
 <StackedAccordion type="single" items={[{ id: 'shipping', title: 'Shipping', content: '…' }]} />
@@ -111,6 +113,9 @@ export function MenusBlocks() {
 <ActivityDropdown items={activity} onMarkAllRead={markAllRead} />
 <MemberSelector members={people} value={ids} onValueChange={setIds} roles={roles} onRolesChange={setRoles} />
 <MultiChainSelector chains={chains} value={chain} onValueChange={setChain} />
+<LanguageMenu languages={[{ id: 'en', name: 'English', short: 'EN' }]} value={locale} onValueChange={setLocale} />
+<ThemeSwitch value={pref} onValueChange={setPref} />
+<PromoBar id="launch" badge="NEW" href="/pricing" linkLabel="See plans" onDismiss={track}>95% off this week</PromoBar>
 <RegistrationCard event={{ title: 'Nabu Summit' }} tickets={tickets} currency="EUR" onSubmit={register} />
 <VoiceRecorder level={micLevel} onStop={({ duration }) => save(duration)} />`,
         blade: `<x-nx::fold-menu :sections="[['title' => 'Explore', 'links' => [['label' => 'Home', 'href' => '/', 'icon' => 'home']]]]" />
@@ -125,6 +130,9 @@ export function MenusBlocks() {
 <x-nx::activity-dropdown :items="$activity" x-on:nx-mark-all-read="$wire.markAllRead()" />
 <x-nx::member-selector :members="$people" wire:model.live="members" roles-model="roles" />
 <x-nx::chain-selector name="chain" :value="$chain" wire:model.live="chain" :chains="$chains" />
+<x-nx::language-menu name="locale" :value="$locale" wire:model.live="locale" :languages="$languages" />
+<x-nx::theme-switch x-on:nx-change="…" />
+<x-nx::promo-bar id="launch" badge="NEW" href="/pricing" link-label="See plans" x-on:nx-dismiss="…">95% off this week</x-nx::promo-bar>
 <x-nx::registration-card model="registration" wire:submit="register" :success="$registered" :event="$event" :tickets="$tickets" />
 <x-nx::voice-recorder x-on:nx-record-stop="$wire.saveNote($event.detail.duration)" />`,
       }}
@@ -160,6 +168,42 @@ export function MenusBlocks() {
               </Button>
             }
           />
+        </Demo>
+
+        <Demo title={tr('ناوبری هاوِر جهت‌آگاه', 'Directional hover nav')}>
+          <HoverNav
+            label={tr('اصلی', 'Main')}
+            brand="NabuX"
+            items={[
+              {
+                id: 'product',
+                label: tr('محصولات', 'Products'),
+                links: [
+                  { label: tr('عامل‌ها', 'Agents'), href: '#menus-blocks', icon: 'sparkles', description: tr('پشتیبانی به هر زبانی', 'Support in every language') },
+                  { label: tr('گردش‌کارها', 'Workflows'), href: '#menus-blocks', icon: 'zap', description: tr('خودکارسازی بدون کد', 'Automation without code') },
+                  { label: tr('بینش‌ها', 'Insights'), href: '#menus-blocks', icon: 'chart' },
+                ],
+              },
+              {
+                id: 'solutions',
+                label: tr('راهکارها', 'Solutions'),
+                links: [
+                  { label: tr('فروشگاه‌ها', 'Retail'), href: '#menus-blocks', icon: 'grid' },
+                  { label: tr('مالی', 'Finance'), href: '#menus-blocks', icon: 'trend-up' },
+                ],
+              },
+              { id: 'docs', label: tr('مستندات', 'Docs'), href: '#menus-blocks' },
+              { id: 'pricing', label: tr('تعرفه‌ها', 'Pricing'), href: '#menus-blocks' },
+              {
+                id: 'say-hi',
+                label: tr('سلام بگو', 'Say hi'),
+                links: [{ label: tr('گفت‌وگو با ما', 'Talk to us'), icon: 'message', onSelect: () => toast.success('Hello · Hola · مرحبا') }],
+              },
+            ]}
+          />
+          <p className="sc-demo-title" style={{ marginBlockStart: 'var(--nx-space-4)' }}>
+            {tr('پنل‌ها از سمتی که موس می‌آید باز می‌شوند و به سمتی که می‌رود بسته — با ماوس حرکت کنید.', 'Panels open from the side the pointer arrives from and leave toward where it goes — try it with a mouse.')}
+          </p>
         </Demo>
 
         <Demo title={tr('فیلتر شکل‌پذیر', 'Morphing filter')}>
@@ -258,6 +302,27 @@ export function MenusBlocks() {
           <p className="sc-demo-title">
             {tr('فعلاً روی', 'Currently on')} <strong>{CHAINS.find((c) => c.id === chain)?.name}</strong>
           </p>
+        </Demo>
+
+        <Demo title={tr('انتخاب زبان', 'Language menu')} center>
+          <div style={tall}>
+            <LanguageMenu languages={LANGUAGES} value={locale} onValueChange={setLocale} />
+            <p className="sc-demo-title" style={{ marginBlockStart: 'var(--nx-space-4)' }}>
+              {tr('زبان فعال:', 'Active locale:')} <strong>{locale}</strong>
+            </p>
+          </div>
+        </Demo>
+
+        <Demo title={tr('کلید پوسته', 'Theme switch')} center>
+          <ThemeSwitch />
+          <p className="sc-demo-title">{tr('همان ترجیحی که کلید هدر عوض می‌کند — روشن، سیستم، تیره.', 'The same preference the header toggle flips — light, system, dark.')}</p>
+        </Demo>
+
+        <Demo title={tr('نوار اطلاعیه', 'Promo bar')}>
+          <PromoBar id="showcase-launch" persist={false} badge="NEW" href="#menus-blocks" linkLabel={tr('بیشتر', 'See more')} onDismiss={() => toast(tr('اطلاعیه بسته شد (برای این نشست)', 'Promo dismissed (for this session)'))}>
+            {tr('۹۵٪ تخفیف روی همهٔ قالب‌ها — فقط همین هفته', '95% off every template — this week only')}
+          </PromoBar>
+          <p className="sc-demo-title">{tr('با بستن، برای این نشست به‌خاطر سپرده می‌شود؛ این‌جا موقتاً برمی‌گردد.', 'Dismissing is remembered for the session; here it always comes back.')}</p>
         </Demo>
 
         <Demo title={tr('داک با پنل', 'Dock with expanding panels')} wide>

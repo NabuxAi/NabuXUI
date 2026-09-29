@@ -655,3 +655,147 @@ export function parametricPath(kind: ParametricKind = 'rose', options: Parametri
   const scale = (half - padding) / (reach || 1);
   return `${points.map(([x, y], i) => `${i ? 'L' : 'M'}${fmt(half + x * scale)},${fmt(half + y * scale)}`).join('')}Z`;
 }
+
+/* ---- Gradient upload: accept, drag, drop ------------------------------------------------ */
+
+export interface FileInfo {
+  name: string;
+  size: number;
+  type?: string;
+}
+
+export type FileRejection = 'accept' | 'size';
+
+/** `.pdf` matches the extension, `image/*` the type prefix, `image/png` the exact type. */
+export function matchesAccept(file: { name: string; type?: string }, accept: readonly string[]): boolean {
+  if (accept.length === 0) return true;
+  const name = file.name.toLowerCase();
+  const type = (file.type ?? '').toLowerCase();
+  return accept.some((pattern) => {
+    const value = pattern.trim().toLowerCase();
+    if (!value) return false;
+    if (value.startsWith('.')) return name.endsWith(value);
+    if (value.endsWith('/*')) return type.startsWith(value.slice(0, -1));
+    return type === value;
+  });
+}
+
+/** Why a file cannot enter the list — wrong kind ('accept') or too large ('size') — or null. */
+export function fileRejection(file: FileInfo, { accept = [], maxBytes = 0 }: { accept?: readonly string[]; maxBytes?: number } = {}): FileRejection | null {
+  if (maxBytes > 0 && file.size > maxBytes) return 'size';
+  if (accept.length > 0 && !matchesAccept(file, accept)) return 'accept';
+  return null;
+}
+
+const BYTE_UNITS: ReadonlyArray<readonly [number, string]> = [
+  [1024 ** 4, 'terabyte'],
+  [1024 ** 3, 'gigabyte'],
+  [1024 ** 2, 'megabyte'],
+  [1024, 'kilobyte'],
+];
+
+/** 1_234_567 → “1.2 MB”, with the locale's digits and unit words (1_024 → “1 KB”). */
+export function formatBytes(bytes: number, locale?: string): string {
+  if (!Number.isFinite(bytes) || bytes < 0) return '';
+  const unit = BYTE_UNITS.find(([size]) => bytes >= size);
+  if (!unit) return new Intl.NumberFormat(locale, { style: 'unit', unit: 'byte', unitDisplay: 'short' }).format(Math.round(bytes));
+  const value = bytes / unit[0];
+  return new Intl.NumberFormat(locale, {
+    style: 'unit',
+    unit: unit[1],
+    unitDisplay: 'short',
+    maximumFractionDigits: value >= 10 ? 0 : 1,
+  }).format(value);
+}
+
+export type DropzoneState = 'idle' | 'drag';
+
+export interface DropzoneOptions {
+  /** The zone root is marked data-state="drag" while files hover over it. */
+  accept?: readonly string[];
+  maxBytes?: number;
+  /** Files picked through the input or dropped on the zone. */
+  onFiles?: (files: File[], source: 'browse' | 'drop') => void;
+  /** The idle / drag transitions, for frameworks that mirror state. */
+  onStateChange?: (state: DropzoneState) => void;
+}
+
+/**
+ * Drag-and-drop for the gradient upload block: hovering files mark the zone
+ * `data-state="drag"` (the CSS glows its brand gradient), dropping hands the
+ * files to `onFiles`. Drop and dragover are also cancelled on the window, so
+ * missing the zone never navigates the page away. Validation is the pure
+ * `fileRejection` above — call it per file in the app layer, where the words
+ * for refusing one live. The behaviour only writes `data-state`; cleanup
+ * detaches every listener and clears the state.
+ */
+export function dropzone(el: HTMLElement, { onFiles, onStateChange }: DropzoneOptions = {}): Cleanup {
+  if (!isBrowser) return () => {};
+  const input = el.querySelector<HTMLInputElement>('.nx-upload-input');
+
+  const setState = (state: DropzoneState) => {
+    if (el.getAttribute('data-state') !== state) {
+      el.setAttribute('data-state', state);
+      onStateChange?.(state);
+    }
+  };
+
+  // dragenter/leave fire at every element boundary: count the pairs, not the events.
+  let depth = 0;
+  const hasFiles = (event: DragEvent) => Boolean(event.dataTransfer && Array.from(event.dataTransfer.types ?? []).includes('Files'));
+
+  const onDragEnter = (event: DragEvent) => {
+    if (!hasFiles(event)) return;
+    event.preventDefault();
+    depth += 1;
+    setState('drag');
+  };
+  const onDragOver = (event: DragEvent) => {
+    if (!hasFiles(event)) return;
+    event.preventDefault();
+    event.dataTransfer!.dropEffect = 'copy';
+  };
+  const onDragLeave = () => {
+    depth = Math.max(0, depth - 1);
+    if (depth === 0) setState('idle');
+  };
+  const onDrop = (event: DragEvent) => {
+    if (!event.dataTransfer) return;
+    event.preventDefault();
+    depth = 0;
+    setState('idle');
+    const files = Array.from(event.dataTransfer.files);
+    if (files.length) onFiles?.(files, 'drop');
+  };
+  const onChange = () => {
+    const files = input?.files ? Array.from(input.files) : [];
+    // Reset first: picking the same file twice must fire change again.
+    if (input) input.value = '';
+    if (files.length) onFiles?.(files, 'browse');
+  };
+  const onWindowOver = (event: DragEvent) => {
+    if (hasFiles(event)) event.preventDefault();
+  };
+  const onWindowDrop = (event: DragEvent) => {
+    // A drop that missed the zone must not open the file in this tab.
+    if (hasFiles(event)) event.preventDefault();
+  };
+
+  el.addEventListener('dragenter', onDragEnter);
+  el.addEventListener('dragover', onDragOver);
+  el.addEventListener('dragleave', onDragLeave);
+  el.addEventListener('drop', onDrop);
+  input?.addEventListener('change', onChange);
+  window.addEventListener('dragover', onWindowOver);
+  window.addEventListener('drop', onWindowDrop);
+  return () => {
+    el.removeEventListener('dragenter', onDragEnter);
+    el.removeEventListener('dragover', onDragOver);
+    el.removeEventListener('dragleave', onDragLeave);
+    el.removeEventListener('drop', onDrop);
+    input?.removeEventListener('change', onChange);
+    window.removeEventListener('dragover', onWindowOver);
+    window.removeEventListener('drop', onWindowDrop);
+    el.removeAttribute('data-state');
+  };
+}
