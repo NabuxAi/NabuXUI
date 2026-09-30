@@ -80,7 +80,7 @@
                                 </a>
                             </span>
                         </li>
-                        <li class="flex items-center gap-4 py-2 relative before:border-l before:border-[#e3e3e0] dark:before:border-[#3E3E3A] before:bottom-1/2 before:top-0 before:left-[0.4rem] before:absolute">
+                        <li class="flex items-center gap-4 py-2 relative before:border-l before:border-[#e3e3e0] dark:before:border-[#3E3E3A] before:top-0 before:bottom-0 before:left-[0.4rem] before:absolute">
                             <span class="relative py-1 bg-white dark:bg-[#161615]">
                                 <span class="flex items-center justify-center rounded-full bg-[#FDFDFC] dark:bg-[#161615] shadow-[0px_0px_1px_0px_rgba(0,0,0,0.03),0px_1px_2px_0px_rgba(0,0,0,0.06)] w-3.5 h-3.5 border dark:border-[#3E3E3A] border-[#e3e3e0]">
                                     <span class="rounded-full bg-[#dbdbd7] dark:bg-[#3E3E3A] w-1.5 h-1.5"></span>
@@ -105,6 +105,20 @@
                                         />
                                     </svg>
                                 </a>
+                            </span>
+                        </li>
+                        <li class="flex items-center gap-4 py-2 relative before:border-l before:border-[#e3e3e0] dark:before:border-[#3E3E3A] before:bottom-1/2 before:top-0 before:left-[0.4rem] before:absolute">
+                            <span class="relative py-1 bg-white dark:bg-[#161615]">
+                                <span class="flex items-center justify-center rounded-full bg-[#FDFDFC] dark:bg-[#161615] shadow-[0px_0px_1px_0px_rgba(0,0,0,0.03),0px_1px_2px_0px_rgba(0,0,0,0.06)] w-3.5 h-3.5 border dark:border-[#3E3E3A] border-[#e3e3e0]">
+                                    <span class="rounded-full bg-[#dbdbd7] dark:bg-[#3E3E3A] w-1.5 h-1.5"></span>
+                                </span>
+                            </span>
+                            <span>
+                                Browse the NabuXUI building blocks in the
+                                <a href="{{ url('/components') }}" class="inline-flex items-center space-x-1 font-medium underline underline-offset-4 text-[#f53003] dark:text-[#FF4433] ml-1">
+                                    <span>component demo catalog · کاتالوگ دموها</span>
+                                </a>
+                                <span class="block text-[#706f6c] dark:text-[#A1A09A]">Admin panel demo · پنل مدیریت — soon</span>
                             </span>
                         </li>
                     </ul>

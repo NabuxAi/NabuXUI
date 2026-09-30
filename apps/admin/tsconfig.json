@@ -1,0 +1,22 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "declaration": false,
+    "types": [
+      "vite/client"
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@nabuxai/ui-core": [
+        "../../packages/core/src/js/index.ts"
+      ],
+      "@nabuxai/ui-react": [
+        "../../packages/react/src/index.ts"
+      ]
+    }
+  },
+  "include": [
+    "src"
+  ]
+}

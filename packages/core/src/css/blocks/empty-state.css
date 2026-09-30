@@ -1,0 +1,175 @@
+/*
+ * Blocks: the empty state — the friendly "nothing here yet".
+ *
+ * For the panel pages that have no data yet (a fresh project list, a filtered
+ * table with no rows): a floating plate with the page's icon, a slow dashed
+ * orbit carrying two sparks, and a halo that breathes behind it — all pure
+ * CSS, both themes from the tokens. Under prefers-reduced-motion every loop
+ * stops and the art simply sits there.
+ *
+ *   <div class="nx-empty-state" data-nx-reveal data-size="sm|md|lg">
+ *     <span class="nx-empty-state-art" aria-hidden="true">
+ *       <span class="nx-empty-state-halo"></span>
+ *       <span class="nx-empty-state-orbit">
+ *         <i class="nx-empty-state-spark"></i> × 2        ← they ride the orbit
+ *       </span>
+ *       <span class="nx-empty-state-plate"><svg class="nx-icon">…</svg></span>
+ *     </span>
+ *     <p class="nx-empty-state-title">No projects yet</p>
+ *     <p class="nx-empty-state-description">…</p>          ← optional
+ *     <div class="nx-empty-state-actions">…buttons…</div>  ← optional
+ */
+@layer nx.components {
+  .nx-empty-state {
+    /* The plate's size; the art scales with it (concentric: plate + orbit). */
+    --nx-empty-plate: 4.25rem;
+
+    display: grid;
+    justify-items: center;
+    gap: var(--nx-space-3);
+    padding: var(--nx-space-10) var(--nx-space-6);
+    color: var(--nx-text-muted);
+    text-align: center;
+  }
+
+  .nx-empty-state[data-size="sm"] {
+    --nx-empty-plate: 2.75rem;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-6) var(--nx-space-4);
+  }
+
+  .nx-empty-state[data-size="lg"] {
+    --nx-empty-plate: 5.5rem;
+    padding: var(--nx-space-12) var(--nx-space-6);
+  }
+
+  /* ---- The art ------------------------------------------------------------------ */
+  .nx-empty-state-art {
+    position: relative;
+    display: grid;
+    place-items: center;
+    inline-size: calc(var(--nx-empty-plate) * 1.9);
+    aspect-ratio: 1;
+    margin-block-end: var(--nx-space-1);
+  }
+
+  /* A ring breathing behind the plate: grows, fades, starts again. */
+  .nx-empty-state-halo {
+    position: absolute;
+    inset: 18%;
+    border-radius: 50%;
+    border: 1px solid color-mix(in oklab, var(--nx-accent) 38%, transparent);
+    animation: nx-empty-halo 3.2s var(--nx-ease-out) infinite;
+  }
+
+  /* The dashed orbit; its sparks are children, so they ride along. */
+  .nx-empty-state-orbit {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 1px dashed color-mix(in oklab, var(--nx-border-strong) 85%, transparent);
+    animation: nx-empty-turn 34s linear infinite;
+  }
+
+  .nx-empty-state-spark {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: 50%;
+    inline-size: 0.34rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--nx-accent);
+    box-shadow: 0 0 7px color-mix(in oklab, var(--nx-accent) 65%, transparent);
+
+    /* Out of the centre, onto the ring (the first by rotate, the second with
+       its own angle); the orbit's own rotation carries both around. */
+    translate: -50% -50%;
+    transform: rotate(var(--_a, 0deg)) translateY(calc(var(--nx-empty-plate) * -0.95));
+
+    &:nth-child(2) {
+      --_a: 135deg;
+      background: var(--nx-gold);
+      box-shadow: 0 0 7px color-mix(in oklab, var(--nx-gold) 65%, transparent);
+    }
+  }
+
+  /* The plate the icon sits on: soft accent wash over a raised surface,
+     gently floating (the nx-float keyframes live in motion.css). */
+  .nx-empty-state-plate {
+    position: relative;
+    display: grid;
+    place-items: center;
+    inline-size: var(--nx-empty-plate);
+    aspect-ratio: 1;
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-xl);
+    background:
+      radial-gradient(120% 120% at 30% 18%, var(--nx-accent-soft), transparent 62%),
+      radial-gradient(90% 90% at 78% 88%, var(--nx-gold-soft), transparent 58%),
+      var(--nx-surface-2);
+    color: var(--nx-accent-text);
+    box-shadow: var(--nx-shadow-sm), inset 0 1px 0 var(--nx-highlight);
+    animation: nx-float 3.4s var(--nx-ease-in-out) infinite;
+
+    .nx-icon { inline-size: 42%; block-size: 42%; }
+  }
+
+  /* ---- The words ----------------------------------------------------------------- */
+  .nx-empty-state-title {
+    margin: 0;
+    color: var(--nx-text);
+    font: 650 var(--nx-text-lg) / 1.3 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tight);
+    text-wrap: balance;
+  }
+
+  .nx-empty-state[data-size="sm"] .nx-empty-state-title { font-size: var(--nx-text-md); }
+  .nx-empty-state[data-size="lg"] .nx-empty-state-title { font-size: var(--nx-text-xl); }
+
+  .nx-empty-state-description {
+    margin: 0;
+    max-inline-size: 46ch;
+    font-size: var(--nx-text-sm);
+    line-height: 1.75;
+    text-wrap: pretty;
+  }
+
+  .nx-empty-state-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--nx-space-3);
+    margin-block-start: var(--nx-space-2);
+  }
+
+  .nx-empty-state:not(:has(.nx-empty-state-actions)) .nx-empty-state-description {
+    margin-block-end: var(--nx-space-1);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    /* Every loop rests; the art stays as a still drawing. */
+    .nx-empty-state-halo {
+      animation: none;
+      opacity: 0.5;
+    }
+
+    .nx-empty-state-orbit,
+    .nx-empty-state-plate { animation: none; }
+  }
+
+  @media (forced-colors: active) {
+    .nx-empty-state-plate { border-color: CanvasText; background: Canvas; }
+    .nx-empty-state-halo,
+    .nx-empty-state-spark { display: none; }
+  }
+
+  @keyframes nx-empty-halo {
+    from { scale: 0.82; opacity: 0.65; }
+    70%, to { scale: calc(1 + 0.34 * var(--nx-motion)); opacity: 0; }
+  }
+
+  @keyframes nx-empty-turn {
+    from { rotate: 0deg; }
+    to { rotate: calc(360deg * var(--nx-motion)); }
+  }
+}

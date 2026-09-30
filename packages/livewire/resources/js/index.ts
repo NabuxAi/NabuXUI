@@ -20,6 +20,11 @@ import { installChipFilterBlocks } from './alpine/blocks/chip-filter';
 import { installStatStripBlocks } from './alpine/blocks/stat-strip';
 import { installSortPillBlocks } from './alpine/blocks/sort-pill';
 import { installGlassBlocks } from './alpine/blocks/glass';
+import { installAdminShellBlocks } from './alpine/blocks/admin-shell';
+import { installAuthCardBlocks } from './alpine/blocks/auth-card';
+import { installCalendarBlocks } from './alpine/blocks/calendar';
+import { installChatBlocks } from './alpine/blocks/chat';
+import { installKanbanBlocks } from './alpine/blocks/kanban';
 
 
 declare global {
@@ -51,6 +56,11 @@ function install(Alpine: AlpineLike | undefined) {
   installStatStripBlocks(Alpine);
   installSortPillBlocks(Alpine);
   installGlassBlocks(Alpine);
+  installAdminShellBlocks(Alpine);
+  installAuthCardBlocks(Alpine);
+  installCalendarBlocks(Alpine);
+  installChatBlocks(Alpine);
+  installKanbanBlocks(Alpine);
 }
 
 if (window.Alpine) install(window.Alpine);

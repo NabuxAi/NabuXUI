@@ -11,6 +11,8 @@
     "test": "pnpm -r --filter ./packages/** run test",
     "typecheck": "pnpm -r --filter ./packages/** run typecheck",
     "showcase": "pnpm --filter showcase dev",
-    "showcase:build": "pnpm --filter showcase build"
+    "showcase:build": "pnpm --filter showcase build",
+    "admin": "pnpm --filter admin dev",
+    "admin:build": "pnpm --filter admin build"
   }
 }

@@ -35,6 +35,14 @@ export * from './blocks/stat-strip';
 export * from './blocks/sort-pill';
 export * from './blocks/glass';
 export * from './blocks/backdrops';
+export * from './blocks/admin-shell';
+export * from './blocks/auth';
+export * from './blocks/calendar';
+export * from './blocks/chat';
+export * from './blocks/empty';
+export * from './blocks/invoice';
+export * from './blocks/kanban';
+export * from './blocks/timeline-feed';
 
 // The framework-agnostic helpers, for pages that need them directly.
 export { theme, transition, toasts, type ToastInput, type ToastTone } from '@nabuxai/ui-core';

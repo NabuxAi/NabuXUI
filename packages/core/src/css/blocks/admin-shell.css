@@ -1,0 +1,662 @@
+/*
+ * Blocks: admin shell — the frame a whole admin panel lives in.
+ *
+ *   <div class="nx-admin">                                (a size container)
+ *     <div class="nx-admin-frame" [data-collapsed]>       grid: sidebar · main
+ *       <aside class="nx-admin-sidebar">                  brand · <nav class="nx-admin-nav">
+ *         <span class="nx-indicator">                     the spring thumb under the current item
+ *         <div class="nx-admin-group"> <h3 class="nx-admin-group-label"> <ul>
+ *           <a|button class="nx-admin-item" data-value data-label [aria-current]>
+ *             icon · <span class="nx-admin-label"> · <span class="nx-admin-badge">
+ *         <div class="nx-admin-sidebar-foot"> <button class="nx-admin-toggle" aria-expanded>
+ *       <div class="nx-admin-main">
+ *         <header class="nx-admin-topbar"> <button class="nx-admin-menu" popovertarget>
+ *           <div class="nx-admin-heading"> · <div class="nx-admin-search"> · <div class="nx-admin-actions">
+ *         <div class="nx-admin-content">
+ *     <div class="nx-admin-drawer" popover>               the sidebar again, on small screens
+ *
+ * Collapsing animates the frame's grid column (a spring on width); the thumb,
+ * the rail tooltips and the badge-dots are the same mechanisms the workspace
+ * shell uses. Under 48rem the inline sidebar goes away and the topbar's menu
+ * button opens the drawer copy as a native popover.
+ */
+@layer nx.components {
+  /* ============================================================================
+   * Admin shell
+   * ========================================================================== */
+  .nx-admin {
+    --_side: 16rem;
+    --_rail: 4.25rem;
+    --_pad: 0.625rem;
+    --_radius: var(--nx-admin-radius, 0px);
+    --_item-radius: var(--nx-radius-md);
+
+    container-type: inline-size;
+    min-inline-size: 0;
+  }
+
+  .nx-admin-frame {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--_side) minmax(0, 1fr);
+    block-size: var(--nx-admin-height, 100dvh);
+    min-block-size: var(--nx-admin-min-height, 0px);
+    /* Whole-page frames want no chrome; a demo card sets --nx-admin-border/-radius. */
+    border: var(--nx-admin-border, 0px) solid var(--nx-border);
+    border-radius: var(--_radius);
+    background: var(--nx-bg);
+    overflow: clip;
+    transition: grid-template-columns var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+  }
+
+  .nx-admin-frame[data-collapsed] { grid-template-columns: var(--_rail) minmax(0, 1fr); }
+
+  /* ---- Sidebar ---------------------------------------------------------------- */
+
+  .nx-admin-sidebar {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: var(--nx-space-3);
+    min-inline-size: 0;
+    min-block-size: 0;
+    padding: var(--_pad);
+    border-inline-end: 1px solid var(--nx-border);
+    background: var(--nx-surface);
+    /* No clipping: in the rail each item's label shows beside its icon. */
+  }
+
+  .nx-admin-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-block-size: 2.5rem;
+    padding-inline: 0.6875rem;
+    overflow: hidden;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .nx-admin-mark {
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 1.625rem;
+    block-size: 1.625rem;
+    border-radius: 0.5rem;
+    background: var(--nx-gradient-brand);
+    color: var(--nx-accent-contrast);
+    font-size: var(--nx-text-xs);
+    font-weight: 800;
+    box-shadow: var(--nx-shadow-glow);
+  }
+
+  .nx-admin-brand-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--nx-text);
+    transition:
+      opacity var(--nx-dur-base) var(--nx-ease-out),
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+  }
+
+  .nx-admin-nav {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    flex: 1;
+    align-content: start;
+    gap: var(--nx-space-4);
+    min-block-size: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    padding-inline-end: 0.125rem;
+
+    /* The thumb follows the current item up and down; it always spans the nav. */
+    .nx-indicator {
+      z-index: -1;
+      inset-inline: 0;
+      inline-size: auto;
+      translate: 0 var(--nx-ind-y, 0px);
+      border-radius: var(--_item-radius);
+      background: var(--nx-surface-2);
+      box-shadow: var(--nx-shadow-sm), inset 0 1px 0 var(--nx-highlight);
+      transition:
+        translate var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+        block-size var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+        opacity var(--nx-dur-fast) var(--nx-ease-out);
+    }
+  }
+
+  .nx-admin-group {
+    display: grid;
+    gap: 0.125rem;
+
+    ul { display: grid; gap: 0.125rem; margin: 0; padding: 0; list-style: none; }
+  }
+
+  .nx-admin-group-label {
+    margin: 0;
+    padding: var(--nx-space-2) 0.9375rem var(--nx-space-1);
+    overflow: hidden;
+    color: var(--nx-text-subtle);
+    font-size: var(--nx-text-xs);
+    font-weight: 600;
+    letter-spacing: var(--nx-tracking-wide);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition:
+      opacity var(--nx-dur-base) var(--nx-ease-out),
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+  }
+
+  .nx-admin-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    inline-size: 100%;
+    min-block-size: 2.5rem;
+    padding-inline: 0.9375rem;
+    border: 0;
+    border-radius: var(--_item-radius);
+    background: transparent;
+    color: var(--nx-text-muted);
+    font: 500 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    text-align: start;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      color var(--nx-dur-fast) var(--nx-ease-out),
+      background-color var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+
+    .nx-icon { flex: none; inline-size: 1.125rem; block-size: 1.125rem; color: var(--nx-text-subtle); transition: color var(--nx-dur-fast) var(--nx-ease-out); }
+    &:hover { color: var(--nx-text); background: color-mix(in oklab, var(--nx-surface-2) 65%, transparent); }
+    &:is([aria-current="page"], [aria-current="true"]) { color: var(--nx-text); font-weight: 600; }
+    &:is([aria-current="page"], [aria-current="true"]) .nx-icon { color: var(--nx-accent-text); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: -2px; }
+    &:active:not([data-static], [data-static] *, :disabled) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:disabled, &[aria-disabled="true"] { opacity: 0.45; cursor: not-allowed; }
+
+    /* In the rail the label shows beside the icon on hover and focus. */
+    &::after {
+      content: attr(data-label) / "";
+      position: absolute;
+      inset-inline-start: calc(100% + 0.75rem);
+      inset-block-start: 50%;
+      z-index: 3;
+      padding: 0.35rem 0.6rem;
+      border-radius: var(--nx-radius-sm);
+      background: var(--nx-surface-inverse);
+      color: var(--nx-text-inverse);
+      font-size: var(--nx-text-xs);
+      font-weight: 500;
+      white-space: nowrap;
+      opacity: 0;
+      translate: calc(-4px * var(--nx-dir) * var(--nx-motion)) -50%;
+      pointer-events: none;
+      visibility: hidden;
+      transition:
+        opacity var(--nx-dur-fast) var(--nx-ease-out),
+        translate var(--nx-dur-fast) var(--nx-ease-out),
+        visibility 0s linear var(--nx-dur-fast);
+    }
+  }
+
+  .nx-admin-label {
+    flex: 1;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition:
+      opacity var(--nx-dur-base) var(--nx-ease-out),
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+  }
+
+  .nx-admin-badge {
+    flex: none;
+    min-inline-size: 1.25rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-accent-soft);
+    color: var(--nx-accent-text);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    transition:
+      opacity var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+  }
+
+  .nx-admin-sidebar-foot {
+    display: grid;
+    gap: 0.25rem;
+    padding-block-start: var(--nx-space-3);
+    border-block-start: 1px solid var(--nx-border);
+  }
+
+  .nx-admin-toggle .nx-icon {
+    transition: rotate var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+  }
+
+  /* ---- Collapsed rail ---------------------------------------------------------
+   * Keyed off the frame (Blade binds it there) and off the sidebar itself
+   * (React's standalone sidebar carries it), so both builds share one block.
+   * The drawer copy lives outside the frame and never carries the attribute,
+   * so it stays expanded. */
+  :is(.nx-admin-frame[data-collapsed], .nx-admin-sidebar[data-collapsed]) {
+    .nx-admin-label,
+    .nx-admin-brand-text,
+    .nx-admin-group-label {
+      opacity: 0;
+      translate: calc(-6px * var(--nx-dir) * var(--nx-motion)) 0;
+      pointer-events: none;
+      transition-duration: 150ms, 150ms;
+      transition-timing-function: var(--nx-ease-out), var(--nx-ease-out);
+    }
+
+    .nx-admin-toggle .nx-icon { rotate: 180deg; }
+
+    .nx-admin-badge {
+      position: absolute;
+      inset-block-start: 0.35rem;
+      inset-inline-start: 1.85rem;
+      min-inline-size: 0.5rem;
+      inline-size: 0.5rem;
+      block-size: 0.5rem;
+      padding: 0;
+      border: 2px solid var(--nx-surface);
+      background: var(--nx-accent);
+      color: transparent;
+      overflow: hidden;
+    }
+
+    .nx-admin-item:is(:hover, :focus-visible)::after {
+      opacity: 1;
+      translate: 0 -50%;
+      visibility: visible;
+      transition-delay: 0s;
+    }
+  }
+
+  /* ---- Main, topbar, content -------------------------------------------------- */
+
+  .nx-admin-main {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    min-inline-size: 0;
+    min-block-size: 0;
+  }
+
+  .nx-admin-topbar {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-3);
+    min-block-size: 3.5rem;
+    padding: var(--nx-space-2) var(--nx-space-5);
+    border-block-end: 1px solid var(--nx-border);
+    background: color-mix(in oklab, var(--nx-surface) 72%, transparent);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+
+  .nx-admin-topbar-start {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: var(--nx-space-3);
+    min-inline-size: 0;
+  }
+
+  .nx-admin-menu {
+    display: none;
+    place-items: center;
+    flex: none;
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--nx-radius-md);
+    background: transparent;
+    color: var(--nx-text-muted);
+    cursor: pointer;
+    transition:
+      background-color var(--nx-dur-fast) var(--nx-ease-out),
+      color var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+
+    .nx-icon { inline-size: 1.125rem; block-size: 1.125rem; }
+    &:hover { background: var(--nx-surface-2); color: var(--nx-text); }
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+  }
+
+  .nx-admin-heading {
+    display: grid;
+    gap: 0.125rem;
+    min-inline-size: 0;
+
+    &:empty { display: none; }
+  }
+
+  .nx-admin-title {
+    margin: 0;
+    overflow: hidden;
+    color: var(--nx-text);
+    font: 650 var(--nx-text-md) / 1.3 var(--nx-font-display);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .nx-admin-subtitle {
+    margin: 0;
+    overflow: hidden;
+    color: var(--nx-text-subtle);
+    font-size: var(--nx-text-xs);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* The search/command seat: a field-shaped button until the app drops its own. */
+  .nx-admin-search {
+    display: flex;
+    flex: 1;
+    justify-content: center;
+    min-inline-size: 0;
+  }
+
+  .nx-admin-search-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    inline-size: min(100%, 22rem);
+    min-block-size: 2.25rem;
+    padding-inline: var(--nx-space-3);
+    border: 0;
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-surface-2);
+    box-shadow: inset 0 0 0 1px var(--nx-border);
+    color: var(--nx-text-subtle);
+    font: 400 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    cursor: pointer;
+    transition:
+      background-color var(--nx-dur-fast) var(--nx-ease-out),
+      box-shadow var(--nx-dur-fast) var(--nx-ease-out),
+      color var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+
+    &:hover { background: var(--nx-surface-3); color: var(--nx-text-muted); }
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; box-shadow: none; }
+
+    .nx-icon { flex: none; inline-size: 1rem; block-size: 1rem; }
+    span { flex: 1; min-inline-size: 0; overflow: hidden; text-align: start; text-overflow: ellipsis; white-space: nowrap; }
+    .nx-kbd { flex: none; }
+  }
+
+  .nx-admin-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    flex: none;
+
+    &:empty { display: none; }
+  }
+
+  /* ---- User menu -------------------------------------------------------------- */
+
+  .nx-admin-user {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding: 0.25rem 0.5rem 0.25rem 0.25rem;
+    border: 0;
+    border-radius: var(--nx-radius-full);
+    background: transparent;
+    color: var(--nx-text);
+    font: 500 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    cursor: pointer;
+    transition:
+      background-color var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+
+    &:hover { background: var(--nx-surface-2); }
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+
+    .nx-icon { flex: none; inline-size: 1rem; block-size: 1rem; color: var(--nx-text-subtle); }
+  }
+
+  .nx-admin-user-text {
+    display: grid;
+    gap: 0.0625rem;
+    min-inline-size: 0;
+    text-align: start;
+
+    span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  }
+
+  .nx-admin-user-name { font-weight: 600; }
+  .nx-admin-user-role { color: var(--nx-text-subtle); font-size: var(--nx-text-xs); }
+
+  .nx-admin-user-menu {
+    display: grid;
+    min-inline-size: 12rem;
+    padding: var(--nx-space-2);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    box-shadow: var(--nx-shadow-xl);
+    z-index: var(--nx-z-dropdown);
+    transform-origin: var(--nx-origin, top center);
+    opacity: 0;
+    scale: 0.96;
+    transition:
+      opacity var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+      display var(--nx-dur-fast) allow-discrete,
+      overlay var(--nx-dur-fast) allow-discrete;
+  }
+
+  .nx-admin-user-menu:where(:popover-open, [data-open]) {
+    opacity: 1;
+    scale: 1;
+
+    @starting-style { opacity: 0; scale: 0.96; }
+  }
+
+  .nx-admin-user-menu:not([popover]):not([data-open]) { display: none; }
+
+  .nx-admin-user-head {
+    display: grid;
+    gap: 0.125rem;
+    padding: var(--nx-space-2) var(--nx-space-2) var(--nx-space-2);
+    border-block-end: 1px solid var(--nx-border);
+    margin-block-end: var(--nx-space-1);
+  }
+
+  .nx-admin-user-item {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    min-block-size: 2.25rem;
+    padding-inline: var(--nx-space-2);
+    border: 0;
+    border-radius: var(--nx-radius-sm);
+    background: transparent;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+    text-align: start;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color var(--nx-dur-fast) var(--nx-ease-out),
+      color var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+
+    .nx-icon { flex: none; inline-size: 1rem; block-size: 1rem; color: var(--nx-text-subtle); }
+    &:hover { background: var(--nx-surface-2); color: var(--nx-text); }
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: -2px; }
+  }
+
+  .nx-admin-user-divider {
+    margin: var(--nx-space-1) 0;
+    border: 0;
+    border-block-start: 1px solid var(--nx-border);
+  }
+
+  .nx-admin-content {
+    min-block-size: 0;
+    padding: var(--nx-space-5) var(--nx-space-5) var(--nx-space-8);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: -2px; }
+  }
+
+  /* ---- Drawer (the sidebar again, on small screens) ---------------------------- */
+
+  .nx-admin-drawer {
+    position: fixed;
+    inset: auto;
+    inset-block: 0;
+    inset-inline-start: 0;
+    display: flex;
+    flex-direction: column;
+    inline-size: min(var(--_side, 16rem), 86vw);
+    max-inline-size: none;
+    max-block-size: none;
+    margin: 0;
+    padding: var(--_pad, 0.625rem);
+    border: 0;
+    border-inline-end: 1px solid var(--nx-border);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    box-shadow: var(--nx-shadow-xl);
+    overflow: visible;
+    opacity: 0;
+    translate: calc(-100% * var(--nx-dir)) 0;
+    transition:
+      opacity var(--nx-dur-base) var(--nx-ease-out),
+      translate var(--nx-spring-soft-duration) var(--nx-spring-soft),
+      display var(--nx-dur-base) allow-discrete,
+      overlay var(--nx-dur-base) allow-discrete;
+  }
+
+  .nx-admin-drawer:where(:popover-open, [data-open]) {
+    opacity: 1;
+    translate: 0 0;
+
+    @starting-style {
+      opacity: 0;
+      translate: calc(-100% * var(--nx-dir)) 0;
+    }
+  }
+
+  .nx-admin-drawer:not([popover]):not([data-open]) { display: none; }
+
+  .nx-admin-drawer::backdrop {
+    background: transparent;
+    -webkit-backdrop-filter: blur(0);
+    backdrop-filter: blur(0);
+    transition:
+      background-color var(--nx-dur-slow) var(--nx-ease-out),
+      backdrop-filter var(--nx-dur-slow) var(--nx-ease-out),
+      display var(--nx-dur-slow) allow-discrete,
+      overlay var(--nx-dur-slow) allow-discrete;
+  }
+
+  .nx-admin-drawer:popover-open::backdrop {
+    background: var(--nx-backdrop);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+
+    @starting-style {
+      background: transparent;
+      -webkit-backdrop-filter: blur(0);
+      backdrop-filter: blur(0);
+    }
+  }
+
+  /* The drawer's copy of the sidebar drops its own edges and its collapse toggle. */
+  .nx-admin-drawer .nx-admin-sidebar {
+    flex: 1;
+    min-block-size: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .nx-admin-drawer .nx-admin-toggle { display: none; }
+
+  .nx-admin-drawer .nx-admin-brand { padding-inline-end: 2.5rem; }
+
+  .nx-admin-drawer-close {
+    position: absolute;
+    inset-block-start: calc(var(--_pad, 0.625rem) + 0.25rem);
+    inset-inline-end: 0.25rem;
+    display: grid;
+    place-items: center;
+    inline-size: 2rem;
+    block-size: 2rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--nx-radius-sm);
+    background: transparent;
+    color: var(--nx-text-muted);
+    cursor: pointer;
+    transition:
+      background-color var(--nx-dur-fast) var(--nx-ease-out),
+      color var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+
+    .nx-icon { inline-size: 1rem; block-size: 1rem; }
+    &:hover { background: var(--nx-surface-2); color: var(--nx-text); }
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+  }
+
+  /* ---- Small screens: the sidebar becomes the drawer -------------------------- */
+  @container (max-width: 48rem) {
+    .nx-admin-frame { grid-template-columns: minmax(0, 1fr); }
+
+    .nx-admin-frame > .nx-admin-sidebar { display: none; }
+
+    .nx-admin-menu { display: grid; }
+
+    .nx-admin-search { display: none; }
+    .nx-admin-search[data-keep] { display: flex; }
+
+    .nx-admin-content { padding: var(--nx-space-4); }
+
+    .nx-admin-user-text { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-admin-frame,
+    .nx-admin-drawer {
+      transition-duration: var(--nx-dur-fast);
+    }
+    .nx-admin-item:active,
+    .nx-admin-menu:active,
+    .nx-admin-search-btn:active,
+    .nx-admin-user:active,
+    .nx-admin-user-item:active { scale: none; }
+  }
+
+  @media (forced-colors: active) {
+    .nx-admin-item[aria-current] { border: 1px solid CanvasText; }
+    .nx-admin-nav .nx-indicator { background: Highlight; }
+  }
+}

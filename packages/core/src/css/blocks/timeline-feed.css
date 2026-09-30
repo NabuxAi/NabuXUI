@@ -1,0 +1,135 @@
+/*
+ * Blocks: timeline feed — a vertical activity stream.
+ *
+ *   <div class="nx-timeline-feed">
+ *     <ol class="nx-timeline-feed-list" data-nx-reveal="group">
+ *       <li class="nx-timeline-feed-item" data-tone="success|warning|info|danger|neutral" style="--nx-i">
+ *         <span class="nx-timeline-feed-node"> icon </span>
+ *         <div class="nx-timeline-feed-body">
+ *           <p class="nx-timeline-feed-text"> <strong>actor</strong> text <strong>target</strong> </p>
+ *           <time class="nx-timeline-feed-time">۳ دقیقه پیش</time>
+ *         </div>
+ *
+ * Rows reveal one after another (core `reveal` with the group stagger); each
+ * row's connector is a short gradient from the tone's colour into the border
+ * colour — the last row has none. The whole thing is CSS: the markup alone
+ * (plus reveal) carries it, so Vue and Svelte can copy it verbatim.
+ */
+@layer nx.components {
+  /* ============================================================================
+   * Timeline feed
+   * ========================================================================== */
+  .nx-timeline-feed {
+    --_node: 2rem;
+    --_line: 2px;
+    --_tone: var(--nx-text-subtle);
+
+    min-inline-size: 0;
+  }
+
+  .nx-timeline-feed-list {
+    display: grid;
+    gap: var(--nx-space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nx-timeline-feed-item {
+    --_tone: var(--nx-text-subtle);
+    --_tone-soft: var(--nx-surface-2);
+
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--_node) minmax(0, 1fr);
+    gap: 0 var(--nx-space-3);
+    align-items: start;
+    padding-block: var(--nx-space-1);
+    border-radius: var(--nx-radius-md);
+
+    &[data-tone="success"] { --_tone: var(--nx-success-text); --_tone-soft: var(--nx-success-soft); }
+    &[data-tone="warning"] { --_tone: var(--nx-warning-text); --_tone-soft: var(--nx-warning-soft); }
+    &[data-tone="info"] { --_tone: var(--nx-info-text); --_tone-soft: var(--nx-info-soft); }
+    &[data-tone="danger"] { --_tone: var(--nx-danger-text); --_tone-soft: var(--nx-danger-soft); }
+
+    /* The connector: a short gradient from this row's tone into the border
+       colour, reaching down to the next node (across the list's gap). */
+    &::before {
+      content: "";
+      grid-area: 1 / 1;
+      justify-self: center;
+      inline-size: var(--_line);
+      block-size: calc(100% - var(--_node));
+      margin-block-start: calc(var(--_node) + var(--nx-space-2) / 2);
+      border-radius: var(--nx-radius-full);
+      background: linear-gradient(to bottom, var(--_tone), color-mix(in oklab, var(--nx-border) 80%, transparent));
+      opacity: 0.55;
+      transition: opacity var(--nx-dur-slower) var(--nx-ease-out);
+    }
+
+    &:last-child::before { display: none; }
+
+    &:hover::before { opacity: 0.9; }
+  }
+
+  .nx-timeline-feed-node {
+    display: grid;
+    place-items: center;
+    inline-size: var(--_node);
+    block-size: var(--_node);
+    border-radius: var(--nx-radius-sm);
+    background: var(--_tone-soft);
+    color: var(--_tone);
+    transition:
+      background-color var(--nx-dur-base) var(--nx-ease-out),
+      color var(--nx-dur-base) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+
+    .nx-icon { inline-size: 1rem; block-size: 1rem; }
+  }
+
+  .nx-timeline-feed-item:is(:hover, :focus-within) .nx-timeline-feed-node { scale: calc(1 + 0.08 * var(--nx-motion)); }
+
+  .nx-timeline-feed-body {
+    display: grid;
+    gap: 0.125rem;
+    align-content: center;
+    min-block-size: var(--_node);
+    padding-block-start: 0.125rem;
+  }
+
+  .nx-timeline-feed-text {
+    margin: 0;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+    line-height: 1.55;
+
+    strong { color: var(--nx-text); font-weight: 600; }
+    a { color: var(--nx-accent-text); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    a:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; border-radius: var(--nx-radius-xs); }
+  }
+
+  .nx-timeline-feed-time {
+    color: var(--nx-text-subtle);
+    font-size: var(--nx-text-xs);
+    transition: color var(--nx-dur-fast) var(--nx-ease-out);
+  }
+
+  .nx-timeline-feed-item:is(:hover, :focus-within) .nx-timeline-feed-time { color: var(--nx-text-muted); }
+
+  /* Rows arrive from the reading side, one after another (reveal's group
+     stagger sets --nx-i). Reduced motion turns the distance into a fade. */
+  :where(.nx-js) .nx-timeline-feed-list[data-nx-reveal]:not([data-nx-revealed]) > .nx-timeline-feed-item {
+    translate: calc(14px * var(--nx-dir) * var(--nx-motion)) 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-timeline-feed-item:is(:hover, :focus-within) .nx-timeline-feed-node { scale: none; }
+  }
+
+  @media (forced-colors: active) {
+    .nx-timeline-feed-node { border: 1px solid CanvasText; }
+    .nx-timeline-feed-item::before { background: CanvasText; }
+  }
+}

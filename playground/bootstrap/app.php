@@ -15,6 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // Behind Coolify's Traefik proxy: without trusting X-Forwarded-*, asset
         // URLs are generated as http:// and get blocked as mixed content.
         $middleware->trustProxies(at: '*');
+        // The demo pages' language menu keeps the chosen fa/en locale in the session.
+        $middleware->web(append: \App\Http\Middleware\SetLocaleFromSession::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

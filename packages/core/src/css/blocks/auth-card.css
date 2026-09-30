@@ -1,0 +1,389 @@
+/*
+ * Blocks: the auth card — sign in, sign up, reset.
+ *
+ * A two-column card: a brand panel on the reading-start side (a deep plate
+ * with drifting aurora glows and a fine grid, pure CSS) and the form panel
+ * with the three panes inside. The panes share one viewport whose height
+ * morphs per mode (core morphShell writes --nx-morph-h); the pane that leaves
+ * glides toward the reading start and the one that arrives springs in from
+ * the end — reversed when going back, mirrored in RTL by --nx-dir.
+ *
+ *   <form class="nx-auth-card" data-mode="login|register|forgot" data-nx-reveal>
+ *     <aside class="nx-auth-card-media" aria-hidden="true">
+ *       <span class="nx-auth-card-glow" data-i="1|2|3"></span>
+ *       <span class="nx-auth-card-gridlines"></span>
+ *       <div class="nx-auth-card-brand">
+ *         <span class="nx-auth-card-mark">N</span>
+ *         <p class="nx-auth-card-name">…</p>
+ *         <p class="nx-auth-card-tagline">…</p>
+ *       </div>
+ *       <ul class="nx-auth-card-perks"><li>…</li></ul>
+ *     </aside>
+ *     <div class="nx-auth-card-body">
+ *       <div class="nx-auth-card-head">
+ *         <h2 class="nx-auth-card-title"><span data-current>…</span> × 3</h2>
+ *         <p class="nx-auth-card-subtitle"><span data-current>…</span> × 3</p>
+ *       </div>
+ *       <div class="nx-auth-card-viewport">                    ← height morphs per mode
+ *         <div class="nx-auth-card-measure">
+ *           <fieldset class="nx-auth-card-pane" data-pane data-pos="before|current|after">…</fieldset> × 3
+ *       …
+ *       <button class="nx-auth-card-submit"><span class="nx-auth-card-submit-labels">…</span></button>
+ *       <p class="nx-auth-card-switch"><span class="nx-auth-card-switch-row" data-current>…</span> × 3</p>
+ *
+ * Every piece that swaps per mode (title, subtitle, submit label, switch row)
+ * keeps all its variants stacked in one grid cell and cross-fades between
+ * them, so the card never jumps while its content changes.
+ */
+@layer nx.components {
+  .nx-auth-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    inline-size: min(100%, var(--nx-auth-width, 64rem));
+    margin: 0;
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-2xl);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    box-shadow: var(--nx-shadow-lg), inset 0 1px 0 var(--nx-highlight);
+    overflow: clip;
+  }
+
+  @media (max-width: 52rem) {
+    /* Narrow screens drop the brand plate; the form is the card. */
+    .nx-auth-card { grid-template-columns: minmax(0, 1fr); }
+    .nx-auth-card-media { display: none; }
+  }
+
+  /* ============================================================================
+   * The brand panel: a fixed deep plate, so its own ink tokens hold in both
+   * themes — the glows are palette colours and the text sits on ink-850/950.
+   * ========================================================================== */
+  .nx-auth-card-media {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: var(--nx-space-6);
+    min-block-size: 30rem;
+    padding: var(--nx-space-8);
+    overflow: clip;
+    background: linear-gradient(168deg, var(--nx-ink-850), var(--nx-ink-950) 72%);
+    color: var(--nx-ink-50);
+  }
+
+  .nx-auth-card-glow {
+    position: absolute;
+    z-index: -1;
+    border-radius: 50%;
+    filter: blur(58px);
+    opacity: 0.5;
+    pointer-events: none;
+    animation: nx-auth-card-drift 24s var(--nx-ease-in-out) infinite alternate;
+  }
+
+  /* Lapis falls from the top-start corner, violet climbs from the bottom-end,
+     a smaller cyan breathes between them. */
+  .nx-auth-card-glow[data-i="1"] {
+    inline-size: 130%;
+    aspect-ratio: 1.5;
+    inset-block-start: -22%;
+    inset-inline-start: -28%;
+    background: linear-gradient(120deg, transparent, var(--nx-lapis-500) 42% 62%, transparent);
+  }
+
+  .nx-auth-card-glow[data-i="2"] {
+    inline-size: 120%;
+    aspect-ratio: 1.4;
+    inset-block-end: -26%;
+    inset-inline-end: -30%;
+    background: linear-gradient(280deg, transparent, var(--nx-violet-500) 40% 60%, transparent);
+    animation-duration: 30s;
+    animation-delay: -9s;
+  }
+
+  .nx-auth-card-glow[data-i="3"] {
+    inline-size: 60%;
+    aspect-ratio: 1.2;
+    inset-block-start: 34%;
+    inset-inline-end: -14%;
+    background: radial-gradient(circle, var(--nx-cyan-400), transparent 68%);
+    animation-duration: 21s;
+    animation-delay: -15s;
+    opacity: 0.3;
+  }
+
+  /* Hairline grid over the plate, fading out toward the reading end. */
+  .nx-auth-card-gridlines {
+    position: absolute;
+    z-index: -1;
+    inset: 0;
+    pointer-events: none;
+    background:
+      repeating-linear-gradient(to right, color-mix(in oklab, var(--nx-ink-50) 5%, transparent) 0 1px, transparent 1px 3.25rem),
+      repeating-linear-gradient(to bottom, color-mix(in oklab, var(--nx-ink-50) 5%, transparent) 0 1px, transparent 1px 3.25rem);
+    -webkit-mask-image: radial-gradient(115% 95% at 12% 6%, rgb(0 0 0 / 0.9), transparent 72%);
+    mask-image: radial-gradient(115% 95% at 12% 6%, rgb(0 0 0 / 0.9), transparent 72%);
+  }
+
+  .nx-auth-card-brand {
+    display: grid;
+    gap: var(--nx-space-3);
+    justify-items: start;
+    margin-block-start: var(--nx-space-2);
+  }
+
+  .nx-auth-card-mark {
+    display: grid;
+    place-items: center;
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-gradient-brand);
+    color: var(--nx-accent-contrast);
+    font: 700 var(--nx-text-lg) / 1 var(--nx-font-display);
+    box-shadow: 0 10px 26px -10px color-mix(in oklab, var(--nx-lapis-500) 80%, transparent);
+  }
+
+  .nx-auth-card-name {
+    margin: 0;
+    font: 650 var(--nx-text-xl) / 1.2 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tight);
+  }
+
+  .nx-auth-card-tagline {
+    margin: 0;
+    max-inline-size: 28ch;
+    color: var(--nx-ink-300);
+    font-size: var(--nx-text-sm);
+    line-height: 1.7;
+    text-wrap: pretty;
+  }
+
+  .nx-auth-card-perks {
+    display: grid;
+    gap: var(--nx-space-3);
+    margin: 0;
+    padding: var(--nx-space-5) 0 0;
+    list-style: none;
+    border-block-start: 1px solid color-mix(in oklab, var(--nx-ink-50) 12%, transparent);
+    color: var(--nx-ink-200);
+    font-size: var(--nx-text-sm);
+
+    > li { display: flex; align-items: center; gap: var(--nx-space-2); }
+    .nx-icon { flex: none; inline-size: 1rem; block-size: 1rem; color: var(--nx-gold); }
+  }
+
+  /* ============================================================================
+   * The form panel.
+   * ========================================================================== */
+  .nx-auth-card-body {
+    display: flex;
+    flex-direction: column;
+    padding: var(--nx-space-8);
+  }
+
+  @media (max-width: 32rem) {
+    .nx-auth-card-body { padding: var(--nx-space-6) var(--nx-space-5); }
+  }
+
+  .nx-auth-card-head {
+    display: grid;
+    gap: var(--nx-space-2);
+    margin-block-end: var(--nx-space-6);
+  }
+
+  .nx-auth-card-title,
+  .nx-auth-card-subtitle {
+    display: grid;
+    margin: 0;
+
+    > span {
+      grid-area: 1 / 1;
+      transition:
+        opacity var(--nx-dur-base) var(--nx-ease-out),
+        translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+    }
+
+    > span:not([data-current]) {
+      opacity: 0;
+      translate: 0 calc(9px * var(--nx-motion));
+      pointer-events: none;
+    }
+  }
+
+  .nx-auth-card-title {
+    font: 700 var(--nx-text-2xl) / 1.2 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tight);
+  }
+
+  .nx-auth-card-subtitle {
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+    line-height: 1.7;
+    text-wrap: pretty;
+  }
+
+  .nx-auth-card-form {
+    display: grid;
+    gap: var(--nx-space-5);
+    margin: 0;
+  }
+
+  .nx-auth-card-viewport {
+    position: relative;
+    block-size: var(--nx-morph-h, auto);
+    overflow: clip;
+    transition: block-size var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+
+    &:is(:not([data-nx-morph]), [data-nx-morph="init"]) { transition: none; }
+  }
+
+  .nx-auth-card-measure {
+    position: relative;
+    display: grid;
+  }
+
+  /* Panes before the current one wait toward the reading start, the ones after
+     it toward the end — going forward slides the old pane out to the start and
+     the new one in from the end, and back reverses it. */
+  .nx-auth-card-pane {
+    display: grid;
+    gap: var(--nx-space-4);
+    min-inline-size: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    opacity: 1;
+    translate: 0 0;
+    transition:
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      opacity var(--nx-dur-base) var(--nx-ease-out) 60ms,
+      visibility 0s;
+
+    &:not([data-pos="current"]) {
+      position: absolute;
+      inset-block-start: 0;
+      inset-inline: 0;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition:
+        translate 200ms var(--nx-ease-in),
+        opacity 150ms var(--nx-ease-in),
+        visibility 0s linear 200ms;
+    }
+
+    &[data-pos="before"] { translate: calc(-22% * var(--nx-dir) * var(--nx-motion)) 0; }
+    &[data-pos="after"] { translate: calc(22% * var(--nx-dir) * var(--nx-motion)) 0; }
+
+    > legend {
+      position: absolute;
+      inline-size: 1px;
+      block-size: 1px;
+      overflow: clip;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+  }
+
+  .nx-auth-card-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--nx-space-3);
+    font-size: var(--nx-text-sm);
+  }
+
+  /* The label swap inside the submit button: every mode's label is stacked in
+     one cell, so the button keeps its width while the words cross-fade. */
+  .nx-auth-card-submit-labels {
+    display: inline-grid;
+    justify-items: stretch;
+
+    > span {
+      grid-area: 1 / 1;
+      transition:
+        opacity var(--nx-dur-base) var(--nx-ease-out),
+        translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+    }
+
+    > span:not([data-current]) {
+      opacity: 0;
+      translate: 0 calc(6px * var(--nx-motion));
+    }
+  }
+
+  .nx-auth-card-switch {
+    display: grid;
+    justify-items: center;
+    margin: 0;
+    margin-block-start: var(--nx-space-5);
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+    text-align: center;
+  }
+
+  .nx-auth-card-switch-row {
+    display: inline-flex;
+    grid-area: 1 / 1;
+    align-items: center;
+    gap: 0.4rem;
+    transition: opacity var(--nx-dur-base) var(--nx-ease-out);
+
+    &:not([data-current]) { opacity: 0; pointer-events: none; }
+  }
+
+  /* The in-card mode links: quiet underlined text buttons. */
+  .nx-auth-card-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--nx-accent-text);
+    font: inherit;
+    font-weight: 600;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    transition-property: color, text-decoration-thickness, scale;
+    transition-duration: var(--nx-dur-fast), var(--nx-dur-fast), var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-ease-out), var(--nx-ease-out), var(--nx-spring-snappy);
+
+    &:hover { color: var(--nx-accent); text-decoration-thickness: 2px; }
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; border-radius: var(--nx-radius-xs); }
+
+    .nx-icon { inline-size: 0.9rem; block-size: 0.9rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    /* The plate keeps its glows, but they stop drifting. */
+    .nx-auth-card-glow { animation: none; }
+  }
+
+  @media (forced-colors: active) {
+    .nx-auth-card,
+    .nx-auth-card-media,
+    .nx-auth-card-mark,
+    .nx-auth-card-perks { border-color: CanvasText; }
+    .nx-auth-card-glow,
+    .nx-auth-card-gridlines { display: none; }
+  }
+
+  @keyframes nx-auth-card-drift {
+    from {
+      translate: 0 0;
+      rotate: -3deg;
+    }
+    to {
+      translate: calc(2.5rem * var(--nx-motion)) calc(-1.6rem * var(--nx-motion));
+      rotate: 4deg;
+    }
+  }
+}

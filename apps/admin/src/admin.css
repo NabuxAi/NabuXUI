@@ -1,0 +1,308 @@
+/* Layout for the admin app only; every component style comes from NabuXUI. */
+
+body {
+  margin: 0;
+}
+
+/* ---- Dashboard grid --------------------------------------------------------------------------- */
+
+.adm-dashboard {
+  display: grid;
+  gap: var(--nx-space-5);
+}
+
+.adm-welcome {
+  display: grid;
+  gap: var(--nx-space-3);
+  padding: var(--nx-space-6);
+  border: 1px solid var(--nx-border);
+  border-radius: var(--nx-radius-xl);
+  background: var(--nx-surface);
+}
+
+.adm-welcome > h1 {
+  margin: 0;
+  font: 700 var(--nx-text-3xl) / 1.25 var(--nx-font-display);
+  letter-spacing: var(--nx-tracking-tight);
+}
+
+.adm-welcome > p {
+  margin: 0;
+  max-inline-size: 46rem;
+  color: var(--nx-text-muted);
+  font-size: var(--nx-text-lg);
+}
+
+.adm-welcome-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--nx-space-2);
+}
+
+/* The tagline rides in the sidebar’s foot; it fades with the rail collapse. */
+.nx-admin-sidebar-foot .nx-admin-brand-text {
+  padding-inline: 0.6875rem;
+  color: var(--nx-text-subtle);
+  font-size: var(--nx-text-xs);
+}
+
+/* Two columns while there is room: the wide chart stays full-bleed, the
+   activity column (feed + usage) stacks beside the heatmap. */
+@media (min-width: 72rem) {
+  .adm-dashboard {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .adm-wide {
+    grid-column: 1 / -1;
+  }
+
+  .adm-side {
+    display: grid;
+    gap: var(--nx-space-5);
+  }
+}
+
+/* ---- Auth -------------------------------------------------------------------------------- */
+
+.adm-auth {
+  display: grid;
+  place-items: center;
+  min-block-size: 100dvh;
+  padding: var(--nx-space-6);
+}
+
+.adm-auth .adm-auth-card {
+  inline-size: min(100%, 56rem);
+}
+
+/* ---- Shared page pieces -------------------------------------------------------------------- */
+
+.adm-form {
+  display: grid;
+  gap: var(--nx-space-4);
+}
+
+.adm-form-grid {
+  display: grid;
+  gap: var(--nx-space-4);
+}
+
+@media (min-width: 48rem) {
+  .adm-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .adm-form-span {
+    grid-column: 1 / -1;
+  }
+}
+
+.adm-form-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* A settings row: what it is on one side, the control on the other. */
+.adm-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nx-space-3);
+}
+
+.adm-row-text {
+  display: grid;
+  gap: 0.125rem;
+}
+
+.adm-row-label {
+  font-weight: 600;
+}
+
+.adm-row-hint {
+  color: var(--nx-text-subtle);
+  font-size: var(--nx-text-sm);
+}
+
+.adm-choices {
+  display: grid;
+  gap: var(--nx-space-4);
+}
+
+/* ---- Profile -------------------------------------------------------------------------------- */
+
+.adm-profile {
+  display: grid;
+  gap: var(--nx-space-5);
+  align-items: start;
+}
+
+.adm-profile-side {
+  display: grid;
+  gap: var(--nx-space-5);
+}
+
+.adm-avatar-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--nx-space-4);
+}
+
+.adm-avatar-actions {
+  display: grid;
+  gap: var(--nx-space-1);
+  justify-items: start;
+}
+
+.adm-avatar-hint {
+  color: var(--nx-text-subtle);
+  font-size: var(--nx-text-xs);
+}
+
+.adm-sessions {
+  display: grid;
+  gap: var(--nx-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.adm-session {
+  display: flex;
+  align-items: center;
+  gap: var(--nx-space-3);
+  padding: var(--nx-space-3);
+  border: 1px solid var(--nx-border);
+  border-radius: var(--nx-radius-lg);
+}
+
+.adm-session-icon {
+  display: grid;
+  place-items: center;
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+  flex-shrink: 0;
+  border-radius: var(--nx-radius-md);
+  background: var(--nx-surface-2);
+  color: var(--nx-text-muted);
+}
+
+.adm-session-meta {
+  display: grid;
+  gap: 0.125rem;
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.adm-session-device {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--nx-space-2);
+  font-weight: 600;
+}
+
+.adm-session-now {
+  padding-inline: var(--nx-space-2);
+  border-radius: var(--nx-radius-full);
+  background: var(--nx-accent-soft);
+  color: var(--nx-accent-text);
+  font-size: var(--nx-text-xs);
+  font-weight: 500;
+}
+
+.adm-session-when {
+  color: var(--nx-text-subtle);
+  font-size: var(--nx-text-sm);
+}
+
+@media (min-width: 72rem) {
+  .adm-profile {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+}
+
+/* ---- Settings ------------------------------------------------------------------------------- */
+
+.adm-settings {
+  display: grid;
+  gap: var(--nx-space-5);
+  align-items: start;
+}
+
+.adm-settings-danger {
+  border-color: var(--nx-danger);
+}
+
+.adm-danger {
+  display: grid;
+  gap: var(--nx-space-4);
+  justify-items: start;
+}
+
+@media (min-width: 72rem) {
+  .adm-settings {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .adm-settings-general,
+  .adm-settings-danger {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ---- Invoices ------------------------------------------------------------------------------- */
+
+.adm-invoices {
+  display: grid;
+  gap: var(--nx-space-5);
+  justify-items: start;
+}
+
+.adm-invoices-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nx-space-3);
+  inline-size: 100%;
+}
+
+.adm-invoices-doc {
+  inline-size: min(100%, 56rem);
+}
+
+/* The print button prints the document alone: the shell folds away and the
+   invoice block's own paper stylesheet (in invoice.css) takes the page. */
+@media print {
+  .nx-admin-sidebar,
+  .nx-admin-topbar,
+  .nx-admin-drawer,
+  .adm-noprint {
+    display: none !important;
+  }
+
+  .nx-admin-frame {
+    display: block;
+    block-size: auto;
+  }
+
+  .nx-admin-main {
+    display: block;
+  }
+
+  .nx-admin-content {
+    overflow: visible;
+    block-size: auto;
+    padding: 0;
+  }
+
+  .adm-invoices,
+  .adm-invoices-doc {
+    inline-size: 100%;
+  }
+}

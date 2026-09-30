@@ -1,0 +1,327 @@
+/*
+ * Blocks: Invoice document (nx-invoice).
+ *
+ *   <article class="nx-invoice" data-status="paid|unpaid|overdue|draft">
+ *     <header class="nx-invoice-head">
+ *       <div class="nx-invoice-brand"> <span class="nx-invoice-mark"> · name + tagline
+ *       <div class="nx-invoice-meta"> <p class="nx-invoice-title"> · <dl class="nx-invoice-facts">
+ *         dt · dd … · <span class="nx-status-badge …">  (payment status)
+ *     <div class="nx-invoice-parties"> <div class="nx-invoice-party" data-kind="from|to">
+ *         label · <p class="nx-invoice-party-name"> · <div class="nx-invoice-party-lines">
+ *     <table class="nx-invoice-lines"> (data-nx-reveal="group" on tbody)
+ *       thead: # · item · qty · unit price · amount
+ *       <tr class="nx-invoice-line" style="--nx-i"> (staggered reveal)
+ *         <td class="nx-invoice-index"> · item(title+description) · qty · unit · <td class="nx-invoice-sum">
+ *     <div class="nx-invoice-totals">
+ *       <div class="nx-invoice-row"> label · <span class="nx-number"> + <span class="nx-invoice-currency">
+ *       <div class="nx-invoice-total"> label · <span class="nx-invoice-total-value"> (rolling)
+ *       <p class="nx-invoice-note">
+ *     <footer class="nx-invoice-foot">
+ *
+ * Sections rise one after another, the line items one row at a time, and every
+ * total rolls its digits (the shared .nx-number columns). Print strips the
+ * chrome and freezes the digits on paper.
+ */
+@layer nx.components {
+  .nx-invoice {
+    --_pad: clamp(1.25rem, 4cqi, 2.25rem);
+    --_line: minmax(18rem, 24rem);
+
+    container-type: inline-size;
+    display: grid;
+    gap: var(--nx-space-8);
+    padding: var(--_pad);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-xl);
+    background:
+      radial-gradient(55% 36% at 100% 0%, var(--nx-accent-soft), transparent 70%),
+      radial-gradient(36% 26% at 0% 100%, var(--nx-gold-soft), transparent 70%),
+      var(--nx-surface);
+    box-shadow: var(--nx-shadow-lg);
+  }
+
+  /* ---- Head: the brand beside the facts ---------------------------------- */
+  .nx-invoice-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--nx-space-6);
+  }
+
+  .nx-invoice-brand {
+    display: grid;
+    gap: 0.125rem;
+  }
+
+  .nx-invoice-brand-row {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-3);
+  }
+
+  .nx-invoice-mark {
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 2.5rem;
+    block-size: 2.5rem;
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-gradient-brand);
+    color: var(--nx-accent-contrast);
+    font: 800 var(--nx-text-sm) / 1 var(--nx-font-display);
+    box-shadow: var(--nx-shadow-glow);
+  }
+
+  .nx-invoice-brand-name {
+    color: var(--nx-text);
+    font: 700 var(--nx-text-lg) / 1.2 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tight);
+  }
+
+  .nx-invoice-brand-tagline {
+    margin-inline-start: calc(2.5rem + var(--nx-space-3));
+    color: var(--nx-text-subtle);
+    font-size: var(--nx-text-xs);
+  }
+
+  .nx-invoice-meta {
+    display: grid;
+    justify-items: end;
+    gap: var(--nx-space-3);
+    text-align: end;
+  }
+
+  .nx-invoice-title {
+    margin: 0;
+    color: var(--nx-text);
+    font: 800 var(--nx-text-2xl) / 1.1 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tight);
+  }
+
+  .nx-invoice-facts {
+    display: grid;
+    gap: 0.25rem;
+    margin: 0;
+
+    > div {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: var(--nx-space-2);
+    }
+
+    dt { color: var(--nx-text-subtle); font-size: var(--nx-text-xs); }
+    dd { margin: 0; color: var(--nx-text); font-size: var(--nx-text-xs); font-weight: 600; font-variant-numeric: tabular-nums; }
+  }
+
+  /* ---- Parties ------------------------------------------------------------- */
+  .nx-invoice-parties {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--nx-space-6);
+  }
+
+  .nx-invoice-party { display: grid; gap: 0.375rem; align-content: start; }
+
+  .nx-invoice-party-label {
+    color: var(--nx-text-subtle);
+    font: 600 var(--nx-text-xs) / 1 var(--nx-font-sans);
+    letter-spacing: var(--nx-tracking-wider);
+    text-transform: uppercase;
+  }
+
+  :lang(fa) .nx-invoice-party-label,
+  :lang(ar) .nx-invoice-party-label { text-transform: none; }
+
+  .nx-invoice-party-name {
+    margin: 0;
+    color: var(--nx-text);
+    font-weight: 650;
+    font-size: var(--nx-text-sm);
+  }
+
+  .nx-invoice-party-lines {
+    display: grid;
+    gap: 0.125rem;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-xs);
+    line-height: 1.6;
+  }
+
+  /* ---- Line items: staggered rows, tabular money -------------------------- */
+  .nx-invoice-lines {
+    inline-size: 100%;
+    border-collapse: collapse;
+    font-size: var(--nx-text-sm);
+  }
+
+  .nx-invoice-lines th {
+    padding-block: var(--nx-space-2);
+    border-block-end: 1px solid var(--nx-border-strong);
+    color: var(--nx-text-subtle);
+    font: 600 var(--nx-text-xs) / 1.2 var(--nx-font-sans);
+    letter-spacing: var(--nx-tracking-wide);
+    text-align: start;
+  }
+
+  :lang(fa) .nx-invoice-lines th,
+  :lang(ar) .nx-invoice-lines th { letter-spacing: 0; }
+
+  .nx-invoice-lines th[data-align="end"],
+  .nx-invoice-lines td[data-align="end"] { text-align: end; }
+
+  .nx-invoice-line > td {
+    padding-block: var(--nx-space-3);
+    border-block-end: 1px solid var(--nx-border);
+    vertical-align: top;
+  }
+
+  .nx-invoice-line > td:not(.nx-invoice-item) { font-variant-numeric: tabular-nums; }
+
+  .nx-invoice-index {
+    color: var(--nx-text-subtle);
+    font-size: var(--nx-text-xs);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .nx-invoice-item { display: grid; gap: 0.125rem; }
+
+  .nx-invoice-item-title { color: var(--nx-text); font-weight: 600; }
+
+  .nx-invoice-item-description {
+    color: var(--nx-text-subtle);
+    font-size: var(--nx-text-xs);
+    line-height: 1.6;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .nx-invoice-line { transition: background-color var(--nx-dur-base) var(--nx-ease-out); }
+    .nx-invoice-line:hover { background: color-mix(in oklab, var(--nx-accent-soft) 45%, transparent); }
+  }
+
+  /* ---- Totals: rolling figures, the total biggest -------------------------- */
+  .nx-invoice-totals {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.375rem;
+  }
+
+  .nx-invoice-row {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--nx-space-8);
+    min-inline-size: var(--_line);
+
+    > span:first-child { color: var(--nx-text-muted); font-size: var(--nx-text-sm); }
+    > .nx-invoice-amount { font-size: var(--nx-text-sm); }
+  }
+
+  .nx-invoice-amount {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.25rem;
+    color: var(--nx-text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nx-invoice-currency {
+    color: var(--nx-text-muted);
+    font-size: 0.75em;
+    font-weight: 500;
+  }
+
+  .nx-invoice-total {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--nx-space-8);
+    margin-block-start: var(--nx-space-2);
+    padding-block-start: var(--nx-space-3);
+    border-block-start: 1px solid var(--nx-border-strong);
+    min-inline-size: var(--_line);
+  }
+
+  .nx-invoice-total-label {
+    color: var(--nx-text);
+    font-weight: 700;
+    font-size: var(--nx-text-sm);
+  }
+
+  .nx-invoice-total .nx-invoice-amount .nx-number {
+    font: 800 var(--nx-text-2xl) / 1.1 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tight);
+  }
+
+  .nx-invoice-total .nx-invoice-currency { font-size: var(--nx-text-sm); }
+
+  .nx-invoice-note {
+    max-inline-size: var(--_line);
+    margin: 0;
+    color: var(--nx-text-subtle);
+    font-size: var(--nx-text-xs);
+    line-height: 1.7;
+    text-align: end;
+  }
+
+  /* ---- Foot ------------------------------------------------------------------ */
+  .nx-invoice-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--nx-space-3);
+    padding-block-start: var(--nx-space-4);
+    border-block-start: 1px solid var(--nx-border);
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-xs);
+  }
+
+  /* ---- Narrow: parties and totals follow the text ---------------------------- */
+  @container (width < 40rem) {
+    .nx-invoice-parties { grid-template-columns: minmax(0, 1fr); }
+    .nx-invoice-meta { justify-items: start; text-align: start; }
+    .nx-invoice-facts > div { justify-content: flex-start; }
+    .nx-invoice-row,
+    .nx-invoice-total { min-inline-size: 100%; }
+  }
+
+  /* ---- Paper: no chrome, no motion, digits settled ---------------------------- */
+  @media print {
+    .nx-invoice {
+      display: block;
+      padding: 0;
+      border: none;
+      border-radius: 0;
+      background: none;
+      box-shadow: none;
+      color: CanvasText;
+    }
+
+    .nx-invoice-head,
+    .nx-invoice-party,
+    .nx-invoice-line,
+    .nx-invoice-totals,
+    .nx-invoice-foot { break-inside: avoid; }
+
+    .nx-invoice-section + .nx-invoice-section { margin-block-start: 1.25rem; }
+
+    .nx-invoice-mark { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+
+    /* Reveals finish at once and the rolling digits land on their values. */
+    .nx-invoice [data-nx-reveal],
+    .nx-invoice [data-nx-reveal] > * {
+      transition: none !important;
+      animation: none !important;
+      opacity: 1 !important;
+      translate: none !important;
+      scale: none !important;
+      filter: none !important;
+      transition-delay: 0ms !important;
+    }
+
+    .nx-invoice .nx-digit-track { translate: 0 calc(var(--d, 0) * -1.1em) !important; }
+  }
+}

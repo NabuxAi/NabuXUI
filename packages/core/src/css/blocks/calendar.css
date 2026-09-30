@@ -1,0 +1,350 @@
+/*
+ * Block: calendar — a month grid with a directional month switch.
+ *
+ *   <section class="nx-calendar" data-nx-reveal>
+ *     <header class="nx-calendar-head">
+ *       <h3 class="nx-calendar-title">September 2026</h3>
+ *       <nav class="nx-calendar-nav">
+ *         <button class="nx-calendar-nav-btn" aria-label="Previous month"><svg data-directional/></button>
+ *         <button class="nx-calendar-nav-btn" aria-label="Next month">…</button></nav></header>
+ *     <div class="nx-calendar-weekdays" aria-hidden="true"><span/>×7</div>
+ *     <div class="nx-calendar-grid" role="grid" data-enter="next|prev">   (remounted per month)
+ *       <div class="nx-calendar-week" role="row">
+ *         <div class="nx-calendar-cell" role="gridcell" [data-out] [data-today] aria-selected>
+ *           <button type="button" class="nx-calendar-day" [aria-current="date"] data-date="2026-09-01">
+ *             <span class="nx-calendar-daynum">۱</span>
+ *             <span class="nx-calendar-day-events"><span class="nx-calendar-chip" data-tone/> <span class="nx-calendar-more"/>…</span>
+ *           </button></div> …</div> …</div>
+ *     <div class="nx-calendar-panel" data-open>                    (the selected day's view)
+ *       <header class="nx-calendar-panel-head"><h4 class="nx-calendar-panel-title"/><span class="nx-calendar-panel-count"/></header>
+ *       <ul class="nx-calendar-panel-list"><li class="nx-calendar-panel-item" style="--nx-i">
+ *         <span class="nx-calendar-panel-time"/><span class="nx-calendar-panel-dot" data-tone/><span class="nx-calendar-panel-label"/></li>…</ul>
+ *     </div>
+ *     <table class="nx-visually-hidden">… the same events as text …</table>
+ *
+ * Switching months remounts the grid with data-enter: the new month slides in
+ * from the side it comes from — inline-end for "next", inline-start for
+ * "previous" — which `--nx-dir` mirrors in right-to-left pages and
+ * `--nx-motion` collapses to a fade under reduced motion. The switch is a
+ * keyboard-frequent action, so it stays short (base duration, not a spring).
+ * Events arrive as data (never via fetch); the grid keeps a plain-button per
+ * day and a visually-hidden table carries the same data for screen readers.
+ */
+@layer nx.components {
+  .nx-calendar [data-tone] {
+    --_tone: var(--nx-accent);
+    --_tone-text: var(--nx-accent-text);
+    --_tone-soft: var(--nx-accent-soft);
+  }
+  .nx-calendar [data-tone='success'] { --_tone: var(--nx-success); --_tone-text: var(--nx-success-text); --_tone-soft: var(--nx-success-soft); }
+  .nx-calendar [data-tone='warning'] { --_tone: var(--nx-warning); --_tone-text: var(--nx-warning-text); --_tone-soft: var(--nx-warning-soft); }
+  .nx-calendar [data-tone='danger']  { --_tone: var(--nx-danger);  --_tone-text: var(--nx-danger-text);  --_tone-soft: var(--nx-danger-soft); }
+  .nx-calendar [data-tone='info']    { --_tone: var(--nx-info);    --_tone-text: var(--nx-info-text);    --_tone-soft: var(--nx-info-soft); }
+  .nx-calendar [data-tone='gold']    { --_tone: var(--nx-gold);    --_tone-text: var(--nx-gold-text);    --_tone-soft: var(--nx-gold-soft); }
+
+  .nx-calendar {
+    display: grid;
+    gap: var(--nx-space-3);
+    padding: var(--nx-space-4);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-xl);
+    background: var(--nx-surface);
+    box-shadow: var(--nx-shadow-sm), inset 0 1px 0 var(--nx-highlight);
+  }
+
+  /* ---- Head ------------------------------------------------------------------------------- */
+
+  .nx-calendar-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--nx-space-3);
+  }
+
+  .nx-calendar-title {
+    margin: 0;
+    color: var(--nx-text);
+    font: 600 var(--nx-text-lg) / 1.2 var(--nx-font-sans);
+    letter-spacing: var(--nx-tracking-tight);
+  }
+
+  .nx-calendar-nav { display: flex; gap: var(--nx-space-1); }
+
+  .nx-calendar-nav-btn {
+    display: grid;
+    place-items: center;
+    inline-size: 2rem;
+    block-size: 2rem;
+    border: 0;
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-surface-2);
+    color: var(--nx-text-muted);
+    cursor: pointer;
+    transition-property: scale, background-color, color;
+    transition-duration: var(--nx-spring-snappy-duration), var(--nx-dur-fast), var(--nx-dur-fast);
+    transition-timing-function: var(--nx-spring-snappy), var(--nx-ease-out), var(--nx-ease-out);
+
+    > .nx-icon { inline-size: 1rem; block-size: 1rem; }
+    &:hover { background: var(--nx-surface-3); color: var(--nx-text); }
+    &:active:not([data-static]) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+  }
+
+  /* ---- Weekday header ---------------------------------------------------------------------- */
+
+  .nx-calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: var(--nx-space-1);
+    padding-inline: var(--nx-space-1);
+  }
+
+  .nx-calendar-weekday {
+    padding-block: var(--nx-space-1);
+    color: var(--nx-text-subtle);
+    font: 600 var(--nx-text-xs) / 1 var(--nx-font-sans);
+    letter-spacing: var(--nx-tracking-wide);
+    text-align: center;
+  }
+
+  /* ---- Grid --------------------------------------------------------------------------------- */
+
+  .nx-calendar-grid {
+    --_travel: 0px;
+    display: grid;
+    gap: var(--nx-space-1);
+  }
+
+  .nx-calendar-grid[data-enter='next'] { --_travel: calc(20px * var(--nx-dir) * var(--nx-motion)); }
+  .nx-calendar-grid[data-enter='prev'] { --_travel: calc(-20px * var(--nx-dir) * var(--nx-motion)); }
+
+  /* A one-shot: the arriving month travels in from its side. */
+  .nx-calendar-grid[data-enter] {
+    animation: nx-calendar-enter var(--nx-dur-base) var(--nx-ease-emphasized);
+  }
+
+  @keyframes nx-calendar-enter {
+    from { opacity: 0; translate: var(--_travel) 0; }
+  }
+
+  .nx-calendar-week {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: var(--nx-space-1);
+  }
+
+  .nx-calendar-cell { display: grid; }
+
+  .nx-calendar-day {
+    display: grid;
+    justify-items: center;
+    gap: var(--nx-space-1);
+    inline-size: 100%;
+    min-block-size: 3.5rem;
+    padding: var(--nx-space-1);
+    border: 0;
+    border-radius: var(--nx-radius-lg);
+    background: transparent;
+    color: var(--nx-text);
+    font: inherit;
+    cursor: pointer;
+    transition-property: scale, background-color, box-shadow;
+    transition-duration: var(--nx-spring-snappy-duration), var(--nx-dur-fast), var(--nx-dur-fast);
+    transition-timing-function: var(--nx-spring-snappy), var(--nx-ease-out), var(--nx-ease-out);
+
+    &:hover { background: var(--nx-surface-2); }
+    &:active:not([data-static]) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: -2px; }
+  }
+
+  /* Days of the neighbouring months stay readable but receded. */
+  .nx-calendar-cell[data-out] .nx-calendar-day { color: var(--nx-text-subtle); opacity: 0.66; }
+
+  .nx-calendar-daynum {
+    display: grid;
+    place-items: center;
+    min-inline-size: 1.625rem;
+    block-size: 1.625rem;
+    border-radius: var(--nx-radius-full);
+    font: 500 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    font-variant-numeric: tabular-nums;
+    transition:
+      background-color var(--nx-dur-fast) var(--nx-ease-out),
+      color var(--nx-dur-fast) var(--nx-ease-out),
+      box-shadow var(--nx-dur-fast) var(--nx-ease-out);
+  }
+
+  /* Today: a dot rides under the number — colour plus shape, never motion alone. */
+  .nx-calendar-cell[data-today] .nx-calendar-daynum {
+    font-weight: 700;
+    box-shadow: inset 0 0 0 1px var(--nx-border-strong);
+  }
+
+  .nx-calendar-today-dot {
+    inline-size: 0.25rem;
+    block-size: 0.25rem;
+    margin-block-start: -0.25rem;
+    border-radius: 50%;
+    background: var(--nx-accent);
+  }
+
+  /* The selected day: an accent disc the number settles into. */
+  .nx-calendar-cell[aria-selected] .nx-calendar-daynum {
+    background: var(--nx-accent);
+    color: var(--nx-accent-contrast);
+    box-shadow: var(--nx-shadow-glow);
+  }
+
+  .nx-calendar-cell[aria-selected] .nx-calendar-today-dot { background: var(--nx-accent-contrast); }
+
+  .nx-calendar-day-events {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 2px;
+    inline-size: 100%;
+    min-block-size: 0.5rem;
+  }
+
+  .nx-calendar-chip {
+    inline-size: 0.5rem;
+    block-size: 0.5rem;
+    border-radius: var(--nx-radius-full);
+    background: var(--_tone);
+    box-shadow: 0 0 0 1.5px var(--nx-surface);
+    transition: scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+  }
+
+  .nx-calendar-more {
+    color: var(--nx-text-subtle);
+    font: 500 var(--nx-text-xs) / 1 var(--nx-font-sans);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---- The selected day's view ---------------------------------------------------------------- */
+
+  .nx-calendar-panel {
+    display: none;
+    padding: var(--nx-space-3);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-surface-2);
+  }
+
+  .nx-calendar-panel:where([data-open]) { display: grid; gap: var(--nx-space-2); }
+
+  .nx-calendar-panel-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--nx-space-3);
+  }
+
+  .nx-calendar-panel-title {
+    margin: 0;
+    color: var(--nx-text);
+    font: 600 var(--nx-text-sm) / 1.3 var(--nx-font-sans);
+  }
+
+  .nx-calendar-panel-count {
+    color: var(--nx-text-subtle);
+    font: 400 var(--nx-text-xs) / 1 var(--nx-font-sans);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nx-calendar-panel-list {
+    display: grid;
+    gap: var(--nx-space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* A one-shot: the day's events rise in, staggered. The li carries the
+     stagger (--nx-i); the item inside it is the row (a link when it goes anywhere). */
+  .nx-calendar-panel-list > li {
+    animation: nx-calendar-item-in var(--nx-dur-base) var(--nx-ease-out) backwards;
+    animation-delay: calc(min(var(--nx-i, 0), 8) * var(--nx-stagger));
+  }
+
+  @keyframes nx-calendar-item-in {
+    from { opacity: 0; translate: 0 calc(6px * var(--nx-motion)); }
+  }
+
+  .nx-calendar-panel-item {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-2) var(--nx-space-3);
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    font: 400 var(--nx-text-sm) / 1.35 var(--nx-font-sans);
+  }
+
+  .nx-calendar-panel-item:where(a) {
+    text-decoration: none;
+    transition-property: background-color;
+    transition-duration: var(--nx-dur-fast);
+    transition-timing-function: var(--nx-ease-out);
+
+    &:hover { background: var(--nx-surface-2); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: -2px; }
+  }
+
+  .nx-calendar-panel-time {
+    flex: none;
+    color: var(--nx-text-subtle);
+    font: 500 var(--nx-text-xs) / 1 var(--nx-font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nx-calendar-panel-dot {
+    flex: none;
+    inline-size: 0.5rem;
+    block-size: 0.5rem;
+    border-radius: 50%;
+    background: var(--_tone);
+    box-shadow: 0 0 0 3px var(--_tone-soft);
+  }
+
+  .nx-calendar-panel-label { min-inline-size: 0; overflow-wrap: anywhere; }
+
+  .nx-calendar-panel-empty {
+    margin: 0;
+    padding: var(--nx-space-3);
+    border: 1px dashed var(--nx-border);
+    border-radius: var(--nx-radius-md);
+    color: var(--nx-text-subtle);
+    font: 400 var(--nx-text-xs) / 1.5 var(--nx-font-sans);
+    text-align: center;
+  }
+
+  /* ---- Motion off / forced colours -------------------------------------------------------------- */
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-calendar-grid[data-enter],
+    .nx-calendar-panel-list > li { animation-duration: 150ms; }
+  }
+
+  @media (forced-colors: active) {
+    .nx-calendar { border: 1px solid CanvasText; }
+    .nx-calendar-day:focus-visible { outline-offset: 2px; }
+    .nx-calendar-cell[aria-selected] .nx-calendar-daynum { border: 1px solid Highlight; }
+    .nx-calendar-panel { border: 1px solid CanvasText; }
+  }
+
+  /* Phones: day chips collapse to a single tally dot per tone. */
+  @media (max-width: 30rem) {
+    .nx-calendar-day { min-block-size: 2.75rem; }
+    .nx-calendar-day-events { display: none; }
+    .nx-calendar-day[data-count]::after {
+      content: '';
+      inline-size: 0.375rem;
+      block-size: 0.375rem;
+      border-radius: 50%;
+      background: var(--nx-accent);
+    }
+  }
+}
