@@ -13,7 +13,11 @@ export * from './components/button';
 export * from './components/form';
 export * from './components/card';
 export * from './components/chart';
-export * from './components/hero';
+// Hero's decorative backdrop is aliased so the plain `Backdrop`/`BackdropVariant`
+// names stay with the content-carrying blocks/backdrops block: the hero layer is
+// `HeroBackdrop` (a layer that sits behind a positioned section), the block is
+// `Backdrop` (the section itself).
+export { Hero, type HeroProps, Backdrop as HeroBackdrop, type BackdropVariant as HeroBackdropVariant } from './components/hero';
 export * from './components/pricing';
 export * from './components/feedback';
 export * from './components/display';
@@ -30,6 +34,7 @@ export * from './blocks/chip-filter';
 export * from './blocks/stat-strip';
 export * from './blocks/sort-pill';
 export * from './blocks/glass';
+export * from './blocks/backdrops';
 
 // The framework-agnostic helpers, for pages that need them directly.
 export { theme, transition, toasts, type ToastInput, type ToastTone } from '@nabuxai/ui-core';

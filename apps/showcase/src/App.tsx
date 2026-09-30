@@ -10,6 +10,7 @@ import { TextBlocks } from './blocks/text';
 import { ActionsBlocks } from './blocks/actions';
 import { CardsBlocks } from './blocks/cards';
 import { DataBlocks } from './blocks/data';
+import { BackdropsBlocks } from './blocks/backdrops';
 import { MenusBlocks } from './blocks/menus';
 import { NavExtrasBlocks } from './blocks/nav-extras';
 import { GlassBlocks } from './blocks/glass';
@@ -158,6 +159,7 @@ export function App() {
             <LoadingSection />
             <GridSection />
             <NavigationSection />
+            <BackdropsBlocks />
             <MenusBlocks />
             <NavExtrasBlocks />
           </main>

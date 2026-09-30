@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  type BackdropVariant,
+  type HeroBackdropVariant,
   Button,
   GradientText,
   Hero,
@@ -17,7 +17,7 @@ import { useLang, useTr } from '../lang';
 
 export function HeroSection() {
   const tr = useTr();
-  const [backdrop, setBackdrop] = useState<BackdropVariant>('aurora');
+  const [backdrop, setBackdrop] = useState<HeroBackdropVariant>('aurora');
 
   return (
     <div style={{ position: 'relative' }}>
@@ -53,7 +53,7 @@ export function HeroSection() {
           size="sm"
           aria-label={tr('پس‌زمینه', 'Backdrop')}
           value={backdrop}
-          onValueChange={(value) => setBackdrop(value as BackdropVariant)}
+          onValueChange={(value) => setBackdrop(value as HeroBackdropVariant)}
           options={[
             { value: 'aurora', label: tr('شفق', 'Aurora') },
             { value: 'grid', label: tr('شبکه', 'Grid') },

@@ -19,7 +19,7 @@ class Blocks extends Component
 
     public function mount(string $group): void
     {
-        abort_unless(in_array($group, ['glass', 'text', 'actions', 'cards', 'data', 'menus'], true), 404);
+        abort_unless(in_array($group, ['glass', 'text', 'actions', 'cards', 'data', 'menus', 'backdrops'], true), 404);
         $this->group = $group;
 
         if ($group === 'glass') {

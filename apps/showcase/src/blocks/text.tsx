@@ -1,8 +1,8 @@
 /** Showcase demos: Text & hero motion. */
 import type { CSSProperties } from 'react';
 import {
-  Backdrop,
-  type BackdropVariant,
+  HeroBackdrop,
+  type HeroBackdropVariant,
   Badge,
   Button,
   DitherBackdrop,
@@ -16,8 +16,8 @@ import {
 import { Demo, Section } from '../Section';
 import { useTr } from '../lang';
 
-/** `mesh` and `stripes` are pure-CSS backdrop variants; BackdropVariant does not list them yet. */
-const ShaderBackdrop = Backdrop as (props: { variant: BackdropVariant | 'mesh' | 'stripes'; className?: string; style?: CSSProperties }) => ReturnType<typeof Backdrop>;
+/** `mesh` and `stripes` are pure-CSS backdrop variants; HeroBackdropVariant does not list them yet. */
+const ShaderBackdrop = HeroBackdrop as (props: { variant: HeroBackdropVariant | 'mesh' | 'stripes'; className?: string; style?: CSSProperties }) => ReturnType<typeof HeroBackdrop>;
 
 const LANGUAGES = ['English', 'Español', 'Français', 'Deutsch', '日本語', '中文', 'العربية', 'فارسی', 'हिन्दी', 'Português', '한국어', 'Türkçe'];
 

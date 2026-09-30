@@ -1,0 +1,406 @@
+/*
+ * Blocks: Backdrops — animated backgrounds that carry their content.
+ *
+ * The .nx-backdrop in hero.css is a layer that sits *behind* a positioned
+ * section; these blocks ARE the section. One class per variant —
+ * nx-backdrop-aurora | -starfield | -mesh | -dither | -plain — because bare
+ * .nx-backdrop already belongs to the hero system. Every variant renders the
+ * same three empty spans and styles them its own way, so React and Blade
+ * share markup and nothing waits for JavaScript:
+ *
+ *   <section class="nx-backdrop-aurora">
+ *     <span class="nx-backdrop-layer" aria-hidden="true"></span> × 3
+ *     …content, painting above the layers…
+ *   </section>
+ *
+ * Adding a variant: append its class to the two frame rules below, then write
+ * its own section. Multiply every travel distance by --nx-motion and stop the
+ * loops under prefers-reduced-motion.
+ */
+@layer nx.components {
+  /* ---- The frame (shared by every variant) ------------------------------------
+   * An isolated stack: the layers sit at the bottom (z-index -1), the content
+   * paints above them, and overflow is clipped so the layers never spill into
+   * the sections around. */
+  .nx-backdrop-aurora,
+  .nx-backdrop-starfield,
+  .nx-backdrop-mesh,
+  .nx-backdrop-dither,
+  .nx-backdrop-plain {
+    position: relative;
+    isolation: isolate;
+    overflow: clip;
+  }
+
+  .nx-backdrop-layer {
+    position: absolute;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  /* ---- Aurora: three curtains of light -----------------------------------------
+   * Big out-of-focus ellipses — lapis toward the top-start, violet toward the
+   * bottom-end, a smaller cyan glow between them — drifting past each other
+   * and slowly turning. They shine at --nx-backdrop-intensity (28% on a light
+   * page, 45% in the dark), so content keeps its contrast in both themes. */
+  .nx-backdrop-aurora > .nx-backdrop-layer {
+    border-radius: 50%;
+    filter: blur(72px);
+    opacity: var(--nx-backdrop-intensity);
+    animation: nx-backdrop-aurora-drift 26s var(--nx-ease-in-out) infinite alternate;
+  }
+
+  /* The lapis curtain, falling from the top-start corner. */
+  .nx-backdrop-aurora > .nx-backdrop-layer:nth-child(1) {
+    inline-size: 62vmax;
+    aspect-ratio: 1.75;
+    inset-block-start: -18%;
+    inset-inline-start: -12%;
+    background: linear-gradient(115deg, transparent, color-mix(in oklab, var(--nx-lapis-500) 85%, var(--nx-violet-500)) 38% 62%, transparent);
+    animation-delay: -4s;
+  }
+
+  /* The violet curtain, rising from the bottom-end corner. */
+  .nx-backdrop-aurora > .nx-backdrop-layer:nth-child(2) {
+    inline-size: 58vmax;
+    aspect-ratio: 1.6;
+    inset-block-end: -20%;
+    inset-inline-end: -12%;
+    background: linear-gradient(65deg, transparent, color-mix(in oklab, var(--nx-violet-500) 80%, var(--nx-lapis-500)) 35% 65%, transparent);
+    filter: blur(88px);
+    opacity: calc(var(--nx-backdrop-intensity) * 0.9);
+    animation-duration: 32s;
+    animation-delay: -13s;
+  }
+
+  /* The cyan glow that swims between the two. */
+  .nx-backdrop-aurora > .nx-backdrop-layer:nth-child(3) {
+    inline-size: 42vmax;
+    aspect-ratio: 1.35;
+    inset-block-start: 32%;
+    inset-inline-start: 26%;
+    background: radial-gradient(50% 50%, var(--nx-cyan-500), transparent 68%);
+    filter: blur(60px);
+    opacity: calc(var(--nx-backdrop-intensity) * 0.6);
+    animation-duration: 21s;
+    animation-delay: -9s;
+  }
+
+  /* Wander and sway. Distances are multiplied by --nx-motion (0 under reduced
+     motion) so stopping the loop below still leaves a composed still frame. */
+  @keyframes nx-backdrop-aurora-drift {
+    0% { translate: 0 0; rotate: calc(-4deg * var(--nx-motion)); scale: 1; }
+    50% { translate: calc(5vmax * var(--nx-motion)) calc(3vmax * var(--nx-motion)); rotate: calc(5deg * var(--nx-motion)); scale: 1.07; }
+    100% { translate: calc(-3vmax * var(--nx-motion)) calc(5vmax * var(--nx-motion)); rotate: calc(-3deg * var(--nx-motion)); scale: 0.96; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-backdrop-aurora > .nx-backdrop-layer { animation: none; }
+  }
+
+  /* ---- Starfield: three parallax fields of box-shadow stars --------------------
+   * Every layer is one tile of stars — the tile is a box-shadow list hung on a
+   * dot-sized carrier (::before) with a twin one tile above (::after) scrolling
+   * in lockstep — falling forever at its own speed, so the near field overtakes
+   * the far one and the sky gains depth. The near field also breathes: a slow
+   * opacity swell. Starlight is --nx-star (white in the dark, periwinkle on a
+   * light page) at three strengths; a few mid stars burn cyan and gold, and the
+   * five brightest near stars carry a halo. The mask fades the field toward the
+   * edges so the tile's bounds never show, and --_tile is also the loop length:
+   * every period the twin lands exactly where the leader started. */
+  .nx-backdrop-starfield {
+    --_tile: 1500px;
+    background: radial-gradient(ellipse 90% 70% at 50% 118%, color-mix(in oklab, var(--nx-lapis-700) 30%, transparent), transparent 62%);
+  }
+
+  .nx-backdrop-starfield > .nx-backdrop-layer {
+    inset: 0;
+    -webkit-mask-image: radial-gradient(ellipse 88% 82% at 50% 44%, #000 38%, transparent 78%);
+    mask-image: radial-gradient(ellipse 88% 82% at 50% 44%, #000 38%, transparent 78%);
+
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      inset-block-start: 0;
+      inset-inline-start: 0;
+      inline-size: var(--_dot);
+      block-size: var(--_dot);
+      border-radius: 50%;
+      box-shadow: var(--_stars);
+      animation: nx-backdrop-starfield-drift var(--_speed) linear infinite;
+    }
+
+    /* The twin: the same tile one loop behind, so the top edge never runs dry. */
+    &::after { inset-block-start: calc(-1 * var(--_tile)); }
+
+    /* Far: many, fine, faint — and the slowest to fall. */
+    &:nth-child(1) {
+      --_dot: 1px;
+      --_speed: 190s;
+      --_c: color-mix(in oklab, var(--nx-star) 45%, transparent);
+      --_stars:
+        983px 1363px 0 0 var(--_c), 477px 996px 0 0 var(--_c), 1390px 248px 0 0 var(--_c),
+        1158px 998px 0 0 var(--_c), 525px 733px 0 0 var(--_c), 955px 266px 0 0 var(--_c),
+        1847px 175px 0 0 var(--_c), 2093px 347px 0 0 var(--_c), 1157px 1134px 0 0 var(--_c),
+        531px 1337px 0 0 var(--_c), 1298px 328px 0 0 var(--_c), 148px 1084px 0 0 var(--_c),
+        67px 1147px 0 0 var(--_c), 690px 143px 0 0 var(--_c), 96px 573px 0 0 var(--_c),
+        182px 440px 0 0 var(--_c), 2119px 623px 0 0 var(--_c), 886px 696px 0 0 var(--_c),
+        669px 334px 0 0 var(--_c), 1292px 916px 0 0 var(--_c), 1857px 1432px 0 0 var(--_c),
+        31px 550px 0 0 var(--_c), 287px 681px 0 0 var(--_c), 104px 1301px 0 0 var(--_c),
+        508px 1077px 0 0 var(--_c), 1793px 980px 0 0 var(--_c), 1684px 1240px 0 0 var(--_c),
+        452px 1231px 0 0 var(--_c), 1916px 429px 0 0 var(--_c), 1213px 1195px 0 0 var(--_c),
+        317px 1047px 0 0 var(--_c), 442px 1368px 0 0 var(--_c), 2301px 57px 0 0 var(--_c),
+        241px 534px 0 0 var(--_c), 1463px 412px 0 0 var(--_c), 828px 885px 0 0 var(--_c),
+        837px 1330px 0 0 var(--_c), 1637px 516px 0 0 var(--_c), 1589px 13px 0 0 var(--_c),
+        1257px 277px 0 0 var(--_c), 225px 640px 0 0 var(--_c), 931px 899px 0 0 var(--_c),
+        2338px 1323px 0 0 var(--_c), 747px 1087px 0 0 var(--_c), 2152px 1099px 0 0 var(--_c),
+        98px 641px 0 0 var(--_c), 492px 877px 0 0 var(--_c), 2265px 584px 0 0 var(--_c),
+        1499px 1337px 0 0 var(--_c), 1353px 1322px 0 0 var(--_c), 2149px 782px 0 0 var(--_c),
+        868px 164px 0 0 var(--_c), 1774px 1458px 0 0 var(--_c), 2129px 723px 0 0 var(--_c),
+        1575px 1185px 0 0 var(--_c), 997px 772px 0 0 var(--_c), 1349px 375px 0 0 var(--_c),
+        686px 490px 0 0 var(--_c), 475px 310px 0 0 var(--_c), 376px 996px 0 0 var(--_c),
+        2100px 121px 0 0 var(--_c), 1574px 796px 0 0 var(--_c), 1477px 173px 0 0 var(--_c),
+        49px 182px 0 0 var(--_c), 1581px 203px 0 0 var(--_c), 276px 407px 0 0 var(--_c);
+    }
+
+    /* Middle: sparser, brighter, with two stars of cyan and one of gold. */
+    &:nth-child(2) {
+      --_dot: 1.5px;
+      --_speed: 125s;
+      --_c: color-mix(in oklab, var(--nx-star) 70%, transparent);
+      --_stars:
+        1346px 649px 0 0 var(--_c), 874px 300px 0 0 var(--_c), 1323px 294px 0 0 var(--_c),
+        1877px 784px 0 0 var(--_c), 95px 889px 0 0 var(--_c), 679px 1378px 0 0 var(--_c),
+        1064px 117px 0 0 var(--_c), 2295px 529px 0 0 var(--_c), 783px 383px 0 0 var(--_c),
+        1272px 988px 0 0 var(--_c), 1147px 70px 0 0 var(--nx-cyan-300), 1832px 1369px 0 0 var(--_c),
+        1844px 225px 0 0 var(--_c), 829px 1104px 0 0 var(--_c), 1753px 530px 0 0 var(--_c),
+        1292px 1382px 0 0 var(--_c), 230px 384px 0 0 var(--_c), 1095px 784px 0 0 var(--_c),
+        449px 51px 0 0 var(--_c), 461px 284px 0 0 var(--_c), 14px 812px 0 0 var(--_c),
+        1832px 1243px 0 0 var(--_c), 890px 1436px 0 0 var(--_c), 2060px 1087px 0 0 var(--_c),
+        1272px 138px 0 0 var(--_c), 1005px 639px 0 0 var(--_c), 761px 190px 0 0 var(--_c),
+        1625px 30px 0 0 var(--nx-gold-300), 894px 729px 0 0 var(--_c), 1037px 1449px 0 0 var(--_c),
+        799px 754px 0 0 var(--_c), 1094px 418px 0 0 var(--_c), 1945px 712px 0 0 var(--_c),
+        77px 1353px 0 0 var(--nx-cyan-300), 2152px 943px 0 0 var(--_c), 2378px 1382px 0 0 var(--_c),
+        1026px 204px 0 0 var(--_c), 162px 1010px 0 0 var(--_c), 2155px 759px 0 0 var(--_c),
+        627px 762px 0 0 var(--_c), 1949px 16px 0 0 var(--_c), 1834px 571px 0 0 var(--_c);
+    }
+
+    /* Near: few, large, at full starlight — and the whole field breathes. */
+    &:nth-child(3) {
+      --_dot: 2.5px;
+      --_speed: 75s;
+      --_c: var(--nx-star);
+      --_stars:
+        1936px 1355px 0 0 var(--_c), 131px 1141px 0 0 var(--_c), 431px 148px 0 0 var(--_c),
+        2319px 163px 3px 0 color-mix(in oklab, var(--nx-gold-300) 55%, transparent),
+        2319px 163px 0 0 var(--nx-gold-300), 1235px 261px 0 0 var(--_c),
+        1931px 480px 3px 0 color-mix(in oklab, var(--nx-cyan-300) 55%, transparent),
+        1931px 480px 0 0 var(--nx-cyan-300), 190px 67px 0 0 var(--_c), 719px 412px 0 0 var(--_c),
+        1302px 1045px 3px 0 color-mix(in oklab, var(--nx-gold-300) 55%, transparent),
+        1302px 1045px 0 0 var(--nx-gold-300), 273px 317px 0 0 var(--_c), 702px 893px 0 0 var(--_c),
+        906px 776px 0 0 var(--_c), 849px 1334px 0 0 var(--_c), 436px 635px 0 0 var(--_c),
+        1544px 662px 3px 0 color-mix(in oklab, var(--nx-gold-300) 55%, transparent),
+        1544px 662px 0 0 var(--nx-gold-300), 477px 484px 0 0 var(--_c), 1061px 365px 0 0 var(--_c),
+        291px 1083px 3px 0 color-mix(in oklab, var(--nx-cyan-300) 55%, transparent),
+        291px 1083px 0 0 var(--nx-cyan-300), 189px 520px 0 0 var(--_c), 309px 1378px 0 0 var(--_c);
+      animation: nx-backdrop-starfield-twinkle 7.5s var(--nx-ease-in-out) infinite alternate;
+    }
+  }
+
+  /* One tile down per period: the twin lands where the leader started, so the
+     loop restarts on an identical frame. */
+  @keyframes nx-backdrop-starfield-drift {
+    to { translate: 0 calc(var(--_tile) * var(--nx-motion)); }
+  }
+
+  @keyframes nx-backdrop-starfield-twinkle {
+    from { opacity: 0.6; }
+    to { opacity: 1; }
+  }
+
+  /* !important because the near field re-sets its twinkle at :nth-child weight,
+     which this plain override cannot reach (the mesh reduce below does the same). */
+  @media (prefers-reduced-motion: reduce) {
+    .nx-backdrop-starfield > .nx-backdrop-layer,
+    .nx-backdrop-starfield > .nx-backdrop-layer::before,
+    .nx-backdrop-starfield > .nx-backdrop-layer::after { animation: none !important; }
+  }
+
+  /* ---- Dither: a wave rolling through a field of tiny dots ---------------------
+   * A halftone of tiny token dots on two screens — lapis on a 9px cell, violet
+   * on one 1.3× coarser — drifting along paths set at an angle to each other,
+   * so where they cross their beats read as one wave running through the field.
+   * Underneath, the same smooth pool of accent light the canvas dither
+   * (dither-backdrop) shows before its first frame. Each screen laps a few
+   * cells along its own path and lands exactly whole cells away, so the loop
+   * never jumps a dot, and the mask dissolves the edges so the field reads as
+   * rhythm, not wallpaper. Dot pitch: --nx-dither-cell (9px). */
+  .nx-backdrop-dither {
+    background: radial-gradient(ellipse 75% 60% at 50% 58%, var(--nx-accent-soft), transparent 72%);
+  }
+
+  .nx-backdrop-dither > .nx-backdrop-layer {
+    --_cell: var(--nx-dither-cell, 9px);
+    inset: 0;
+    opacity: calc(var(--nx-backdrop-intensity) * 2.2);
+    background-image: radial-gradient(var(--_dot) 1px, transparent 1.5px);
+    background-size: var(--_cell) var(--_cell);
+    -webkit-mask-image: radial-gradient(ellipse 78% 68% at 50% 46%, #000 32%, transparent 80%);
+    mask-image: radial-gradient(ellipse 78% 68% at 50% 46%, #000 32%, transparent 80%);
+  }
+
+  /* The lapis screen, wandering down and toward the end edge. */
+  .nx-backdrop-dither > .nx-backdrop-layer:nth-child(1) {
+    --_dot: color-mix(in oklab, var(--nx-lapis-500) 60%, transparent);
+    animation: nx-backdrop-dither-wave-a 17s var(--nx-ease-in-out) infinite;
+  }
+
+  /* The violet screen, coarser and crossed against the first, out of phase. */
+  .nx-backdrop-dither > .nx-backdrop-layer:nth-child(2) {
+    --_dot: color-mix(in oklab, var(--nx-violet-500) 55%, transparent);
+    --_cell: calc(var(--nx-dither-cell, 9px) * 1.3);
+    animation: nx-backdrop-dither-wave-b 23s var(--nx-ease-in-out) -7s infinite;
+  }
+
+  /* The wave needs two screens; the frame's third span stays out of the paint. */
+  .nx-backdrop-dither > .nx-backdrop-layer:nth-child(3) { display: none; }
+
+  /* Ease in and out of every leg: the field surges and settles like water. */
+  @keyframes nx-backdrop-dither-wave-a {
+    from { background-position: 0 0; }
+    25% { background-position: calc(2 * var(--_cell) * var(--nx-motion)) calc(-1 * var(--_cell) * var(--nx-motion)); }
+    50% { background-position: calc(1 * var(--_cell) * var(--nx-motion)) calc(2 * var(--_cell) * var(--nx-motion)); }
+    75% { background-position: calc(3 * var(--_cell) * var(--nx-motion)) calc(1 * var(--_cell) * var(--nx-motion)); }
+    to { background-position: calc(4 * var(--_cell) * var(--nx-motion)) 0; }
+  }
+
+  @keyframes nx-backdrop-dither-wave-b {
+    from { background-position: 0 0; }
+    33% { background-position: calc(-2 * var(--_cell) * var(--nx-motion)) calc(1 * var(--_cell) * var(--nx-motion)); }
+    66% { background-position: calc(-1 * var(--_cell) * var(--nx-motion)) calc(-2 * var(--_cell) * var(--nx-motion)); }
+    to { background-position: calc(-3 * var(--_cell) * var(--nx-motion)) calc(2 * var(--_cell) * var(--nx-motion)); }
+  }
+
+  /* !important for the same reason: the two screens set their waves at
+     :nth-child weight, above this plain override. */
+  @media (prefers-reduced-motion: reduce) {
+    .nx-backdrop-dither > .nx-backdrop-layer { animation: none !important; }
+  }
+
+  /* ---- Mesh: a living mesh gradient --------------------------------------------
+   * Five blurred colour fields — lapis, violet, cyan, gold, and a weave of
+   * violet through cyan — roaming the box on their own clocks. Each blends with
+   * the fields already on the canvas (soft-light on a light page, screen in the
+   * dark), so the overlaps read as one woven surface rather than stacked
+   * circles. The two tracks (drift, breathe) stay out of phase and the mesh
+   * never repeats. Mesh paints five layers, not the frame's default three. */
+  .nx-backdrop-mesh > .nx-backdrop-layer {
+    border-radius: 50%;
+    filter: blur(clamp(20px, 3vw, 44px));
+    opacity: calc(var(--nx-backdrop-intensity) * 1.5);
+    mix-blend-mode: var(--_mesh-blend, soft-light);
+    animation: nx-backdrop-mesh-drift 26s var(--nx-ease-in-out) infinite alternate;
+  }
+
+  /* Lapis, pouring from the top-start corner. */
+  .nx-backdrop-mesh > .nx-backdrop-layer:nth-child(1) {
+    inset-block: -32% 52%;
+    inset-inline: -18% 46%;
+    background: radial-gradient(closest-side, var(--nx-lapis-500), color-mix(in oklab, var(--nx-lapis-500) 30%, transparent) 58%, transparent);
+    animation-delay: -5s;
+  }
+
+  /* Violet, rising toward the top-end corner. */
+  .nx-backdrop-mesh > .nx-backdrop-layer:nth-child(2) {
+    inset-block: -26% 44%;
+    inset-inline: 44% -22%;
+    background: radial-gradient(closest-side, var(--nx-violet-500), color-mix(in oklab, var(--nx-violet-500) 30%, transparent) 58%, transparent);
+    animation-name: nx-backdrop-mesh-breathe;
+    animation-duration: 31s;
+    animation-delay: -14s;
+    animation-direction: alternate-reverse;
+  }
+
+  /* Cyan, pooling toward the bottom-end corner. */
+  .nx-backdrop-mesh > .nx-backdrop-layer:nth-child(3) {
+    inset-block: 34% -32%;
+    inset-inline: 30% -28%;
+    background: radial-gradient(closest-side, var(--nx-cyan-500), color-mix(in oklab, var(--nx-cyan-500) 30%, transparent) 58%, transparent);
+    animation-duration: 37s;
+    animation-delay: -21s;
+  }
+
+  /* Gold runs hot, so it hangs back: dimmer, from the bottom-start corner. */
+  .nx-backdrop-mesh > .nx-backdrop-layer:nth-child(4) {
+    inset-block: 46% -34%;
+    inset-inline: -24% 42%;
+    background: radial-gradient(closest-side, var(--nx-gold-500), color-mix(in oklab, var(--nx-gold-500) 26%, transparent) 55%, transparent);
+    opacity: calc(var(--nx-backdrop-intensity) * 1.1);
+    animation-name: nx-backdrop-mesh-breathe;
+    animation-duration: 29s;
+    animation-delay: -9s;
+    animation-direction: alternate-reverse;
+  }
+
+  /* The weave: violet through cyan, roaming the middle slowest of all. */
+  .nx-backdrop-mesh > .nx-backdrop-layer:nth-child(5) {
+    --_weave: color-mix(in oklab, var(--nx-violet-500) 55%, var(--nx-cyan-500));
+    inset-block: 12% 16%;
+    inset-inline: 26% 30%;
+    background: radial-gradient(closest-side, var(--_weave), color-mix(in oklab, var(--_weave) 28%, transparent) 60%, transparent);
+    opacity: calc(var(--nx-backdrop-intensity) * 1.25);
+    animation-duration: 43s;
+    animation-delay: -30s;
+  }
+
+  @keyframes nx-backdrop-mesh-drift {
+    0% { translate: 0 0; scale: 1; }
+    33% {
+      translate: calc(9% * var(--nx-motion) * var(--nx-dir)) calc(-6% * var(--nx-motion));
+      scale: calc(1 + 0.14 * var(--nx-motion));
+    }
+    66% {
+      translate: calc(-8% * var(--nx-motion) * var(--nx-dir)) calc(6% * var(--nx-motion));
+      scale: calc(1 - 0.1 * var(--nx-motion));
+    }
+    100% {
+      translate: calc(6% * var(--nx-motion) * var(--nx-dir)) calc(8% * var(--nx-motion));
+      scale: calc(1 + 0.08 * var(--nx-motion));
+    }
+  }
+
+  @keyframes nx-backdrop-mesh-breathe {
+    0% {
+      translate: calc(-4% * var(--nx-motion) * var(--nx-dir)) calc(3% * var(--nx-motion));
+      scale: 0.94;
+    }
+    50% {
+      translate: calc(5% * var(--nx-motion) * var(--nx-dir)) calc(-5% * var(--nx-motion));
+      scale: calc(1 + 0.16 * var(--nx-motion));
+    }
+    100% {
+      translate: calc(-3% * var(--nx-motion) * var(--nx-dir)) calc(5% * var(--nx-motion));
+      scale: 0.98;
+    }
+  }
+
+  /* How the fields fuse, per theme — the same matrix the tokens use: light by
+     default, system dark unless the page pins a theme, pinned dark, then pinned
+     light last, so a light island inside a dark page wins. */
+  :root { --_mesh-blend: soft-light; }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"], .light) { --_mesh-blend: screen; }
+  }
+
+  [data-theme="dark"], .dark { --_mesh-blend: screen; }
+  [data-theme="light"], .light { --_mesh-blend: soft-light; }
+
+  /* !important because two fields re-set animation-name at :nth-child weight,
+     which this plain override cannot reach (hero.css does the same for its
+     backdrops). Reduced motion holds one composed still frame. */
+  @media (prefers-reduced-motion: reduce) {
+    .nx-backdrop-mesh > .nx-backdrop-layer { animation: none !important; }
+  }
+}
