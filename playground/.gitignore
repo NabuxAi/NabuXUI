@@ -8,3 +8,4 @@
 /.env.backup
 /.phpunit.cache
 /database/*.sqlite
+/.phpunit.result.cache

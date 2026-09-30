@@ -29,7 +29,9 @@
             return [(string) $time, null];
         }
 
-        return [$date->locale($lang)->diffForHumans(), $date->toIso8601String()];
+        // Carbon translates the words but leaves the counter in latin digits;
+        // map them through the locale's numbering system (identity for latin locales).
+        return [strtr($date->locale($lang)->diffForHumans(), array_combine(range(0, 9), NabuXUI::digits($lang))), $date->toIso8601String()];
     };
     // Listeners go on the wrapper: the panel's events bubble through it, not the trigger.
     $listeners = $attributes->whereStartsWith(['x-on:', '@', 'wire:']);

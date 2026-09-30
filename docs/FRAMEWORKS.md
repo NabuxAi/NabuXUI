@@ -736,6 +736,7 @@ theme.watch((scheme) => …); // تغییر سیستم و تب‌های دیگر
 | pit-slider | ردیف میله‌ها روی یک رِنج بومی؛ زیر thumb هنگام کشیدن در گودال فرو می‌روند | `PitSlider` | `<x-nx::pit-slider>` | `pitSlider` |
 | precision-slider | اسلایدر دقیق با عدد رولینگ و تیک‌های پرشونده | `PrecisionSlider` | `<x-nx::precision-slider>` | بله |
 | infinite-grid | زمینهٔ نقطه‌ای بی‌پایان با spot موس | `InfiniteGrid` | `<x-nx::infinite-grid>` | `spotlight` |
+| invoice | سند فاکتور قابل‌چاپ؛ ردیف‌ها reveal و جمع‌ها رول می‌شوند | `Invoice` | `<x-nx::invoice>` | `reveal` |
 
 ### داده
 
@@ -755,11 +756,16 @@ theme.watch((scheme) => …); // تغییر سیستم و تب‌های دیگر
 | curved-timeline | تایم‌لاین مارپیچ با نقاط تاریخ‌دار | `CurvedTimeline` | `<x-nx::curved-timeline>` | `curvedTimeline` |
 | usage-card | کارت مصرف با سهم دسته‌ها و CTA ارتقا | `UsageCard` | `<x-nx::usage-card>` | `reveal` |
 | comparison-table | جدول مقایسهٔ پلن‌ها با ستون پیشنهادی | `ComparisonTable` | `<x-nx::comparison-table>` | `reveal` |
+| calendar | تقویم ماه؛ تغییر ماه با اسلاید جهت‌دار و پیمایش کیبوردی روزها | `Calendar` | `<x-nx::calendar>` | بله |
+| kanban | برد ستونی با درگ‌انددراپ بومی و لغزش FLIP | `Kanban` | `<x-nx::kanban>` | `snapshotRows` + `playRowFlip` |
+| timeline-feed | جریان فعالیت عمودی با اتصال گرادیانی و زمان نسبی | `TimelineFeed` | `<x-nx::timeline-feed>` | `reveal` |
+| empty-state | «هنوز چیزی نیست»: بشقاب شناور، مدار خط‌چین و هالهٔ نرم | `EmptyState` | `<x-nx::empty-state>` | `reveal` |
 
 ### منو
 
 | بلوک | تگ یک‌خطی | React | Blade | JS رفتاری |
 |---|---|---|---|---|
+| admin-shell | پوستهٔ پنل: سایدبار گروهی با نشان فنری، تاپ‌بار، دراور موبایل | `AdminShell` + `AdminSidebar` + `AdminTopbar` | `<x-nx::admin-shell>` + `<x-nx::admin-sidebar>` + `<x-nx::admin-topbar>` | `indicator` + `place` + `lightDismiss` |
 | fold-menu | هر بخش یک تایِ تاشو؛ سه‌چهار بخش بهتر خوانده می‌شود | `FoldMenu` | `<x-nx::fold-menu>` | بله |
 | dock-panels | داک که خودش به پنل آیتم فعال بزرگ می‌شود | `DockPanels` | `<x-nx::dock-panels>` | بله |
 | morph-menu | دکمهٔ فیلتری که ظرفِ خودش منو می‌شود | `MorphMenu` | `<x-nx::morph-menu>` | `morphShell` |
@@ -767,9 +773,11 @@ theme.watch((scheme) => …); // تغییر سیستم و تب‌های دیگر
 | stack-menu | منوی چندسطحی با push/pop و جست‌وجوی همهٔ لایه‌ها | `StackMenu` | `<x-nx::stack-menu>` | بله |
 | morph-tabs | تب‌های آیکونی؛ فعال‌ شده باز می‌شود و pill دنبالش می‌آید | `MorphTabs` | `<x-nx::morph-tabs>` | `morphTabs` |
 | audio-room | اتاق صوتی با میزبان‌ها و نوارهای گفتار | `AudioRoom` | `<x-nx::audio-room>` | بله |
+| chat | گفتگوی دوستونه: جست‌وجوی رشته‌ها، اکوی محلی پیام، حالت تایپ | `Chat` | `<x-nx::chat>` | بله |
 | activity-dropdown | دراپ‌داون فعالیت با زمان نسبی | `ActivityDropdown` | `<x-nx::activity-dropdown>` | بله |
 | member-selector | چندانتخاب عضو با جست‌وجو و نقش‌ها | `MemberSelector` | `<x-nx::member-selector>` | بله |
 | registration-card | فرم ثبت‌نام چندمرحله‌ای با بلیت‌ها | `RegistrationCard` | `<x-nx::registration-card>` | بله |
+| auth-card | فرم سه‌پنهای ورود/ثبت‌نام/فراموشی؛ پن‌ها می‌لغزند و ارتفاع مورف می‌شود | `AuthCard` | `<x-nx::auth-card>` | `morphShell` |
 | voice-recorder | میکروفونی که قرص ضبط و پخش می‌شود — بدون دسترسی میکروفن | `VoiceRecorder` | `<x-nx::voice-recorder>` | بله |
 | mega-menu | منوی بزرگ هدر با ستون‌ها و توضیح | `MegaMenu` | `<x-nx::mega-menu>` | بله |
 | hover-nav | ناوبری که پنل از سمتِ ورودِ موس باز می‌شود | `HoverNav` | — (هنوز Blade ندارد) | `hoverNav` |
