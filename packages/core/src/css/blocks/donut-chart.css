@@ -1,0 +1,206 @@
+/*
+ * Block: donut-chart — a CSS donut that sweeps in when revealed.
+ *
+ *   <figure class="nx-chart nx-donut-chart" data-nx-reveal
+ *           style="--nx-donut-chart-size: 12rem; --nx-donut-chart-thickness: 14%">
+ *     <div class="nx-chart-head"> title </div>
+ *     <div class="nx-donut-chart-frame">
+ *       <div class="nx-donut-chart-ring" aria-hidden="true">
+ *         <span class="nx-donut-chart-track"/>
+ *         <span class="nx-donut-chart-segment" style="--_start: 0; --_len: 38; --nx-i: 0;
+ *               --nx-series: var(--nx-chart-1)"/> …        (sweep rides --nx-donut-sweep)
+ *         <div class="nx-donut-chart-center">
+ *           <span class="nx-number nx-donut-chart-value" data-nx-reveal>…rolling total…</span>
+ *           <span class="nx-donut-chart-caption">Total</span>
+ *         </div>
+ *       </div>
+ *       <ul class="nx-chart-legend nx-donut-chart-legend">
+ *         <li class="nx-legend-item nx-donut-chart-row">
+ *           <span class="nx-legend-swatch" style="--nx-series: var(--nx-chart-1)"/>
+ *           <span class="nx-donut-chart-row-label">Web</span>
+ *           <span class="nx-donut-chart-row-value">12</span>
+ *           <span class="nx-number nx-donut-chart-row-share" data-nx-reveal>…rolling percent…</span>
+ *         </li> …
+ *       </ul>
+ *     </div>
+ *     <table class="nx-visually-hidden">…the same data…</table>
+ *   </figure>
+ *
+ * No JavaScript: each segment is a full-size circle painted with a conic-gradient
+ * (from its start angle, as far as its length × the sweep multiplier) and masked
+ * to the ring, so the donut fills clockwise when [data-nx-revealed] lands — one
+ * segment after another (--nx-i). --nx-donut-sweep is a registered custom
+ * property, which is what lets the gradient stop interpolate; the same trick
+ * the progress ring uses for --nx-value. The legend rolls its percents and the
+ * centre rolls its number on the same reveal (the shared .nx-number markup),
+ * and hovering a row brightens it while its neighbours step back. The data also
+ * ships as the visually-hidden table. Everything is logical properties — RTL
+ * mirrors itself; the sweep itself is the chart's own direction, not the
+ * reader's.
+ */
+@layer nx.components {
+  /* Registered so it interpolates: the fraction of each segment's length shown. */
+  @property --nx-donut-sweep {
+    syntax: "<number>";
+    inherits: false;
+    initial-value: 0;
+  }
+
+  .nx-donut-chart {
+    --nx-donut-chart-size: 12rem;
+    /* Ring thickness: a share of the radius, or any CSS length ("2rem"). */
+    --nx-donut-chart-thickness: 14%;
+    container-type: inline-size;
+  }
+
+  /* ---- The ring: track, segments, centre -------------------------------------------------- */
+
+  .nx-donut-chart-frame {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-space-6) var(--nx-space-8);
+  }
+
+  .nx-donut-chart-ring {
+    position: relative;
+    display: grid;
+    place-items: center;
+    inline-size: var(--nx-donut-chart-size);
+    aspect-ratio: 1;
+    margin-inline: auto;
+  }
+
+  .nx-donut-chart-track,
+  .nx-donut-chart-segment {
+    grid-area: 1 / 1;
+    inline-size: 100%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    pointer-events: none;
+    /* The annulus: everything inside the outer radius of the thickness is cut. */
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - var(--nx-donut-chart-thickness)), #000 calc(100% - var(--nx-donut-chart-thickness) + 0.5px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - var(--nx-donut-chart-thickness)), #000 calc(100% - var(--nx-donut-chart-thickness) + 0.5px));
+  }
+
+  .nx-donut-chart-track { background: var(--nx-surface-3); }
+
+  .nx-donut-chart-segment {
+    /* From the top (conic 0deg), clockwise: as far as this segment's share of
+       the turn, scaled by the sweep — the stop that animates. */
+    background: conic-gradient(
+      from calc(var(--_start, 0) * 3.6deg),
+      var(--nx-series, var(--nx-chart-1)) 0 calc(var(--_len, 0) * var(--nx-donut-sweep, 1) * 1%),
+      transparent 0
+    );
+    transition: --nx-donut-sweep var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+    /* One segment waits for its predecessor: the donut fills in reading order. */
+    transition-delay: calc(min(var(--nx-i, 0), 12) * 90ms);
+  }
+
+  .nx-donut-chart-center {
+    grid-area: 1 / 1;
+    display: grid;
+    justify-items: center;
+    gap: var(--nx-space-1);
+    padding-inline: calc(var(--nx-donut-chart-thickness) + var(--nx-space-3));
+    text-align: center;
+    pointer-events: none;
+  }
+
+  .nx-donut-chart-value {
+    font: 700 var(--nx-text-2xl) / 1.1 var(--nx-font-sans);
+    font-variant-numeric: tabular-nums;
+    color: var(--nx-text);
+  }
+
+  .nx-donut-chart-caption {
+    max-inline-size: 100%;
+    color: var(--nx-text-muted);
+    font: 400 var(--nx-text-xs) / 1.35 var(--nx-font-sans);
+    overflow-wrap: anywhere;
+  }
+
+  /* ---- The legend: label, value and a rolling percent -------------------------------------- */
+
+  .nx-donut-chart-legend {
+    flex: 1 1 12rem;
+    min-inline-size: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--nx-space-1);
+    font-size: var(--nx-text-sm);
+  }
+
+  .nx-donut-chart-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: var(--nx-space-3);
+    padding-block: var(--nx-space-1);
+    padding-inline: var(--nx-space-2);
+    border-radius: var(--nx-radius-sm);
+    color: var(--nx-text-muted);
+    transition: color var(--nx-dur-fast) var(--nx-ease-out), background-color var(--nx-dur-fast) var(--nx-ease-out);
+  }
+
+  .nx-donut-chart-row-label {
+    min-inline-size: 0;
+    color: var(--nx-text);
+    overflow-wrap: anywhere;
+  }
+
+  .nx-donut-chart-row-value {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nx-donut-chart-row-share {
+    color: var(--nx-text-subtle);
+    font-variant-numeric: tabular-nums;
+    min-inline-size: 3ch;
+    text-align: end;
+  }
+
+  /* Hover names the slice: the row gains a wash while its neighbours step back
+     (colour, never motion alone). Fine pointers only. */
+  @media (hover: hover) and (pointer: fine) {
+    .nx-donut-chart-row:hover {
+      background: var(--nx-surface-2);
+      color: var(--nx-text);
+    }
+
+    .nx-donut-chart-legend:has(.nx-donut-chart-row:hover) .nx-donut-chart-row:not(:hover) {
+      opacity: 0.55;
+    }
+  }
+
+  /* ---- First reveal: the donut sweeps in, numbers roll -------------------------------------- */
+
+  :where(.nx-js) .nx-donut-chart[data-nx-reveal]:not([data-nx-revealed]) .nx-donut-chart-segment {
+    --nx-donut-sweep: 0;
+  }
+
+  .nx-donut-chart[data-nx-revealed] .nx-donut-chart-segment,
+  .nx-donut-chart:not([data-nx-reveal]) .nx-donut-chart-segment {
+    --nx-donut-sweep: 1;
+  }
+
+  /* If the observer never fires, land the sweep anyway (the shared failsafe
+     keyframe cannot touch a custom property, so this one does). */
+  @keyframes nx-donut-chart-failsafe { to { --nx-donut-sweep: 1; } }
+
+  :where(.nx-js:not(.nx-live)) .nx-donut-chart[data-nx-reveal]:not([data-nx-revealed]) .nx-donut-chart-segment {
+    animation: nx-donut-chart-failsafe 1ms 2.5s forwards;
+  }
+
+  /* Narrow containers: the legend drops under the ring, rows stay readable. */
+  @container (width < 30rem) {
+    .nx-donut-chart-frame { flex-direction: column; }
+    .nx-donut-chart-legend { max-inline-size: 24rem; }
+  }
+
+  @media (forced-colors: active) {
+    .nx-donut-chart-segment { forced-color-adjust: none; }
+  }
+}

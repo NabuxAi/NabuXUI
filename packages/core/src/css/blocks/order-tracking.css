@@ -1,0 +1,400 @@
+/*
+ * Block: order-tracking — where an order is, and how it got there.
+ *
+ *   <section class="nx-order-tracking" data-nx-reveal="group" aria-label>
+ *     <header class="nx-order-tracking-head">
+ *       <div class="nx-order-tracking-order">
+ *         <span class="nx-order-tracking-kicker"/>                    ("Order tracking")
+ *         <p class="nx-order-tracking-number"/>                       (with .nx-visually-hidden "Order no.")
+ *       <dl class="nx-order-tracking-facts">
+ *         <div class="nx-order-tracking-fact"><dt/>carrier|eta<dd/></div>
+ *       <span class="nx-order-tracking-status"/>                      (a .nx-status-badge, live)
+ *     <ol class="nx-order-tracking-steps">                            (scrolls when narrow)
+ *       <li class="nx-order-tracking-step" data-state="complete|current|upcoming" style="--nx-i">
+ *         <span class="nx-order-tracking-marker">check | step icon | index (aria-hidden)
+ *         <div class="nx-order-tracking-step-text">
+ *           <p class="nx-order-tracking-step-title"/>
+ *           <p class="nx-order-tracking-step-desc"/>
+ *           <time class="nx-order-tracking-step-time"/>
+ *     <div class="nx-order-tracking-events">
+ *       <h3 class="nx-order-tracking-events-title"/>
+ *       <ol class="nx-order-tracking-events-list" data-nx-reveal="group">
+ *         <li class="nx-order-tracking-event" data-tone="success|warning|info|danger" style="--nx-i">
+ *           <span class="nx-order-tracking-event-node"/>
+ *           <div class="nx-order-tracking-event-body">
+ *             <p class="nx-order-tracking-event-title"/>
+ *             <p class="nx-order-tracking-event-desc"/>
+ *             <p class="nx-order-tracking-event-meta"> <time/> · <span place/> </p>
+ *
+ * The sections rise one after another; then the progress bar draws itself,
+ * segment by segment, up to the current step — whose marker carries a slow
+ * ping ring while the order travels. Event rows slide in from the reading
+ * side, stitched by the tone-coloured connector. Every state is readable
+ * without motion: complete steps are filled green, the current one is
+ * accented and marked aria-current="step", upcoming ones stay muted.
+ */
+@layer nx.components {
+  .nx-order-tracking {
+    --_pad: clamp(1.25rem, 4cqi, 2.25rem);
+    --_node: 2rem;
+
+    container-type: inline-size;
+    display: grid;
+    gap: var(--nx-space-6);
+    padding: var(--_pad);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-xl);
+    background:
+      radial-gradient(52% 34% at 100% 0%, var(--nx-accent-soft), transparent 70%),
+      radial-gradient(34% 24% at 0% 100%, var(--nx-success-soft), transparent 70%),
+      var(--nx-surface);
+    box-shadow: var(--nx-shadow-md);
+  }
+
+  /* ---- Head: the order, its facts and the live badge ---------------------- */
+
+  .nx-order-tracking-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--nx-space-4) var(--nx-space-6);
+  }
+
+  .nx-order-tracking-order { display: grid; gap: 0.25rem; }
+
+  .nx-order-tracking-kicker {
+    color: var(--nx-text-subtle);
+    font: 600 var(--nx-text-xs) / 1 var(--nx-font-sans);
+    letter-spacing: var(--nx-tracking-wider);
+    text-transform: uppercase;
+  }
+
+  :lang(fa) .nx-order-tracking-kicker,
+  :lang(ar) .nx-order-tracking-kicker { letter-spacing: 0; text-transform: none; }
+
+  .nx-order-tracking-number {
+    margin: 0;
+    color: var(--nx-text);
+    font: 800 var(--nx-text-2xl) / 1.15 var(--nx-font-display);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: var(--nx-tracking-tight);
+  }
+
+  .nx-order-tracking-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--nx-space-2) var(--nx-space-6);
+    margin: 0;
+  }
+
+  .nx-order-tracking-fact { display: grid; gap: 0.125rem; }
+
+  .nx-order-tracking-fact dt {
+    color: var(--nx-text-subtle);
+    font: 600 var(--nx-text-xs) / 1.2 var(--nx-font-sans);
+    letter-spacing: var(--nx-tracking-wide);
+  }
+
+  :lang(fa) .nx-order-tracking-fact dt,
+  :lang(ar) .nx-order-tracking-fact dt { letter-spacing: 0; }
+
+  .nx-order-tracking-fact dd {
+    margin: 0;
+    color: var(--nx-text);
+    font: 600 var(--nx-text-sm) / 1.35 var(--nx-font-sans);
+  }
+
+  .nx-order-tracking-status { margin-inline-start: auto; }
+
+  /* ---- Steps: the horizontal progress route -------------------------------- */
+
+  .nx-order-tracking-steps {
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    padding: 0 var(--nx-space-1) var(--nx-space-2);
+    list-style: none;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+  }
+
+  .nx-order-tracking-step {
+    position: relative;
+    flex: 1 1 0;
+    min-inline-size: 6.75rem;
+    display: grid;
+    justify-items: center;
+    gap: var(--nx-space-2);
+    padding-inline: var(--nx-space-1);
+    text-align: center;
+  }
+
+  /* The connector: one segment per step, from this marker's centre to the
+     next one (equal flex shares make the halves meet in the middle). */
+  .nx-order-tracking-step:not(:last-child)::before,
+  .nx-order-tracking-step:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    inset-block-start: calc(1.125rem - 1px);
+    inset-inline-start: 50%;
+    inline-size: 100%;
+    block-size: 2px;
+    border-radius: 1px;
+    background: var(--nx-border);
+  }
+
+  /* The fill draws from the reading side — held back until the block's reveal,
+     then one segment after another (see the reveal rules below). */
+  .nx-order-tracking-step:not(:last-child)::after {
+    background: var(--nx-gradient-brand);
+    scale: 0 1;
+    transform-origin: left;
+    transition: scale var(--nx-spring-soft-duration) var(--nx-spring-soft);
+  }
+
+  .nx-order-tracking-step[data-state="complete"]:not(:last-child)::after { scale: 1 1; }
+
+  :where([dir="rtl"]) .nx-order-tracking-step:not(:last-child)::after { transform-origin: right; }
+
+  .nx-order-tracking-marker {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    border: 2px solid var(--nx-border);
+    border-radius: 50%;
+    background: var(--nx-surface);
+    color: var(--nx-text-muted);
+    font: 700 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    font-variant-numeric: tabular-nums;
+    transition:
+      background-color var(--nx-dur-base) var(--nx-ease-out),
+      border-color var(--nx-dur-base) var(--nx-ease-out),
+      color var(--nx-dur-base) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+
+    .nx-icon { inline-size: 1rem; block-size: 1rem; }
+  }
+
+  .nx-order-tracking-step[data-state="complete"] .nx-order-tracking-marker {
+    border-color: var(--nx-success);
+    background: var(--nx-success-soft);
+    color: var(--nx-success-text);
+  }
+
+  .nx-order-tracking-step[data-state="current"] .nx-order-tracking-marker {
+    border-color: var(--nx-accent);
+    background: var(--nx-accent-soft);
+    color: var(--nx-accent-text);
+    box-shadow: 0 0 0 4px var(--nx-accent-soft);
+    scale: calc(1 + 0.08 * var(--nx-motion));
+  }
+
+  /* The travelling halo: a slow ping around the current marker. Colour and
+     aria-current change with it, so the ring is never the only cue. */
+  .nx-order-tracking-step[data-state="current"] .nx-order-tracking-marker::after {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    border: 2px solid var(--nx-accent);
+    animation: nx-order-tracking-ping 1.8s var(--nx-ease-out) infinite;
+  }
+
+  @keyframes nx-order-tracking-ping {
+    from { scale: 1; opacity: 0.55; }
+    70%, to { scale: calc(1 + 0.5 * var(--nx-motion)); opacity: 0; }
+  }
+
+  .nx-order-tracking-step-text {
+    display: grid;
+    gap: 0.125rem;
+    min-inline-size: 0;
+  }
+
+  .nx-order-tracking-step-title {
+    margin: 0;
+    color: var(--nx-text);
+    font: 600 var(--nx-text-sm) / 1.35 var(--nx-font-sans);
+    overflow-wrap: anywhere;
+  }
+
+  .nx-order-tracking-step[data-state="upcoming"] .nx-order-tracking-step-title { color: var(--nx-text-muted); }
+
+  .nx-order-tracking-step-desc {
+    margin: 0;
+    color: var(--nx-text-subtle);
+    font: 400 var(--nx-text-xs) / 1.5 var(--nx-font-sans);
+  }
+
+  .nx-order-tracking-step-time {
+    color: var(--nx-text-subtle);
+    font: 500 var(--nx-text-xs) / 1.4 var(--nx-font-sans);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nx-order-tracking-step[data-state="current"] .nx-order-tracking-step-time { color: var(--nx-accent-text); }
+
+  /* ---- Events: the vertical route log --------------------------------------- */
+
+  .nx-order-tracking-events { display: grid; gap: var(--nx-space-2); }
+
+  .nx-order-tracking-events-title {
+    margin: 0;
+    color: var(--nx-text-subtle);
+    font: 600 var(--nx-text-xs) / 1 var(--nx-font-sans);
+    letter-spacing: var(--nx-tracking-wider);
+    text-transform: uppercase;
+  }
+
+  :lang(fa) .nx-order-tracking-events-title,
+  :lang(ar) .nx-order-tracking-events-title { letter-spacing: 0; text-transform: none; }
+
+  .nx-order-tracking-events-list {
+    display: grid;
+    gap: var(--nx-space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nx-order-tracking-event {
+    --_tone: var(--nx-text-subtle);
+    --_tone-soft: var(--nx-surface-2);
+
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--_node) minmax(0, 1fr);
+    gap: 0 var(--nx-space-3);
+    align-items: start;
+    padding-block: var(--nx-space-1);
+
+    &[data-tone="success"] { --_tone: var(--nx-success-text); --_tone-soft: var(--nx-success-soft); }
+    &[data-tone="warning"] { --_tone: var(--nx-warning-text); --_tone-soft: var(--nx-warning-soft); }
+    &[data-tone="info"]    { --_tone: var(--nx-info-text);    --_tone-soft: var(--nx-info-soft); }
+    &[data-tone="danger"]  { --_tone: var(--nx-danger-text);  --_tone-soft: var(--nx-danger-soft); }
+
+    /* The connector to the next event, in this event's tone — the last one has none. */
+    &::before {
+      content: "";
+      grid-area: 1 / 1;
+      justify-self: center;
+      inline-size: 2px;
+      block-size: calc(100% - var(--_node));
+      margin-block-start: calc(var(--_node) + var(--nx-space-2) / 2);
+      border-radius: var(--nx-radius-full);
+      background: linear-gradient(to bottom, var(--_tone), color-mix(in oklab, var(--nx-border) 80%, transparent));
+      opacity: 0.55;
+    }
+
+    &:last-child::before { display: none; }
+  }
+
+  .nx-order-tracking-event-node {
+    display: grid;
+    place-items: center;
+    inline-size: var(--_node);
+    block-size: var(--_node);
+    border-radius: var(--nx-radius-sm);
+    background: var(--_tone-soft);
+    color: var(--_tone);
+    transition:
+      background-color var(--nx-dur-base) var(--nx-ease-out),
+      color var(--nx-dur-base) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+
+    .nx-icon { inline-size: 1rem; block-size: 1rem; }
+  }
+
+  .nx-order-tracking-event:is(:hover, :focus-within) .nx-order-tracking-event-node { scale: calc(1 + 0.08 * var(--nx-motion)); }
+
+  .nx-order-tracking-event-body {
+    display: grid;
+    gap: 0.125rem;
+    align-content: center;
+    min-block-size: var(--_node);
+    padding-block-start: 0.125rem;
+  }
+
+  .nx-order-tracking-event-title {
+    margin: 0;
+    color: var(--nx-text);
+    font: 600 var(--nx-text-sm) / 1.45 var(--nx-font-sans);
+    overflow-wrap: anywhere;
+  }
+
+  .nx-order-tracking-event-desc {
+    margin: 0;
+    color: var(--nx-text-muted);
+    font: 400 var(--nx-text-xs) / 1.55 var(--nx-font-sans);
+  }
+
+  .nx-order-tracking-event-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--nx-space-1);
+    margin: 0;
+    color: var(--nx-text-subtle);
+    font: 400 var(--nx-text-xs) / 1.4 var(--nx-font-sans);
+  }
+
+  .nx-order-tracking-event-time { font-variant-numeric: tabular-nums; transition: color var(--nx-dur-fast) var(--nx-ease-out); }
+
+  .nx-order-tracking-event:is(:hover, :focus-within) .nx-order-tracking-event-time { color: var(--nx-text-muted); }
+
+  .nx-order-tracking-event-place { color: var(--nx-text-muted); }
+
+  .nx-order-tracking-empty {
+    padding: var(--nx-space-3);
+    border: 1px dashed var(--nx-border);
+    border-radius: var(--nx-radius-lg);
+    color: var(--nx-text-subtle);
+    font: 400 var(--nx-text-xs) / 1.5 var(--nx-font-sans);
+    text-align: center;
+  }
+
+  /* ---- First reveal: sections rise (the shared group rule), then the
+     progress draws itself one segment at a time ------------------------------ */
+
+  :where(.nx-js) .nx-order-tracking[data-nx-reveal]:not([data-nx-revealed]) .nx-order-tracking-step[data-state="complete"]:not(:last-child)::after {
+    scale: 0 1;
+    transition-delay: calc(min(var(--nx-i, 0), 10) * 60ms + 150ms);
+  }
+
+  :where(.nx-js:not(.nx-live)) .nx-order-tracking[data-nx-reveal]:not([data-nx-revealed]) .nx-order-tracking-step:not(:last-child)::after {
+    animation: nx-reveal-failsafe 1ms 2.5s forwards;
+  }
+
+  /* Event rows arrive from the reading side, one after another. */
+  :where(.nx-js) .nx-order-tracking-events-list[data-nx-reveal]:not([data-nx-revealed]) > .nx-order-tracking-event {
+    translate: calc(14px * var(--nx-dir) * var(--nx-motion)) 0;
+  }
+
+  /* ---- Narrow: the head wraps, the facts sit under the number ---------------- */
+
+  @container (width < 34rem) {
+    .nx-order-tracking-head { display: grid; justify-items: start; }
+    .nx-order-tracking-status { margin-inline-start: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-order-tracking-step:not(:last-child)::after { transition: none; }
+    .nx-order-tracking-step[data-state="current"] .nx-order-tracking-marker { scale: none; }
+    .nx-order-tracking-step[data-state="current"] .nx-order-tracking-marker::after { animation: none; opacity: 0.3; }
+    .nx-order-tracking-event:is(:hover, :focus-within) .nx-order-tracking-event-node { scale: none; }
+  }
+
+  @media (forced-colors: active) {
+    .nx-order-tracking { border: 1px solid CanvasText; }
+    .nx-order-tracking-marker { border: 2px solid CanvasText; }
+    .nx-order-tracking-step:not(:last-child)::before { background: CanvasText; }
+    .nx-order-tracking-step:not(:last-child)::after { background: Highlight; }
+    .nx-order-tracking-event::before { background: CanvasText; }
+    .nx-order-tracking-empty { border: 1px dashed CanvasText; }
+  }
+}

@@ -1,0 +1,620 @@
+/*
+ * Block: file-manager — browse a folder tree, search it, upload into it.
+ *
+ *   <section class="nx-file-manager" data-nx-reveal aria-label style="--nx-fm-height">
+ *     <header class="nx-fm-toolbar">
+ *       <nav class="nx-fm-crumbs" aria-label>                      (buttons .nx-fm-crumb[data-folder], root first)
+ *       <span class="nx-fm-countwrap"><span class="nx-fm-count"><span class="nx-number"/>…</span>
+ *         <span class="nx-visually-hidden"/{{-- the spoken count --}}></span>
+ *       <div class="nx-fm-tools">
+ *         <div class="nx-fm-search" data-query><icon/><input class="nx-fm-search-input"/>
+ *           <button class="nx-fm-clear" hidden/></div>
+ *         <div class="nx-segmented nx-fm-view" role="radiogroup"/>  (grid | list, the stock control)
+ *         <button class="nx-fm-upload"/><input type="file" class="nx-visually-hidden" hidden from tab/></div></header>
+ *     <div class="nx-fm-stage">                                     (the framed well; everything below shares its cell)
+ *       <div class="nx-fm-scroll"><ul class="nx-fm-items" data-view="grid|list">
+ *           <li class="nx-fm-item" data-kind data-parent data-name [hidden] style="--nx-i">
+ *             <button class="nx-fm-card" [data-active] [aria-pressed]>
+ *               <span class="nx-fm-icon" data-kind/><span class="nx-fm-name"/><span class="nx-fm-meta"/></button></li> …</ul>
+ *         <div class="nx-fm-empty" data-variant="folder|results"/></div>
+ *       <div class="nx-fm-scrim" [data-open] aria-hidden/>           (click to dismiss)
+ *       <aside class="nx-fm-drawer" [data-open] role="region"/>      (slides in from the inline end)
+ *     </div></section>
+ *
+ * Folders come first in every listing, names sorted by the reader's collation.
+ * The card answers the pointer with a small lift; the file whose details are
+ * open keeps an accent rim (a colour cue as well as motion). The drawer is a
+ * non-modal panel: it springs in from the inline-end edge over a scrim, Escape
+ * and the scrim close it, and under reduced motion it only fades. Switching
+ * grid/list is a keyboard-frequent action, so it changes no animation at all.
+ */
+@layer nx.components {
+  /* Kind colours: one custom property set, shared by the card and drawer tiles. */
+  .nx-file-manager [data-kind] {
+    --_tone: var(--nx-text-muted);
+    --_tone-soft: color-mix(in oklab, var(--nx-text-muted) 14%, transparent);
+  }
+  .nx-file-manager [data-kind='folder'] { --_tone: var(--nx-gold);    --_tone-soft: var(--nx-gold-soft); }
+  .nx-file-manager [data-kind='image']  { --_tone: var(--nx-info);    --_tone-soft: var(--nx-info-soft); }
+  .nx-file-manager [data-kind='audio']  { --_tone: var(--nx-accent);  --_tone-soft: var(--nx-accent-soft); }
+  .nx-file-manager [data-kind='video']  { --_tone: var(--nx-success); --_tone-soft: var(--nx-success-soft); }
+
+  .nx-file-manager {
+    --nx-fm-height: none;
+    display: grid;
+    gap: var(--nx-space-3);
+  }
+
+  /* ---- Toolbar --------------------------------------------------------------------------- */
+
+  .nx-fm-toolbar {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    flex-wrap: wrap;
+    padding-inline: var(--nx-space-1);
+  }
+
+  .nx-fm-crumbs {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-1);
+    flex: 1 1 11rem;
+    min-inline-size: 0;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+
+  .nx-fm-crumb {
+    display: inline-flex;
+    align-items: center;
+    flex: none;
+    min-block-size: 1.75rem;
+    padding: var(--nx-space-1) var(--nx-space-2);
+    border: 0;
+    border-radius: var(--nx-radius-md);
+    background: transparent;
+    color: var(--nx-text-muted);
+    font: 500 var(--nx-text-xs) / 1.2 var(--nx-font-sans);
+    cursor: pointer;
+    transition-property: scale, background-color, color;
+    transition-duration: var(--nx-spring-snappy-duration), var(--nx-dur-fast), var(--nx-dur-fast);
+    transition-timing-function: var(--nx-spring-snappy), var(--nx-ease-out), var(--nx-ease-out);
+
+    > .nx-icon { flex: none; inline-size: 0.9rem; block-size: 0.9rem; color: var(--nx-text-subtle); }
+    > span {
+      min-inline-size: 0;
+      max-inline-size: 11rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    &:hover { background: var(--nx-surface-3); color: var(--nx-text); }
+    &:active:not([data-static]) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 1px; }
+    &[aria-current='page'] { background: var(--nx-surface-3); color: var(--nx-text); font-weight: 600; }
+  }
+
+  /* The separator between crumbs: a masked chevron that follows the reading direction. */
+  .nx-fm-crumb:not(:first-child)::before {
+    content: '';
+    flex: none;
+    inline-size: 0.8rem;
+    block-size: 0.8rem;
+    margin-inline-end: var(--nx-space-1);
+    background: currentColor;
+    color: var(--nx-text-subtle);
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l6 6-6 6'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+
+  :where([dir='rtl']) .nx-fm-crumb:not(:first-child)::before { rotate: 180deg; }
+
+  .nx-fm-countwrap { display: inline-flex; flex: none; align-items: center; }
+
+  .nx-fm-count {
+    display: inline-grid;
+    place-items: center;
+    min-inline-size: 1.625rem;
+    block-size: 1.375rem;
+    padding-inline: var(--nx-space-2);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface-2);
+    color: var(--nx-text-muted);
+    font: 600 var(--nx-text-xs) / 1 var(--nx-font-sans);
+    font-variant-numeric: tabular-nums;
+
+    .nx-number { font-size: inherit; }
+  }
+
+  .nx-fm-tools {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    flex-wrap: wrap;
+    margin-inline-start: auto;
+  }
+
+  .nx-fm-search {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    flex: 1 1 9rem;
+    max-inline-size: 17rem;
+    min-block-size: 2.25rem;
+    padding-inline: var(--nx-space-3);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface);
+    transition:
+      border-color var(--nx-dur-fast) var(--nx-ease-out),
+      box-shadow var(--nx-dur-fast) var(--nx-ease-out);
+
+    > .nx-icon { flex: none; inline-size: 1rem; block-size: 1rem; color: var(--nx-text-subtle); }
+    &:focus-within {
+      border-color: var(--nx-border-strong);
+      box-shadow: 0 0 0 3px color-mix(in oklab, var(--nx-accent) 16%, transparent);
+    }
+  }
+
+  .nx-fm-search-input {
+    min-inline-size: 0;
+    flex: 1;
+    border: 0;
+    background: transparent;
+    color: var(--nx-text);
+    font: 400 var(--nx-text-sm) / 1.4 var(--nx-font-sans);
+
+    &::placeholder { color: var(--nx-text-subtle); }
+    /* The wrapper carries the focus ring; the native search cancel is ours. */
+    &:focus-visible { outline: none; }
+    &::-webkit-search-cancel-button { display: none; }
+  }
+
+  .nx-fm-clear {
+    flex: none;
+    display: grid;
+    place-items: center;
+    inline-size: 1.25rem;
+    block-size: 1.25rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--nx-radius-sm);
+    background: transparent;
+    color: var(--nx-text-subtle);
+    cursor: pointer;
+    transition-property: scale, background-color, color;
+    transition-duration: var(--nx-spring-snappy-duration), var(--nx-dur-fast), var(--nx-dur-fast);
+    transition-timing-function: var(--nx-spring-snappy), var(--nx-ease-out), var(--nx-ease-out);
+
+    > .nx-icon { inline-size: 0.85rem; block-size: 0.85rem; }
+    &:hover { background: var(--nx-surface-3); color: var(--nx-text); }
+    &:active:not([data-static]) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 1px; }
+  }
+
+  .nx-fm-upload {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-space-2);
+    flex: none;
+    min-block-size: 2.25rem;
+    padding-inline: var(--nx-space-3);
+    border: 0;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-accent);
+    color: var(--nx-accent-contrast);
+    font: 600 var(--nx-text-xs) / 1 var(--nx-font-sans);
+    letter-spacing: var(--nx-tracking-tight);
+    cursor: pointer;
+    transition-property: scale, background-color;
+    transition-duration: var(--nx-spring-snappy-duration), var(--nx-dur-fast);
+    transition-timing-function: var(--nx-spring-snappy), var(--nx-ease-out);
+
+    > .nx-icon { inline-size: 0.9rem; block-size: 0.9rem; }
+    &:hover { background: color-mix(in oklab, var(--nx-accent) 88%, var(--nx-text)); }
+    &:active:not([data-static]) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+  }
+
+  /* ---- The framed well: the listing, the scrim and the drawer share one grid cell ---------- */
+
+  .nx-fm-stage {
+    display: grid;
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-xl);
+    background: var(--nx-surface-2);
+    box-shadow: var(--nx-shadow-xs);
+  }
+
+  .nx-fm-scroll {
+    grid-area: 1 / 1;
+    block-size: var(--nx-fm-height, auto);
+    overflow-block: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+
+  .nx-fm-items {
+    display: grid;
+    gap: var(--nx-space-2);
+    align-content: start;
+    margin: 0;
+    padding: var(--nx-space-3);
+    list-style: none;
+    grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  }
+
+  /* List view: one column of rows — the same markup, rearranged. */
+  .nx-fm-items[data-view='list'] {
+    gap: var(--nx-space-1);
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .nx-fm-item {
+    min-inline-size: 0;
+    transition:
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      opacity var(--nx-dur-base) var(--nx-ease-out);
+    /* One delay per property above: each entry waits its turn in the first-reveal stagger. */
+    transition-delay:
+      calc(min(var(--nx-i, 0), 12) * 40ms),
+      calc(min(var(--nx-i, 0), 12) * 40ms);
+  }
+  .nx-fm-item[hidden],
+  .nx-fm-empty[hidden],
+  .nx-fm-crumb[hidden],
+  .nx-fm-clear[hidden] { display: none; }
+
+  /* ---- Cards ------------------------------------------------------------------------------ */
+
+  .nx-fm-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--nx-space-2);
+    inline-size: 100%;
+    min-block-size: 0;
+    padding: var(--nx-space-4) var(--nx-space-3);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    text-align: center;
+    box-shadow: var(--nx-shadow-xs);
+    cursor: pointer;
+    transition:
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+      opacity var(--nx-dur-base) var(--nx-ease-out),
+      border-color var(--nx-dur-fast) var(--nx-ease-out),
+      box-shadow var(--nx-dur-fast) var(--nx-ease-out);
+    /* One delay per property above: the reveal properties (translate, opacity)
+       wait their turn in the first-reveal stagger; press and hover stay immediate. */
+    transition-delay:
+      calc(min(var(--nx-i, 0), 12) * 40ms),
+      0ms,
+      calc(min(var(--nx-i, 0), 12) * 40ms),
+      0ms,
+      0ms;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .nx-fm-card:hover {
+      border-color: var(--nx-border-strong);
+      box-shadow: var(--nx-shadow-sm);
+      translate: 0 calc(-2px * var(--nx-motion));
+      transition-delay: 0ms;
+    }
+  }
+
+  .nx-fm-card:active:not([data-static]) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+  .nx-fm-card:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+
+  /* The entry whose details are open: an accent rim — a state, not just motion. */
+  .nx-fm-card[data-active] {
+    border-color: color-mix(in oklab, var(--nx-accent) 55%, var(--nx-border));
+    box-shadow: var(--nx-shadow-xs), inset 0 0 0 1px color-mix(in oklab, var(--nx-accent) 30%, transparent);
+  }
+
+  .nx-fm-icon {
+    flex: none;
+    display: grid;
+    place-items: center;
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
+    border-radius: var(--nx-radius-md);
+    background: var(--_tone-soft);
+    color: var(--_tone);
+
+    > .nx-icon, > svg { inline-size: 1.25rem; block-size: 1.25rem; }
+  }
+
+  .nx-fm-name {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    font: 500 var(--nx-text-sm) / 1.4 var(--nx-font-sans);
+  }
+
+  .nx-fm-meta {
+    color: var(--nx-text-subtle);
+    font: 400 var(--nx-text-xs) / 1.4 var(--nx-font-sans);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* List view: a quiet row that answers the pointer with a surface, not a lift. */
+  .nx-fm-items[data-view='list'] .nx-fm-card {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--nx-space-3);
+    padding: var(--nx-space-2) var(--nx-space-3);
+    border-color: transparent;
+    border-radius: var(--nx-radius-md);
+    background: transparent;
+    text-align: start;
+    box-shadow: none;
+  }
+
+  .nx-fm-items[data-view='list'] .nx-fm-card:hover {
+    border-color: var(--nx-border);
+    background: var(--nx-surface);
+    box-shadow: none;
+  }
+
+  .nx-fm-items[data-view='list'] .nx-fm-card[data-active] {
+    border-color: color-mix(in oklab, var(--nx-accent) 55%, var(--nx-border));
+    background: var(--nx-surface);
+  }
+
+  .nx-fm-items[data-view='list'] .nx-fm-icon {
+    inline-size: 2rem;
+    block-size: 2rem;
+    border-radius: var(--nx-radius-sm);
+  }
+
+  .nx-fm-items[data-view='list'] .nx-fm-name {
+    display: block;
+    flex: 1;
+    min-inline-size: 0;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .nx-fm-items[data-view='list'] .nx-fm-meta { flex: none; white-space: nowrap; }
+
+  /* ---- Empty states ------------------------------------------------------------------------ */
+
+  .nx-fm-empty {
+    display: grid;
+    place-items: center;
+    margin: 0 var(--nx-space-3) var(--nx-space-3);
+    padding: var(--nx-space-8) var(--nx-space-4);
+    border: 1px dashed var(--nx-border);
+    border-radius: var(--nx-radius-lg);
+    color: var(--nx-text-subtle);
+    font: 400 var(--nx-text-xs) / 1.5 var(--nx-font-sans);
+    text-align: center;
+  }
+
+  /* ---- The details drawer -------------------------------------------------------------------- */
+
+  .nx-fm-scrim {
+    grid-area: 1 / 1;
+    z-index: 1;
+    border: 0;
+    padding: 0;
+    background: color-mix(in oklab, var(--nx-bg) 55%, transparent);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      opacity var(--nx-dur-base) var(--nx-ease-out),
+      visibility 0s linear var(--nx-dur-base);
+  }
+
+  .nx-fm-scrim[data-open] {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition-delay: 0s;
+  }
+
+  .nx-fm-drawer {
+    grid-area: 1 / 1;
+    z-index: 2;
+    justify-self: end;
+    display: flex;
+    flex-direction: column;
+    inline-size: min(21rem, 100%);
+    border: 1px solid var(--nx-border);
+    border-start-start-radius: var(--nx-radius-xl);
+    border-end-start-radius: var(--nx-radius-xl);
+    background: var(--nx-surface);
+    box-shadow: var(--nx-shadow-xl), inset 0 1px 0 var(--nx-highlight);
+    /* Parked past the inline-end edge; --nx-dir flips the side in RTL. */
+    translate: calc(100% * var(--nx-dir)) 0;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      opacity var(--nx-dur-base) var(--nx-ease-out),
+      visibility 0s linear var(--nx-spring-gentle-duration);
+  }
+
+  .nx-fm-drawer[data-open] {
+    translate: 0;
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition-delay: 0s;
+  }
+
+  .nx-fm-drawer-head {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-3);
+    padding: var(--nx-space-4);
+    border-block-end: 1px solid var(--nx-border);
+  }
+
+  .nx-fm-drawer-id {
+    display: grid;
+    gap: var(--nx-space-1);
+    flex: 1;
+    min-inline-size: 0;
+  }
+
+  .nx-fm-drawer-title {
+    margin: 0;
+    overflow-wrap: anywhere;
+    color: var(--nx-text);
+    font: 600 var(--nx-text-sm) / 1.35 var(--nx-font-sans);
+    letter-spacing: var(--nx-tracking-tight);
+  }
+
+  .nx-fm-drawer-kind {
+    margin: 0;
+    color: var(--nx-text-subtle);
+    font: 400 var(--nx-text-xs) / 1.3 var(--nx-font-sans);
+  }
+
+  .nx-fm-drawer-close {
+    flex: none;
+    display: grid;
+    place-items: center;
+    inline-size: 1.5rem;
+    block-size: 1.5rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--nx-radius-sm);
+    background: transparent;
+    color: var(--nx-text-subtle);
+    cursor: pointer;
+    transition-property: scale, background-color, color;
+    transition-duration: var(--nx-spring-snappy-duration), var(--nx-dur-fast), var(--nx-dur-fast);
+    transition-timing-function: var(--nx-spring-snappy), var(--nx-ease-out), var(--nx-ease-out);
+
+    > .nx-icon { inline-size: 1rem; block-size: 1rem; }
+    &:hover { background: var(--nx-surface-3); color: var(--nx-text); }
+    &:active:not([data-static]) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 1px; }
+  }
+
+  .nx-fm-drawer-body {
+    display: grid;
+    gap: var(--nx-space-4);
+    align-content: start;
+    padding: var(--nx-space-4);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+
+  .nx-fm-drawer-preview {
+    margin: 0;
+    border-radius: var(--nx-radius-lg);
+    overflow: clip;
+
+    & img {
+      display: block;
+      inline-size: 100%;
+      block-size: 11rem;
+      object-fit: cover;
+      outline: 1px solid color-mix(in oklab, currentColor 10%, transparent);
+      outline-offset: -1px;
+    }
+  }
+
+  .nx-fm-drawer-preview[hidden],
+  .nx-fm-drawer-open[hidden] { display: none; }
+
+  .nx-fm-drawer-rows { display: grid; margin: 0; }
+
+  .nx-fm-drawer-rows > div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--nx-space-3);
+    padding-block: var(--nx-space-2);
+    border-block-end: 1px solid var(--nx-border);
+  }
+
+  .nx-fm-drawer-rows > div:last-child { border-block-end: 0; }
+
+  .nx-fm-drawer-rows dt {
+    flex: none;
+    color: var(--nx-text-subtle);
+    font: 400 var(--nx-text-xs) / 1.5 var(--nx-font-sans);
+  }
+
+  .nx-fm-drawer-rows dd {
+    margin: 0;
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+    text-align: end;
+    color: var(--nx-text);
+    font: 500 var(--nx-text-sm) / 1.5 var(--nx-font-sans);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nx-fm-drawer-open {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-space-2);
+    min-block-size: 2.25rem;
+    padding-inline: var(--nx-space-3);
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-accent);
+    color: var(--nx-accent-contrast);
+    font: 600 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    text-decoration: none;
+    cursor: pointer;
+    transition-property: scale, background-color;
+    transition-duration: var(--nx-spring-snappy-duration), var(--nx-dur-fast);
+    transition-timing-function: var(--nx-spring-snappy), var(--nx-ease-out);
+
+    > .nx-icon { inline-size: 1rem; block-size: 1rem; }
+    &:hover { background: color-mix(in oklab, var(--nx-accent) 88%, var(--nx-text)); }
+    &:active:not([data-static]) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+  }
+
+  /* ---- First reveal: the entries rise in, staggered ------------------------------------------- */
+
+  :where(.nx-js) .nx-file-manager[data-nx-reveal]:not([data-nx-revealed]) .nx-fm-item {
+    opacity: 0;
+    translate: 0 calc(8px * var(--nx-motion));
+  }
+
+  :where(.nx-js:not(.nx-live)) .nx-file-manager[data-nx-reveal]:not([data-nx-revealed]) .nx-fm-item {
+    animation: nx-reveal-failsafe 1ms 2.5s forwards;
+  }
+
+  .nx-file-manager[data-nx-revealed] .nx-fm-item,
+  .nx-file-manager:not([data-nx-reveal]) .nx-fm-item { opacity: 1; translate: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    /* The drawer keeps its place and only fades; the listing settles instantly. */
+    .nx-fm-drawer {
+      translate: none;
+      transition: opacity 150ms var(--nx-ease-out), visibility 0s linear 150ms;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .nx-fm-stage { border: 1px solid CanvasText; }
+    .nx-fm-card { border: 1px solid CanvasText; }
+    .nx-fm-items[data-view='list'] .nx-fm-card { border-color: CanvasText; }
+    .nx-fm-empty { border: 1px dashed CanvasText; }
+    .nx-fm-drawer { border: 1px solid CanvasText; }
+    .nx-fm-scrim { background: Canvas; }
+  }
+}

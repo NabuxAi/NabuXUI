@@ -1,0 +1,298 @@
+/*
+ * Block: tree-view — a collapsible tree (role=tree) with full keyboard
+ * support and a roving tab stop.
+ *
+ *   <ul class="nx-tree-view" role="tree" aria-label>
+ *     <li class="nx-tree-view-item" role="treeitem" data-id tabindex="-1|0"
+ *         aria-level aria-setsize aria-posinset [aria-expanded] [aria-selected] style="--nx-i">
+ *       <div class="nx-tree-view-row">                    (click: the twist zone folds, the rest selects)
+ *         <span class="nx-tree-view-twist" [data-leaf] aria-hidden/>   (chevron; a dot on leaves)
+ *         <span class="nx-tree-view-icon"/>               (optional, from the node)
+ *         <span class="nx-tree-view-label" id/>
+ *         <span class="nx-tree-view-meta"/>
+ *         <span class="nx-tree-view-count"><span class="nx-number"/></span>
+ *         <span class="nx-visually-hidden">{count} children</span>
+ *       </div>
+ *       <div class="nx-tree-view-group">                  (the 0fr/1fr fold)
+ *         <ul class="nx-tree-view-group-list" role="group" aria-labelledby>…items…</ul>
+ *       </div>
+ *     </li> … </ul>
+ *
+ * The ARIA treeview pattern: one tab stop per tree, arrows walk the visible
+ * items (↑/↓), →/← expand and collapse (swapped in RTL), Home/End jump to the
+ * ends, Enter selects, Space folds a parent. Selection is aria-selected on the
+ * treeitem; expansion is aria-expanded. Groups fold with the grid-rows 0fr→1fr
+ * trick while `visibility` rides the same transition, so collapsed children
+ * leave the tab order and the accessibility tree once the fold has run. Each
+ * time a group opens its children rise in with a short stagger; the fold is a
+ * state change, so the chevron turns and the label colour moves with it —
+ * motion is never the only cue. Without JS every group stays open (the fold is
+ * gated on .nx-js), so the tree still reads.
+ */
+@layer nx.components {
+  /* Tone colours: one custom property set, used by the node icon. */
+  .nx-tree-view [data-tone] {
+    --_tone: var(--nx-accent);
+  }
+  .nx-tree-view [data-tone='success'] { --_tone: var(--nx-success); }
+  .nx-tree-view [data-tone='warning'] { --_tone: var(--nx-warning); }
+  .nx-tree-view [data-tone='danger']  { --_tone: var(--nx-danger); }
+  .nx-tree-view [data-tone='info']    { --_tone: var(--nx-info); }
+  .nx-tree-view [data-tone='gold']    { --_tone: var(--nx-gold); }
+
+  .nx-tree-view {
+    --nx-tree-view-indent: 1.25rem;
+    display: grid;
+    gap: var(--nx-space-1);
+    align-content: start;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--nx-text);
+  }
+
+  /* One node: the li carries the ARIA state, the row carries the look. */
+  .nx-tree-view-item {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    /* Children rise in with a short stagger each time their group opens;
+       translate waits its turn, opacity never blocks the fold itself. */
+    transition:
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      opacity var(--nx-dur-base) var(--nx-ease-out);
+    transition-delay: calc(min(var(--nx-i, 0), 12) * var(--nx-stagger)), 0ms;
+  }
+
+  .nx-tree-view-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    min-block-size: 2.125rem;
+    padding-inline: var(--nx-space-2);
+    border: 1px solid transparent;
+    border-radius: var(--nx-radius-md);
+    color: var(--nx-text);
+    font: 500 var(--nx-text-sm) / 1.3 var(--nx-font-sans);
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    transition-property: background-color, color, border-color, scale;
+    transition-duration: var(--nx-dur-fast), var(--nx-dur-fast), var(--nx-dur-fast), var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-ease-out), var(--nx-ease-out), var(--nx-ease-out), var(--nx-spring-snappy);
+  }
+
+  /* Colour-only hover may stay global; the lift-free look suits a dense list. */
+  .nx-tree-view-row:hover {
+    background: var(--nx-surface-2);
+    border-color: var(--nx-border);
+  }
+
+  .nx-tree-view-item:not([data-static]) > .nx-tree-view-row:active {
+    scale: calc(1 - 0.04 * var(--nx-motion));
+  }
+
+  .nx-tree-view-item:focus-visible > .nx-tree-view-row {
+    outline: 2px solid var(--nx-ring);
+    outline-offset: -2px;
+  }
+
+  /* Selected: an accent wash plus an inline-start marker — colour and shape,
+     never motion alone. */
+  .nx-tree-view-item[aria-selected='true'] > .nx-tree-view-row {
+    background: var(--nx-accent-soft);
+    border-color: var(--nx-accent-border, var(--nx-accent));
+    color: var(--nx-accent-text);
+  }
+
+  .nx-tree-view-item[aria-selected='true'] > .nx-tree-view-row::after {
+    content: '';
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block: 22%;
+    inline-size: 2px;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-accent);
+  }
+
+  /* ---- The twist: chevron on parents, a dot on leaves ---------------------------------- */
+
+  .nx-tree-view-twist {
+    flex: none;
+    display: grid;
+    place-items: center;
+    inline-size: 1.25rem;
+    block-size: 1.25rem;
+    /* Pull the chevron into the row padding so parent and leaf labels align. */
+    margin-inline-start: calc(-0.5rem);
+    color: var(--nx-text-subtle);
+    /* chevron-right points inline-end in LTR; mirror it in RTL, and let the
+       open turn follow the same sign (--nx-dir applies before the mirror). */
+    scale: var(--nx-dir, 1) 1;
+    transition-property: rotate, color;
+    transition-duration: var(--nx-spring-snappy-duration), var(--nx-dur-fast);
+    transition-timing-function: var(--nx-spring-snappy), var(--nx-ease-out);
+
+    > svg { inline-size: 0.875rem; block-size: 0.875rem; }
+  }
+
+  .nx-tree-view-row:hover .nx-tree-view-twist { color: var(--nx-text); }
+
+  .nx-tree-view-item[aria-expanded='true'] > .nx-tree-view-row > .nx-tree-view-twist {
+    rotate: calc(90deg * var(--nx-dir, 1));
+    color: var(--nx-text);
+  }
+
+  .nx-tree-view-twist[data-leaf]::before {
+    content: '';
+    inline-size: 0.25rem;
+    block-size: 0.25rem;
+    border-radius: 50%;
+    background: var(--nx-border-strong);
+  }
+
+  /* ---- Label, meta and the child count -------------------------------------------------- */
+
+  .nx-tree-view-icon {
+    flex: none;
+    display: grid;
+    color: var(--_tone, var(--nx-text-subtle));
+
+    > .nx-icon { inline-size: 1rem; block-size: 1rem; }
+  }
+
+  .nx-tree-view-item[aria-selected='true'] > .nx-tree-view-row .nx-tree-view-icon {
+    color: inherit;
+  }
+
+  .nx-tree-view-label {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .nx-tree-view-meta {
+    flex: none;
+    max-inline-size: 45%;
+    overflow: hidden;
+    color: var(--nx-text-subtle);
+    font: 400 var(--nx-text-xs) / 1.3 var(--nx-font-sans);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .nx-tree-view-count {
+    flex: none;
+    display: inline-grid;
+    place-items: center;
+    min-inline-size: 1.5rem;
+    block-size: 1.25rem;
+    padding-inline: var(--nx-space-2);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface-2);
+    color: var(--nx-text-subtle);
+    font: 600 var(--nx-text-xs) / 1 var(--nx-font-sans);
+    font-variant-numeric: tabular-nums;
+
+    .nx-number { font-size: inherit; }
+  }
+
+  .nx-tree-view-item[aria-selected='true'] > .nx-tree-view-row .nx-tree-view-count {
+    background: color-mix(in oklab, var(--nx-accent) 14%, transparent);
+    color: var(--nx-accent-text);
+  }
+
+  /* ---- The fold ---------------------------------------------------------------------------- */
+
+  /* Open by default so the tree reads without JS; under .nx-js the state on the
+     treeitem decides. `visibility` shares the fold's transition: it flips to
+     visible at once when opening and to hidden when the fold has closed, which
+     is what keeps collapsed children out of the tab order. */
+  .nx-tree-view-group {
+    display: grid;
+    grid-template-rows: 1fr;
+    opacity: 1;
+    visibility: visible;
+    transition:
+      grid-template-rows var(--nx-dur-base) var(--nx-ease-out),
+      opacity var(--nx-dur-fast) var(--nx-ease-out),
+      visibility var(--nx-dur-base) linear;
+  }
+
+  :where(.nx-js) .nx-tree-view-item[aria-expanded='false'] > .nx-tree-view-group {
+    grid-template-rows: 0fr;
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .nx-tree-view-group-list {
+    display: grid;
+    gap: var(--nx-space-1);
+    align-content: start;
+    min-block-size: 0;
+    margin: 0;
+    /* One guide line per level: the group hangs one indent in from its item. */
+    margin-inline-start: var(--nx-tree-view-indent);
+    padding-block-start: var(--nx-space-1);
+    border-inline-start: 1px solid var(--nx-border);
+    list-style: none;
+    overflow: clip;
+  }
+
+  /* Children wait inside a closed group as a stagger-to-come; closing drops
+     the delay so the fold never trails behind. */
+  :where(.nx-js) .nx-tree-view-item[aria-expanded='false'] .nx-tree-view-item {
+    opacity: 0;
+    translate: 0 calc(6px * var(--nx-motion));
+    transition-delay: 0ms, 0ms;
+  }
+
+  /* ---- Empty tree ---------------------------------------------------------------------------- */
+
+  .nx-tree-view-empty {
+    padding: var(--nx-space-3);
+    border: 1px dashed var(--nx-border);
+    border-radius: var(--nx-radius-md);
+    color: var(--nx-text-subtle);
+    font: 400 var(--nx-text-xs) / 1.5 var(--nx-font-sans);
+    text-align: center;
+  }
+
+  /* ---- Reduced motion: state changes stay, travel goes --------------------------------------- */
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-tree-view-item {
+      transition: opacity var(--nx-dur-fast) var(--nx-ease-out);
+      transition-delay: 0ms;
+    }
+
+    :where(.nx-js) .nx-tree-view-item[aria-expanded='false'] .nx-tree-view-item {
+      translate: none;
+    }
+
+    .nx-tree-view-group {
+      transition:
+        opacity var(--nx-dur-fast) var(--nx-ease-out),
+        visibility 0ms;
+    }
+
+    .nx-tree-view-twist {
+      transition-duration: var(--nx-dur-fast), var(--nx-dur-fast);
+      transition-timing-function: var(--nx-ease-out), var(--nx-ease-out);
+    }
+
+    .nx-tree-view-row:active { scale: 1; }
+  }
+
+  @media (forced-colors: active) {
+    .nx-tree-view-row { border: 1px solid CanvasText; }
+    .nx-tree-view-item[aria-selected='true'] > .nx-tree-view-row { border: 1px solid Highlight; }
+    .nx-tree-view-group-list { border-inline-start: 1px solid CanvasText; }
+    .nx-tree-view-twist[data-leaf]::before { background: CanvasText; }
+    .nx-tree-view-empty { border: 1px dashed CanvasText; }
+  }
+}

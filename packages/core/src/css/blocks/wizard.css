@@ -1,0 +1,397 @@
+/*
+ * Block: wizard — a multi-step form shell on top of the existing steps.
+ *
+ *   <form class="nx-wizard" data-nx-reveal novalidate aria-labelledby>
+ *     <header class="nx-wizard-head">
+ *       <div><h2 class="nx-wizard-title"/><p class="nx-wizard-subtitle"/></div>
+ *       <span class="nx-wizard-count"><span class="nx-number">…</span> <span class="nx-wizard-count-sep">of</span> <span class="nx-number">…</span></span>
+ *     </header>
+ *     <div class="nx-wizard-progress" role="progressbar">           ← fill width = --nx-wizard-p %
+ *       <span class="nx-wizard-progress-track"><span class="nx-wizard-progress-fill"/></span>
+ *     </div>
+ *     <ol class="nx-steps nx-wizard-steps">                          ← the shared steps look
+ *       <li class="nx-step" data-status aria-current="step">
+ *         <button class="nx-wizard-step-jump" type="button" [disabled]>   ← enabled on completed steps only
+ *           <span class="nx-step-marker"/><span class="nx-step-text">…</span></button></li> …
+ *     </ol>
+ *     <div class="nx-wizard-viewport">                              ← height morphs (core morphShell → --nx-morph-h)
+ *       <div class="nx-wizard-measure">
+ *         <fieldset class="nx-wizard-pane" data-pos="before|current|after" [disabled] [data-invalid]>
+ *           <legend class="nx-visually-hidden"/>…fields…</fieldset> …
+ *         <fieldset class="nx-wizard-pane" data-pane="review" data-pos="after">   ← the summary
+ *           <dl class="nx-wizard-summary">
+ *             <div class="nx-wizard-summary-group">
+ *               <div class="nx-wizard-summary-head"><dt class="nx-wizard-summary-step"/>
+ *                 <button class="nx-wizard-summary-edit"/></div>
+ *               <div class="nx-wizard-summary-row"><span class="nx-wizard-summary-label"/>
+ *                 <dd class="nx-wizard-summary-value" [data-empty]/></div> …
+ *   <footer class="nx-wizard-foot">
+ *     <button class="nx-wizard-back" data-off="on|off"/>        ← held in place, invisible on step one
+ *     <p class="nx-wizard-error" [data-invalid]/>                   ← colour + icon + shake, never motion alone
+ *     <button class="nx-wizard-next" type="submit"><span class="nx-wizard-next-labels">…</span></button>
+ *
+ * The panes share one viewport whose height morphs per step; the pane that
+ * leaves glides toward the reading start and the arriving one springs in from
+ * the end — reversed when going back, mirrored in RTL by --nx-dir. The non-
+ * current panes are disabled fieldsets, so the form's own constraint
+ * validation only ever judges the step in front of you. A failed "next" shakes
+ * the pane, lights the footer error and focuses the first bad field. The last
+ * pane is the review: the answers so far as a summary, grouped per step, each
+ * group with an "edit" jump back. The next/submit labels cross-fade in place
+ * so the footer never jumps while the words change.
+ */
+@layer nx.components {
+  .nx-wizard {
+    display: grid;
+    gap: var(--nx-space-6);
+    inline-size: min(100%, var(--nx-wizard-width, 44rem));
+    margin: 0;
+    padding: var(--nx-space-8);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-2xl);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    box-shadow: var(--nx-shadow-lg), inset 0 1px 0 var(--nx-highlight);
+  }
+
+  @media (max-width: 32rem) {
+    .nx-wizard { gap: var(--nx-space-5); padding: var(--nx-space-6) var(--nx-space-5); }
+  }
+
+  /* ---- Head: title, subtitle, and the "2 of 3" chip ------------------------------------ */
+
+  .nx-wizard-head {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: var(--nx-space-4);
+  }
+
+  .nx-wizard-title {
+    margin: 0;
+    font: 700 var(--nx-text-xl) / 1.25 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tight);
+  }
+
+  .nx-wizard-subtitle {
+    margin: 0;
+    margin-block-start: var(--nx-space-1);
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+    line-height: 1.65;
+    text-wrap: pretty;
+  }
+
+  .nx-wizard-count {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: var(--nx-space-1);
+    padding: var(--nx-space-1) var(--nx-space-3);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface-2);
+    color: var(--nx-text-muted);
+    font: 600 var(--nx-text-xs) / 1.4 var(--nx-font-sans);
+    font-variant-numeric: tabular-nums;
+
+    .nx-number { font-size: inherit; }
+  }
+
+  .nx-wizard-count-sep { color: var(--nx-text-subtle); }
+
+  /* ---- The progress track ---------------------------------------------------------------- */
+
+  .nx-wizard-progress { display: grid; }
+
+  .nx-wizard-progress-track {
+    position: relative;
+    display: block;
+    block-size: 0.375rem;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface-3);
+    box-shadow: inset 0 0 0 1px var(--nx-border);
+    overflow: clip;
+  }
+
+  /* The fill grows from the reading start; a size change, kept small and spring-set. */
+  .nx-wizard-progress-fill {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    inline-size: calc(var(--nx-wizard-p, 0) * 1%);
+    border-radius: inherit;
+    background: var(--nx-gradient-brand);
+    transition: inline-size var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+  }
+
+  /* ---- The steps bar: the shared nx-steps look, completed steps become jumps --------------- */
+
+  .nx-wizard-steps { margin-block: calc(-1 * var(--nx-space-2)) 0; }
+
+  /* The Blade flavour keeps every marker's check in the DOM (morph-stable);
+     the status decides which face shows — the tick when complete, the step's
+     number (the shared counter) until then. */
+  .nx-wizard-steps .nx-step-marker > .nx-icon { display: none; }
+  .nx-wizard-steps .nx-step[data-status='complete'] .nx-step-marker > .nx-icon { display: block; }
+  .nx-wizard-steps .nx-step:not([data-status='complete']) .nx-step-marker::before { content: counter(nx-step); }
+
+  .nx-wizard-step-jump {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--nx-space-3);
+    min-inline-size: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    cursor: default;
+    transition-property: scale;
+    transition-duration: var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-spring-snappy);
+
+    /* Only a completed step is a jump; the others are the plain steps listing. */
+    &:is(:enabled) { cursor: pointer; }
+    &:is(:enabled):active:not([data-static]) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:is(:enabled):focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; border-radius: var(--nx-radius-md); }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .nx-wizard-step-jump:is(:enabled):hover .nx-step-title { color: var(--nx-accent-text); }
+  }
+
+  @media (max-width: 36rem) {
+    /* Tight screens keep the markers and titles; the descriptions can wait. */
+    .nx-wizard-steps .nx-step-description { display: none; }
+    .nx-wizard-steps .nx-step-text { padding-block-start: 0.35rem; }
+  }
+
+  /* ---- The panes: one viewport, a morphing height, a slide per hop ------------------------ */
+
+  .nx-wizard-viewport {
+    position: relative;
+    block-size: var(--nx-morph-h, auto);
+    overflow: clip;
+    transition: block-size var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+
+    &:is(:not([data-nx-morph]), [data-nx-morph='init']) { transition: none; }
+  }
+
+  .nx-wizard-measure {
+    position: relative;
+    display: grid;
+  }
+
+  .nx-wizard-pane {
+    display: grid;
+    gap: var(--nx-space-4);
+    min-inline-size: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    translate: 0 0;
+    transition:
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      opacity var(--nx-dur-base) var(--nx-ease-out) 60ms,
+      visibility 0s;
+
+    /* Panes before the current one wait toward the reading start, the ones after
+       it toward the end — going forward slides the old pane out to the start and
+       the new one in from the end, and back reverses it. Disabled fieldsets also
+       keep their controls out of the tab order and the final POST's way. */
+    &:not([data-pos='current']) {
+      position: absolute;
+      inset-block-start: 0;
+      inset-inline: 0;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition:
+        translate 200ms var(--nx-ease-in),
+        opacity 150ms var(--nx-ease-in),
+        visibility 0s linear 200ms;
+    }
+
+    &[data-pos='before'] { translate: calc(-22% * var(--nx-dir) * var(--nx-motion)) 0; }
+    &[data-pos='after'] { translate: calc(22% * var(--nx-dir) * var(--nx-motion)) 0; }
+
+    > legend {
+      position: absolute;
+      inline-size: 1px;
+      block-size: 1px;
+      overflow: clip;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+  }
+
+  /* A refused hop: the pane shakes toward the reading start and back — small,
+     once, and never the only cue (the error line and field messages light up too). */
+  .nx-wizard-pane[data-invalid] { animation: nx-wizard-refuse 320ms var(--nx-ease-out); }
+
+  @keyframes nx-wizard-refuse {
+    20% { translate: calc(-8px * var(--nx-dir) * var(--nx-motion)) 0; }
+    45% { translate: calc(6px * var(--nx-dir) * var(--nx-motion)) 0; }
+    70% { translate: calc(-3px * var(--nx-dir) * var(--nx-motion)) 0; }
+  }
+
+  /* ---- The review pane: the answers so far, grouped per step ------------------------------- */
+
+  .nx-wizard-summary {
+    display: grid;
+    gap: var(--nx-space-3);
+    margin: 0;
+  }
+
+  .nx-wizard-summary-group {
+    display: grid;
+    gap: var(--nx-space-3);
+    padding: var(--nx-space-4);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-surface-2);
+  }
+
+  .nx-wizard-summary-head {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+  }
+
+  .nx-wizard-summary-step {
+    min-inline-size: 0;
+    flex: 1;
+    font: 600 var(--nx-text-sm) / 1.3 var(--nx-font-sans);
+    letter-spacing: var(--nx-tracking-tight);
+  }
+
+  /* The quiet "edit" jump: an icon and a word, the review's way back. */
+  .nx-wizard-summary-edit {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 0.35rem;
+    min-block-size: 1.75rem;
+    padding: var(--nx-space-1) var(--nx-space-2);
+    border: 0;
+    border-radius: var(--nx-radius-sm);
+    background: transparent;
+    color: var(--nx-accent-text);
+    font: 600 var(--nx-text-xs) / 1 var(--nx-font-sans);
+    cursor: pointer;
+    transition-property: scale, background-color;
+    transition-duration: var(--nx-spring-snappy-duration), var(--nx-dur-fast);
+    transition-timing-function: var(--nx-spring-snappy), var(--nx-ease-out);
+
+    > .nx-icon { inline-size: 0.85rem; block-size: 0.85rem; }
+    &:hover { background: var(--nx-accent-soft); }
+    &:active:not([data-static]) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 1px; }
+  }
+
+  .nx-wizard-summary-rows {
+    display: grid;
+    gap: var(--nx-space-1);
+    margin: 0;
+  }
+
+  .nx-wizard-summary-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--nx-space-4);
+  }
+
+  .nx-wizard-summary-label {
+    flex: none;
+    max-inline-size: 55%;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-xs);
+    line-height: 1.6;
+  }
+
+  .nx-wizard-summary-value {
+    margin: 0;
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+    font: 500 var(--nx-text-sm) / 1.6 var(--nx-font-sans);
+    text-align: end;
+
+    /* An unanswered field says so, in words — the muted tone is the second cue. */
+    &[data-empty] { color: var(--nx-text-subtle); font-weight: 400; }
+  }
+
+  /* ---- The footer: back, the error line, next/submit -------------------------------------- */
+
+  .nx-wizard-foot {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-3);
+  }
+
+  /* Held in place on step one ("on"): invisible and unfocusable, but the footer keeps its shape. */
+  .nx-wizard-back[data-off='on'] { visibility: hidden; pointer-events: none; }
+
+  .nx-wizard-error {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    min-inline-size: 0;
+    min-block-size: 2.25rem;
+    margin: 0;
+    color: var(--nx-danger-text);
+    font: 500 var(--nx-text-xs) / 1.45 var(--nx-font-sans);
+    text-align: center;
+    opacity: 0;
+    translate: 0 calc(4px * var(--nx-motion));
+    pointer-events: none;
+    transition:
+      opacity var(--nx-dur-fast) var(--nx-ease-out),
+      translate var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+
+    > .nx-icon { flex: none; inline-size: 0.9rem; block-size: 0.9rem; }
+    &[data-invalid] { opacity: 1; translate: none; }
+  }
+
+  .nx-wizard-next { flex: none; margin-inline-start: auto; }
+
+  /* The next/submit swap: both labels stacked in one cell, cross-faded in place. */
+  .nx-wizard-next-labels {
+    display: inline-grid;
+    justify-items: stretch;
+
+    > span {
+      grid-area: 1 / 1;
+      transition:
+        opacity var(--nx-dur-base) var(--nx-ease-out),
+        translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+    }
+
+    > span:not([data-current]) {
+      opacity: 0;
+      translate: 0 calc(6px * var(--nx-motion));
+    }
+  }
+
+  /* ---- Motion and forced colours ----------------------------------------------------------- */
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-wizard-progress-fill { transition: none; }
+    .nx-wizard-pane[data-invalid] { animation: none; }
+    .nx-wizard-pane:not([data-pos='current']) { translate: none; }
+    .nx-wizard-error { translate: none; }
+    .nx-wizard-next-labels > span:not([data-current]) { translate: none; }
+  }
+
+  @media (forced-colors: active) {
+    .nx-wizard,
+    .nx-wizard-summary-group { border-color: CanvasText; }
+    .nx-wizard-progress-track { background: Canvas; box-shadow: inset 0 0 0 1px CanvasText; }
+    .nx-wizard-progress-fill { background: Highlight; }
+    .nx-wizard-count { border-color: CanvasText; }
+  }
+}

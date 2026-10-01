@@ -1,0 +1,232 @@
+/*
+ * Block: bar-chart — a CSS bar chart that grows in steps when revealed.
+ *
+ *   <figure class="nx-chart nx-bar-chart" data-nx-reveal>
+ *     <div class="nx-chart-head"> title · legend (series > 1) </div>
+ *     <div class="nx-bar-chart-frame">                          (--nx-bar-chart-height)
+ *       <div class="nx-bar-chart-plot">
+ *         <span class="nx-bar-chart-gridline" style="--_p: 0|25|…"/>  (data-zero = the baseline)
+ *         <span class="nx-bar-chart-tick" style="--_p: 50">۴۸</span>  (value axis, in the gutter)
+ *         <div class="nx-bar-chart-row">
+ *           <div class="nx-bar-chart-group" tabindex="0" role="img" aria-label="…: ۱۲ · ۸"
+ *                style="--nx-i: 2; --_top: 62">                (--_top: tallest bar, %)
+ *             <div class="nx-bar-chart-bars" data-stacked?>     (grouped side by side | stacked column)
+ *               <span class="nx-bar-chart-bar" style="--_v: 31; --nx-j: 0;
+ *                     --nx-series: var(--nx-chart-1)" data-cap?/>  (data-cap: rounded data end)
+ *             </div>
+ *             <div class="nx-chart-tooltip nx-bar-chart-tip" aria-hidden="true">…</div>
+ *           </div> …</div></div>
+ *       <div class="nx-bar-chart-names" aria-hidden="true"><span class="nx-bar-chart-name"/>…</div>
+ *     </div>
+ *     <table class="nx-visually-hidden">…the same data…</table>
+ *   </figure>
+ *
+ * No JavaScript: the bars are heights as custom properties, so they grow from
+ * the baseline with a spring when [data-nx-revealed] lands — one step per
+ * category (--nx-i), one finer step per series inside it (--nx-j). Stacks grow
+ * as one column (the scale sits on .nx-bar-chart-bars). The tooltip rides each
+ * group: it opens above the tallest bar on hover and on :focus-visible, so the
+ * keyboard reader gets the same readout; the full data also ships as the
+ * visually-hidden table. Everything is logical properties — RTL mirrors itself.
+ */
+@layer nx.components {
+  .nx-bar-chart {
+    /* The value-axis gutter (tick labels live inside it). */
+    --_axis: 3rem;
+    --nx-bar-chart-height: 15rem;
+  }
+
+  .nx-bar-chart-frame {
+    display: grid;
+    grid-template-rows: 1fr auto;
+    block-size: var(--nx-bar-chart-height);
+    min-inline-size: 0;
+  }
+
+  /* ---- Plot, gridlines and the value axis ---------------------------------------------- */
+
+  .nx-bar-chart-plot {
+    position: relative;
+    min-inline-size: 0;
+    padding-inline-start: var(--_axis);
+    overflow: visible;
+  }
+
+  .nx-bar-chart-gridline {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: calc(var(--_p, 0) * 1%);
+    block-size: 1px;
+    background: var(--nx-chart-grid);
+
+    /* The baseline carries the structure; the rest are hairlines. */
+    &[data-zero] { background: var(--nx-border-strong); }
+  }
+
+  .nx-bar-chart-tick {
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block-end: calc(var(--_p, 0) * 1%);
+    inline-size: calc(var(--_axis) - var(--nx-space-2));
+    translate: 0 50%;
+    overflow: hidden;
+    color: var(--nx-text-subtle);
+    font: 400 var(--nx-text-xs) / 1 var(--nx-font-sans);
+    font-variant-numeric: tabular-nums;
+    text-align: end;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ---- Groups and bars ------------------------------------------------------------------ */
+
+  .nx-bar-chart-row {
+    position: relative;
+    display: flex;
+    gap: var(--nx-space-3);
+    block-size: 100%;
+  }
+
+  .nx-bar-chart-group {
+    position: relative;
+    flex: 1 1 0;
+    min-inline-size: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    border-radius: var(--nx-radius-sm);
+    cursor: default;
+
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+  }
+
+  .nx-bar-chart-bars {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: var(--nx-space-1);
+    block-size: 100%;
+    min-inline-size: 0;
+    transition: opacity var(--nx-dur-base) var(--nx-ease-out);
+  }
+
+  .nx-bar-chart-bar {
+    flex: 1 1 0;
+    min-inline-size: 0.25rem;
+    max-inline-size: 2.75rem;
+    block-size: calc(var(--_v, 0) * 1%);
+    background: var(--nx-series, var(--nx-chart-1));
+    transform-origin: 50% 100%;
+    transition:
+      scale var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      opacity var(--nx-dur-base) var(--nx-ease-out),
+      filter var(--nx-dur-fast) var(--nx-ease-out);
+    /* The stair: each category waits its turn, each series inside it a finer step. */
+    transition-delay:
+      calc(min(var(--nx-i, 0), 14) * 60ms + min(var(--nx-j, 0), 6) * 30ms),
+      0ms,
+      0ms;
+
+    /* Rounded at the data end, square at the baseline (stacks: the top segment only). */
+    &[data-cap] {
+      border-start-start-radius: 4px;
+      border-start-end-radius: 4px;
+    }
+  }
+
+  /* A stack grows as one column: the spring sits on the container, not the segments. */
+  .nx-bar-chart-bars[data-stacked] {
+    flex-direction: column-reverse;
+    justify-content: flex-start;
+    gap: 2px;
+    inline-size: min(100%, 3.25rem);
+    transform-origin: 50% 100%;
+    transition:
+      scale var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      opacity var(--nx-dur-base) var(--nx-ease-out);
+    transition-delay: calc(min(var(--nx-i, 0), 14) * 60ms), 0ms;
+  }
+
+  .nx-bar-chart-bars[data-stacked] .nx-bar-chart-bar {
+    flex: none;
+    inline-size: 100%;
+    min-inline-size: 0;
+    max-inline-size: none;
+    transition-property: opacity, filter;
+    transition-duration: var(--nx-dur-base), var(--nx-dur-fast);
+    transition-timing-function: var(--nx-ease-out), var(--nx-ease-out);
+  }
+
+  /* Hover names the category: it brightens while its neighbours step back (colour, plus
+     the tooltip below — never motion alone). Keyboard focus gets the same readout. */
+  .nx-bar-chart-row:has(.nx-bar-chart-group:is(:hover, :focus-visible))
+    .nx-bar-chart-group:not(:is(:hover, :focus-visible)) .nx-bar-chart-bars {
+    opacity: 0.45;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .nx-bar-chart-group:hover .nx-bar-chart-bar { filter: brightness(1.07) saturate(1.05); }
+  }
+
+  /* ---- The tooltip: parked above each group's tallest bar -------------------------------- */
+
+  .nx-bar-chart-tip {
+    inset-block-start: auto;
+    inset-inline: 0;
+    inset-block-end: calc(var(--_top, 100) * 1% + var(--nx-space-2));
+    margin-inline: auto;
+    inline-size: max-content;
+    translate: 0 calc(4px * var(--nx-motion));
+  }
+
+  .nx-bar-chart-group:is(:hover, :focus-visible) .nx-bar-chart-tip {
+    opacity: 1;
+    scale: 1;
+    translate: 0 0;
+  }
+
+  /* ---- Category names, under their groups ------------------------------------------------- */
+
+  .nx-bar-chart-names {
+    display: flex;
+    gap: var(--nx-space-3);
+    padding-inline-start: var(--_axis);
+    padding-block-start: var(--nx-space-2);
+  }
+
+  .nx-bar-chart-name {
+    flex: 1 1 0;
+    min-inline-size: 0;
+    color: var(--nx-text-muted);
+    font: 400 var(--nx-text-xs) / 1.35 var(--nx-font-sans);
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+
+  /* ---- First reveal: the bars grow in, stepped --------------------------------------------- */
+
+  :where(.nx-js) .nx-bar-chart[data-nx-reveal]:not([data-nx-revealed]) .nx-bar-chart-bar {
+    scale: 1 0;
+  }
+
+  :where(.nx-js) .nx-bar-chart[data-nx-reveal]:not([data-nx-revealed]) .nx-bar-chart-bars[data-stacked] {
+    scale: 1 0;
+  }
+
+  :where(.nx-js:not(.nx-live)) .nx-bar-chart[data-nx-reveal]:not([data-nx-revealed]) .nx-bar-chart-bar,
+  :where(.nx-js:not(.nx-live)) .nx-bar-chart[data-nx-reveal]:not([data-nx-revealed]) .nx-bar-chart-bars[data-stacked] {
+    animation: nx-reveal-failsafe 1ms 2.5s forwards;
+  }
+
+  .nx-bar-chart[data-nx-revealed] .nx-bar-chart-bar,
+  .nx-bar-chart:not([data-nx-reveal]) .nx-bar-chart-bar,
+  .nx-bar-chart[data-nx-revealed] .nx-bar-chart-bars[data-stacked],
+  .nx-bar-chart:not([data-nx-reveal]) .nx-bar-chart-bars[data-stacked] {
+    scale: 1;
+  }
+
+  @media (forced-colors: active) {
+    .nx-bar-chart-bar { forced-color-adjust: none; }
+    .nx-bar-chart-group:focus-visible { outline: 2px solid Highlight; }
+  }
+}

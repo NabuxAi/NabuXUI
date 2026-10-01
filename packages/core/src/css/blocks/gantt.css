@@ -1,0 +1,573 @@
+/*
+ * Block: gantt — rows of draggable bars over a time grid (days), with a today
+ * line, dependency elbows and a simple zoom (day / week / month).
+ *
+ *   <section class="nx-gantt" data-zoom="day" data-nx-reveal aria-label
+ *            style="--nx-gantt-days: 48">
+ *     <div class="nx-gantt-toolbar">
+ *       <button class="nx-gantt-today-button"/>                        (scrolls to today)
+ *       <fieldset class="nx-gantt-zoom"><legend class="nx-visually-hidden"/>
+ *         <label class="nx-gantt-zoom-choice"><input class="nx-gantt-zoom-input" type="radio"/>
+ *           <span class="nx-gantt-zoom-label">Day</span></label> …</fieldset></div>
+ *     <div class="nx-gantt-frame">                                     (the one scroller)
+ *       <div class="nx-gantt-inner">
+ *         <div class="nx-gantt-corner"/>                               (sticky both axes)
+ *         <div class="nx-gantt-head">                                  (sticky top)
+ *           <div class="nx-gantt-months"><span class="nx-gantt-month" style="--s;--n"/>
+ *                                      <span class="nx-gantt-today-flag" style="--d"/></div>
+ *           <div class="nx-gantt-days"><span class="nx-gantt-day" data-weekend style="--d"/></div>
+ *           <div class="nx-gantt-weeks"><span class="nx-gantt-week" style="--d"/></div></div>
+ *         <div class="nx-gantt-side"><div class="nx-gantt-label" style="--lanes">…</div> …</div>
+ *         <div class="nx-gantt-lanes">
+ *           <div class="nx-gantt-grid" aria-hidden="true"><span class="nx-gantt-tick" data-week data-month style="--d"/>
+ *                                                       <span class="nx-gantt-weekend" style="--d"/></div>
+ *           <div class="nx-gantt-link" aria-hidden="true"><span class="nx-gantt-link-h" style="--x;--y;--w"/>
+ *             <span class="nx-gantt-link-v" style="--x;--y;--h"/><span class="nx-gantt-link-dot" style="--x;--y"/>…</div>
+ *           <div class="nx-gantt-today" aria-hidden="true" style="--d"/>
+ *           <div class="nx-gantt-track" style="--lanes">
+ *             <button class="nx-gantt-bar" data-tone draggable="false" style="--s;--n;--l;--p;--nx-i">
+ *               <span class="nx-gantt-bar-fill"/><span class="nx-gantt-bar-title"/>
+ *               <span class="nx-gantt-bar-handle" data-handle="start"/><span class="nx-gantt-bar-handle" data-handle="end"/>
+ *             </button> …</div> …</div></div></div>
+ *     <table class="nx-visually-hidden">…the same data…</table></section>
+ *
+ * Every position is day units × --nx-gantt-unit (set per zoom), so zooming is
+ * one attribute and the whole chart — grid, bars, elbows, today line — reflows
+ * in a spring. Bars are buttons: pointer-drag to move, the edge handles to
+ * resize, arrow keys to move (Shift = a week, Alt = resize), Escape cancels a
+ * drag. The dependency "dot" elbows ride above the rows and end in a dot on
+ * the successor; the today line breathes once, then rests.
+ */
+@layer nx.components {
+  /* Tone colours: one custom property set, used by the bars, links and chips. */
+  .nx-gantt [data-tone] {
+    --_tone: var(--nx-accent);
+    --_tone-text: var(--nx-accent-text);
+    --_tone-soft: var(--nx-accent-soft);
+    --_tone-border: var(--nx-accent-border, var(--nx-accent));
+  }
+  .nx-gantt [data-tone='success'] { --_tone: var(--nx-success); --_tone-text: var(--nx-success-text); --_tone-soft: var(--nx-success-soft); }
+  .nx-gantt [data-tone='warning'] { --_tone: var(--nx-warning); --_tone-text: var(--nx-warning-text); --_tone-soft: var(--nx-warning-soft); }
+  .nx-gantt [data-tone='danger']  { --_tone: var(--nx-danger);  --_tone-text: var(--nx-danger-text);  --_tone-soft: var(--nx-danger-soft); }
+  .nx-gantt [data-tone='info']    { --_tone: var(--nx-info);    --_tone-text: var(--nx-info-text);    --_tone-soft: var(--nx-info-soft); }
+  .nx-gantt [data-tone='gold']    { --_tone: var(--nx-gold);    --_tone-text: var(--nx-gold-text);    --_tone-soft: var(--nx-gold-soft); }
+
+  .nx-gantt {
+    /* The time scale: one day is --nx-gantt-unit wide; everything derives from it. */
+    --nx-gantt-lane: 1.75rem;
+    --nx-gantt-label-w: 10.5rem;
+    --nx-gantt-height: none;
+    display: grid;
+    gap: var(--nx-space-3);
+  }
+
+  .nx-gantt[data-zoom='day']   { --nx-gantt-unit: 2.75rem; }
+  .nx-gantt[data-zoom='week']  { --nx-gantt-unit: 0.6rem; }
+  .nx-gantt[data-zoom='month'] { --nx-gantt-unit: 0.3rem; }
+
+  /* ---- Toolbar: the today jump and the zoom pills ---------------------------------------- */
+
+  .nx-gantt-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--nx-space-2);
+    padding-inline: var(--nx-space-1);
+  }
+
+  .nx-gantt-today-button {
+    display: inline-grid;
+    place-items: center;
+    min-block-size: 2rem;
+    padding-inline: var(--nx-space-3);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    background: transparent;
+    color: var(--nx-text-muted);
+    font: 500 var(--nx-text-xs) / 1 var(--nx-font-sans);
+    letter-spacing: var(--nx-tracking-tight);
+    cursor: pointer;
+    transition-property: scale, border-color, color, background-color;
+    transition-duration: var(--nx-spring-snappy-duration), var(--nx-dur-fast), var(--nx-dur-fast), var(--nx-dur-fast);
+    transition-timing-function: var(--nx-spring-snappy), var(--nx-ease-out), var(--nx-ease-out), var(--nx-ease-out);
+
+    &:hover { border-color: var(--nx-border-strong); color: var(--nx-text); background: var(--nx-surface-2); }
+    &:active:not([data-static]) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+  }
+
+  .nx-gantt-zoom {
+    display: inline-flex;
+    gap: 2px;
+    margin: 0;
+    padding: 3px;
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface-2);
+  }
+
+  .nx-gantt-zoom-choice { position: relative; display: grid; }
+
+  /* The radio itself is a full-size invisible sheet, so the pill stays one hit area. */
+  .nx-gantt-zoom-input {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    appearance: none;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .nx-gantt-zoom-label {
+    display: inline-grid;
+    place-items: center;
+    min-block-size: 1.625rem;
+    padding-inline: var(--nx-space-3);
+    border-radius: var(--nx-radius-full);
+    color: var(--nx-text-muted);
+    font: 500 var(--nx-text-xs) / 1 var(--nx-font-sans);
+    letter-spacing: var(--nx-tracking-tight);
+    pointer-events: none;
+    transition-property: scale, background-color, color, box-shadow;
+    transition-duration: var(--nx-spring-snappy-duration), var(--nx-dur-fast), var(--nx-dur-fast), var(--nx-dur-fast);
+    transition-timing-function: var(--nx-spring-snappy), var(--nx-ease-out), var(--nx-ease-out), var(--nx-ease-out);
+  }
+
+  .nx-gantt-zoom-input:active + .nx-gantt-zoom-label { scale: calc(1 - 0.04 * var(--nx-motion)); }
+  .nx-gantt-zoom-input:checked + .nx-gantt-zoom-label {
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    box-shadow: var(--nx-shadow-xs), inset 0 0 0 1px color-mix(in oklab, var(--nx-accent) 30%, transparent);
+  }
+  .nx-gantt-zoom-input:focus-visible + .nx-gantt-zoom-label { outline: 2px solid var(--nx-ring); outline-offset: 1px; }
+
+  /* ---- The frame: one scroller for both axes ---------------------------------------------- */
+
+  .nx-gantt-frame {
+    max-block-size: var(--nx-gantt-height);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-xl);
+    background: var(--nx-surface);
+    box-shadow: var(--nx-shadow-xs);
+    overflow: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+
+  .nx-gantt-inner {
+    display: grid;
+    grid-template-columns: var(--nx-gantt-label-w) calc(var(--nx-gantt-days, 28) * var(--nx-gantt-unit));
+  }
+
+  .nx-gantt-corner {
+    grid-column: 1;
+    grid-row: 1;
+    position: sticky;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    z-index: 5;
+    border-inline-end: 1px solid var(--nx-border);
+    border-block-end: 1px solid var(--nx-border);
+    background: var(--nx-surface);
+  }
+
+  .nx-gantt-head {
+    grid-column: 2;
+    grid-row: 1;
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 4;
+    display: grid;
+    inline-size: calc(var(--nx-gantt-days, 28) * var(--nx-gantt-unit));
+    border-block-end: 1px solid var(--nx-border);
+    background: var(--nx-surface);
+  }
+
+  .nx-gantt-months {
+    position: relative;
+    block-size: 1.875rem;
+  }
+
+  .nx-gantt-month {
+    position: absolute;
+    inset-block: 0;
+    display: flex;
+    align-items: center;
+    padding-inline: var(--nx-space-2);
+    border-inline-start: 1px solid color-mix(in oklab, var(--nx-border-strong) 65%, transparent);
+    overflow: hidden;
+    color: var(--nx-text-muted);
+    font: 600 var(--nx-text-xs) / 1 var(--nx-font-sans);
+    letter-spacing: var(--nx-tracking-tight);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &:first-child { border-inline-start: 0; }
+  }
+
+  .nx-gantt-days,
+  .nx-gantt-weeks {
+    position: relative;
+    block-size: 1.5rem;
+    border-block-start: 1px solid color-mix(in oklab, var(--nx-border) 60%, transparent);
+  }
+
+  .nx-gantt-day {
+    position: absolute;
+    inset-block: 0;
+    display: grid;
+    place-items: center;
+    inset-inline-start: calc(var(--d) * var(--nx-gantt-unit));
+    inline-size: var(--nx-gantt-unit);
+    color: var(--nx-text-subtle);
+    font: 500 calc(var(--nx-text-xs) * 0.9) / 1 var(--nx-font-sans);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nx-gantt-day[data-weekend] { background: color-mix(in oklab, var(--nx-text) 4%, transparent); }
+
+  .nx-gantt-week {
+    position: absolute;
+    inset-block: 0;
+    display: flex;
+    align-items: center;
+    padding-inline: var(--nx-space-1);
+    inset-inline-start: calc(var(--d) * var(--nx-gantt-unit));
+    inline-size: calc(7 * var(--nx-gantt-unit));
+    overflow: hidden;
+    color: var(--nx-text-subtle);
+    font: 500 var(--nx-text-xs) / 1 var(--nx-font-sans);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* The bands the current zoom doesn't need are simply not there. */
+  .nx-gantt[data-zoom='week'] .nx-gantt-days,
+  .nx-gantt[data-zoom='month'] .nx-gantt-days { display: none; }
+  .nx-gantt:not([data-zoom='week']) .nx-gantt-weeks { display: none; }
+
+  /* ---- Row labels: the sticky side column --------------------------------------------------- */
+
+  .nx-gantt-side {
+    grid-column: 1;
+    grid-row: 2;
+    position: sticky;
+    inset-inline-start: 0;
+    z-index: 3;
+    display: grid;
+    align-content: start;
+    border-inline-end: 1px solid var(--nx-border);
+    background: var(--nx-surface);
+  }
+
+  .nx-gantt-label {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    block-size: calc(var(--lanes, 1) * var(--nx-gantt-lane));
+    padding-inline: var(--nx-space-3);
+    border-block-end: 1px solid color-mix(in oklab, var(--nx-border) 55%, transparent);
+    overflow: hidden;
+    color: var(--nx-text);
+    font: 500 var(--nx-text-sm) / 1.3 var(--nx-font-sans);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .nx-gantt-label-dot {
+    flex: none;
+    inline-size: 0.375rem;
+    block-size: 0.375rem;
+    border-radius: 50%;
+    background: var(--_tone);
+  }
+
+  /* ---- The lanes: grid, links, today, then the tracks with their bars ----------------------- */
+
+  .nx-gantt-lanes {
+    grid-column: 2;
+    grid-row: 2;
+    position: relative;
+  }
+
+  .nx-gantt-grid,
+  .nx-gantt-link,
+  .nx-gantt-today {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .nx-gantt-tick {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc(var(--d) * var(--nx-gantt-unit));
+    inline-size: 1px;
+    background: color-mix(in oklab, var(--nx-border) 55%, transparent);
+  }
+
+  .nx-gantt-tick[data-week] { background: color-mix(in oklab, var(--nx-border-strong) 55%, transparent); }
+  .nx-gantt-tick[data-month] { background: var(--nx-border-strong); }
+
+  /* Only the ticks the zoom can still see. */
+  .nx-gantt[data-zoom='week'] .nx-gantt-tick:not([data-week]) { display: none; }
+  .nx-gantt[data-zoom='month'] .nx-gantt-tick:not([data-month]) { display: none; }
+
+  .nx-gantt-weekend {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc(var(--d) * var(--nx-gantt-unit));
+    inline-size: var(--nx-gantt-unit);
+    background: color-mix(in oklab, var(--nx-text) 3.5%, transparent);
+  }
+
+  .nx-gantt:not([data-zoom='day']) .nx-gantt-weekend { display: none; }
+
+  /* ---- Dependency elbows: thin rails ending in a dot on the successor ----------------------- */
+
+  .nx-gantt-link-h {
+    position: absolute;
+    block-size: 1.5px;
+    inset-block-start: calc(var(--y) * var(--nx-gantt-lane) - 0.75px);
+    inset-inline-start: calc(var(--x) * var(--nx-gantt-unit));
+    inline-size: max(calc(var(--w) * var(--nx-gantt-unit)), 0.1875rem);
+    border-radius: var(--nx-radius-full);
+    background: color-mix(in oklab, var(--_tone, var(--nx-accent)) 45%, var(--nx-border));
+  }
+
+  .nx-gantt-link-v {
+    position: absolute;
+    inline-size: 1.5px;
+    inset-inline-start: calc(var(--x) * var(--nx-gantt-unit) - 0.75px);
+    inset-block-start: calc(var(--y) * var(--nx-gantt-lane));
+    block-size: max(calc(var(--h) * var(--nx-gantt-lane)), 0.1875rem);
+    border-radius: var(--nx-radius-full);
+    background: color-mix(in oklab, var(--_tone, var(--nx-accent)) 45%, var(--nx-border));
+  }
+
+  .nx-gantt-link-dot {
+    position: absolute;
+    inline-size: 0.4375rem;
+    block-size: 0.4375rem;
+    border-radius: 50%;
+    background: var(--_tone, var(--nx-accent));
+    box-shadow: 0 0 0 2px var(--nx-surface);
+    inset-inline-start: calc(var(--x) * var(--nx-gantt-unit));
+    inset-block-start: calc(var(--y) * var(--nx-gantt-lane));
+    translate: -50% -50%;
+  }
+
+  /* ---- The today line and its flag ----------------------------------------------------------- */
+
+  .nx-gantt-today::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc(var(--d) * var(--nx-gantt-unit) - 0.75px);
+    inline-size: 1.5px;
+    background: linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--nx-accent) 80%, transparent),
+      color-mix(in oklab, var(--nx-accent) 18%, transparent)
+    );
+  }
+
+  .nx-gantt-today-dot {
+    position: absolute;
+    inset-block-start: calc(0.5 * var(--nx-gantt-lane) - 0.3125rem);
+    inset-inline-start: calc(var(--d) * var(--nx-gantt-unit));
+    inline-size: 0.375rem;
+    block-size: 0.375rem;
+    border-radius: 50%;
+    background: var(--nx-accent);
+    box-shadow: 0 0 0 3px var(--nx-accent-soft);
+    translate: -50% -50%;
+    animation: nx-gantt-breathe 1.6s var(--nx-ease-in-out) infinite;
+  }
+
+  .nx-gantt-today-flag {
+    position: absolute;
+    inset-block-start: 0.1875rem;
+    inset-inline-start: calc(var(--d) * var(--nx-gantt-unit));
+    translate: -50% 0;
+    padding: 0.1875rem var(--nx-space-2);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-accent);
+    color: var(--nx-accent-contrast);
+    font: 600 calc(var(--nx-text-xs) * 0.9) / 1.2 var(--nx-font-sans);
+    letter-spacing: var(--nx-tracking-tight);
+    white-space: nowrap;
+    box-shadow: var(--nx-shadow-sm);
+  }
+
+  @keyframes nx-gantt-breathe {
+    50% { scale: calc(1 + 0.3 * var(--nx-motion)); opacity: 0.6; }
+  }
+
+  /* ---- Tracks and bars ------------------------------------------------------------------------ */
+
+  .nx-gantt-track {
+    position: relative;
+    block-size: calc(var(--lanes, 1) * var(--nx-gantt-lane));
+    border-block-end: 1px solid color-mix(in oklab, var(--nx-border) 55%, transparent);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .nx-gantt-track:hover { background: color-mix(in oklab, var(--nx-text) 2%, transparent); }
+  }
+
+  .nx-gantt-bar {
+    --ds: 0; /* days the drag has moved the start (transient, set while dragging) */
+    --dn: 0; /* days the drag has stretched the duration (transient) */
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-1);
+    inset-block-start: calc((var(--l, 0) + 0.14) * var(--nx-gantt-lane));
+    block-size: calc(0.72 * var(--nx-gantt-lane));
+    /* --over is the damped rubber-band beyond the timeline's edge, in days. */
+    inset-inline-start: calc((var(--s) + var(--ds) + var(--over, 0)) * var(--nx-gantt-unit));
+    inline-size: max(calc((var(--n) + var(--dn)) * var(--nx-gantt-unit)), 0.625rem);
+    padding-inline: var(--nx-space-2);
+    border: 1px solid color-mix(in oklab, var(--_tone-border) 55%, var(--nx-border));
+    border-radius: var(--nx-radius-sm);
+    background: var(--_tone-soft);
+    color: var(--_tone-text);
+    font: 600 var(--nx-text-xs) / 1 var(--nx-font-sans);
+    letter-spacing: var(--nx-tracking-tight);
+    text-align: start;
+    cursor: grab;
+    overflow: hidden;
+    user-select: none;
+    touch-action: none;
+    transition:
+      inset-inline-start var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      inline-size var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+      opacity var(--nx-dur-base) var(--nx-ease-out),
+      border-color var(--nx-dur-fast) var(--nx-ease-out),
+      box-shadow var(--nx-dur-fast) var(--nx-ease-out);
+    /* The reveal property (opacity) waits its turn in the first-reveal stagger;
+       drag, hover and press cues stay immediate. The rules below re-zero it. */
+    transition-delay:
+      0ms,
+      0ms,
+      0ms,
+      calc(min(var(--nx-i, 0), 12) * 45ms),
+      0ms,
+      0ms;
+  }
+
+  /* While a pointer drag drives --ds/--dn every frame, the spring would lag a frame
+     behind; the bar glides on the fast ease instead, and the spring takes over on drop. */
+  .nx-gantt-bar[data-dragging] {
+    transition:
+      inset-inline-start var(--nx-dur-fast) var(--nx-ease-out),
+      inline-size var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+      opacity var(--nx-dur-fast) var(--nx-ease-out),
+      border-color var(--nx-dur-fast) var(--nx-ease-out),
+      box-shadow var(--nx-dur-fast) var(--nx-ease-out);
+    transition-delay: 0ms;
+    z-index: 4;
+    cursor: grabbing;
+    border-color: var(--_tone-border);
+    box-shadow: var(--nx-shadow-md);
+    scale: calc(1 + 0.02 * var(--nx-motion));
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .nx-gantt-bar:hover {
+      border-color: var(--_tone-border);
+      box-shadow: var(--nx-shadow-sm);
+      transition-delay: 0ms;
+    }
+  }
+
+  .nx-gantt-bar:focus-visible {
+    outline: 2px solid var(--nx-ring);
+    outline-offset: 2px;
+  }
+
+  .nx-gantt-bar-fill {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    inline-size: calc(var(--p, 100) * 1%);
+    background: color-mix(in oklab, var(--_tone) 55%, transparent);
+    transition: inline-size var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+  }
+
+  .nx-gantt-bar-title {
+    position: relative;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .nx-gantt-bar-handle {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: -0.25rem;
+    inline-size: 0.5rem;
+    display: grid;
+    place-items: center;
+    cursor: ew-resize;
+    opacity: 0.45;
+    transition-property: opacity, scale;
+    transition-duration: var(--nx-dur-fast), var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-ease-out), var(--nx-spring-snappy);
+
+    &::before {
+      content: '';
+      inline-size: 2px;
+      block-size: 55%;
+      border-radius: var(--nx-radius-full);
+      background: var(--_tone);
+    }
+  }
+
+  .nx-gantt-bar-handle[data-handle='end'] { inset-inline-start: auto; inset-inline-end: -0.25rem; }
+
+  .nx-gantt-bar:hover .nx-gantt-bar-handle,
+  .nx-gantt-bar:focus-visible .nx-gantt-bar-handle,
+  .nx-gantt-bar[data-dragging] .nx-gantt-bar-handle { opacity: 1; scale: calc(1 + 0.1 * var(--nx-motion)); }
+
+  /* ---- Empty state ------------------------------------------------------------------------------ */
+
+  .nx-gantt-empty {
+    display: grid;
+    place-items: center;
+    min-block-size: 10rem;
+    color: var(--nx-text-subtle);
+    font: 400 var(--nx-text-sm) / 1.5 var(--nx-font-sans);
+  }
+
+  /* ---- First reveal: the bars rise in, staggered ------------------------------------------------- */
+
+  :where(.nx-js) .nx-gantt[data-nx-reveal]:not([data-nx-revealed]) .nx-gantt-bar {
+    opacity: 0;
+    translate: 0 calc(8px * var(--nx-motion));
+  }
+
+  :where(.nx-js:not(.nx-live)) .nx-gantt[data-nx-reveal]:not([data-nx-revealed]) .nx-gantt-bar {
+    animation: nx-reveal-failsafe 1ms 2.5s forwards;
+  }
+
+  .nx-gantt[data-nx-revealed] .nx-gantt-bar,
+  .nx-gantt:not([data-nx-reveal]) .nx-gantt-bar { opacity: 1; translate: 0 0; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-gantt-today-dot { animation: none; opacity: 0.75; }
+    .nx-gantt-bar[data-dragging] { scale: 1; }
+  }
+
+  @media (forced-colors: active) {
+    .nx-gantt-frame { border: 1px solid CanvasText; }
+    .nx-gantt-bar { border: 1px solid CanvasText; background: Canvas; }
+    .nx-gantt-today::before { background: Highlight; }
+    .nx-gantt-today-flag { background: Highlight; color: HighlightText; }
+    .nx-gantt-link-h,
+    .nx-gantt-link-v { background: CanvasText; }
+  }
+}

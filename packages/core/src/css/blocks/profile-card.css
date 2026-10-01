@@ -1,0 +1,453 @@
+/*
+ * Block: profile-card — a profile over a gradient cover (nx-profile-card).
+ *
+ *   <article class="nx-profile-card" data-covered? data-nx-reveal="group">
+ *     <div class="nx-profile-card-cover">                       (brand gradient, always)
+ *       <img class="nx-profile-card-cover-img" src alt/>         (optional photo on top)
+ *     <div class="nx-profile-card-body">
+ *       <div class="nx-profile-card-id">                         (the avatar rides the seam)
+ *         <span class="nx-profile-card-avatar" data-status="online?" role="img">
+ *           <img class="nx-profile-card-avatar-img"?> · initials
+ *         <div class="nx-profile-card-id-text">
+ *           <h3 class="nx-profile-card-name"><a class="nx-profile-card-link" href/>
+ *             · <span class="nx-profile-card-verified">check + visually-hidden label
+ *           <p class="nx-profile-card-role">role · <span class="nx-profile-card-handle">@…
+ *       <div class="nx-profile-card-actions">
+ *         <button class="nx-profile-card-follow" data-following?> (the morph)
+ *           <span class="nx-profile-card-follow-icon">plus + check, both in the DOM</span>
+ *           <span class="nx-profile-card-follow-label">idle + done labels, both in the DOM</span>
+ *         <button class="nx-profile-card-message"/> | <a class="nx-profile-card-message" href/>
+ *       <dl class="nx-profile-card-stats">                        (rolling .nx-number values)
+ *         <div class="nx-profile-card-stat" data-stat><dt>label</dt><dd>…</dd></div> ×n
+ *       <div class="nx-profile-card-tabs" role="tablist"> <span class="nx-indicator"/>
+ *         <button class="nx-profile-card-tab" role="tab" aria-selected/>
+ *       <div class="nx-profile-card-panel" role="tabpanel"/>      (one per tab, hidden)
+ *
+ * The sections rise one after another (group reveal), every stat rolls its digits
+ * (the shared .nx-number columns), the small tabs pass a springing indicator over
+ * the chosen one, and the follow button morphs between “follow” and “following” —
+ * icon swap (scale 0.25→1, blur 4px→0, the one allowed exception) plus a label
+ * crossfade and an accent→success recolour, so the state is never carried by
+ * motion alone. Presence is colour, not motion: the online dot breathes softly
+ * (the only loop, off under reduced motion).
+ */
+@layer nx.components {
+  .nx-profile-card {
+    container-type: inline-size;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-xl);
+    background: var(--nx-surface);
+    box-shadow: var(--nx-shadow-xs);
+    overflow: clip;
+    transition:
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      border-color var(--nx-dur-fast) var(--nx-ease-out),
+      box-shadow var(--nx-dur-fast) var(--nx-ease-out);
+  }
+
+  /* Fine pointers: the card lifts a touch. Colour-only feedback elsewhere. */
+  @media (hover: hover) and (pointer: fine) {
+    .nx-profile-card:hover {
+      border-color: var(--nx-border-strong);
+      box-shadow: var(--nx-shadow-sm);
+      translate: 0 calc(-3px * var(--nx-motion));
+    }
+  }
+
+  /* ---- Cover: the brand gradient, with room for a photo ---------------------- */
+
+  .nx-profile-card-cover {
+    position: relative;
+    display: block;
+    block-size: clamp(5rem, 22cqi, 7.5rem);
+    background:
+      radial-gradient(60% 90% at 100% 0%, color-mix(in oklab, var(--nx-gold) 26%, transparent), transparent 62%),
+      radial-gradient(75% 120% at 0% 0%, color-mix(in oklab, var(--nx-cyan-400) 40%, transparent), transparent 58%),
+      var(--nx-gradient-brand);
+  }
+
+  .nx-profile-card-cover-img {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    outline: 1px solid color-mix(in oklab, var(--nx-text) 10%, transparent);
+    outline-offset: -1px;
+  }
+
+  /* A photo fades into the card's surface where the avatar rides the seam. */
+  .nx-profile-card[data-covered] .nx-profile-card-cover::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, var(--nx-surface), transparent 58%);
+  }
+
+  /* ---- Identity: the avatar rides the cover/body seam -------------------------- */
+
+  .nx-profile-card-body {
+    display: grid;
+    gap: var(--nx-space-4);
+    padding: 0 var(--nx-space-5) var(--nx-space-5);
+    min-inline-size: 0;
+  }
+
+  .nx-profile-card-id {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: flex-end;
+    gap: var(--nx-space-3);
+  }
+
+  .nx-profile-card-avatar {
+    --_size: 4.5rem;
+
+    position: relative;
+    flex: none;
+    display: grid;
+    place-items: center;
+    inline-size: var(--_size);
+    block-size: var(--_size);
+    /* Half the avatar over the cover; its surface ring knits it to the card. */
+    margin-block-start: calc(-1 * (var(--_size) / 2) - var(--nx-space-2));
+    margin-block-end: calc(-1 * var(--nx-space-2));
+    border-radius: 50%;
+    background: var(--nx-gradient-brand);
+    color: var(--nx-accent-contrast);
+    font: 600 calc(var(--_size) * 0.34) / 1 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tight);
+    user-select: none;
+    box-shadow:
+      0 0 0 4px var(--nx-surface),
+      var(--nx-shadow-sm);
+
+    /* Presence: colour first, a soft breath second. */
+    &[data-status]::after {
+      content: "";
+      position: absolute;
+      inset-block-end: 4%;
+      inset-inline-end: 4%;
+      inline-size: 26%;
+      block-size: 26%;
+      border: 2px solid var(--nx-surface);
+      border-radius: 50%;
+      background: var(--nx-text-subtle);
+    }
+
+    &[data-status='online']::after { background: var(--nx-success); }
+    &[data-status='busy']::after { background: var(--nx-danger); }
+    &[data-status='away']::after { background: var(--nx-warning); }
+  }
+
+  .nx-profile-card-avatar[data-status='online']::after {
+    animation: nx-profile-card-breathe 1.6s var(--nx-ease-in-out) infinite;
+  }
+
+  @keyframes nx-profile-card-breathe {
+    50% { scale: calc(1 + 0.3 * var(--nx-motion)); opacity: 0.65; }
+  }
+
+  .nx-profile-card-avatar-img {
+    inline-size: 100%;
+    block-size: 100%;
+    border-radius: inherit;
+    object-fit: cover;
+    outline: 1px solid color-mix(in oklab, var(--nx-text) 10%, transparent);
+    outline-offset: -1px;
+  }
+
+  .nx-profile-card-id-text {
+    display: grid;
+    gap: 0.125rem;
+    min-inline-size: 0;
+    padding-block-end: 0.125rem;
+  }
+
+  .nx-profile-card-name {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-1);
+    margin: 0;
+    min-inline-size: 0;
+    color: var(--nx-text);
+    font: 700 var(--nx-text-lg) / 1.2 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tight);
+  }
+
+  .nx-profile-card-link {
+    color: var(--nx-text);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+    transition-property: color;
+    transition-duration: var(--nx-dur-fast);
+    transition-timing-function: var(--nx-ease-out);
+
+    &:hover { color: var(--nx-accent-text); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; border-radius: var(--nx-radius-xs); }
+  }
+
+  /* The verified seal: gold check, its meaning written for the ears. */
+  .nx-profile-card-verified {
+    display: inline-flex;
+    flex: none;
+    color: var(--nx-gold);
+
+    & .nx-icon { inline-size: 1rem; block-size: 1rem; }
+  }
+
+  .nx-profile-card-role {
+    margin: 0;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+
+  .nx-profile-card-handle {
+    color: var(--nx-text-subtle);
+    font-family: var(--nx-font-mono);
+    font-size: var(--nx-text-xs);
+  }
+
+  /* ---- Actions: the follow morph and the message button ------------------------ */
+
+  .nx-profile-card-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    gap: var(--nx-space-2);
+  }
+
+  .nx-profile-card-follow,
+  .nx-profile-card-message {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-space-2);
+    min-block-size: 2.5rem;
+    padding-inline: var(--nx-space-3);
+    border-radius: var(--nx-radius-md);
+    font: 600 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    cursor: pointer;
+    transition-property: scale, background-color, color, box-shadow, border-color;
+    transition-duration: var(--nx-spring-snappy-duration), var(--nx-dur-base), var(--nx-dur-base), var(--nx-dur-base), var(--nx-dur-base);
+    transition-timing-function: var(--nx-spring-snappy), var(--nx-ease-out), var(--nx-ease-out), var(--nx-ease-out), var(--nx-ease-out);
+
+    &:active:not(:disabled, [data-static]) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+  }
+
+  .nx-profile-card-follow {
+    border: 0;
+    background: var(--nx-accent);
+    color: var(--nx-accent-contrast);
+    text-decoration: none;
+
+    &:hover:not(:disabled) { background: color-mix(in oklab, var(--nx-accent) 88%, var(--nx-text)); }
+    &:disabled { cursor: not-allowed; }
+  }
+
+  /* Following: the settled state — recolour, ring, and the icon/label swap. */
+  .nx-profile-card-follow[data-following] {
+    background: var(--nx-success-soft);
+    color: var(--nx-success-text);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--nx-success) 35%, transparent);
+
+    &:hover { background: color-mix(in oklab, var(--nx-success-soft) 82%, var(--nx-success) 18%); }
+  }
+
+  .nx-profile-card-message {
+    border: 1px solid var(--nx-border);
+    background: var(--nx-surface-2);
+    color: var(--nx-text);
+    text-decoration: none;
+
+    &:hover { border-color: var(--nx-border-strong); background: var(--nx-surface-3); }
+  }
+
+  .nx-profile-card-message .nx-icon { inline-size: 1rem; block-size: 1rem; }
+
+  /* The icon morph — the contextual swap exception: both icons stay in the DOM
+     (each in its own marked slot); the hidden one rests at scale .25, blurred. */
+  .nx-profile-card-follow-icon {
+    position: relative;
+    flex: none;
+    inline-size: 1rem;
+    block-size: 1rem;
+
+    > [data-part] {
+      position: absolute;
+      inset-block-start: 0;
+      inset-inline-start: 0;
+      display: block;
+      inline-size: 1rem;
+      block-size: 1rem;
+      transition:
+        scale 300ms cubic-bezier(0.2, 0, 0, 1),
+        opacity 300ms cubic-bezier(0.2, 0, 0, 1),
+        filter 300ms cubic-bezier(0.2, 0, 0, 1);
+
+      & .nx-icon { inline-size: 1rem; block-size: 1rem; }
+    }
+
+    > [data-part='done'] { scale: 0.25; opacity: 0; filter: blur(4px); }
+  }
+
+  .nx-profile-card-follow[data-following] .nx-profile-card-follow-icon > [data-part='idle'] { scale: 0.25; opacity: 0; filter: blur(4px); }
+  .nx-profile-card-follow[data-following] .nx-profile-card-follow-icon > [data-part='done'] { scale: 1; opacity: 1; filter: blur(0); }
+
+  /* The label crossfade: the leaving copy drops away faster than the arriving
+     one rises in; both stay in the DOM on the same grid cell. */
+  .nx-profile-card-follow-label {
+    display: grid;
+    min-inline-size: 0;
+
+    > span { grid-area: 1 / 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  }
+
+  .nx-profile-card-follow-label > [data-part='idle'] {
+    transition: opacity var(--nx-dur-fast) var(--nx-ease-out), translate var(--nx-dur-fast) var(--nx-ease-out);
+  }
+
+  .nx-profile-card-follow-label > [data-part='done'] {
+    opacity: 0;
+    translate: 0 calc(-6px * var(--nx-motion));
+    transition: opacity var(--nx-dur-base) var(--nx-ease-out), translate var(--nx-dur-base) var(--nx-ease-out);
+  }
+
+  .nx-profile-card-follow[data-following] .nx-profile-card-follow-label > [data-part='idle'] {
+    opacity: 0;
+    translate: 0 calc(6px * var(--nx-motion));
+  }
+
+  .nx-profile-card-follow[data-following] .nx-profile-card-follow-label > [data-part='done'] {
+    opacity: 1;
+    translate: none;
+  }
+
+  /* ---- Stats: rolling figures behind quiet labels ------------------------------- */
+
+  .nx-profile-card-stats {
+    display: flex;
+    margin: 0;
+  }
+
+  .nx-profile-card-stat {
+    display: grid;
+    flex: 1;
+    gap: 0.125rem;
+    min-inline-size: 0;
+    padding-inline: var(--nx-space-3);
+
+    /* Value above the label (the dt stays the term for the ears). */
+    dd {
+      order: 1;
+      margin: 0;
+      color: var(--nx-text);
+      font: 700 var(--nx-text-md) / 1.2 var(--nx-font-display);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: var(--nx-tracking-tight);
+    }
+
+    dt {
+      order: 2;
+      color: var(--nx-text-subtle);
+      font: 500 var(--nx-text-xs) / 1.4 var(--nx-font-sans);
+      overflow-wrap: anywhere;
+    }
+
+    & + & { border-inline-start: 1px solid var(--nx-border); }
+  }
+
+  .nx-profile-card-stats .nx-profile-card-stat:first-child {
+    padding-inline-start: 0;
+  }
+
+  /* ---- The small tabs and their panel -------------------------------------------- */
+
+  .nx-profile-card-tabs {
+    position: relative;
+    isolation: isolate;
+    display: inline-flex;
+    gap: 0.125rem;
+    justify-self: start;
+    max-inline-size: 100%;
+    padding: 0.1875rem;
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-surface-2);
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    .nx-indicator {
+      z-index: -1;
+      border-radius: calc(var(--nx-radius-md) - 0.1875rem);
+      background: var(--nx-surface);
+      box-shadow: var(--nx-shadow-sm), inset 0 1px 0 var(--nx-highlight);
+    }
+  }
+
+  .nx-profile-card-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-block-size: 1.75rem;
+    padding-inline: 0.625rem;
+    border: 0;
+    border-radius: calc(var(--nx-radius-md) - 0.1875rem);
+    background: transparent;
+    color: var(--nx-text-muted);
+    font: 500 var(--nx-text-xs) / 1 var(--nx-font-sans);
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      color var(--nx-dur-base) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+
+    &:hover { color: var(--nx-text); }
+    &[aria-selected='true'] { color: var(--nx-text); font-weight: 600; }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 1px; }
+    &:active:not([data-static], [data-static] *) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+  }
+
+  .nx-profile-card-panel {
+    display: grid;
+    gap: var(--nx-space-2);
+    min-inline-size: 0;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+    line-height: 1.7;
+    animation: nx-profile-card-panel-in var(--nx-dur-base) var(--nx-ease-out);
+
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 4px; }
+  }
+
+  /* A one-shot arrival: the incoming panel rises a touch (a fade when motion is off). */
+  @keyframes nx-profile-card-panel-in {
+    from { opacity: 0; translate: 0 calc(6px * var(--nx-motion)); }
+  }
+
+  /* ---- Narrow cards --------------------------------------------------------------- */
+
+  @container (width < 18rem) {
+    .nx-profile-card-body { padding-inline: var(--nx-space-4) var(--nx-space-4); }
+    .nx-profile-card-stat { padding-inline: var(--nx-space-2); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-profile-card-avatar[data-status='online']::after { animation: none; opacity: 0.75; }
+    /* The swap becomes a plain short fade; nothing scales or blurs. */
+    .nx-profile-card-follow-icon > [data-part] { transition: opacity 150ms var(--nx-ease-out); }
+    .nx-profile-card-follow-label > span { transition: opacity 150ms var(--nx-ease-out); }
+  }
+
+  @media (forced-colors: active) {
+    .nx-profile-card { border: 1px solid CanvasText; }
+    .nx-profile-card-follow { border: 1px solid ButtonText; }
+    .nx-profile-card-message { border: 1px solid ButtonText; }
+    .nx-profile-card-avatar { border: 1px solid CanvasText; }
+    .nx-profile-card-stat + .nx-profile-card-stat { border-inline-start: 1px solid CanvasText; }
+  }
+}

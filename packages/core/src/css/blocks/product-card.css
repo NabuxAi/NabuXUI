@@ -1,0 +1,405 @@
+/*
+ * Block: product-card — a shop card (nx-product-card).
+ *
+ *   <article class="nx-product-card" data-stock="in|low|out" data-nx-reveal>
+ *     <div class="nx-product-card-media">                        (4:5 frame, clips the zoom)
+ *       <img class="nx-product-card-img" src alt loading="lazy"/>
+ *       <div class="nx-product-card-tags">                       (top inline-start corner)
+ *         <span class="nx-product-card-discount">−۲۳٪</span>      (only when cheaper than before)
+ *         <span class="nx-product-card-stock" data-stock="low">  (dot + label)
+ *           <i class="nx-product-card-stock-dot"/><span>…</span></span>
+ *     </div>
+ *     <div class="nx-product-card-body">
+ *       <p class="nx-product-card-category"/>
+ *       <h3 class="nx-product-card-title"><a class="nx-product-card-link" href/></h3>
+ *       <div class="nx-product-card-rating" role="img" aria-label="4.5 of 5 stars">
+ *         <span class="nx-product-card-stars" style="--nx-product-rating: 4.5" aria-hidden="true">
+ *           <span class="nx-product-card-stars-row nx-product-card-stars-bg">star ×5</span>
+ *           <span class="nx-product-card-stars-fill"><span class="nx-product-card-stars-row">star ×5</span></span>
+ *         <span class="nx-product-card-rating-value">۴٫۵</span>
+ *         <span class="nx-product-card-rating-count">۱۲ نظر</span>
+ *       <div class="nx-product-card-pricing">
+ *         <span class="nx-product-card-price">… <span class="nx-product-card-currency"/></span>
+ *         <s class="nx-product-card-compare">…</s>
+ *       <button class="nx-product-card-add" data-in-cart? disabled?>        (the morph)
+ *         <span class="nx-product-card-add-icon">plus + check, both in the DOM</span>
+ *         <span class="nx-product-card-add-label">idle + done labels, both in the DOM</span>
+ *
+ * The image zooms inside its frame and the card lifts (fine pointers only);
+ * stars fill to the fraction of `--nx-product-rating` from the inline start,
+ * so RTL reads the same; the add button morphs between "add" and "added" —
+ * icon swap (scale 0.25→1, blur 4px→0, the one allowed exception) plus a
+ * label crossfade and an accent→success recolour, so the state is never
+ * carried by motion alone. The low-stock dot breathes (the only loop, off
+ * under reduced motion). Out of stock disables the button and dims the card.
+ */
+@layer nx.components {
+  /* Stock tones: one custom property set, used by the badge and the dot. */
+  .nx-product-card [data-stock] {
+    --_tone: var(--nx-success);
+    --_tone-text: var(--nx-success-text);
+    --_tone-soft: var(--nx-success-soft);
+  }
+  .nx-product-card [data-stock='low'] { --_tone: var(--nx-warning); --_tone-text: var(--nx-warning-text); --_tone-soft: var(--nx-warning-soft); }
+  .nx-product-card [data-stock='out'] { --_tone: var(--nx-danger);  --_tone-text: var(--nx-danger-text);  --_tone-soft: var(--nx-danger-soft); }
+
+  .nx-product-card {
+    container-type: inline-size;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-xl);
+    background: var(--nx-surface);
+    box-shadow: var(--nx-shadow-xs);
+    transition:
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      border-color var(--nx-dur-fast) var(--nx-ease-out),
+      box-shadow var(--nx-dur-fast) var(--nx-ease-out);
+  }
+
+  /* Fine pointers: the card lifts a touch. Colour-only feedback elsewhere. */
+  @media (hover: hover) and (pointer: fine) {
+    .nx-product-card:hover {
+      border-color: var(--nx-border-strong);
+      box-shadow: var(--nx-shadow-sm);
+      translate: 0 calc(-3px * var(--nx-motion));
+    }
+  }
+
+  /* ---- Media: the zooming image ------------------------------------------------ */
+
+  .nx-product-card-media {
+    position: relative;
+    display: block;
+    overflow: clip;
+    margin: var(--nx-space-2);
+    border-radius: var(--nx-radius-lg);
+    aspect-ratio: 4 / 5;
+    background: var(--nx-surface-2);
+  }
+
+  .nx-product-card-img {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    outline: 1px solid color-mix(in oklab, var(--nx-text) 10%, transparent);
+    outline-offset: -1px;
+    transition: scale var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+  }
+
+  /* The zoom lives inside the frame; its travel dies with --nx-motion. */
+  @media (hover: hover) and (pointer: fine) {
+    .nx-product-card:hover .nx-product-card-img { scale: calc(1 + 0.05 * var(--nx-motion)); }
+    .nx-product-card:focus-within .nx-product-card-img { scale: calc(1 + 0.03 * var(--nx-motion)); }
+  }
+
+  /* ---- Corner tags: discount + stock -------------------------------------------- */
+
+  .nx-product-card-tags {
+    position: absolute;
+    inset-block-start: var(--nx-space-2);
+    inset-inline-start: var(--nx-space-2);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--nx-space-1);
+    pointer-events: none;
+  }
+
+  /* No photo: the tags ride along the body's top edge, not over it. */
+  .nx-product-card-body > .nx-product-card-tags {
+    position: static;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .nx-product-card-discount,
+  .nx-product-card-stock {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-1);
+    padding: var(--nx-space-1) var(--nx-space-2);
+    border-radius: var(--nx-radius-full);
+    font: 600 var(--nx-text-xs) / 1.2 var(--nx-font-sans);
+    font-variant-numeric: tabular-nums;
+    backdrop-filter: blur(6px);
+  }
+
+  .nx-product-card-discount {
+    background: var(--nx-danger-soft);
+    color: var(--nx-danger-text);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--nx-danger) 30%, transparent);
+  }
+
+  .nx-product-card-stock {
+    background: color-mix(in oklab, var(--nx-surface) 78%, transparent);
+    color: var(--_tone-text, var(--nx-text-muted));
+  }
+
+  .nx-product-card-stock-dot {
+    flex: none;
+    inline-size: 0.4375rem;
+    block-size: 0.4375rem;
+    border-radius: 50%;
+    background: var(--_tone, var(--nx-text-subtle));
+  }
+
+  /* Only the low stock breathes: a soft pulse, and never the only cue. */
+  .nx-product-card-stock[data-stock='low'] .nx-product-card-stock-dot {
+    animation: nx-product-card-breathe 1.4s var(--nx-ease-in-out) infinite;
+  }
+
+  @keyframes nx-product-card-breathe {
+    50% { scale: calc(1 + 0.35 * var(--nx-motion)); opacity: 0.6; }
+  }
+
+  /* ---- Body ---------------------------------------------------------------------- */
+
+  .nx-product-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--nx-space-2);
+    flex: 1;
+    min-inline-size: 0;
+    padding: var(--nx-space-2) var(--nx-space-3) var(--nx-space-3);
+  }
+
+  .nx-product-card-category {
+    margin: 0;
+    color: var(--nx-text-subtle);
+    font: 500 var(--nx-text-xs) / 1.4 var(--nx-font-sans);
+    letter-spacing: var(--nx-tracking-wide);
+  }
+
+  :lang(fa) .nx-product-card-category,
+  :lang(ar) .nx-product-card-category { letter-spacing: 0; }
+
+  .nx-product-card-title {
+    margin: 0;
+    font: 600 var(--nx-text-sm) / 1.45 var(--nx-font-sans);
+    letter-spacing: var(--nx-tracking-tight);
+  }
+
+  .nx-product-card-link {
+    color: var(--nx-text);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+    transition-property: color;
+    transition-duration: var(--nx-dur-fast);
+    transition-timing-function: var(--nx-ease-out);
+
+    &:hover { color: var(--nx-accent-text); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; border-radius: var(--nx-radius-xs); }
+  }
+
+  /* ---- Rating: stars filled to the fraction -------------------------------------- */
+
+  .nx-product-card-rating {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    color: var(--nx-text-muted);
+    font: 500 var(--nx-text-xs) / 1.3 var(--nx-font-sans);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nx-product-card-stars {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+  }
+
+  .nx-product-card-stars-row {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    gap: 0.125rem;
+
+    & .nx-icon { inline-size: 0.875rem; block-size: 0.875rem; }
+  }
+
+  .nx-product-card-stars-bg { color: var(--nx-border-strong); }
+
+  /* The fill spans the same five stars, clipped to the rating's share and
+     anchored to the inline start, so it fills from where the row begins. */
+  .nx-product-card-stars-fill {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    overflow: clip;
+    inline-size: calc(clamp(0, var(--nx-product-rating, 0), 5) / 5 * 100%);
+    color: var(--nx-gold);
+  }
+
+  .nx-product-card-rating-count { color: var(--nx-text-subtle); }
+
+  /* ---- Pricing: the price, the crossed-out before, the unit ----------------------- */
+
+  .nx-product-card-pricing {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--nx-space-1) var(--nx-space-2);
+    margin-block-start: auto;
+  }
+
+  .nx-product-card-price {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.25rem;
+    color: var(--nx-text);
+    font: 700 var(--nx-text-lg) / 1.2 var(--nx-font-display);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nx-product-card-currency {
+    color: var(--nx-text-muted);
+    font: 500 0.75em / 1 var(--nx-font-sans);
+  }
+
+  .nx-product-card-compare {
+    color: var(--nx-text-subtle);
+    font: 400 var(--nx-text-xs) / 1.2 var(--nx-font-sans);
+    font-variant-numeric: tabular-nums;
+    text-decoration: line-through;
+  }
+
+  /* ---- The add-to-cart button and its morph ---------------------------------------- */
+
+  .nx-product-card-add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-space-2);
+    min-block-size: 2.5rem;
+    margin-block-start: var(--nx-space-1);
+    padding-inline: var(--nx-space-3);
+    border: 0;
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-accent);
+    color: var(--nx-accent-contrast);
+    font: 600 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    cursor: pointer;
+    transition-property: scale, background-color, color, box-shadow;
+    transition-duration: var(--nx-spring-snappy-duration), var(--nx-dur-base), var(--nx-dur-base), var(--nx-dur-base);
+    transition-timing-function: var(--nx-spring-snappy), var(--nx-ease-out), var(--nx-ease-out), var(--nx-ease-out);
+
+    &:hover:not(:disabled) { background: color-mix(in oklab, var(--nx-accent) 88%, var(--nx-text)); }
+    &:active:not(:disabled, [data-static]) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+    &:disabled { cursor: not-allowed; }
+  }
+
+  /* In the cart: the success state — recolour, ring, and the icon/label swap. */
+  .nx-product-card-add[data-in-cart] {
+    background: var(--nx-success-soft);
+    color: var(--nx-success-text);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--nx-success) 35%, transparent);
+
+    &:hover { background: color-mix(in oklab, var(--nx-success-soft) 82%, var(--nx-success) 18%); }
+  }
+
+  /* Out of stock: the only button state, framed and quiet. */
+  .nx-product-card-add:disabled {
+    background: var(--nx-surface-3);
+    color: var(--nx-text-subtle);
+    box-shadow: inset 0 0 0 1px var(--nx-border);
+  }
+
+  /* The icon morph — the contextual swap exception: both icons stay in the
+     DOM (each in its own marked slot); the hidden one rests at scale .25,
+     blurred, and they trade places. */
+  .nx-product-card-add-icon {
+    position: relative;
+    flex: none;
+    inline-size: 1rem;
+    block-size: 1rem;
+
+    > [data-part] {
+      position: absolute;
+      inset-block-start: 0;
+      inset-inline-start: 0;
+      display: block;
+      inline-size: 1rem;
+      block-size: 1rem;
+      transition:
+        scale 300ms cubic-bezier(0.2, 0, 0, 1),
+        opacity 300ms cubic-bezier(0.2, 0, 0, 1),
+        filter 300ms cubic-bezier(0.2, 0, 0, 1);
+
+      & .nx-icon { inline-size: 1rem; block-size: 1rem; }
+    }
+
+    > [data-part='done'] { scale: 0.25; opacity: 0; filter: blur(4px); }
+  }
+
+  .nx-product-card-add[data-in-cart] .nx-product-card-add-icon > [data-part='idle'] { scale: 0.25; opacity: 0; filter: blur(4px); }
+  .nx-product-card-add[data-in-cart] .nx-product-card-add-icon > [data-part='done'] { scale: 1; opacity: 1; filter: blur(0); }
+
+  /* The label crossfade: the leaving copy drops away faster than the arriving
+     one rises in; both stay in the DOM on the same grid cell. */
+  .nx-product-card-add-label {
+    display: grid;
+    min-inline-size: 0;
+
+    > span { grid-area: 1 / 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  }
+
+  .nx-product-card-add-label > [data-part='idle'] {
+    transition: opacity var(--nx-dur-fast) var(--nx-ease-out), translate var(--nx-dur-fast) var(--nx-ease-out);
+  }
+
+  .nx-product-card-add-label > [data-part='done'] {
+    opacity: 0;
+    translate: 0 calc(-6px * var(--nx-motion));
+    transition: opacity var(--nx-dur-base) var(--nx-ease-out), translate var(--nx-dur-base) var(--nx-ease-out);
+  }
+
+  .nx-product-card-add[data-in-cart] .nx-product-card-add-label > [data-part='idle'] {
+    opacity: 0;
+    translate: 0 calc(6px * var(--nx-motion));
+  }
+
+  .nx-product-card-add[data-in-cart] .nx-product-card-add-label > [data-part='done'] {
+    opacity: 1;
+    translate: none;
+  }
+
+  /* An unfocused card cannot reach for the cart; keep it visible but dimmed. */
+  .nx-product-card[data-stock='out'] .nx-product-card-img { opacity: 0.65; }
+
+  /* ---- First reveal: the card rises in ---------------------------------------------- */
+
+  :where(.nx-js) .nx-product-card[data-nx-reveal]:not([data-nx-revealed]) {
+    opacity: 0;
+    translate: 0 calc(12px * var(--nx-motion));
+  }
+
+  :where(.nx-js:not(.nx-live)) .nx-product-card[data-nx-reveal]:not([data-nx-revealed]) {
+    animation: nx-reveal-failsafe 1ms 2.5s forwards;
+  }
+
+  .nx-product-card[data-nx-revealed],
+  .nx-product-card:not([data-nx-reveal]) { opacity: 1; }
+
+  /* ---- Narrow cards: breathe less ---------------------------------------------------- */
+
+  @container (width < 14rem) {
+    .nx-product-card-body { padding-inline: var(--nx-space-2); }
+    .nx-product-card-rating-count { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-product-card-stock[data-stock='low'] .nx-product-card-stock-dot { animation: none; opacity: 0.75; }
+    /* The swap becomes a plain short fade; nothing scales or blurs. */
+    .nx-product-card-add-icon > [data-part] { transition: opacity 150ms var(--nx-ease-out); }
+    .nx-product-card-add-label > span { transition: opacity 150ms var(--nx-ease-out); }
+  }
+
+  @media (forced-colors: active) {
+    .nx-product-card { border: 1px solid CanvasText; }
+    .nx-product-card-add { border: 1px solid ButtonText; }
+    .nx-product-card-add:disabled { border: 1px solid GrayText; color: GrayText; }
+    .nx-product-card-compare { color: GrayText; }
+  }
+}

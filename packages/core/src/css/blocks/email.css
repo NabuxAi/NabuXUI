@@ -1,0 +1,640 @@
+/*
+ * Blocks: Mail client (nx-email).
+ *
+ * Three panes over one shared message markup:
+ *
+ *   <section class="nx-email" style="--nx-email-height: 36rem" data-nx-reveal aria-label>
+ *     <div class="nx-email-frame">
+ *       <nav class="nx-email-folders" aria-label>            (glass rail)
+ *         <ul class="nx-email-folder-list">
+ *           <li> <button class="nx-email-folder" aria-current="true|false" data-folder>
+ *                 icon · <span class="nx-email-folder-label"> ·
+ *                 <span class="nx-email-folder-count"> + visually-hidden “{count} unread”
+ *       <div class="nx-email-listcol">
+ *         <ul class="nx-email-list" role="listbox" data-nx-reveal="group">   (rows stagger in)
+ *           <li class="nx-email-item" style="--nx-i">        ([hidden] when outside the folder)
+ *             <button class="nx-email-row" role="option" aria-selected data-unread>
+ *               <span class="nx-avatar …"> <span class="nx-email-cell">
+ *                 <span class="nx-email-line"><span class="nx-email-from"> · <time class="nx-email-when">
+ *                 <span class="nx-email-line"><span class="nx-email-subject">
+ *                 <span class="nx-email-snippet">            (first line of the body)
+ *               + visually-hidden “unread”
+ *             <button class="nx-email-star" aria-pressed>    (one per row)
+ *           <li class="nx-email-empty">
+ *       <div class="nx-email-main">
+ *         <div class="nx-email-reading" data-message>        (one per message, shown for the open one)
+ *           <header class="nx-email-head">
+ *             <h3 class="nx-email-subject-full">
+ *             <div class="nx-email-parties"> avatar · <span class="nx-email-party">×2 (from/to) · <time>
+ *             <button class="nx-email-star" aria-pressed>
+ *           <div class="nx-email-body"> <p> per body line
+ *         <div class="nx-email-noselect"> — nothing open
+ *         <form class="nx-email-composer">
+ *           <span class="nx-email-reply"> “Reply to {name}”
+ *           <div class="nx-email-compose"> <textarea class="nx-email-input" rows="1">
+ *             <button class="nx-email-send" type="submit" [data-ready]>
+ *
+ * The unread state is never motion alone: the inline-start bar collapses but the
+ * title weight and colour change with it. Stars pop and turn gold; the reading
+ * pane steps in from the list side (mirrored by --nx-dir, a fade under reduced
+ * motion). The composer is soft on Arabic-script diacritics — see its rule.
+ */
+@layer nx.components {
+  /* The reading pane arrives from the list side: a small step, never from zero. */
+  @keyframes nx-email-read-in {
+    from {
+      opacity: 0;
+      translate: calc(-10px * var(--nx-dir) * var(--nx-motion)) 0;
+    }
+  }
+  /* A star lights up: a pop around 1, plus its gold colour change. */
+  @keyframes nx-email-star-pop {
+    0% { scale: calc(1 - 0.3 * var(--nx-motion)); }
+    60% { scale: calc(1 + 0.12 * var(--nx-motion)); }
+  }
+
+  .nx-email {
+    --_radius: var(--nx-radius-xl);
+    --_pad: 0.625rem;
+
+    container-type: inline-size;
+    min-inline-size: 0;
+  }
+
+  .nx-email-frame {
+    display: grid;
+    grid-template-columns: minmax(9.5rem, 11.5rem) minmax(15.5rem, 19rem) minmax(0, 1fr);
+    block-size: var(--nx-email-height, 36rem);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--_radius);
+    background:
+      radial-gradient(50% 40% at 100% 0%, var(--nx-accent-soft), transparent 70%),
+      radial-gradient(40% 30% at 0% 100%, var(--nx-gold-soft), transparent 70%),
+      var(--nx-bg-subtle);
+    box-shadow: var(--nx-shadow-lg);
+    overflow: clip;
+  }
+
+  /* ---- Folder rail ----------------------------------------------------------------------- */
+
+  .nx-email-folders {
+    display: flex;
+    flex-direction: column;
+    min-inline-size: 0;
+    padding: var(--_pad);
+    border-inline-end: 1px solid var(--nx-glass-border);
+    background: color-mix(in oklab, var(--nx-surface-2) 88%, transparent);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    backdrop-filter: blur(18px) saturate(150%);
+  }
+
+  .nx-email-folder-list {
+    display: grid;
+    align-content: start;
+    gap: 0.125rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nx-email-folder {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    inline-size: 100%;
+    padding: 0.5rem 0.625rem;
+    border: 0;
+    border-radius: calc(var(--_radius) - var(--_pad));
+    background: transparent;
+    color: var(--nx-text-muted);
+    font: 500 var(--nx-text-sm) / 1.3 var(--nx-font-sans);
+    text-align: start;
+    cursor: pointer;
+    transition:
+      background-color var(--nx-dur-base) var(--nx-ease-out),
+      color var(--nx-dur-base) var(--nx-ease-out),
+      scale var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+
+    > .nx-icon { flex: none; inline-size: 1rem; block-size: 1rem; color: var(--nx-text-subtle); }
+
+    &:focus-visible {
+      outline: 2px solid var(--nx-ring);
+      outline-offset: 2px;
+    }
+
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+
+    &:hover { background: var(--nx-surface-3); color: var(--nx-text); }
+
+    &[aria-selected="true"],
+    &[aria-current="true"] {
+      background: var(--nx-surface);
+      color: var(--nx-text);
+      box-shadow: var(--nx-shadow-sm), inset 0 1px 0 0 var(--nx-highlight);
+
+      > .nx-icon { color: var(--nx-accent-text); }
+    }
+  }
+
+  .nx-email-folder-label {
+    flex: 1;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .nx-email-folder-count {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    min-inline-size: 1.375rem;
+    padding-inline: 0.3125rem;
+    block-size: 1.25rem;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-accent-soft);
+    color: var(--nx-accent-text);
+    font: 600 var(--nx-text-xs) / 1 var(--nx-font-sans);
+    font-variant-numeric: tabular-nums;
+
+    &[hidden] { display: none; }
+  }
+
+  .nx-email-folder[aria-current="true"] .nx-email-folder-count {
+    background: var(--nx-accent);
+    color: var(--nx-accent-contrast);
+  }
+
+  /* ---- Message list ------------------------------------------------------------------------ */
+
+  .nx-email-listcol {
+    display: flex;
+    flex-direction: column;
+    min-inline-size: 0;
+    min-block-size: 0;
+    border-inline-end: 1px solid var(--nx-border);
+  }
+
+  .nx-email-list {
+    display: grid;
+    align-content: start;
+    gap: 0.125rem;
+    flex: 1;
+    margin: 0;
+    padding: var(--_pad);
+    list-style: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+
+  .nx-email-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.125rem;
+  }
+
+  .nx-email-item[hidden] { display: none; }
+
+  .nx-email-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-inline-size: 0;
+    padding: 0.5rem 0.5625rem;
+    padding-inline-start: 0.75rem;
+    border: 0;
+    border-radius: calc(var(--_radius) - var(--_pad));
+    background: transparent;
+    color: var(--nx-text-muted);
+    font: 500 var(--nx-text-sm) / 1.3 var(--nx-font-sans);
+    text-align: start;
+    cursor: pointer;
+    transition:
+      background-color var(--nx-dur-base) var(--nx-ease-out),
+      color var(--nx-dur-base) var(--nx-ease-out),
+      scale var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+
+    &:focus-visible {
+      outline: 2px solid var(--nx-ring);
+      outline-offset: 2px;
+    }
+
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+
+    /* The open message reads as chosen: a surface card, not only a colour. */
+    &[aria-selected="true"] {
+      background: var(--nx-surface);
+      color: var(--nx-text);
+      box-shadow: var(--nx-shadow-sm), inset 0 1px 0 0 var(--nx-highlight);
+    }
+
+    /* Unread: an accent bar grows on the inline-start edge — and the type
+       strengthens with it, so the state survives without the motion. */
+    &::before {
+      content: "";
+      position: absolute;
+      inset-inline-start: 0.3125rem;
+      block-size: 60%;
+      inline-size: 0.1875rem;
+      border-radius: var(--nx-radius-full);
+      background: var(--nx-accent);
+      scale: 1 1;
+      opacity: 1;
+      transition:
+        scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+        opacity var(--nx-dur-fast) var(--nx-ease-out);
+    }
+
+    &:not([data-unread])::before {
+      scale: 1 calc(1 - 1 * var(--nx-motion));
+      opacity: 0;
+    }
+  }
+
+  .nx-email-row[data-unread] .nx-email-from,
+  .nx-email-row[data-unread] .nx-email-subject {
+    color: var(--nx-text);
+    font-weight: 650;
+  }
+
+  .nx-email-cell {
+    display: grid;
+    flex: 1;
+    gap: 0.125rem;
+    min-inline-size: 0;
+  }
+
+  .nx-email-line {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    min-inline-size: 0;
+  }
+
+  .nx-email-from {
+    overflow: hidden;
+    font-weight: 600;
+    color: var(--nx-text);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .nx-email-when {
+    flex: none;
+    color: var(--nx-text-subtle);
+    font-size: var(--nx-text-xs);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .nx-email-subject {
+    overflow: hidden;
+    font-weight: 500;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .nx-email-snippet {
+    overflow: hidden;
+    color: var(--nx-text-subtle);
+    font-size: var(--nx-text-xs);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* The star: quiet until it matters — gold and popping once pressed. */
+  .nx-email-star {
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 1.75rem;
+    block-size: 1.75rem;
+    padding: 0;
+    border: 0;
+    border-radius: calc(var(--_radius) - var(--_pad));
+    background: transparent;
+    color: var(--nx-text-subtle);
+    cursor: pointer;
+    transition-property: scale, color, background-color;
+    transition-duration: var(--nx-spring-snappy-duration), var(--nx-dur-fast), var(--nx-dur-fast);
+    transition-timing-function: var(--nx-spring-snappy), var(--nx-ease-out), var(--nx-ease-out);
+
+    > .nx-icon { inline-size: 1rem; block-size: 1rem; }
+
+    &:hover { background: var(--nx-surface-3); color: var(--nx-gold-text); }
+
+    &:focus-visible {
+      outline: 2px solid var(--nx-ring);
+      outline-offset: 1px;
+    }
+
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+
+    &[aria-pressed="true"] {
+      background: var(--nx-gold-soft);
+      color: var(--nx-gold-text);
+      animation: nx-email-star-pop var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+    }
+  }
+
+  .nx-email-empty {
+    display: grid;
+    place-content: center;
+    gap: var(--nx-space-2);
+    justify-items: center;
+    flex: 1;
+    padding: var(--nx-space-8) var(--nx-space-4);
+    color: var(--nx-text-subtle);
+    font: 500 var(--nx-text-sm) / 1.5 var(--nx-font-sans);
+    text-align: center;
+
+    > .nx-icon { color: var(--nx-text-subtle); }
+  }
+
+  /* ---- Reading pane ------------------------------------------------------------------------- */
+
+  .nx-email-main {
+    display: flex;
+    flex-direction: column;
+    min-inline-size: 0;
+    min-block-size: 0;
+  }
+
+  .nx-email-reading {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-block-size: 0;
+    animation: nx-email-read-in var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+  }
+
+  .nx-email-head {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-3) var(--nx-space-4);
+    border-block-end: 1px solid var(--nx-border);
+    background: color-mix(in oklab, var(--nx-surface) 72%, transparent);
+  }
+
+  .nx-email-head-main {
+    display: grid;
+    gap: var(--nx-space-2);
+    flex: 1;
+    min-inline-size: 0;
+  }
+
+  .nx-email-subject-full {
+    margin: 0;
+    overflow: hidden;
+    color: var(--nx-text);
+    font: 650 var(--nx-text-base) / 1.35 var(--nx-font-sans);
+    letter-spacing: var(--nx-tracking-tight);
+    overflow-wrap: anywhere;
+  }
+
+  .nx-email-parties {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-inline-size: 0;
+  }
+
+  .nx-email-party-group {
+    display: grid;
+    gap: 0.125rem;
+    min-inline-size: 0;
+  }
+
+  .nx-email-party {
+    display: flex;
+    align-items: baseline;
+    gap: 0.375rem;
+    min-inline-size: 0;
+    color: var(--nx-text-subtle);
+    font-size: var(--nx-text-xs);
+    white-space: nowrap;
+
+    /* “From” / “To” — the roles, quiet next to the addresses. */
+    > .nx-email-role { color: var(--nx-text-subtle); }
+
+    > .nx-email-address {
+      overflow: hidden;
+      color: var(--nx-text-muted);
+      font-weight: 600;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .nx-email-when-full {
+    color: var(--nx-text-subtle);
+    font-size: var(--nx-text-xs);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nx-email-head > .nx-email-star {
+    inline-size: 2rem;
+    block-size: 2rem;
+    border-radius: var(--nx-radius-md);
+
+    > .nx-icon { inline-size: 1.125rem; block-size: 1.125rem; }
+  }
+
+  /* The body: roomy lines that carry Arabic-script diacritics without clipping. */
+  .nx-email-body {
+    display: grid;
+    align-content: start;
+    gap: var(--nx-space-3);
+    flex: 1;
+    min-block-size: 0;
+    padding: var(--nx-space-4);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    color: var(--nx-text);
+    font: 400 var(--nx-text-sm) / 1.65 var(--nx-font-sans);
+    overflow-wrap: anywhere;
+
+    > p { margin: 0; }
+  }
+
+  .nx-email-noselect {
+    display: grid;
+    place-content: center;
+    gap: var(--nx-space-2);
+    justify-items: center;
+    flex: 1;
+    padding: var(--nx-space-8) var(--nx-space-4);
+    color: var(--nx-text-subtle);
+    font: 500 var(--nx-text-sm) / 1.5 var(--nx-font-sans);
+    text-align: center;
+  }
+
+  /* ---- Composer ------------------------------------------------------------------------------- */
+
+  .nx-email-composer {
+    display: grid;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-3) var(--nx-space-4);
+    border-block-start: 1px solid var(--nx-border);
+    background: color-mix(in oklab, var(--nx-surface) 72%, transparent);
+  }
+
+  .nx-email-reply {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    color: var(--nx-text-subtle);
+    font: 500 var(--nx-text-xs) / 1 var(--nx-font-sans);
+
+    > .nx-icon { inline-size: 0.875rem; block-size: 0.875rem; }
+  }
+
+  .nx-email-compose {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--nx-space-2);
+  }
+
+  /* Soft on diacritics: no letter-spacing to shear the Arabic-script joins, a
+     roomy line-height so tashkeel above and below the line never clips, and
+     wrap-anywhere so one long decorated word never overflows the field. */
+  .nx-email-input {
+    flex: 1;
+    min-inline-size: 0;
+    min-block-size: 2.5rem;
+    max-block-size: 10lh;
+    padding: var(--nx-space-2) var(--nx-space-3);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    font: 400 var(--nx-text-sm) / 1.7 var(--nx-font-sans);
+    letter-spacing: normal;
+    overflow-wrap: anywhere;
+    resize: none;
+    transition: border-color var(--nx-dur-base) var(--nx-ease-out), box-shadow var(--nx-dur-base) var(--nx-ease-out);
+
+    &::placeholder { color: var(--nx-text-subtle); }
+
+    &:focus-visible {
+      outline: 2px solid var(--nx-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  .nx-email-send {
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 2.5rem;
+    block-size: 2.5rem;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-accent);
+    color: var(--nx-accent-contrast);
+    cursor: pointer;
+    scale: 0.95;
+    transition:
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+      box-shadow var(--nx-dur-base) var(--nx-ease-out),
+      opacity var(--nx-dur-fast) var(--nx-ease-out),
+      background-color var(--nx-dur-base) var(--nx-ease-out);
+
+    > .nx-icon {
+      transition: translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle), opacity var(--nx-dur-fast) var(--nx-ease-out);
+      opacity: 0.7;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--nx-ring);
+      outline-offset: 2px;
+    }
+
+    /* Motion is never the only cue: the ready button also gains its glow. */
+    &[data-ready] {
+      scale: 1;
+      box-shadow: var(--nx-shadow-glow);
+
+      > .nx-icon { opacity: 1; }
+    }
+
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+
+    &:disabled {
+      background: var(--nx-surface-3);
+      color: var(--nx-text-subtle);
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+  }
+
+  /* ---- Narrow panes --------------------------------------------------------------------------- */
+
+  /* Medium: the rail folds to icons; the badge stays beside them. */
+  @container (width < 62rem) {
+    .nx-email-frame {
+      grid-template-columns: minmax(3rem, 3.5rem) minmax(14rem, 17rem) minmax(0, 1fr);
+    }
+
+    .nx-email-folder {
+      justify-content: center;
+      padding-inline: 0;
+    }
+
+    .nx-email-folder-label { display: none; }
+  }
+
+  /* Narrow: the rail becomes a scrolling row over a stacked list and reader. */
+  @container (width < 44rem) {
+    .nx-email-frame {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto minmax(9rem, 13rem) minmax(0, 1fr);
+    }
+
+    .nx-email-folders {
+      flex-direction: row;
+      border-inline-end: 0;
+      border-block-end: 1px solid var(--nx-glass-border);
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scrollbar-width: none;
+    }
+
+    .nx-email-folder-list {
+      display: flex;
+      gap: 0.25rem;
+    }
+
+    .nx-email-folder {
+      justify-content: flex-start;
+      padding-inline: 0.625rem;
+      white-space: nowrap;
+    }
+
+    .nx-email-folder-label { display: block; }
+
+    .nx-email-listcol { border-inline-end: 0; }
+  }
+
+  /* Reduced motion: everything already folds to fades (travel is multiplied by
+     --nx-motion); the star pop collapses to its colour change. */
+  @media (prefers-reduced-motion: reduce) {
+    .nx-email-reading { animation-duration: 150ms; }
+    .nx-email-star[aria-pressed="true"] { animation: none; }
+  }
+
+  @media (forced-colors: active) {
+    .nx-email-frame { border: 1px solid CanvasText; }
+    .nx-email-row[aria-selected="true"] { outline: 1px solid Highlight; }
+    .nx-email-star[aria-pressed="true"] { color: Highlight; }
+    .nx-email-input { border: 1px solid CanvasText; }
+  }
+}

@@ -1,0 +1,517 @@
+/*
+ * Block: todo — a task list: grouped tasks, a spring tick, drag-to-reorder,
+ * a rolling counter with a progress bar, and a quick-add composer.
+ *
+ *   <section class="nx-todo" data-nx-reveal aria-label>
+ *     <header class="nx-todo-head">
+ *       <h3 class="nx-todo-title"/><span class="nx-todo-count">…<span class="nx-number"/></span>
+ *       <span class="nx-visually-hidden">… done of …</span></header>
+ *     <div class="nx-todo-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+ *       <span class="nx-todo-progress-track"><span class="nx-todo-progress-fill"/></span>
+ *       <span class="nx-todo-progress-label"><span class="nx-number">…%</span></span></div>
+ *     <form class="nx-todo-add"><input class="nx-todo-add-input"/>
+ *       <select class="nx-todo-add-select"/><button class="nx-todo-add-submit"/></form>
+ *     <ul class="nx-todo-groups">
+ *       <li class="nx-todo-group" data-group="work">                  ([data-dropping] under a drag)
+ *         <header class="nx-todo-group-head">
+ *           <span class="nx-todo-group-dot" data-tone/><h4 class="nx-todo-group-title"/>
+ *           <span class="nx-todo-group-count"><span class="nx-number">…</span></span></header>
+ *         <ul class="nx-todo-list">
+ *           <li class="nx-todo-item" draggable data-key data-done style="--nx-i">
+ *             <span class="nx-todo-grip" aria-hidden="true"/>
+ *             <input type="checkbox" class="nx-todo-check"/>
+ *             <span class="nx-todo-label">…</span>
+ *             <button type="button" class="nx-todo-remove" aria-label="Remove …"/></li>
+ *           <li class="nx-todo-placeholder" aria-hidden="true"/>
+ *           <li class="nx-todo-empty"/></ul></li> … </ul></section>
+ *
+ * The tick springs in (a bouncy scale, never from zero-opacity alone: the box
+ * also fills and the label strikes through), tasks glide with FLIP
+ * (core snapshotRows/playRowFlip) when a drag, an Alt+Arrow nudge or a removal
+ * reorders them, and the drop point shows as a slim pill with a breathing dot —
+ * the only loop, and it stops under reduced motion. The bar's fill is driven by
+ * `--nx-todo-p` (0–100) so both frameworks only ever set one number; it grows
+ * from the inline-start edge, so it flips with the direction by itself.
+ */
+@layer nx.components {
+  /* Tone colours: one custom property set, used by the dots, rims and fills. */
+  .nx-todo [data-tone] {
+    --_tone: var(--nx-accent);
+    --_tone-soft: var(--nx-accent-soft);
+  }
+  .nx-todo [data-tone='success'] { --_tone: var(--nx-success); --_tone-soft: var(--nx-success-soft); }
+  .nx-todo [data-tone='warning'] { --_tone: var(--nx-warning); --_tone-soft: var(--nx-warning-soft); }
+  .nx-todo [data-tone='danger']  { --_tone: var(--nx-danger);  --_tone-soft: var(--nx-danger-soft); }
+  .nx-todo [data-tone='info']    { --_tone: var(--nx-info);    --_tone-soft: var(--nx-info-soft); }
+  .nx-todo [data-tone='gold']    { --_tone: var(--nx-gold);    --_tone-soft: var(--nx-gold-soft); }
+
+  .nx-todo {
+    display: grid;
+    gap: var(--nx-space-3);
+  }
+
+  /* ---- Head: title, rolling counter ------------------------------------------------------ */
+
+  .nx-todo-head {
+    display: flex;
+    align-items: baseline;
+    gap: var(--nx-space-3);
+  }
+
+  .nx-todo-title {
+    min-inline-size: 0;
+    margin: 0;
+    overflow: hidden;
+    color: var(--nx-text);
+    font: 600 var(--nx-text-sm) / 1.3 var(--nx-font-sans);
+    letter-spacing: var(--nx-tracking-tight);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .nx-todo-count {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--nx-space-1);
+    margin-inline-start: auto;
+    padding-inline: var(--nx-space-2);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface-2);
+    color: var(--nx-text-muted);
+    font: 600 var(--nx-text-xs) / 1.7 var(--nx-font-sans);
+    font-variant-numeric: tabular-nums;
+
+    .nx-number { font-size: inherit; }
+  }
+
+  .nx-todo-count-sep { color: var(--nx-text-subtle); }
+
+  /* ---- Progress: one fill, one rolling percent -------------------------------------------- */
+
+  .nx-todo-progress {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+  }
+
+  .nx-todo-progress-track {
+    position: relative;
+    flex: 1;
+    block-size: 0.5rem;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface-3);
+    box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.08);
+    overflow: clip;
+  }
+
+  .nx-todo-progress-fill {
+    display: block;
+    block-size: 100%;
+    inline-size: calc(var(--nx-todo-p, 0) * 1%);
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--nx-accent), color-mix(in oklab, var(--nx-accent) 65%, var(--nx-gold)));
+    transition: inline-size var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+  }
+
+  /* All done turns the bar into a quiet success state — colour, not just width. */
+  .nx-todo[data-complete] .nx-todo-progress-fill {
+    background: var(--nx-success);
+  }
+
+  .nx-todo-progress-label {
+    flex: none;
+    min-inline-size: 2.75rem;
+    color: var(--nx-text-muted);
+    font: 600 var(--nx-text-xs) / 1 var(--nx-font-sans);
+    font-variant-numeric: tabular-nums;
+    text-align: end;
+
+    .nx-number { font-size: inherit; }
+  }
+
+  /* ---- Quick add ---------------------------------------------------------------------------- */
+
+  .nx-todo-add {
+    display: flex;
+    gap: var(--nx-space-2);
+  }
+
+  .nx-todo-add-input,
+  .nx-todo-add-select {
+    min-inline-size: 0;
+    padding: var(--nx-space-2) var(--nx-space-3);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    font: 400 var(--nx-text-sm) / 1.4 var(--nx-font-sans);
+
+    &::placeholder { color: var(--nx-text-subtle); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 1px; }
+  }
+
+  .nx-todo-add-input { flex: 1; }
+
+  .nx-todo-add-select {
+    flex: none;
+    max-inline-size: 9rem;
+    cursor: pointer;
+  }
+
+  .nx-todo-add-submit {
+    flex: none;
+    display: inline-grid;
+    place-items: center;
+    min-block-size: 2.25rem;
+    padding-inline: var(--nx-space-3);
+    border: 0;
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-accent);
+    color: var(--nx-accent-contrast);
+    font: 600 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    cursor: pointer;
+    transition-property: scale, background-color;
+    transition-duration: var(--nx-spring-snappy-duration), var(--nx-dur-fast);
+    transition-timing-function: var(--nx-spring-snappy), var(--nx-ease-out);
+
+    > .nx-icon { inline-size: 0.95rem; block-size: 0.95rem; }
+    &:hover { background: color-mix(in oklab, var(--nx-accent) 88%, var(--nx-text)); }
+    &:active:not([data-static]) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+  }
+
+  /* ---- Groups ------------------------------------------------------------------------------- */
+
+  .nx-todo-groups {
+    display: grid;
+    gap: var(--nx-space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nx-todo-group {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-xl);
+    background: var(--nx-surface-2);
+    box-shadow: var(--nx-shadow-xs);
+    transition:
+      border-color var(--nx-dur-fast) var(--nx-ease-out),
+      box-shadow var(--nx-dur-fast) var(--nx-ease-out),
+      background-color var(--nx-dur-fast) var(--nx-ease-out);
+  }
+
+  /* The group the pointer is over takes the drop: its rim turns tone-coloured. */
+  .nx-todo-group[data-dropping] {
+    border-color: color-mix(in oklab, var(--_tone, var(--nx-accent)) 55%, var(--nx-border));
+    background: var(--nx-surface-3);
+    box-shadow: var(--nx-shadow-sm), inset 0 0 0 1px color-mix(in oklab, var(--_tone, var(--nx-accent)) 22%, transparent);
+  }
+
+  .nx-todo-group-head {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-3) var(--nx-space-3) var(--nx-space-2);
+  }
+
+  .nx-todo-group-dot {
+    flex: none;
+    inline-size: 0.5rem;
+    block-size: 0.5rem;
+    border-radius: 50%;
+    background: var(--_tone);
+    box-shadow: 0 0 0 3px var(--_tone-soft);
+  }
+
+  .nx-todo-group-title {
+    min-inline-size: 0;
+    margin: 0;
+    overflow: hidden;
+    color: var(--nx-text);
+    font: 600 var(--nx-text-sm) / 1.3 var(--nx-font-sans);
+    letter-spacing: var(--nx-tracking-tight);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .nx-todo-group-count {
+    display: inline-grid;
+    place-items: center;
+    min-inline-size: 1.625rem;
+    margin-inline-start: auto;
+    padding-inline: var(--nx-space-2);
+    block-size: 1.375rem;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface);
+    color: var(--nx-text-muted);
+    font: 600 var(--nx-text-xs) / 1 var(--nx-font-sans);
+    font-variant-numeric: tabular-nums;
+
+    .nx-number { font-size: inherit; }
+  }
+
+  .nx-todo-list {
+    display: grid;
+    gap: var(--nx-space-1);
+    align-content: start;
+    margin: 0;
+    padding: 0 var(--nx-space-2) var(--nx-space-2);
+    list-style: none;
+  }
+
+  /* ---- One task ------------------------------------------------------------------------------ */
+
+  .nx-todo-item {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding-block: var(--nx-space-2);
+    padding-inline: var(--nx-space-1) var(--nx-space-2);
+    border: 1px solid transparent;
+    border-radius: var(--nx-radius-lg);
+    cursor: grab;
+    transition:
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+      opacity var(--nx-dur-base) var(--nx-ease-out),
+      border-color var(--nx-dur-fast) var(--nx-ease-out),
+      background-color var(--nx-dur-fast) var(--nx-ease-out);
+    /* One delay per property above: the reveal properties (translate, opacity)
+       wait their turn in the first-reveal stagger; press, hover and drag cues
+       stay immediate. The :hover rule below re-zeroes it for the pointer lift. */
+    transition-delay:
+      calc(min(var(--nx-i, 0), 12) * 40ms),
+      0ms,
+      calc(min(var(--nx-i, 0), 12) * 40ms),
+      0ms,
+      0ms;
+  }
+
+  /* Tasks answer the pointer with a soft plate; colour only, no travel on touch. */
+  @media (hover: hover) and (pointer: fine) {
+    .nx-todo-item:hover {
+      border-color: var(--nx-border);
+      background: var(--nx-surface);
+      translate: 0 calc(-1px * var(--nx-motion));
+      transition-delay: 0ms;
+    }
+  }
+
+  /* The task in flight: dimmed and slightly shrunk — a state, not just motion. */
+  .nx-todo-item[data-dragging] {
+    opacity: 0.35;
+    scale: calc(0.98 * (1 - 0.02 * var(--nx-motion)));
+    border: 1px dashed var(--nx-border-strong);
+    background: var(--nx-surface);
+    cursor: grabbing;
+  }
+
+  .nx-todo-grip {
+    flex: none;
+    inline-size: 0.875rem;
+    block-size: 1.125rem;
+    background: radial-gradient(currentColor 1px, transparent 1.3px) 50% / 5px 5px no-repeat;
+    color: var(--nx-text-subtle);
+    opacity: 0.45;
+    transition: opacity var(--nx-dur-fast) var(--nx-ease-out);
+  }
+
+  .nx-todo-item:is(:hover, :focus-within, [data-dragging]) .nx-todo-grip { opacity: 1; }
+  .nx-todo-item[data-dragging] .nx-todo-grip { color: var(--nx-text-muted); }
+
+  /* The spring tick: a native checkbox, drawn from scratch. */
+  .nx-todo-check {
+    appearance: none;
+    flex: none;
+    display: inline-grid;
+    place-content: center;
+    inline-size: 1.25rem;
+    block-size: 1.25rem;
+    border: 1.5px solid var(--nx-border-strong);
+    border-radius: var(--nx-radius-sm);
+    background: var(--nx-surface);
+    color: var(--nx-accent-contrast);
+    cursor: pointer;
+    transition:
+      background-color var(--nx-dur-fast) var(--nx-ease-out),
+      border-color var(--nx-dur-fast) var(--nx-ease-out),
+      box-shadow var(--nx-dur-base) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+
+    &::before {
+      content: "";
+      grid-area: 1 / 1;
+      inline-size: 0.85rem;
+      block-size: 0.85rem;
+      background: currentColor;
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 12.5 9.5 17.5 19.5 6.5'/%3E%3C/svg%3E") center / contain no-repeat;
+      scale: calc(0.4 + 0.6 * (1 - var(--nx-motion)));
+      opacity: 0;
+      rotate: calc(-8deg * var(--nx-motion));
+      transition:
+        scale var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy),
+        rotate var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy),
+        opacity var(--nx-dur-fast) var(--nx-ease-out);
+    }
+
+    &:hover:not(:disabled, :checked) { border-color: var(--nx-accent); box-shadow: 0 0 0 4px var(--nx-accent-soft); }
+    &:active:not(:disabled) { scale: calc(1 - 0.12 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+    &:disabled { cursor: not-allowed; opacity: 0.6; }
+
+    &:checked {
+      border-color: var(--nx-accent);
+      background: var(--nx-accent);
+      box-shadow: 0 0 0 4px var(--nx-accent-soft);
+
+      &::before { scale: 1; opacity: 1; rotate: 0deg; transition-delay: 30ms; }
+    }
+  }
+
+  .nx-todo-label {
+    position: relative;
+    min-inline-size: 0;
+    flex: 1;
+    color: var(--nx-text);
+    font: 500 var(--nx-text-sm) / 1.5 var(--nx-font-sans);
+    overflow-wrap: anywhere;
+    transition: color var(--nx-dur-base) var(--nx-ease-out), opacity var(--nx-dur-base) var(--nx-ease-out);
+
+    /* The strike: a hairline that sweeps in from the reading edge. */
+    &::after {
+      content: "";
+      position: absolute;
+      inset-block-start: 0.72em;
+      inset-inline-start: 0;
+      inline-size: 0;
+      block-size: 1.5px;
+      border-radius: var(--nx-radius-full);
+      background: currentColor;
+      opacity: 0.55;
+      transition: inline-size var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+    }
+  }
+
+  /* Done: struck, dimmed — colour and label, never motion alone. */
+  .nx-todo-item[data-done] .nx-todo-label {
+    color: var(--nx-text-subtle);
+
+    &::after { inline-size: 100%; }
+  }
+
+  .nx-todo-remove {
+    flex: none;
+    display: grid;
+    place-items: center;
+    inline-size: 1.5rem;
+    block-size: 1.5rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--nx-radius-sm);
+    background: transparent;
+    color: var(--nx-text-subtle);
+    cursor: pointer;
+    opacity: 0;
+    transition-property: scale, background-color, color, opacity;
+    transition-duration: var(--nx-spring-snappy-duration), var(--nx-dur-fast), var(--nx-dur-fast), var(--nx-dur-fast);
+    transition-timing-function: var(--nx-spring-snappy), var(--nx-ease-out), var(--nx-ease-out), var(--nx-ease-out);
+
+    > .nx-icon { inline-size: 0.9rem; block-size: 0.9rem; }
+    &:hover { background: var(--nx-danger-soft); color: var(--nx-danger-text); }
+    &:active:not([data-static]) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { opacity: 1; outline: 2px solid var(--nx-ring); outline-offset: 1px; }
+  }
+
+  /* The remove affordance rides the item's hover; on touch there is none, so it stays. */
+  .nx-todo-item:is(:hover, :focus-within) .nx-todo-remove,
+  .nx-todo-item[data-dragging] .nx-todo-remove { opacity: 1; }
+
+  @media (hover: none) {
+    .nx-todo-remove { opacity: 1; }
+    .nx-todo-grip { opacity: 0.8; }
+  }
+
+  /* ---- The drop placeholder: a slim pill with a breathing dot --------------------------------- */
+
+  /* Shown unless [hidden]; every hop to a new index replays the slot pop. */
+  .nx-todo-placeholder {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    min-block-size: 2rem;
+    padding-inline: var(--nx-space-3);
+    border: 1px dashed color-mix(in oklab, var(--_tone, var(--nx-accent)) 60%, var(--nx-border));
+    border-radius: var(--nx-radius-lg);
+    background: var(--_tone-soft, var(--nx-accent-soft));
+    animation: nx-todo-slot var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+  }
+
+  .nx-todo-placeholder[hidden] { display: none; }
+
+  @keyframes nx-todo-slot {
+    from { opacity: 0; scale: calc(1 - 0.1 * var(--nx-motion)); }
+  }
+
+  .nx-todo-placeholder-dot {
+    flex: none;
+    inline-size: 0.5rem;
+    block-size: 0.5rem;
+    border-radius: 50%;
+    background: var(--_tone, var(--nx-accent));
+    animation: nx-todo-breathe 1.4s var(--nx-ease-in-out) infinite;
+  }
+
+  .nx-todo-placeholder-bar {
+    inline-size: min(9rem, 60%);
+    block-size: 0.375rem;
+    border-radius: var(--nx-radius-full);
+    background: color-mix(in oklab, var(--_tone, var(--nx-accent)) 28%, transparent);
+  }
+
+  @keyframes nx-todo-breathe {
+    50% { scale: calc(1 + 0.35 * var(--nx-motion)); opacity: 0.55; }
+  }
+
+  .nx-todo-empty {
+    padding: var(--nx-space-3);
+    border: 1px dashed var(--nx-border);
+    border-radius: var(--nx-radius-lg);
+    color: var(--nx-text-subtle);
+    font: 400 var(--nx-text-xs) / 1.5 var(--nx-font-sans);
+    text-align: center;
+  }
+
+  /* ---- First reveal: the tasks rise in, staggered ----------------------------------------------- */
+
+  :where(.nx-js) .nx-todo[data-nx-reveal]:not([data-nx-revealed]) .nx-todo-item {
+    opacity: 0;
+    translate: 0 calc(8px * var(--nx-motion));
+  }
+
+  :where(.nx-js:not(.nx-live)) .nx-todo[data-nx-reveal]:not([data-nx-revealed]) .nx-todo-item {
+    animation: nx-reveal-failsafe 1ms 2.5s forwards;
+  }
+
+  .nx-todo[data-nx-revealed] .nx-todo-item,
+  .nx-todo:not([data-nx-reveal]) .nx-todo-item { opacity: 1; translate: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-todo-progress-fill,
+    .nx-todo-label::after { transition-duration: 150ms; transition-timing-function: var(--nx-ease-out); }
+    .nx-todo-check::before { transition-duration: 150ms; transition-timing-function: var(--nx-ease-out); }
+    .nx-todo-placeholder { animation-duration: 150ms; }
+    .nx-todo-placeholder-dot { animation: none; opacity: 0.75; }
+    .nx-todo-item[data-dragging] { scale: 1; }
+  }
+
+  @media (forced-colors: active) {
+    .nx-todo-group { border: 1px solid CanvasText; }
+    .nx-todo-item[data-dragging] { border: 1px dashed CanvasText; opacity: 0.6; }
+    .nx-todo-placeholder { border: 1px dashed CanvasText; }
+    .nx-todo-check:checked { background: Highlight; border-color: Highlight; }
+    .nx-todo-label::after { background: CanvasText; }
+  }
+}
