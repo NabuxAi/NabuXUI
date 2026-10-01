@@ -25,6 +25,15 @@ import { installAuthCardBlocks } from './alpine/blocks/auth-card';
 import { installCalendarBlocks } from './alpine/blocks/calendar';
 import { installChatBlocks } from './alpine/blocks/chat';
 import { installKanbanBlocks } from './alpine/blocks/kanban';
+import { installEmailBlocks } from './alpine/blocks/email';
+import { installFileManagerBlocks } from './alpine/blocks/file-manager';
+import { installTodoBlocks } from './alpine/blocks/todo';
+import { installProductCardBlocks } from './alpine/blocks/product-card';
+import { installOrderTrackingBlocks } from './alpine/blocks/order-tracking';
+import { installTreeViewBlocks } from './alpine/blocks/tree-view';
+import { installGanttBlocks } from './alpine/blocks/gantt';
+import { installWizardBlocks } from './alpine/blocks/wizard';
+import { installProfileCardBlocks } from './alpine/blocks/profile-card';
 
 
 declare global {
@@ -61,6 +70,15 @@ function install(Alpine: AlpineLike | undefined) {
   installCalendarBlocks(Alpine);
   installChatBlocks(Alpine);
   installKanbanBlocks(Alpine);
+  installEmailBlocks(Alpine);
+  installFileManagerBlocks(Alpine);
+  installTodoBlocks(Alpine);
+  installProductCardBlocks(Alpine);
+  installOrderTrackingBlocks(Alpine);
+  installTreeViewBlocks(Alpine);
+  installGanttBlocks(Alpine);
+  installWizardBlocks(Alpine);
+  installProfileCardBlocks(Alpine);
 }
 
 if (window.Alpine) install(window.Alpine);

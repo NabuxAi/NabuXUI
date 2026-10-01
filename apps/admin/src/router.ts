@@ -3,41 +3,64 @@ import { useEffect, useState } from 'react';
 /**
  * A deliberately tiny hash router — no dependency, no history API. The panel’s
  * pages are static ids: `#/users`, `#/kanban`… The auth views (`#/login`,
- * `#/register`, `#/forgot`) render outside the admin shell.
+ * `#/register`, `#/forgot`) and the standalone minimal error views (`#/err404`,
+ * `#/err500`, `#/maintenance`) render outside the admin shell.
  */
 
 export type RouteId =
   | 'dash'
   | 'analytics'
+  | 'products'
+  | 'orders'
   | 'users'
+  | 'roles'
   | 'kanban'
   | 'calendar'
   | 'chat'
+  | 'email'
+  | 'files'
+  | 'todo'
   | 'invoices'
   | 'profile'
   | 'settings'
   | 'login'
   | 'register'
-  | 'forgot';
+  | 'forgot'
+  | 'err404'
+  | 'err500'
+  | 'maintenance';
 
 export const ROUTES: readonly RouteId[] = [
   'dash',
   'analytics',
+  'products',
+  'orders',
   'users',
+  'roles',
   'kanban',
   'calendar',
   'chat',
+  'email',
+  'files',
+  'todo',
   'invoices',
   'profile',
   'settings',
   'login',
   'register',
   'forgot',
+  'err404',
+  'err500',
+  'maintenance',
 ];
 
 const AUTH_ROUTES: ReadonlySet<string> = new Set(['login', 'register', 'forgot']);
+const ERROR_ROUTES: ReadonlySet<string> = new Set(['err404', 'err500', 'maintenance']);
 
 export const isAuthRoute = (id: RouteId) => AUTH_ROUTES.has(id);
+
+/** The standalone minimal error views — like auth, they render outside the shell. */
+export const isErrorRoute = (id: RouteId) => ERROR_ROUTES.has(id);
 
 export const href = (id: RouteId) => `#/${id}`;
 

@@ -32,6 +32,22 @@ Route::get('/admin/invoice', \App\Livewire\Admin\Invoice::class)->name('admin.in
 Route::get('/admin/profile', \App\Livewire\Admin\Profile::class)->name('admin.profile');
 Route::get('/admin/settings', \App\Livewire\Admin\Settings::class)->name('admin.settings');
 
+// The shop group: the catalogue (product-card grid + category filter) and its
+// orders (data-table with an order-tracking dialog per row).
+Route::get('/admin/products', \App\Livewire\Admin\Products::class)->name('admin.products');
+Route::get('/admin/orders', \App\Livewire\Admin\Orders::class)->name('admin.orders');
+
+// The pages group: the full-page app demos — mail (nx-email), the file
+// manager, the to-do list and the roles' permission matrix — plus the panel's
+// standalone minimal error pages (no shell; one component, three flavours).
+Route::get('/admin/email', \App\Livewire\Admin\Email::class)->name('admin.email');
+Route::get('/admin/files', \App\Livewire\Admin\Files::class)->name('admin.files');
+Route::get('/admin/todo', \App\Livewire\Admin\Todo::class)->name('admin.todo');
+Route::get('/admin/roles', \App\Livewire\Admin\Roles::class)->name('admin.roles');
+Route::get('/admin/errors/404', \App\Livewire\Admin\ErrorPage::class)->defaults('code', '404')->name('admin.errors.404');
+Route::get('/admin/errors/500', \App\Livewire\Admin\ErrorPage::class)->defaults('code', '500')->name('admin.errors.500');
+Route::get('/admin/errors/maintenance', \App\Livewire\Admin\ErrorPage::class)->defaults('code', 'maintenance')->name('admin.errors.maintenance');
+
 // Auth gate: one component, three panes (login / register / forgot-password).
 Route::get('/login', \App\Livewire\Auth\Gate::class)->defaults('mode', 'login')->name('login');
 Route::get('/register', \App\Livewire\Auth\Gate::class)->defaults('mode', 'register')->name('register');

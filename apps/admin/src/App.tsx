@@ -15,20 +15,27 @@ import {
   type IconName,
 } from '@nabuxai/ui-react';
 import { LangContext, STRINGS, localeId, readLang, type Lang } from './lang';
-import { href, isAuthRoute, useRoute, type RouteId } from './router';
+import { href, isAuthRoute, isErrorRoute, useRoute, type RouteId } from './router';
 import { AGO } from './data';
 import { DashboardPage } from './pages/dashboard';
 import { AnalyticsPage } from './pages/analytics';
+import { ProductsPage } from './pages/products';
+import { OrdersPage } from './pages/orders';
 import { UsersPage } from './pages/users';
+import { RolesPage } from './pages/roles';
 import { KanbanPage } from './pages/kanban';
 import { CalendarPage } from './pages/calendar';
 import { ChatPage } from './pages/chat';
+import { EmailPage } from './pages/email';
+import { FilesPage } from './pages/files';
+import { TodoPage } from './pages/todo';
 import { InvoicesPage } from './pages/invoices';
 import { ProfilePage } from './pages/profile';
 import { SettingsPage } from './pages/settings';
 import { AuthPage } from './pages/auth';
+import { ErrorPage } from './pages/errors';
 
-type PanelRoute = Exclude<RouteId, 'login' | 'register' | 'forgot'>;
+type PanelRoute = Exclude<RouteId, 'login' | 'register' | 'forgot' | 'err404' | 'err500' | 'maintenance'>;
 
 /** The page registry: one list drives the sidebar, the router and the palette. */
 interface PanelPage {
@@ -41,10 +48,16 @@ interface PanelPage {
 const PANEL: readonly PanelPage[] = [
   { id: 'dash', group: 'main', icon: 'grid', Component: DashboardPage },
   { id: 'analytics', group: 'main', icon: 'chart', Component: AnalyticsPage },
+  { id: 'products', group: 'main', icon: 'star', Component: ProductsPage },
+  { id: 'orders', group: 'main', icon: 'zap', Component: OrdersPage },
   { id: 'users', group: 'main', icon: 'users', Component: UsersPage },
+  { id: 'roles', group: 'main', icon: 'shield', Component: RolesPage },
   { id: 'kanban', group: 'work', icon: 'layers', Component: KanbanPage },
   { id: 'calendar', group: 'work', icon: 'grid', Component: CalendarPage },
   { id: 'chat', group: 'work', icon: 'message', Component: ChatPage },
+  { id: 'email', group: 'work', icon: 'mail', Component: EmailPage },
+  { id: 'files', group: 'work', icon: 'folder', Component: FilesPage },
+  { id: 'todo', group: 'work', icon: 'check-circle', Component: TodoPage },
   { id: 'invoices', group: 'work', icon: 'file', Component: InvoicesPage },
   { id: 'profile', group: 'account', icon: 'user', Component: ProfilePage },
   { id: 'settings', group: 'account', icon: 'settings', Component: SettingsPage },
@@ -62,7 +75,8 @@ export function App() {
 
   const page = PANEL.find((entry) => entry.id === route);
   const authTitle = route === 'register' ? s.pages.auth.registerTitle : route === 'forgot' ? s.pages.auth.forgotTitle : s.pages.auth.loginTitle;
-  const title = page ? s.pages[page.id].title : authTitle;
+  const errorTitle = route === 'err404' ? s.pages.err404.title : route === 'err500' ? s.pages.err500.title : route === 'maintenance' ? s.pages.maintenance.title : authTitle;
+  const title = page ? s.pages[page.id].title : errorTitle;
 
   // The document follows the language, exactly like the showcase app.
   useEffect(() => {
@@ -134,6 +148,18 @@ export function App() {
       <LangContext.Provider value={lang}>
         <NabuXUIProvider locale={lang}>
           <AuthPage />
+          <Toaster />
+        </NabuXUIProvider>
+      </LangContext.Provider>
+    );
+  }
+
+  // The error views are standalone and minimal — no shell, just the page.
+  if (isErrorRoute(route)) {
+    return (
+      <LangContext.Provider value={lang}>
+        <NabuXUIProvider locale={lang}>
+          <ErrorPage />
           <Toaster />
         </NabuXUIProvider>
       </LangContext.Provider>

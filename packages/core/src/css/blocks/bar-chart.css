@@ -225,6 +225,18 @@
     scale: 1;
   }
 
+  /* Under reduced motion the bars stand at their height — no spring, no stair;
+     only the short colour fades stay. */
+  @media (prefers-reduced-motion: reduce) {
+    .nx-bar-chart-bar {
+      transition: opacity var(--nx-dur-base) var(--nx-ease-out), filter var(--nx-dur-fast) var(--nx-ease-out);
+    }
+
+    .nx-bar-chart-bars[data-stacked] {
+      transition: opacity var(--nx-dur-base) var(--nx-ease-out);
+    }
+  }
+
   @media (forced-colors: active) {
     .nx-bar-chart-bar { forced-color-adjust: none; }
     .nx-bar-chart-group:focus-visible { outline: 2px solid Highlight; }

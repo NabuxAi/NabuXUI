@@ -187,4 +187,10 @@
   :where(.nx-js) .nx-gauge[data-nx-reveal]:not([data-nx-revealed]) .nx-gauge-needle { rotate: -90deg; }
   :where(.nx-js) .nx-gauge[data-nx-reveal]:not([data-nx-revealed]) .nx-gauge-zone,
   :where(.nx-js) .nx-gauge[data-nx-reveal]:not([data-nx-revealed]) .nx-gauge-ticks { opacity: 0; }
+
+  /* Under reduced motion the dial settles at once — the reading matters, not the ride. */
+  @media (prefers-reduced-motion: reduce) {
+    .nx-gauge-value,
+    .nx-gauge-needle { transition: none; }
+  }
 }

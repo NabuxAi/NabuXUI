@@ -1,0 +1,250 @@
+/* Layout for the Svelte admin app only; every component style comes from NabuXUI. */
+
+body {
+  margin: 0;
+}
+
+/* ---- Dashboard grid --------------------------------------------------------------------------- */
+
+.adm-dashboard {
+  display: grid;
+  gap: var(--nx-space-5);
+}
+
+.adm-welcome {
+  display: grid;
+  gap: var(--nx-space-3);
+  padding: var(--nx-space-6);
+  border: 1px solid var(--nx-border);
+  border-radius: var(--nx-radius-xl);
+  background: var(--nx-surface);
+}
+
+.adm-welcome > h1 {
+  margin: 0;
+  font: 700 var(--nx-text-3xl) / 1.25 var(--nx-font-display);
+  letter-spacing: var(--nx-tracking-tight);
+}
+
+.adm-welcome > p {
+  margin: 0;
+  max-inline-size: 46rem;
+  color: var(--nx-text-muted);
+  font-size: var(--nx-text-lg);
+}
+
+.adm-welcome-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--nx-space-2);
+}
+
+/* The tagline rides in the sidebar’s foot; it fades with the rail collapse. */
+.nx-admin-sidebar-foot .nx-admin-brand-text {
+  padding-inline: 0.6875rem;
+  color: var(--nx-text-subtle);
+  font-size: var(--nx-text-xs);
+}
+
+/* ---- Auth -------------------------------------------------------------------------------- */
+
+.adm-auth {
+  display: grid;
+  place-items: center;
+  min-block-size: 100dvh;
+  padding: var(--nx-space-6);
+  row-gap: var(--nx-space-4);
+}
+
+.adm-auth-card {
+  inline-size: min(100%, 26rem);
+}
+
+.adm-auth-perks {
+  display: grid;
+  gap: var(--nx-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.adm-auth-perk {
+  display: flex;
+  align-items: center;
+  gap: var(--nx-space-2);
+  color: var(--nx-text-muted);
+  font-size: var(--nx-text-sm);
+}
+
+.adm-auth-perk .nx-icon {
+  color: var(--nx-success);
+}
+
+/* ---- Shared page pieces -------------------------------------------------------------------- */
+
+.adm-form {
+  display: grid;
+  gap: var(--nx-space-4);
+}
+
+.adm-form-grid {
+  display: grid;
+  gap: var(--nx-space-4);
+}
+
+@media (min-width: 48rem) {
+  .adm-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .adm-form-span {
+    grid-column: 1 / -1;
+  }
+}
+
+.adm-form-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* A settings row: what it is on one side, the control on the other. */
+.adm-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nx-space-3);
+}
+
+.adm-row-text {
+  display: grid;
+  gap: 0.125rem;
+}
+
+.adm-row-label {
+  font-weight: 600;
+}
+
+.adm-row-hint {
+  color: var(--nx-text-subtle);
+  font-size: var(--nx-text-sm);
+}
+
+.adm-choices {
+  display: grid;
+  gap: var(--nx-space-4);
+}
+
+/* ---- Settings ------------------------------------------------------------------------------- */
+
+.adm-settings {
+  display: grid;
+  gap: var(--nx-space-5);
+  align-items: start;
+}
+
+.adm-settings-danger {
+  border-color: var(--nx-danger);
+}
+
+.adm-danger {
+  display: grid;
+  gap: var(--nx-space-4);
+  justify-items: start;
+}
+
+@media (min-width: 72rem) {
+  .adm-settings {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .adm-settings-general,
+  .adm-settings-danger {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ---- Storage card (dashboard) ---------------------------------------------------------------- */
+
+.adm-usage {
+  display: grid;
+  gap: var(--nx-space-3);
+}
+
+.adm-usage-list {
+  display: grid;
+  gap: var(--nx-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.adm-usage-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nx-space-3);
+  font-size: var(--nx-text-sm);
+}
+
+.adm-usage-row > span:first-child {
+  color: var(--nx-text-muted);
+}
+
+.adm-usage-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nx-space-2);
+  color: var(--nx-text-subtle);
+  font-size: var(--nx-text-xs);
+}
+
+/* ---- Invoices -------------------------------------------------------------------------------- */
+
+.adm-invoices {
+  display: grid;
+  gap: var(--nx-space-5);
+  justify-items: center;
+}
+
+.adm-invoices-bar {
+  inline-size: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--nx-space-3);
+}
+
+/* The document keeps a paper-ish measure even on wide screens. */
+.adm-invoices-doc {
+  inline-size: min(100%, 56rem);
+}
+
+/* ---- Paper: the shell folds away, the document stays ------------------------------------------ */
+
+@media print {
+  .nx-admin-topbar,
+  .nx-admin-sidebar,
+  .nx-admin-drawer,
+  .adm-invoices-bar,
+  .nx-toaster {
+    display: none !important;
+  }
+
+  .nx-admin-content {
+    overflow: visible;
+    block-size: auto;
+  }
+
+  .adm-invoices,
+  .adm-invoices-doc {
+    display: block;
+  }
+
+  .nx-invoice {
+    inline-size: 100%;
+  }
+}

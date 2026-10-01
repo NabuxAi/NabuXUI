@@ -34,12 +34,29 @@ class Panel
                 ],
             ],
             [
+                'label' => __('admin.group_shop'),
+                'items' => [
+                    ['id' => 'products', 'label' => __('admin.products'), 'icon' => 'heart', 'href' => route('admin.products'), 'navigate' => true],
+                    ['id' => 'orders', 'label' => __('admin.orders'), 'icon' => 'zap', 'href' => route('admin.orders'), 'navigate' => true, 'badge' => 3],
+                ],
+            ],
+            [
                 'label' => __('admin.group_work'),
                 'items' => [
                     ['id' => 'kanban', 'label' => __('admin.kanban'), 'icon' => 'layers', 'href' => route('admin.kanban'), 'navigate' => true],
                     ['id' => 'calendar', 'label' => __('admin.calendar'), 'icon' => 'file', 'href' => route('admin.calendar'), 'navigate' => true],
                     ['id' => 'chat', 'label' => __('admin.chat'), 'icon' => 'message', 'href' => route('admin.chat'), 'navigate' => true, 'badge' => 5],
                     ['id' => 'invoice', 'label' => __('admin.invoice'), 'icon' => 'copy', 'href' => route('admin.invoice'), 'navigate' => true],
+                ],
+            ],
+            [
+                'label' => __('admin.group_pages'),
+                'items' => [
+                    ['id' => 'email', 'label' => __('admin.email'), 'icon' => 'mail', 'href' => route('admin.email'), 'navigate' => true, 'badge' => 3],
+                    ['id' => 'files', 'label' => __('admin.files'), 'icon' => 'folder', 'href' => route('admin.files'), 'navigate' => true],
+                    ['id' => 'todo', 'label' => __('admin.todo'), 'icon' => 'check-circle', 'href' => route('admin.todo'), 'navigate' => true],
+                    ['id' => 'roles', 'label' => __('admin.roles'), 'icon' => 'shield', 'href' => route('admin.roles'), 'navigate' => true],
+                    ['id' => 'errors', 'label' => __('admin.errors'), 'icon' => 'alert-triangle', 'href' => route('admin.errors.404'), 'navigate' => true],
                 ],
             ],
             [

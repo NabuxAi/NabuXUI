@@ -13,6 +13,8 @@
     "showcase": "pnpm --filter showcase dev",
     "showcase:build": "pnpm --filter showcase build",
     "admin": "pnpm --filter admin dev",
-    "admin:build": "pnpm --filter admin build"
+    "admin:build": "pnpm --filter admin build",
+    "admin:vue": "pnpm --filter admin-vue dev",
+    "admin:svelte": "pnpm --filter admin-svelte dev"
   }
 }

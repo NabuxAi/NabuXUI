@@ -43,6 +43,18 @@ export * from './blocks/empty';
 export * from './blocks/invoice';
 export * from './blocks/kanban';
 export * from './blocks/timeline-feed';
+export * from './blocks/email';
+export * from './blocks/file-manager';
+export * from './blocks/todo';
+export * from './blocks/product-card';
+export * from './blocks/order-tracking';
+export * from './blocks/bar-chart';
+export * from './blocks/donut-chart';
+export * from './blocks/gauge';
+export * from './blocks/tree-view';
+export * from './blocks/gantt';
+export * from './blocks/wizard';
+export * from './blocks/profile-card';
 
 // The framework-agnostic helpers, for pages that need them directly.
 export { theme, transition, toasts, type ToastInput, type ToastTone } from '@nabuxai/ui-core';

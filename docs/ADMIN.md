@@ -257,6 +257,58 @@ distها هم ساخته‌شده‌اند. بعد از تغییر رفتار پ
 - گارد روی `/admin` عمداً نیست (دمو). اگر روزی پنل واقعی شد، همین‌جا شروع
   کنید؛ بقیهٔ صفحات از `admin_auth` فقط برای toastهای ورود/خروج خبر دارند.
 
+## استقرار
+
+### پورت‌ها
+
+| سرویس compose | چه چیزی را بالا می‌آورد | پورت | تعریف |
+|---|---|---|---|
+| `app` | پلی‌گراوند لاراول + طعم Livewire پنل (`/admin`…) | `${APP_PORT:-8000}` | `docker-compose.yml` |
+| `vite` | سرور dev پلی‌گراوند | `${VITE_PORT:-5173}` | `docker-compose.override.yml` |
+| `admin` | اپ React پنل | `${ADMIN_PORT:-5174}` | override + `server.port` در `apps/admin/vite.config.ts` |
+| `admin-vue` | اپ Vue پنل | `${ADMIN_VUE_PORT:-5175}` | override + `apps/admin-vue/vite.config.ts` |
+| `admin-svelte` | اپ Svelte پنل | `${ADMIN_SVELTE_PORT:-5176}` | override |
+
+پورت‌ها عمداً یکتا و پایدارند: هر اپ در `vite.config.ts` خودش پورت را با
+`strictPort` قفل می‌کند و سرویس compose هم همان شماره را با `--port`/`--strictPort`
+صریح می‌گذارد — پس `pnpm --filter <app> dev` روی میز و `docker compose up`
+درون کانتینر همیشه به یک شماره می‌رسند و اگر پورت اشغال باشد بدترین حالت
+خروج با خطاست، نه جابه‌جایی پورت.
+
+### اجرای محلی با داکر
+
+`docker-compose.override.yml` فقط لوکال است (`.gitignore:16`) و سرویس‌های dev
+را می‌دهد: `vite` برای پلی‌گراوند و `admin` / `admin-vue` / `admin-svelte`
+برای اپ‌های پنل — همه `node:22-alpine`، pnpm از طریق corepack مطابق
+`packageManager` ریشهٔ مونوریپو. این سه سرویس یک مجموعهٔ مشترک از
+node_modules volumeها دارند: اولین سرویسی که بالا می‌آید `pnpm install`
+فیلترشده را زیر قفل `node_modules/.install-lock` اجرا می‌کند، بقیه تا آزادشدن
+قفل می‌چرخند و بعد هرکدام dev سرور خودش را می‌آورد. node_modulesهای میزبان
+(darwin) دست‌نخورده می‌مانند چون هر پوشهٔ node_modules ورک‌اسپیس با volume
+مخصوص خودش سایه می‌شود. دو نکته: install ممکن است `pnpm-lock.yaml` میزبان را
+به‌روز کند (bind mount؛ سرویس `vite` هم با `npm install` همین را با
+package-lock.json می‌کند) و تا وقتی اپی هنوز ساخته نشده، سرویسش با پیام
+«No projects matched the filters» می‌ایستد.
+
+### Coolify
+
+نسخهٔ عمومی از همین مخزن روی Coolify (بررسی زنده، ۱ اکتبر ۲۰۲۶) این‌طور
+می‌آید: اپ `nabu-x-ui:main-…` در پروژهٔ «Nabuxai.com»، مخزن
+`nabuxai/NabuXUi` شاخهٔ `main`، با build pack داکر-کامپوز روی مسیر
+`/docker-compose.yml` — یعنی **فقط فایل پایه**؛ چون override در git نیست و
+Coolify هم صریحاً `-f docker-compose.yml` می‌زند، bind mountها و سرویس‌های dev
+هرگز به سرور نمی‌رسند. دامنه‌ها روی سرویس `app` هستند:
+`https://ui.nabuxai.com` و `https://www.ui.nabuxai.com`. کلیدهای
+`APP_PORT`/`VITE_PORT` برای جایگزینی `${…}` در compose ست شده‌اند به‌علاوهٔ
+متغیرهای لاراولی `APP_*`. سرویس `mysql` پشت profile است و در استقرار
+پیش‌فرض بالا نمی‌آید.
+
+اپ‌های React/Vue/Svelte پنل در `docker-compose.yml` سرویس پروداکشن ندارند؛
+خروجی `pnpm --filter <app> build` آنها static است (`apps/<app>/dist`) و هر
+میزبان static جوابش می‌دهد. روزی که قرار شد یکی از طعم‌ها تولیدی شود، سرویس
+آن باید در فایل پایه (که کامیتی است و Coolify می‌بیند) تعریف شود — نه در
+override.
+
 ## چک‌های تحویل
 
 قبل از بستن هر کار روی پنل:

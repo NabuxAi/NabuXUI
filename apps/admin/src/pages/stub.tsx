@@ -8,7 +8,21 @@ import { EmptyState, type IconName } from '@nabuxai/ui-react';
 import { useStrings } from '../lang';
 import { href } from '../router';
 
-export type StubId = 'analytics' | 'users' | 'kanban' | 'calendar' | 'chat' | 'invoices' | 'profile' | 'settings';
+export type StubId =
+  | 'analytics'
+  | 'products'
+  | 'orders'
+  | 'users'
+  | 'roles'
+  | 'kanban'
+  | 'calendar'
+  | 'chat'
+  | 'email'
+  | 'files'
+  | 'todo'
+  | 'invoices'
+  | 'profile'
+  | 'settings';
 
 export function StubPage({ id, icon }: { id: StubId; icon: IconName }) {
   const s = useStrings();

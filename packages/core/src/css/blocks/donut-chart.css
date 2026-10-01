@@ -200,6 +200,11 @@
     .nx-donut-chart-legend { max-inline-size: 24rem; }
   }
 
+  /* Under reduced motion the donut lands full — no sweep, no per-segment wait. */
+  @media (prefers-reduced-motion: reduce) {
+    .nx-donut-chart-segment { transition: none; }
+  }
+
   @media (forced-colors: active) {
     .nx-donut-chart-segment { forced-color-adjust: none; }
   }

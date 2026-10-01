@@ -40,3 +40,15 @@
 @import "./blocks/invoice.css";
 @import "./blocks/kanban.css";
 @import "./blocks/timeline-feed.css";
+@import "./blocks/email.css";
+@import "./blocks/file-manager.css";
+@import "./blocks/todo.css";
+@import "./blocks/product-card.css";
+@import "./blocks/order-tracking.css";
+@import "./blocks/bar-chart.css";
+@import "./blocks/donut-chart.css";
+@import "./blocks/gauge.css";
+@import "./blocks/tree-view.css";
+@import "./blocks/gantt.css";
+@import "./blocks/wizard.css";
+@import "./blocks/profile-card.css";
