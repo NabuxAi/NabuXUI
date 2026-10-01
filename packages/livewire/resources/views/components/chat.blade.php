@@ -21,24 +21,19 @@
 
     $locale = str_replace('_', '-', app()->getLocale());
     $lang = substr($locale, 0, 2);
+    // The chat's own words live in the core i18n table (resources/lang, generated from it).
     $words = [
-        'fa' => [
-            'conversations' => 'گفتگوها', 'messages' => 'پیام‌ها', 'placeholder' => 'پیام بنویسید…',
-            'typing' => ':name در حال نوشتن…', 'unread' => 'خوانده‌نشده', 'empty' => 'هنوز گفتگویی نیست',
-            'noMessages' => 'هنوز پیامی نیست', 'now' => 'همین حالا', 'minute' => ':n دقیقه پیش',
-            'hour' => ':n ساعت پیش', 'day' => ':n روز پیش',
-        ],
-        'ar' => [
-            'conversations' => 'المحادثات', 'messages' => 'الرسائل', 'placeholder' => 'اكتب رسالة…',
-            'typing' => ':name يكتب…', 'unread' => 'غير مقروء', 'empty' => 'لا محادثات بعد',
-            'noMessages' => 'لا رسائل بعد', 'now' => 'الآن', 'minute' => 'قبل :n دقيقة',
-            'hour' => 'قبل :n ساعة', 'day' => 'قبل :n يوم',
-        ],
-    ][$lang] ?? [
-        'conversations' => 'Conversations', 'messages' => 'Messages', 'placeholder' => 'Write a message…',
-        'typing' => ':name is typing…', 'unread' => 'unread', 'empty' => 'No conversations yet',
-        'noMessages' => 'No messages yet', 'now' => 'just now', 'minute' => ':n minutes ago',
-        'hour' => ':n hours ago', 'day' => ':n days ago',
+        'conversations' => __('nabuxui::ui.chatConversations', [], $lang),
+        'messages' => __('nabuxui::ui.chatMessages', [], $lang),
+        'placeholder' => __('nabuxui::ui.chatMessagePlaceholder', [], $lang),
+        'typing' => __('nabuxui::ui.chatTyping', [], $lang),
+        'unread' => __('nabuxui::ui.chatUnread', [], $lang),
+        'empty' => __('nabuxui::ui.chatEmpty', [], $lang),
+        'noMessages' => __('nabuxui::ui.chatNoMessages', [], $lang),
+        'now' => __('nabuxui::ui.chatJustNow', [], $lang),
+        'minute' => __('nabuxui::ui.chatMinutesAgo', [], $lang),
+        'hour' => __('nabuxui::ui.chatHoursAgo', [], $lang),
+        'day' => __('nabuxui::ui.chatDaysAgo', [], $lang),
     ];
     $words = array_merge($words, is_array($labels) ? $labels : []);
     $say = fn (string $key, array $swap = []) => strtr($words[$key], $swap);
@@ -143,6 +138,8 @@
                             $id = $conversation['id'];
                             $current = $id === $active;
                             $when = $relative($conversation['time']);
+                            $at = $moment($conversation['time']);
+                            $iso = $at === null ? null : date('c', $at);
                             $unreadShown = $conversation['unread'] > 0 && ! $current;
                         @endphp
                         <li role="presentation" wire:key="nx-chat-c-{{ $id }}" x-show="matches({{ $i }})">
@@ -158,7 +155,7 @@
                                 <span class="nx-chat-cell">
                                     <span class="nx-chat-row">
                                         <span class="nx-chat-name">{{ $conversation['name'] }}</span>
-                                        @if ($when !== null)<time class="nx-chat-time">{{ $when }}</time>@endif
+                                        @if ($when !== null)<time class="nx-chat-time" @if ($iso) datetime="{{ $iso }}" @endif>{{ $when }}</time>@endif
                                     </span>
                                     <span class="nx-chat-row">
                                         <span class="nx-chat-preview">{{ $conversation['preview'] }}</span>
@@ -200,13 +197,15 @@
                                 $previousDay = $previous ? $dayLabel($previous['time']) : null;
                                 $grouped = $previous && $previous['side'] === $message['side'] && $day === $previousDay;
                                 $clock = $clockOf($message['time']);
+                                $messageAt = $moment($message['time']);
+                                $messageIso = $messageAt === null ? null : date('c', $messageAt);
                             @endphp
                             @if ($day !== null && $day !== $previousDay)
                                 <div class="nx-chat-day" wire:key="nx-chat-d-{{ $id }}-{{ $message['id'] }}"><span>{{ $day }}</span></div>
                             @endif
                             <div class="nx-chat-message" data-side="{{ $message['side'] }}" @if ($grouped) data-grouped @endif wire:key="nx-chat-m-{{ $id }}-{{ $message['id'] }}">
                                 <div class="nx-chat-bubble">{{ $message['text'] }}
-                                    @if ($clock !== null)<time class="nx-chat-message-time">{{ $clock }}</time>@endif
+                                    @if ($clock !== null)<time class="nx-chat-message-time" @if ($messageIso) datetime="{{ $messageIso }}" @endif>{{ $clock }}</time>@endif
                                 </div>
                             </div>
                             @php

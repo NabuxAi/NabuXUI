@@ -135,7 +135,7 @@
     margin: 0;
     padding: 0 var(--nx-space-2) var(--nx-space-2);
     list-style: none;
-    overflow-block: auto;
+    overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;
   }

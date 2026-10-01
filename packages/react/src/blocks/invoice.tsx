@@ -13,8 +13,9 @@ import {
   useMemo,
   useRef,
 } from 'react';
+import type { MessageKey } from '@nabuxai/ui-core';
 import { cx } from '../internal/hooks';
-import { useLocale } from '../internal/provider';
+import { useLocale, useT } from '../internal/provider';
 import { NumberTicker, useReveal } from '../components/text';
 import { StatusBadge, type JobStatus } from './data';
 
@@ -32,24 +33,25 @@ type InvoiceWord =
   | 'item' | 'quantity' | 'unitPrice' | 'amount' | 'subtotal' | 'total'
   | 'paid' | 'unpaid' | 'overdue' | 'draft' | 'caption';
 
-const WORDS: Record<InvoiceWord, Record<'en' | 'fa' | 'ar', string>> = {
-  title: { en: 'Invoice', fa: 'فاکتور', ar: 'فاتورة' },
-  number: { en: 'Invoice no.', fa: 'شمارهٔ فاکتور', ar: 'رقم الفاتورة' },
-  issueDate: { en: 'Issue date', fa: 'تاریخ صدور', ar: 'تاريخ الإصدار' },
-  dueDate: { en: 'Due date', fa: 'موعد پرداخت', ar: 'تاريخ الاستحقاق' },
-  from: { en: 'From', fa: 'صادرکننده', ar: 'من' },
-  to: { en: 'Billed to', fa: 'صورتحساب برای', ar: 'إلى' },
-  item: { en: 'Item', fa: 'شرح', ar: 'البند' },
-  quantity: { en: 'Qty', fa: 'تعداد', ar: 'الكمية' },
-  unitPrice: { en: 'Unit price', fa: 'قیمت واحد', ar: 'سعر الوحدة' },
-  amount: { en: 'Amount', fa: 'مبلغ', ar: 'المبلغ' },
-  subtotal: { en: 'Subtotal', fa: 'جمع جزء', ar: 'المجموع الفرعي' },
-  total: { en: 'Total due', fa: 'مبلغ قابل پرداخت', ar: 'الإجمالي المستحق' },
-  paid: { en: 'Paid', fa: 'پرداخت شده', ar: 'مدفوعة' },
-  unpaid: { en: 'Awaiting payment', fa: 'در انتظار پرداخت', ar: 'بانتظار الدفع' },
-  overdue: { en: 'Overdue', fa: 'سرسید گذشته', ar: 'متأخرة' },
-  draft: { en: 'Draft', fa: 'پیش‌نویس', ar: 'مسودة' },
-  caption: { en: 'Bank transfer · Acme Bank · IBAN …', fa: 'کارت به کارت · بانک … · شماره کارت …', ar: 'تحويل بنكي …' },
+/** Where each of them lives in the core i18n table. */
+const WORD_KEYS: Record<InvoiceWord, MessageKey> = {
+  title: 'invoiceTitle',
+  number: 'invoiceNumber',
+  issueDate: 'invoiceIssueDate',
+  dueDate: 'invoiceDueDate',
+  from: 'invoiceFrom',
+  to: 'invoiceTo',
+  item: 'invoiceItem',
+  quantity: 'invoiceQuantity',
+  unitPrice: 'invoiceUnitPrice',
+  amount: 'invoiceAmount',
+  subtotal: 'invoiceSubtotal',
+  total: 'invoiceTotal',
+  paid: 'invoicePaid',
+  unpaid: 'invoiceUnpaid',
+  overdue: 'invoiceOverdue',
+  draft: 'invoiceDraft',
+  caption: 'invoiceCaption',
 };
 
 export interface InvoiceLine {
@@ -123,9 +125,11 @@ export function Invoice({
   className,
   ...rest
 }: InvoiceProps) {
+  const t = useT();
   const language = useLocale();
   const intl = locale ?? INTL[language];
-  const word = (key: InvoiceWord) => labels?.[key] ?? WORDS[key][language];
+  // `labels` may override any word; the rest come from the core table.
+  const word = (key: InvoiceWord) => labels?.[key] ?? t(WORD_KEYS[key]);
   const id = useId();
   const root = useRef<HTMLElement>(null);
   const body = useRef<HTMLTableSectionElement>(null);

@@ -39,27 +39,25 @@
 
     $locale = str_replace('_', '-', app()->getLocale());
     $lang = substr($locale, 0, 2);
+    // The invoice's own words live in the core i18n table (resources/lang, generated from it).
     $words = [
-        'fa' => [
-            'title' => 'فاکتور', 'number' => 'شمارهٔ فاکتور', 'issueDate' => 'تاریخ صدور', 'dueDate' => 'موعد پرداخت',
-            'from' => 'صادرکننده', 'to' => 'صورتحساب برای', 'item' => 'شرح', 'quantity' => 'تعداد',
-            'unitPrice' => 'قیمت واحد', 'amount' => 'مبلغ', 'subtotal' => 'جمع جزء', 'total' => 'مبلغ قابل پرداخت',
-            'paid' => 'پرداخت شده', 'unpaid' => 'در انتظار پرداخت', 'overdue' => 'سرسید گذشته', 'draft' => 'پیش‌نویس',
-            'caption' => 'کارت به کارت · بانک … · شماره کارت …',
-        ],
-        'ar' => [
-            'title' => 'فاتورة', 'number' => 'رقم الفاتورة', 'issueDate' => 'تاريخ الإصدار', 'dueDate' => 'تاريخ الاستحقاق',
-            'from' => 'من', 'to' => 'إلى', 'item' => 'البند', 'quantity' => 'الكمية',
-            'unitPrice' => 'سعر الوحدة', 'amount' => 'المبلغ', 'subtotal' => 'المجموع الفرعي', 'total' => 'الإجمالي المستحق',
-            'paid' => 'مدفوعة', 'unpaid' => 'بانتظار الدفع', 'overdue' => 'متأخرة', 'draft' => 'مسودة',
-            'caption' => 'تحويل بنكي …',
-        ],
-    ][$lang] ?? [
-        'title' => 'Invoice', 'number' => 'Invoice no.', 'issueDate' => 'Issue date', 'dueDate' => 'Due date',
-        'from' => 'From', 'to' => 'Billed to', 'item' => 'Item', 'quantity' => 'Qty',
-        'unitPrice' => 'Unit price', 'amount' => 'Amount', 'subtotal' => 'Subtotal', 'total' => 'Total due',
-        'paid' => 'Paid', 'unpaid' => 'Awaiting payment', 'overdue' => 'Overdue', 'draft' => 'Draft',
-        'caption' => 'Bank transfer · Acme Bank · IBAN …',
+        'title' => __('nabuxui::ui.invoiceTitle', [], $lang),
+        'number' => __('nabuxui::ui.invoiceNumber', [], $lang),
+        'issueDate' => __('nabuxui::ui.invoiceIssueDate', [], $lang),
+        'dueDate' => __('nabuxui::ui.invoiceDueDate', [], $lang),
+        'from' => __('nabuxui::ui.invoiceFrom', [], $lang),
+        'to' => __('nabuxui::ui.invoiceTo', [], $lang),
+        'item' => __('nabuxui::ui.invoiceItem', [], $lang),
+        'quantity' => __('nabuxui::ui.invoiceQuantity', [], $lang),
+        'unitPrice' => __('nabuxui::ui.invoiceUnitPrice', [], $lang),
+        'amount' => __('nabuxui::ui.invoiceAmount', [], $lang),
+        'subtotal' => __('nabuxui::ui.invoiceSubtotal', [], $lang),
+        'total' => __('nabuxui::ui.invoiceTotal', [], $lang),
+        'paid' => __('nabuxui::ui.invoicePaid', [], $lang),
+        'unpaid' => __('nabuxui::ui.invoiceUnpaid', [], $lang),
+        'overdue' => __('nabuxui::ui.invoiceOverdue', [], $lang),
+        'draft' => __('nabuxui::ui.invoiceDraft', [], $lang),
+        'caption' => __('nabuxui::ui.invoiceCaption', [], $lang),
     ];
     $words = array_merge($words, is_array($labels) ? $labels : []);
     $say = fn (string $key) => (string) $words[$key];

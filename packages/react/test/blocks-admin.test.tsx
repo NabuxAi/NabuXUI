@@ -105,12 +105,12 @@ describe('AuthCard', () => {
     expect(screen.getByText('Nabu Panel')).toBeTruthy();
     expect(screen.getByText('Design ops, calm')).toBeTruthy();
     // The active pane is kept in sync with a hidden measure clone, so its words appear twice.
-    expect(screen.getAllByText('Welcome back').length).toBeGreaterThanOrEqual(1); // authWords.en.loginTitle
+    expect(screen.getAllByText('Welcome back').length).toBeGreaterThanOrEqual(1); // i18n.en.authLoginTitle
   });
 
   it('switches pane words with the mode', () => {
     render(<AuthCard mode="register" />);
-    expect(screen.getAllByText('Get started in minutes').length).toBeGreaterThanOrEqual(1); // authWords.en.registerTitle
+    expect(screen.getAllByText('Get started in minutes').length).toBeGreaterThanOrEqual(1); // i18n.en.authRegisterTitle
     expect(screen.getAllByText('Full name').length).toBeGreaterThanOrEqual(1); // the register-only field
   });
 });
@@ -226,8 +226,8 @@ describe('Invoice', () => {
     expect(screen.getByText('Design system audit')).toBeTruthy();
     expect(screen.getByText('Motion pass')).toBeTruthy();
     expect(screen.getByText('Tax (9%)')).toBeTruthy();
-    expect(screen.getByText('Subtotal')).toBeTruthy(); // WORDS.en.subtotal
-    expect(screen.getByText('Total due')).toBeTruthy(); // WORDS.en.total
+    expect(screen.getByText('Subtotal')).toBeTruthy(); // i18n.en.invoiceSubtotal
+    expect(screen.getByText('Total due')).toBeTruthy(); // i18n.en.invoiceTotal
   });
 });
 

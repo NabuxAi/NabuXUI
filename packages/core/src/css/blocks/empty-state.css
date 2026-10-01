@@ -59,7 +59,7 @@
     inset: 18%;
     border-radius: 50%;
     border: 1px solid color-mix(in oklab, var(--nx-accent) 38%, transparent);
-    animation: nx-empty-halo 3.2s var(--nx-ease-out) infinite;
+    animation: nx-empty-halo 6s var(--nx-ease-out) infinite;
   }
 
   /* The dashed orbit; its sparks are children, so they ride along. */
@@ -94,7 +94,8 @@
   }
 
   /* The plate the icon sits on: soft accent wash over a raised surface,
-     gently floating (the nx-float keyframes live in motion.css). */
+     gently floating (its own keyframes below — half the shared nx-float
+     travel in motion.css, so the plate drifts less than the hero art). */
   .nx-empty-state-plate {
     position: relative;
     display: grid;
@@ -109,7 +110,7 @@
       var(--nx-surface-2);
     color: var(--nx-accent-text);
     box-shadow: var(--nx-shadow-sm), inset 0 1px 0 var(--nx-highlight);
-    animation: nx-float 3.4s var(--nx-ease-in-out) infinite;
+    animation: nx-empty-float 8s var(--nx-ease-in-out) infinite;
 
     .nx-icon { inline-size: 42%; block-size: 42%; }
   }
@@ -164,9 +165,11 @@
   }
 
   @keyframes nx-empty-halo {
-    from { scale: 0.82; opacity: 0.65; }
-    70%, to { scale: calc(1 + 0.34 * var(--nx-motion)); opacity: 0; }
+    from { scale: 0.86; opacity: 0.65; }
+    70%, to { scale: calc(1 + 0.22 * var(--nx-motion)); opacity: 0; }
   }
+
+  @keyframes nx-empty-float { 50% { translate: 0 calc(-3px * var(--nx-motion)); } }
 
   @keyframes nx-empty-turn {
     from { rotate: 0deg; }

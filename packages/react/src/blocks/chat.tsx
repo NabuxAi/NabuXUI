@@ -17,7 +17,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { activityTime, autogrow, foldSearchText, prefersReducedMotion, roveFocus, timeOf } from '@nabuxai/ui-core';
+import { type MessageKey, activityTime, autogrow, foldSearchText, prefersReducedMotion, roveFocus, timeOf } from '@nabuxai/ui-core';
 import { cx, useControllable, useIsoLayoutEffect } from '../internal/hooks';
 import { Icon } from '../internal/icon';
 import { useLocale, useT } from '../internal/provider';
@@ -30,14 +30,15 @@ const vars = (style: Record<string, string | number | undefined>) => style as CS
 /** The words the chat says itself; override any of them with the `labels` prop. */
 type ChatWord = 'conversations' | 'messages' | 'messagePlaceholder' | 'typing' | 'unread' | 'empty' | 'noMessages';
 
-const WORDS: Record<ChatWord, Record<'en' | 'fa' | 'ar', string>> = {
-  conversations: { en: 'Conversations', fa: 'گفتگوها', ar: 'المحادثات' },
-  messages: { en: 'Messages', fa: 'پیام‌ها', ar: 'الرسائل' },
-  messagePlaceholder: { en: 'Write a message…', fa: 'پیام بنویسید…', ar: 'اكتب رسالة…' },
-  typing: { en: '{name} is typing…', fa: '{name} در حال نوشتن…', ar: '{name} يكتب…' },
-  unread: { en: 'unread', fa: 'خوانده‌نشده', ar: 'غير مقروء' },
-  empty: { en: 'No conversations yet', fa: 'هنوز گفتگویی نیست', ar: 'لا محادثات بعد' },
-  noMessages: { en: 'No messages yet', fa: 'هنوز پیامی نیست', ar: 'لا رسائل بعد' },
+/** Where each of them lives in the core i18n table. */
+const WORD_KEYS: Record<ChatWord, MessageKey> = {
+  conversations: 'chatConversations',
+  messages: 'chatMessages',
+  messagePlaceholder: 'chatMessagePlaceholder',
+  typing: 'chatTyping',
+  unread: 'chatUnread',
+  empty: 'chatEmpty',
+  noMessages: 'chatNoMessages',
 };
 
 export type ChatPresence = 'online' | 'busy' | 'away' | 'offline';
@@ -101,6 +102,13 @@ function dayOf(time: Date | number | string | undefined, locale: string): string
   return Number.isNaN(at) ? null : new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(at);
 }
 
+/** The machine-readable moment behind a shown time; undefined when `time` is a plain label. */
+function isoOf(time: Date | number | string | undefined): string | undefined {
+  if (time === undefined) return undefined;
+  const at = timeOf(time);
+  return Number.isNaN(at) ? undefined : new Date(at).toISOString();
+}
+
 export function Chat({
   conversations,
   value,
@@ -121,8 +129,11 @@ export function Chat({
   const t = useT();
   const language = useLocale();
   const intl = locale ?? INTL[language];
-  const word = (key: ChatWord, params: Record<string, string | number> = {}) =>
-    (labels?.[key] ?? WORDS[key][language]).replace(/\{(\w+)\}/g, (_, name: string) => String(params[name] ?? ''));
+  // `labels` may override any word; the rest come from the core table, params filling `{name}` slots.
+  const word = (key: ChatWord, params: Record<string, string | number> = {}) => {
+    const override = labels?.[key];
+    return override === undefined ? t(WORD_KEYS[key], params) : override.replace(/\{(\w+)\}/g, (_, name: string) => String(params[name] ?? ''));
+  };
 
   const base = `nx-chat${useId().replace(/:/g, '')}`;
   const [current, setCurrent] = useControllable(value, defaultValue ?? conversations[0]?.id ?? '', onValueChange);
@@ -253,7 +264,7 @@ export function Chat({
                       <span className="nx-chat-cell">
                         <span className="nx-chat-row">
                           <span className="nx-chat-name">{conversation.name}</span>
-                          {time && <time className="nx-chat-time">{time}</time>}
+                          {time && <time className="nx-chat-time" dateTime={isoOf(conversation.time)}>{time}</time>}
                         </span>
                         <span className="nx-chat-row">
                           <span className="nx-chat-preview">{conversation.preview}</span>
@@ -300,7 +311,7 @@ export function Chat({
                       <div className="nx-chat-message" data-side={message.side} data-grouped={grouped ? '' : undefined} data-fresh={isFresh(message) ? '' : undefined}>
                         <div className="nx-chat-bubble">
                           {message.text}
-                          {clock && <time className="nx-chat-message-time">{clock}</time>}
+                          {clock && <time className="nx-chat-message-time" dateTime={isoOf(message.time)}>{clock}</time>}
                         </div>
                       </div>
                     </Fragment>

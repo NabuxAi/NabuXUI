@@ -7,6 +7,8 @@
     <title>پنل نابو · NabuXUI</title>
     <!-- Theme before first paint (the same snippet @nabuxai/ui-core exports as themeScript). -->
     <script>(function(){var r=document.documentElement;r.classList.add('nx-js');try{var m=window.matchMedia('(prefers-color-scheme: dark)');var a=function(){var p=null;try{p=localStorage.getItem('nabu.theme')}catch(e){}var d=p==='dark'||(p!=='light'&&m.matches);r.setAttribute('data-theme',d?'dark':'light');r.classList.toggle('dark',d);r.style.colorScheme=d?'dark':'light'};a();m.addEventListener&&m.addEventListener('change',a)}catch(e){}})();</script>
+    <!-- Saved language before first paint (the same key lang.tsx readLang() reads; fa unless 'en'). -->
+    <script>(function(){var r=document.documentElement;try{var fa=localStorage.getItem('nabuxui.admin.lang')!=='en';r.lang=fa?'fa':'en';r.dir=fa?'rtl':'ltr'}catch(e){}})();</script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Inter:wght@400..700&family=JetBrains+Mono:wght@400;500&family=Vazirmatn:wght@300..800&display=swap" rel="stylesheet" />

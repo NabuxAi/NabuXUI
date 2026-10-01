@@ -22,13 +22,14 @@
     use NabuXUI\NabuXUI;
     $locale = str_replace('_', '-', $locale ?? app()->getLocale());
     $lang = substr($locale, 0, 2);
-    $t = fn (string $en, string $fa, string $ar) => match ($lang) { 'fa' => $fa, 'ar' => $ar, default => $en };
+    // The calendar's own words live in the core i18n table (resources/lang, generated from it).
+    $say = fn (string $key) => __('nabuxui::ui.'.$key, [], $lang);
     $labels = [
-        'calendar' => $label ?? $t('Calendar', 'تقویم', 'التقويم'),
-        'prevMonth' => $t('Previous month', 'ماه قبل', 'الشهر السابق'),
-        'nextMonth' => $t('Next month', 'ماه بعد', 'الشهر التالي'),
-        'eventsCount' => $t(':count events', ':count رویداد', ':count أحداث'),
-        'emptyDay' => $emptyText ?? $t('No events', 'رویدادی نیست', 'لا أحداث'),
+        'calendar' => $label ?? $say('calendar'),
+        'prevMonth' => $say('calendarPrevMonth'),
+        'nextMonth' => $say('calendarNextMonth'),
+        'eventsCount' => $say('calendarEventsCount'),
+        'emptyDay' => $emptyText ?? $say('calendarEmptyDay'),
     ];
     // The week starts on Saturday in the Persian and Arabic calendars, Sunday
     // elsewhere. Kebab-case numeric props arrive as strings; compare textually.
@@ -155,7 +156,7 @@
     </div>
 
     {{-- The selected day's agenda; rebuilt per day, staggered by --nx-i. --}}
-    <div class="nx-calendar-panel" x-ref="panel" x-bind:data-open="selected ? '' : null">
+    <div class="nx-calendar-panel" x-ref="panel" aria-live="polite" x-bind:data-open="selected ? '' : null">
         @if ($selected)
             <header class="nx-calendar-panel-head">
                 <h4 class="nx-calendar-panel-title">{{ $fmt('EEEE, d MMMM y', new \DateTimeImmutable("{$selected} 00:00:00", new \DateTimeZone('UTC'))) }}</h4>

@@ -19,10 +19,11 @@
 @php
     use NabuXUI\NabuXUI;
     $lang = substr(app()->getLocale(), 0, 2);
+    // The toggle's own words live in the core i18n table (resources/lang, generated from it).
     $words = [
-        'fa' => ['collapse' => 'بستن نوار کناری', 'expand' => 'باز کردن نوار کناری'],
-        'ar' => ['collapse' => 'طي الشريط الجانبي', 'expand' => 'توسيع الشريط الجانبي'],
-    ][$lang] ?? ['collapse' => 'Collapse sidebar', 'expand' => 'Expand sidebar'];
+        'collapse' => __('nabuxui::ui.collapseSidebar', [], $lang),
+        'expand' => __('nabuxui::ui.expandSidebar', [], $lang),
+    ];
     $active = (string) ($active ?? ($groups[0]['items'][0]['id'] ?? ''));
     $mark = $brandMark ?? (is_string($brand) && $brand !== '' ? mb_substr($brand, 0, 1) : 'N');
     $badgeOf = fn ($badge) => is_numeric($badge) ? NabuXUI::formatNumber((float) $badge, 0, $lang) : (string) $badge;
@@ -77,7 +78,7 @@
                 data-label="{{ $collapsed ? $words['expand'] : $words['collapse'] }}"
                 x-bind:aria-expanded="collapsed ? 'false' : 'true'" x-bind:data-label="collapsed ? @js($words['expand']) : @js($words['collapse'])" x-on:click="collapsed = ! collapsed">
                 {{ NabuXUI::icon('chevron-left') }}
-                <span class="nx-admin-label" x-text="collapsed ? @js($words['expand']) : @js($words['collapse']) }}">{{ $collapsed ? $words['expand'] : $words['collapse'] }}</span>
+                <span class="nx-admin-label" x-text="collapsed ? @js($words['expand']) : @js($words['collapse'])">{{ $collapsed ? $words['expand'] : $words['collapse'] }}</span>
             </button>
         @endif
     </div>

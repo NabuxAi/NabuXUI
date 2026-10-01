@@ -9,7 +9,7 @@
  */
 import { useMemo, useState } from 'react';
 import { Button, ChipFilter, Invoice, type InvoiceLine, type InvoiceParty, type InvoiceStep, type InvoiceStatus } from '@nabuxai/ui-react';
-import { useLang, useStrings, useTr } from '../lang';
+import { useLang, useStrings } from '../lang';
 
 const INTL = { fa: 'fa-IR', en: 'en-US' } as const;
 
@@ -29,7 +29,6 @@ export function InvoicesPage() {
   const lang = useLang();
   const s = useStrings();
   const inv = s.pages.invoices;
-  const tr = useTr();
   const intl = INTL[lang];
   const [current, setCurrent] = useState('inv-118');
 
@@ -39,8 +38,8 @@ export function InvoicesPage() {
   const parse = (iso: string) => new Date(`${iso}T00:00:00`);
 
   const from: InvoiceParty = {
-    name: tr('فروشگاه نابو', 'Nabu Store'),
-    lines: [tr('تهران، ایران', 'Tehran, Iran'), 'billing@nabu.shop', tr('شناسه ملی ۱۴۰۰…', 'Tax id 1400…')],
+    name: s.app.storeName,
+    lines: [inv.tehran, 'billing@nabu.shop', inv.taxId],
   };
 
   const invoices: SeededInvoice[] = [
@@ -50,11 +49,11 @@ export function InvoicesPage() {
       status: 'paid',
       issue: '2026-09-01',
       due: '2026-09-15',
-      to: { name: tr('مریم رضایی', 'Maryam Rezaei'), lines: [tr('تهران، ایران', 'Tehran, Iran'), 'maryam@example.com'] },
+      to: { name: s.people.maryam, lines: [inv.tehran, 'maryam@example.com'] },
       lines: [
-        { id: 'bag', title: tr('کیف چرمی نابو', 'Nabu leather bag'), description: tr('چرم طبیعی، دوخت دست', 'Full-grain leather, hand stitched'), quantity: 2, unitPrice: 8_400_000 },
-        { id: 'scarf', title: tr('شال کشمیر نابو', 'Nabu cashmere scarf'), description: tr('سه رنگ قابل انتخاب', 'Three colourways'), quantity: 3, unitPrice: 3_150_000 },
-        { id: 'wrap', title: tr('بسته‌بندی هدیه', 'Gift wrapping'), description: tr('همراه با کارت تبریک', 'With a greeting card'), quantity: 5, unitPrice: 180_000 },
+        { id: 'bag', title: inv.itemBag, description: inv.itemBagDesc, quantity: 2, unitPrice: 8_400_000 },
+        { id: 'scarf', title: inv.itemScarf, description: inv.itemScarfDesc, quantity: 3, unitPrice: 3_150_000 },
+        { id: 'wrap', title: inv.itemWrap, description: inv.itemWrapDesc, quantity: 5, unitPrice: 180_000 },
       ],
       extraTotals: [{ label: inv.tax, percent: 0.09 }],
     },
@@ -64,10 +63,10 @@ export function InvoicesPage() {
       status: 'unpaid',
       issue: '2026-09-18',
       due: '2026-10-02',
-      to: { name: tr('شرکت آدم', 'Acme Corp'), lines: [tr('تهران، ایران', 'Tehran, Iran'), 'accounts@acme.ir'] },
+      to: { name: inv.clientAcme, lines: [inv.tehran, 'accounts@acme.ir'] },
       lines: [
-        { id: 'watch', title: tr('ساعت نابو کلاسیک', 'Nabu classic watch'), description: tr('بدنهٔ استیل، بند چرمی', 'Steel case, leather strap'), quantity: 4, unitPrice: 12_900_000 },
-        { id: 'support', title: tr('پشتیبانی ماهانه', 'Monthly support'), description: tr('دو روز اختصاصی در ماه', 'Two dedicated days a month'), quantity: 1, unitPrice: 25_000_000 },
+        { id: 'watch', title: inv.itemWatch, description: inv.itemWatchDesc, quantity: 4, unitPrice: 12_900_000 },
+        { id: 'support', title: inv.itemSupport, description: inv.itemSupportDesc, quantity: 1, unitPrice: 25_000_000 },
       ],
       extraTotals: [{ label: inv.tax, percent: 0.09 }],
     },
@@ -77,26 +76,26 @@ export function InvoicesPage() {
       status: 'overdue',
       issue: '2026-08-05',
       due: '2026-08-20',
-      to: { name: tr('گالری رنگین', 'Rangin Gallery'), lines: [tr('اصفهان، ایران', 'Isfahan, Iran'), 'hello@rangin.art'] },
+      to: { name: inv.clientRangin, lines: [inv.isfahan, 'hello@rangin.art'] },
       lines: [
-        { id: 'print', title: tr('چاپ محدود پوستر', 'Limited poster print'), description: tr('سری ده‌تایی، امضاشده', 'Signed run of ten'), quantity: 3, unitPrice: 6_800_000 },
-        { id: 'ship', title: tr('ارسال بیمه‌شده', 'Insured shipping'), quantity: 1, unitPrice: 1_200_000 },
+        { id: 'print', title: inv.itemPrint, description: inv.itemPrintDesc, quantity: 3, unitPrice: 6_800_000 },
+        { id: 'ship', title: inv.itemShip, quantity: 1, unitPrice: 1_200_000 },
       ],
       extraTotals: [
         { label: inv.discount, amount: -900_000 },
         { label: inv.tax, percent: 0.09 },
       ],
-      note: tr('پرداخت تا موعد اعلام‌شده؛ پس از آن دیرکرد ۲٪ در ماه حساب می‌شود.', 'Payable by the due date; afterwards a late fee of 2% per month applies.'),
+      note: inv.lateFeeNote,
     },
     {
       id: 'draft-41',
       number: 'DRAFT-41',
       status: 'draft',
       issue: '2026-09-26',
-      to: { name: tr('داخلی · بازبینی طراحی', 'Internal · design review') },
+      to: { name: inv.clientInternal },
       lines: [
-        { id: 'audit', title: tr('بازبینی دسترس‌پذیری', 'Accessibility audit'), quantity: 6, unitPrice: 9_000_000 },
-        { id: 'rtl', title: tr('پیمایش راست‌به‌چپ', 'RTL sweep'), quantity: 4, unitPrice: 7_500_000 },
+        { id: 'audit', title: inv.itemAudit, quantity: 6, unitPrice: 9_000_000 },
+        { id: 'rtl', title: inv.itemRtl, quantity: 4, unitPrice: 7_500_000 },
       ],
       extraTotals: [],
     },
@@ -132,13 +131,13 @@ export function InvoicesPage() {
           lines={active.lines}
           extraTotals={active.extraTotals}
           note={active.note}
-          currency={tr('تومان', 'Toman')}
+          currency={inv.currency}
           decimals={0}
           locale={intl}
-          footer={tr('فروشگاه نابو · billing@nabu.shop · سپاس از خرید شما.', 'Nabu Store · billing@nabu.shop · Thank you for your purchase.')}
+          footer={inv.footer}
           labels={{
-            title: tr('فاکتور', 'Invoice'),
-            number: tr('شمارهٔ فاکتور', 'Invoice no.'),
+            title: inv.docTitle,
+            number: inv.numberLabel,
             issueDate: inv.issueDate,
             dueDate: inv.dueDate,
             from: inv.from,
@@ -153,7 +152,7 @@ export function InvoicesPage() {
             unpaid: inv.unpaid,
             overdue: inv.overdue,
             draft: inv.draft,
-            caption: tr('کارت به کارت · بانک نابو · شماره کارت ۶۱۰۴…', 'Bank transfer · Nabu Bank · card 6104…'),
+            caption: inv.paymentCaption,
           }}
         />
       </div>

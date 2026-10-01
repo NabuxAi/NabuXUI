@@ -14,27 +14,7 @@ import { type CSSProperties, type HTMLAttributes, type KeyboardEvent, type React
 import { reveal } from '@nabuxai/ui-core';
 import { cx, useBehavior, useControllable } from '../internal/hooks';
 import { Icon } from '../internal/icon';
-import { SmartLink, useLocale } from '../internal/provider';
-
-/* ---- The block's own words (kept local until they graduate into the core table) --------- */
-
-const words = {
-  en: { calendar: 'Calendar', prevMonth: 'Previous month', nextMonth: 'Next month', eventsCount: '{count} events', emptyDay: 'No events' },
-  fa: { calendar: 'تقویم', prevMonth: 'ماه قبل', nextMonth: 'ماه بعد', eventsCount: '{count} رویداد', emptyDay: 'رویدادی نیست' },
-  ar: { calendar: 'التقويم', prevMonth: 'الشهر السابق', nextMonth: 'الشهر التالي', eventsCount: '{count} أحداث', emptyDay: 'لا أحداث' },
-} as const;
-
-type WordKey = keyof (typeof words)['en'];
-type Language = keyof typeof words;
-
-function useWord(): (key: WordKey, params?: Record<string, string | number>) => string {
-  const locale = useLocale();
-  const language: Language = locale in words ? (locale as Language) : 'en';
-  return (key, params = {}) => {
-    const text = words[language][key] ?? words.en[key];
-    return text.replace(/\{(\w+)\}/g, (_, name: string) => String(params[name] ?? `{${name}}`));
-  };
-}
+import { SmartLink, useLocale, useT } from '../internal/provider';
 
 /* ---- Types ---------------------------------------------------------------------------- */
 
@@ -118,7 +98,7 @@ export function Calendar({
   className,
   ...rest
 }: CalendarProps) {
-  const word = useWord();
+  const t = useT();
   const language = useLocale();
   // The week starts on Saturday in the Persian and Arabic calendars, Sunday elsewhere.
   const week = weekStart ?? (language === 'fa' || language === 'ar' ? 6 : 0);
@@ -208,11 +188,11 @@ export function Calendar({
         <h3 className="nx-calendar-title" id={`${id}-title`} aria-live="polite">
           {titleText}
         </h3>
-        <nav className="nx-calendar-nav" aria-label={label ?? word('calendar')}>
-          <button type="button" className="nx-calendar-nav-btn" aria-label={word('prevMonth')} onClick={() => go(-1)}>
+        <nav className="nx-calendar-nav" aria-label={label ?? t('calendar')}>
+          <button type="button" className="nx-calendar-nav-btn" aria-label={t('calendarPrevMonth')} onClick={() => go(-1)}>
             <Icon name="chevron-left" />
           </button>
-          <button type="button" className="nx-calendar-nav-btn" aria-label={word('nextMonth')} onClick={() => go(1)}>
+          <button type="button" className="nx-calendar-nav-btn" aria-label={t('calendarNextMonth')} onClick={() => go(1)}>
             <Icon name="chevron-right" />
           </button>
         </nav>
@@ -259,7 +239,7 @@ export function Calendar({
                     data-count={list.length > 0 ? '' : undefined}
                     tabIndex={iso === anchor ? 0 : -1}
                     aria-current={isToday ? 'date' : undefined}
-                    aria-label={`${formatters.long.format(new Date(`${iso}T00:00:00Z`))}${list.length ? `, ${word('eventsCount', { count: formatters.number.format(list.length) })}` : ''}`}
+                    aria-label={`${formatters.long.format(new Date(`${iso}T00:00:00Z`))}${list.length ? `, ${t('calendarEventsCount', { count: formatters.number.format(list.length) })}` : ''}`}
                     onClick={() => pick(iso)}
                   >
                     <span className="nx-calendar-daynum">{dayOf(iso)}</span>
@@ -290,7 +270,7 @@ export function Calendar({
           <>
             <header className="nx-calendar-panel-head">
               <h4 className="nx-calendar-panel-title">{formatters.long.format(new Date(`${selected}T00:00:00Z`))}</h4>
-              <span className="nx-calendar-panel-count">{word('eventsCount', { count: formatters.number.format(dayEvents.length) })}</span>
+              <span className="nx-calendar-panel-count">{t('calendarEventsCount', { count: formatters.number.format(dayEvents.length) })}</span>
             </header>
             {dayEvents.length > 0 ? (
               <ul className="nx-calendar-panel-list" key={selected}>
@@ -316,7 +296,7 @@ export function Calendar({
                 })}
               </ul>
             ) : (
-              <p className="nx-calendar-panel-empty">{emptyText ?? word('emptyDay')}</p>
+              <p className="nx-calendar-panel-empty">{emptyText ?? t('calendarEmptyDay')}</p>
             )}
           </>
         )}

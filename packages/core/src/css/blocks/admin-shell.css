@@ -416,7 +416,8 @@
     display: flex;
     align-items: center;
     gap: var(--nx-space-2);
-    padding: 0.25rem 0.5rem 0.25rem 0.25rem;
+    padding-block: 0.25rem;
+    padding-inline: 0.25rem 0.5rem;
     border: 0;
     border-radius: var(--nx-radius-full);
     background: transparent;
@@ -645,7 +646,8 @@
 
   @media (prefers-reduced-motion: reduce) {
     .nx-admin-frame,
-    .nx-admin-drawer {
+    .nx-admin-drawer,
+    .nx-admin-drawer::backdrop {
       transition-duration: var(--nx-dur-fast);
     }
     .nx-admin-item:active,

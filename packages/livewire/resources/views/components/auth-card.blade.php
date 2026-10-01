@@ -32,28 +32,29 @@
     use NabuXUI\NabuXUI;
     $id = NabuXUI::id('nx-auth');
     $lang = substr($locale ?? app()->getLocale(), 0, 2);
-    $t = fn (string $en, string $fa, string $ar) => match ($lang) { 'fa' => $fa, 'ar' => $ar, default => $en };
+    // The card's own words live in the core i18n table (resources/lang, generated from it).
+    $say = fn (string $key) => __('nabuxui::ui.'.$key, [], $lang);
     $modes = ['login', 'register', 'forgot'];
     $mode = in_array($mode, $modes, true) ? $mode : 'login';
 
     $defaults = [
-        'login' => $t('Sign in', 'ورود', 'تسجيل الدخول'),
-        'loginTitle' => $t('Welcome back', 'خوش آمدید', 'أهلاً بعودتك'),
-        'loginSubtitle' => $t('Sign in to pick up right where you left off.', 'وارد شوید تا از همان‌جا ادامه دهید.', 'سجّل الدخول لتكمل من حيث توقفت.'),
-        'register' => $t('Create account', 'ساخت حساب', 'إنشاء حساب'),
-        'registerTitle' => $t('Get started in minutes', 'در چند دقیقه شروع کنید', 'ابدأ في دقائق'),
-        'registerSubtitle' => $t('A couple of details and your workspace is ready.', 'چند جزئیات و فضای کاری شما آماده است.', 'بضعة تفاصيل ويصبح مساحة عملك جاهزة.'),
-        'forgot' => $t('Reset password', 'بازنشانی رمز', 'إعادة تعيين كلمة المرور'),
-        'forgotTitle' => $t('Forgot your password?', 'رمز عبورتان را فراموش کرده‌اید؟', 'نسيت كلمة المرور؟'),
-        'forgotSubtitle' => $t('Enter your email and we’ll send you a reset link.', 'ایمیل‌تان را بنویسید تا پیوند بازنشانی بفرستیم.', 'اكتب بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين.'),
-        'email' => $t('Email', 'ایمیل', 'البريد الإلكتروني'),
-        'password' => $t('Password', 'رمز عبور', 'كلمة المرور'),
-        'name' => $t('Full name', 'نام و نام خانوادگی', 'الاسم الكامل'),
-        'remember' => $t('Remember me', 'مرا به یاد داشته باش', 'تذكّرني'),
-        'forgotLink' => $t('Forgot password?', 'رمز را فراموش کرده‌اید؟', 'نسيت كلمة المرور؟'),
-        'noAccount' => $t('No account yet?', 'هنوز حساب ندارید؟', 'لا تملك حسابًا بعد؟'),
-        'hasAccount' => $t('Already have an account?', 'قبلاً حساب ساخته‌اید؟', 'لديك حساب بالفعل؟'),
-        'backToLogin' => $t('Back to sign in', 'بازگشت به ورود', 'العودة لتسجيل الدخول'),
+        'login' => $say('authLogin'),
+        'loginTitle' => $say('authLoginTitle'),
+        'loginSubtitle' => $say('authLoginSubtitle'),
+        'register' => $say('authRegister'),
+        'registerTitle' => $say('authRegisterTitle'),
+        'registerSubtitle' => $say('authRegisterSubtitle'),
+        'forgot' => $say('authForgot'),
+        'forgotTitle' => $say('authForgotTitle'),
+        'forgotSubtitle' => $say('authForgotSubtitle'),
+        'email' => $say('authEmail'),
+        'password' => $say('authPassword'),
+        'name' => $say('authName'),
+        'remember' => $say('authRemember'),
+        'forgotLink' => $say('authForgotLink'),
+        'noAccount' => $say('authNoAccount'),
+        'hasAccount' => $say('authHasAccount'),
+        'backToLogin' => $say('authBackToLogin'),
     ];
     $w = fn (string $key) => $words[$key] ?? $defaults[$key];
     $field = fn (string $name) => $model ? "{$model}.{$name}" : $name;

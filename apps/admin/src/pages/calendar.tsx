@@ -88,7 +88,7 @@ export function CalendarPage() {
     setViewing(draft.date.slice(0, 7));
     setComposing(false);
     setDraft({ label: '', date: draft.date, time: '' });
-    toast(tr('رویداد تازه ثبت شد', 'The new event was added'));
+    toast(c.added);
   };
 
   const canAdd = draft.label.trim().length > 0 && /^\d{4}-\d{2}-\d{2}$/.test(draft.date);
@@ -157,13 +157,13 @@ export function CalendarPage() {
         }
       >
         <div style={{ display: 'grid', gap: 'var(--nx-space-3)' }}>
-          <Field label={tr('عنوان', 'Title')} required>
+          <Field label={c.fieldTitle} required>
             <Input value={draft.label} onChange={(event) => setDraft({ ...draft, label: event.target.value })} autoComplete="off" />
           </Field>
-          <Field label={tr('روز', 'Day')} required>
+          <Field label={c.fieldDay} required>
             <Input type="date" dir="ltr" value={draft.date} onChange={(event) => setDraft({ ...draft, date: event.target.value })} />
           </Field>
-          <Field label={tr('ساعت', 'Time')}>
+          <Field label={c.fieldTime}>
             <Input type="time" dir="ltr" value={draft.time} onChange={(event) => setDraft({ ...draft, time: event.target.value })} />
           </Field>
         </div>

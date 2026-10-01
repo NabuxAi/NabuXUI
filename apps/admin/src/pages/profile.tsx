@@ -49,9 +49,9 @@ export function ProfilePage() {
 
   const [avatar, setAvatar] = useState<string>();
   const [sessions, setSessions] = useState<Session[]>(() => [
-    { id: 'mac', icon: 'command', device: tr('کروم · مک‌اواس', 'Chrome · macOS'), lastActive: s.common.online, current: true },
-    { id: 'iphone', icon: 'globe', device: tr('سافاری · آیفون', 'Safari · iPhone'), lastActive: tr('۱۸ دقیقه پیش', '18 minutes ago') },
-    { id: 'windows', icon: 'grid', device: tr('فایرفاکس · ویندوز', 'Firefox · Windows'), lastActive: tr('دو روز پیش', 'two days ago') },
+    { id: 'mac', icon: 'command', device: p.deviceMac, lastActive: s.common.online, current: true },
+    { id: 'iphone', icon: 'globe', device: p.deviceIphone, lastActive: p.whenIphone },
+    { id: 'windows', icon: 'grid', device: p.deviceWindows, lastActive: p.whenWindows },
   ]);
 
   // The photo picker: a hidden native input behind the button; the preview is
@@ -83,7 +83,7 @@ export function ProfilePage() {
             <div className="adm-avatar-actions">
               <Button size="sm" icon="image" onClick={() => file.current?.click()}>{p.changeAvatar}</Button>
               <input ref={file} type="file" accept="image/*" hidden onChange={pick} />
-              <span className="adm-avatar-hint">{tr('PNG یا JPG، حداکثر ۲ مگابایت', 'PNG or JPG, up to 2 MB')}</span>
+              <span className="adm-avatar-hint">{p.avatarHint}</span>
             </div>
           </div>
           <div className="adm-form-grid">
@@ -104,14 +104,14 @@ export function ProfilePage() {
                 name="timezone"
                 defaultValue="Asia/Tehran"
                 options={[
-                  { value: 'Asia/Tehran', label: tr('تهران (GMT+3:30)', 'Tehran (GMT+3:30)') },
-                  { value: 'Europe/Berlin', label: tr('برلین (GMT+2:00)', 'Berlin (GMT+2:00)') },
+                  { value: 'Asia/Tehran', label: s.common.tzTehran },
+                  { value: 'Europe/Berlin', label: s.common.tzBerlin },
                   { value: 'UTC', label: 'UTC' },
                 ]}
               />
             </Field>
             <Field label={p.bio} className="adm-form-span">
-              <Textarea name="bio" rows={3} maxRows={6} defaultValue={tr('مدیر سیستم فروشگاه نابو؛ علاقه‌مند به ابزارهای خوب و تنظیمات ریز.', 'Nabu Store’s system admin; fond of good tooling and careful tuning.')} />
+              <Textarea name="bio" rows={3} maxRows={6} defaultValue={p.bioDefault} />
             </Field>
           </div>
           <div className="adm-form-actions">
@@ -123,14 +123,14 @@ export function ProfilePage() {
       <div className="adm-profile-side">
         <Card title={p.security} titleAs="h2" icon="lock">
           <form className="adm-form" onSubmit={submit}>
-            <Field label={tr('رمز فعلی', 'Current password')}>
+            <Field label={s.common.currentPassword}>
               <Input name="current" type="password" dir="ltr" autoComplete="current-password" required />
             </Field>
-            <Field label={tr('رمز تازه', 'New password')} hint={tr('حداقل ۸ نویسه، با عدد و نویسهٔ بزرگ', 'At least 8 characters, with a digit and an uppercase')}>
+            <Field label={s.common.newPassword} hint={p.newPasswordHint}>
               <Input name="next" type="password" dir="ltr" autoComplete="new-password" required minLength={8} />
             </Field>
             <div className="adm-form-actions">
-              <SaveButton label={tr('به‌روزرسانی رمز', 'Update password')} saved={s.common.saved} />
+              <SaveButton label={p.updatePassword} saved={s.common.saved} />
             </div>
           </form>
         </Card>
@@ -145,7 +145,7 @@ export function ProfilePage() {
                 <span className="adm-session-meta">
                   <span className="adm-session-device">
                     {session.device}
-                    {session.current && <span className="adm-session-now">{tr('این دستگاه', 'This device')}</span>}
+                    {session.current && <span className="adm-session-now">{p.thisDevice}</span>}
                   </span>
                   <span className="adm-session-when">{p.lastActive}: {session.lastActive}</span>
                 </span>
@@ -154,7 +154,7 @@ export function ProfilePage() {
                   variant="ghost"
                   icon="lock"
                   disabled={session.current}
-                  title={session.current ? tr('برای دستگاه فعلی، از تنظیمات خارج شوید', 'For the current device, sign out from settings') : undefined}
+                  title={session.current ? p.currentDeviceHint : undefined}
                   onClick={() => revoke(session)}
                 >
                   {p.revoke}

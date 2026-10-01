@@ -5,7 +5,7 @@
  * feed and the storage usage card.
  */
 import { Backdrop, Button, Heatmap, MetricChart, StatStrip, TimelineFeed, UsageCard, type TimelineEntry } from '@nabuxai/ui-react';
-import { useLang, useStrings, useTr } from '../lang';
+import { useLang, useStrings, useTr, localeId } from '../lang';
 import {
   AGO,
   HEAT_DAYS,
@@ -34,7 +34,7 @@ export function DashboardPage() {
       id: 'order-1248',
       actor: tr('مریم رضایی', 'Maryam Rezaei'),
       text: tr('سفارش را تأیید کرد', 'confirmed order'),
-      target: '#1248',
+      target: localeId('#1248', lang),
       time: AGO.minutes3.at,
       tone: 'success',
     },

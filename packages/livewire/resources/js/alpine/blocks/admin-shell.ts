@@ -5,9 +5,9 @@
  * including the drawer's copy) and the native-popover drawer and user menu
  * (place + lightDismiss, the same wiring as the sort pill).
  *
- * Not registered in ../index.ts yet: import and call
- * `installAdminShellBlocks(Alpine)` from your own alpine:init listener, or add
- * it there once every page that uses <x-nx::admin-shell> ships this file.
+ * Registered in ../../index.ts: installAdminShellBlocks(Alpine) runs with the
+ * other blocks on alpine:init, so any page that ships the bundle gets this
+ * wiring for <x-nx::admin-shell> automatically.
  */
 import { type Cleanup, type PlaceOptions, indicator, lightDismiss, place, roveFocus } from '@nabuxai/ui-core';
 import type { AlpineLike, Magics } from '../types';

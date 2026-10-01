@@ -5,12 +5,18 @@
  * over css/blocks/timeline-feed.css — the Blade twin renders the same markup.
  */
 import { type CSSProperties, type HTMLAttributes, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
-import { type IconName, activityTime, reveal } from '@nabuxai/ui-core';
+import { type IconName, activityTime, reveal, timeOf } from '@nabuxai/ui-core';
 import { cx, useBehavior } from '../internal/hooks';
 import { Icon } from '../internal/icon';
 import { SmartLink, useLocale } from '../internal/provider';
 
 const vars = (style: Record<string, string | number | undefined>) => style as CSSProperties;
+
+/** The machine-readable moment behind a shown time; undefined when `time` is a plain label. */
+const isoOf = (time: Date | number | string): string | undefined => {
+  const at = timeOf(time);
+  return Number.isNaN(at) ? undefined : new Date(at).toISOString();
+};
 
 export type TimelineTone = 'neutral' | 'success' | 'warning' | 'info' | 'danger';
 
@@ -87,7 +93,7 @@ export function TimelineFeed({ entries, label, locale, className, ...rest }: Tim
                 <p className="nx-timeline-feed-text">
                   {entry.actor && <strong>{entry.actor}</strong>} {entry.text} {target}
                 </p>
-                <time className="nx-timeline-feed-time">{when}</time>
+                <time className="nx-timeline-feed-time" dateTime={isoOf(entry.time)}>{when}</time>
               </div>
             </li>
           );

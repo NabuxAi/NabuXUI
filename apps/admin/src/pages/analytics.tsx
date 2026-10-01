@@ -8,7 +8,7 @@
  * every chart ships its visually-hidden table inside its block.
  */
 import { AnalyticsCard, ComparisonTable, MetricChart, UsageCard, type AnalyticsPeriod, type ComparisonFeature, type ComparisonPlan } from '@nabuxai/ui-react';
-import { useLang, useStrings, useTr } from '../lang';
+import { useLang, useStrings } from '../lang';
 import { monthLabels, NOW, ORDERS_DELTA, REVENUE_DELTA, VISITS_DELTA } from '../data';
 import { href } from '../router';
 
@@ -37,7 +37,6 @@ const LATENCY_BY_MONTH = [238, 231, 236, 224, 219, 222, 214, 209, 212, 204, 198,
 
 export function AnalyticsPage() {
   const lang = useLang();
-  const tr = useTr();
   const a = useStrings().pages.analytics;
   const intl = INTL[lang];
   const number = new Intl.NumberFormat(intl);
@@ -77,29 +76,25 @@ export function AnalyticsPage() {
     period('quarter', a.quarter, CONVERSION.quarter.map((v) => v / 1000), CONVERSION.quarter[CONVERSION.quarter.length - 1]! / 1000, 1.1),
   ];
 
-  const capacity = tr('ظرفیت', 'Capacity');
-  const insights = tr('بینش', 'Insights');
-  const supportGroup = tr('پشتیبانی', 'Support');
-
   const plans: ComparisonPlan[] = [
-    { id: 'basic', name: tr('پایه', 'Basic'), price: number.format(0), period: a.monthly, description: tr('برای شروع', 'To get going'), action: { label: a.cta, href: href('settings') } },
-    { id: 'growth', name: tr('رشد', 'Growth'), price: number.format(990), period: a.monthly, description: tr('برای تیم‌های کوچک', 'For small teams'), action: { label: a.cta, href: href('settings') } },
-    { id: 'pro', name: tr('حرفه‌ای', 'Pro'), price: number.format(2900), period: a.monthly, description: tr('برای فروشگاههای بزرگ', 'For large stores'), action: { label: a.cta, href: href('settings') } },
+    { id: 'basic', name: a.planBasic, price: number.format(0), period: a.monthly, description: a.planBasicDesc, action: { label: a.cta, href: href('settings') } },
+    { id: 'growth', name: a.planGrowth, price: number.format(990), period: a.monthly, description: a.planGrowthDesc, action: { label: a.cta, href: href('settings') } },
+    { id: 'pro', name: a.planPro, price: number.format(2900), period: a.monthly, description: a.planProDesc, action: { label: a.cta, href: href('settings') } },
   ];
 
   const features: ComparisonFeature[] = [
-    { group: capacity, label: tr('اعضای تیم', 'Team members'), values: { basic: number.format(3), growth: number.format(10), pro: tr('نامحدود', 'Unlimited') } },
-    { group: capacity, label: tr('فضای ذخیره‌سازی', 'Storage'), values: { basic: '5 GB', growth: '50 GB', pro: '500 GB' } },
-    { group: capacity, label: tr('کارت هدیه', 'Gift cards'), values: { basic: false, growth: true, pro: true } },
-    { group: insights, label: tr('گزارشهای تحلیلی', 'Analytics reports'), values: { basic: false, growth: true, pro: true } },
-    { group: insights, label: tr('خروجی داده', 'Data export'), values: { basic: false, growth: true, pro: true } },
-    { group: insights, label: tr('نمودارهای مقایسهٔ دوره', 'Period comparison charts'), values: { basic: false, growth: false, pro: true } },
-    { group: supportGroup, label: tr('پشتیبانی ایمیلی', 'Email support'), values: { basic: true, growth: true, pro: true } },
-    { group: supportGroup, label: tr('پشتیبانی زنده', 'Live chat support'), values: { basic: false, growth: true, pro: true } },
-    { group: supportGroup, label: tr('مدیر موفقیت اختصاصی', 'Dedicated success manager'), values: { basic: false, growth: false, pro: true } },
+    { group: a.groupCapacity, label: a.featTeam, values: { basic: number.format(3), growth: number.format(10), pro: a.featUnlimited } },
+    { group: a.groupCapacity, label: a.featStorage, values: { basic: '5 GB', growth: '50 GB', pro: '500 GB' } },
+    { group: a.groupCapacity, label: a.featGiftCards, values: { basic: false, growth: true, pro: true } },
+    { group: a.groupInsights, label: a.featReports, values: { basic: false, growth: true, pro: true } },
+    { group: a.groupInsights, label: a.featExport, values: { basic: false, growth: true, pro: true } },
+    { group: a.groupInsights, label: a.featCompare, values: { basic: false, growth: false, pro: true } },
+    { group: a.groupSupport, label: a.featEmail, values: { basic: true, growth: true, pro: true } },
+    { group: a.groupSupport, label: a.featLiveChat, values: { basic: false, growth: true, pro: true } },
+    { group: a.groupSupport, label: a.featSuccessManager, values: { basic: false, growth: false, pro: true } },
   ];
 
-  const percent = tr('٪', '%');
+  const percent = a.percentSign;
 
   return (
     <div className="adm-dashboard">
@@ -111,7 +106,7 @@ export function AnalyticsPage() {
 
       <MetricChart
         className="adm-wide"
-        title={tr('کیفیت فروشگاه', 'Store quality')}
+        title={a.qualityTitle}
         caption={a.vsPrev}
         labels={monthLabels(intl)}
         metrics={[
@@ -124,7 +119,7 @@ export function AnalyticsPage() {
       <ComparisonTable
         className="adm-wide"
         caption={a.comparisonTitle}
-        featureLabel={tr('ویژگی', 'Feature')}
+        featureLabel={a.featureLabel}
         recommendedLabel={a.recommended}
         includedLabel={a.included}
         excludedLabel={a.excluded}

@@ -14,7 +14,7 @@ import {
   type CommandGroup,
   type IconName,
 } from '@nabuxai/ui-react';
-import { LangContext, STRINGS, readLang, type Lang } from './lang';
+import { LangContext, STRINGS, localeId, readLang, type Lang } from './lang';
 import { href, isAuthRoute, useRoute, type RouteId } from './router';
 import { AGO } from './data';
 import { DashboardPage } from './pages/dashboard';
@@ -87,7 +87,7 @@ export function App() {
   };
 
   const activity: ActivityItem[] = [
-    { id: 'a1', actor: { name: tr('مریم رضایی', 'Maryam Rezaei') }, text: tr('سفارش را تأیید کرد', 'confirmed order'), target: '#1248', time: AGO.minutes18.at, unread: true },
+    { id: 'a1', actor: { name: tr('مریم رضایی', 'Maryam Rezaei') }, text: tr('سفارش را تأیید کرد', 'confirmed order'), target: localeId('#1248', lang), time: AGO.minutes18.at, unread: true },
     { id: 'a2', actor: { name: tr('علی نیک‌پور', 'Ali Nikpour') }, text: tr('کامنت گذاشت روی', 'commented on'), target: tr('صفحهٔ پرداخت', 'Checkout page'), time: AGO.hour1.at, unread: true },
     { id: 'a3', actor: { name: tr('سارا احمدی', 'Sara Ahmadi') }, text: tr('گزارش مالی را بست', 'closed the financial report'), time: AGO.day1.at },
   ];

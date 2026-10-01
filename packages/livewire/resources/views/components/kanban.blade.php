@@ -26,16 +26,17 @@
     $quickAdd = ! in_array(strtolower((string) $quickAdd), ['0', 'false', 'no', 'off', ''], true);
     $locale = str_replace('_', '-', $locale ?? app()->getLocale());
     $lang = substr($locale, 0, 2);
-    $t = fn (string $en, string $fa, string $ar) => match ($lang) { 'fa' => $fa, 'ar' => $ar, default => $en };
+    // The board's own words live in the core i18n table (resources/lang, generated from it).
+    $say = fn (string $key) => __('nabuxui::ui.'.$key, [], $lang);
     $labels = [
-        'board' => $label ?? $t('Board', 'برد', 'اللوحة'),
-        'addCard' => $t('Add a card', 'افزودن کارت', 'إضافة بطاقة'),
-        'add' => $t('Add', 'افزودن', 'إضافة'),
-        'empty' => $t('No cards yet', 'هنوز کاری نیست', 'لا بطاقات بعد'),
-        'moveTo' => $t('Move to :column', 'انتقال به :column', 'نقل إلى :column'),
-        'menuFor' => $t('Actions for :name', 'کنش‌های :name', 'إجراءات :name'),
-        'cards' => $t(':count cards', ':count کارت', ':count بطاقات'),
-        'movedTo' => $t(':card moved to :column', '«:card» به «:column» منتقل شد', 'نُقلت :card إلى :column'),
+        'board' => $label ?? $say('kanbanBoard'),
+        'addCard' => $say('kanbanAddCard'),
+        'add' => $say('kanbanAdd'),
+        'empty' => $say('kanbanEmpty'),
+        'moveTo' => $say('kanbanMoveTo'),
+        'menuFor' => $say('kanbanCardMenu'),
+        'cards' => $say('kanbanCards'),
+        'movedTo' => $say('kanbanMovedTo'),
     ];
     $toneOf = fn ($tone) => in_array($tone, ['accent', 'success', 'warning', 'danger', 'info', 'gold'], true) ? $tone : null;
     $columns = array_values(array_map(fn ($column) => [
@@ -79,7 +80,8 @@
                     <span class="nx-kanban-column-count" aria-hidden="true">
                         <x-nx::number :value="count($column['cards'])" :reveal="false" :locale="$locale" wire:ignore />
                     </span>
-                    <span class="nx-visually-hidden" x-text="countText(@js($columnId))"></span>
+                    {{-- The spoken count is server-rendered so it reads without JS; Alpine keeps it honest. --}}
+                    <span class="nx-visually-hidden" x-text="countText(@js($columnId))">{{ str_replace(':count', NabuXUI::formatNumber(count($column['cards']), 0, $locale), $labels['cards']) }}</span>
                 </header>
                 <ul class="nx-kanban-list" aria-labelledby="{{ $colKey }}-title"
                     x-on:dragover="dragOver($event)" x-on:drop="drop($event)" x-on:dragleave="dragLeave($event)">

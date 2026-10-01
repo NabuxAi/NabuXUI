@@ -21,13 +21,12 @@ import {
   toast,
   type ButtonStatus,
 } from '@nabuxai/ui-react';
-import { useLang, useStrings, useTr } from '../lang';
+import { useLang, useStrings } from '../lang';
 import { useRoute } from '../router';
 
 export function SettingsPage() {
   const s = useStrings();
   const set = s.pages.settings;
-  const tr = useTr();
   const lang = useLang();
   const [, go] = useRoute();
 
@@ -38,7 +37,7 @@ export function SettingsPage() {
   const [weekly, setWeekly] = useState(true);
   const [passwordOpen, setPasswordOpen] = useState(false);
   const [confirm, setConfirm] = useState('');
-  const deleteWord = tr('حذف', 'delete');
+  const deleteWord = set.deleteWord;
   const armed = confirm.trim().toLowerCase() === deleteWord;
 
   const saveGeneral = (event: FormEvent<HTMLFormElement>) => {
@@ -63,11 +62,11 @@ export function SettingsPage() {
     window.location.reload();
   };
 
-  const signOutEverywhere = () => toast.info(tr('از همهٔ دستگاه‌ها خارج شدید', 'Signed out on all devices'));
+  const signOutEverywhere = () => toast.info(set.signedOutEverywhere);
 
   const deleteStore = () => {
     go('login');
-    toast.warning(tr('فروشگاه حذف شد', 'The store was deleted'));
+    toast.warning(set.storeDeleted);
   };
 
   return (
@@ -76,7 +75,7 @@ export function SettingsPage() {
         <form className="adm-form" onSubmit={saveGeneral}>
           <div className="adm-form-grid">
             <Field label={set.workspaceName}>
-              <Input name="workspace" defaultValue={tr('فروشگاه نابو', 'Nabu Store')} required />
+              <Input name="workspace" defaultValue={s.app.storeName} required />
             </Field>
             <Field label={set.workspaceUrl}>
               <Input name="url" dir="ltr" defaultValue="nabu.shop" startAddon="https://" />
@@ -86,8 +85,8 @@ export function SettingsPage() {
                 name="timezone"
                 defaultValue="Asia/Tehran"
                 options={[
-                  { value: 'Asia/Tehran', label: tr('تهران (GMT+3:30)', 'Tehran (GMT+3:30)') },
-                  { value: 'Europe/Berlin', label: tr('برلین (GMT+2:00)', 'Berlin (GMT+2:00)') },
+                  { value: 'Asia/Tehran', label: s.common.tzTehran },
+                  { value: 'Europe/Berlin', label: s.common.tzBerlin },
                   { value: 'UTC', label: 'UTC' },
                 ]}
               />
@@ -103,7 +102,7 @@ export function SettingsPage() {
         <div className="adm-row">
           <span className="adm-row-text">
             <span className="adm-row-label">{set.theme}</span>
-            <span className="adm-row-hint">{tr('روشن، تیره یا دنبالِ سیستم — بلافاصله اعمال می‌شود.', 'Light, dark or follow the system — applied right away.')}</span>
+            <span className="adm-row-hint">{set.themeHint}</span>
           </span>
           <ThemeSwitch label={set.theme} />
         </div>
@@ -113,7 +112,7 @@ export function SettingsPage() {
         <div className="adm-row">
           <span className="adm-row-text">
             <span className="adm-row-label">{set.languageFa} · {set.languageEn}</span>
-            <span className="adm-row-hint">{tr('پس از انتخاب، پنل با زبان تازه بارگذاری می‌شود.', 'Picking one reloads the panel in the new language.')}</span>
+            <span className="adm-row-hint">{set.languageHint}</span>
           </span>
           <LanguageMenu
             label={set.languageSection}
@@ -147,7 +146,7 @@ export function SettingsPage() {
               onOpenChange={setPasswordOpen}
               trigger={<Button size="sm" variant="outline" icon="lock">{s.common.edit}</Button>}
               title={set.password}
-              description={tr('یک رمز تازه با حداقل ۸ نویسه انتخاب کنید.', 'Pick a new password of at least 8 characters.')}
+              description={set.passwordDescription}
               footer={
                 <>
                   <Button variant="ghost" onClick={() => setPasswordOpen(false)}>{s.common.cancel}</Button>
@@ -156,7 +155,7 @@ export function SettingsPage() {
                     icon="check"
                     onClick={() => {
                       setPasswordOpen(false);
-                      toast.success(tr('رمز عبور به‌روزرسانی شد', 'Password updated'));
+                      toast.success(set.passwordUpdated);
                     }}
                   >
                     {s.common.confirm}
@@ -164,10 +163,10 @@ export function SettingsPage() {
                 </>
               }
             >
-              <Field label={tr('رمز فعلی', 'Current password')}>
+              <Field label={s.common.currentPassword}>
                 <Input type="password" dir="ltr" autoComplete="current-password" required />
               </Field>
-              <Field label={tr('رمز تازه', 'New password')}>
+              <Field label={s.common.newPassword}>
                 <Input type="password" dir="ltr" autoComplete="new-password" required minLength={8} />
               </Field>
             </Dialog>
@@ -183,7 +182,7 @@ export function SettingsPage() {
 
       <Card className="adm-settings-danger" title={set.danger} titleAs="h2" icon="alert-triangle" description={set.deleteBody}>
         <div className="adm-danger">
-          <Field label={set.typeToDelete} hint={tr('واژهٔ تأیید', 'Confirmation word')}>
+          <Field label={set.typeToDelete} hint={set.confirmWord}>
             <Input value={confirm} onChange={(event) => setConfirm(event.target.value)} dir="ltr" autoComplete="off" placeholder={deleteWord} />
           </Field>
           <Button variant="danger" icon="trash" disabled={!armed} onClick={deleteStore}>

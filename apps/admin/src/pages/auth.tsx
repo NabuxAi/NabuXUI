@@ -7,13 +7,12 @@
  * the panel (login/register) or confirms the reset link (forgot).
  */
 import { AuthCard, Button, toast, type AuthMode } from '@nabuxai/ui-react';
-import { useStrings, useTr } from '../lang';
+import { useStrings } from '../lang';
 import { href, useRoute } from '../router';
 
 export function AuthPage() {
   const s = useStrings();
   const a = s.pages.auth;
-  const tr = useTr();
   const [route, go] = useRoute();
   const mode: AuthMode = route === 'register' ? 'register' : route === 'forgot' ? 'forgot' : 'login';
 
@@ -23,9 +22,9 @@ export function AuthPage() {
     new Promise<void>((resolve) => {
       window.setTimeout(() => {
         if (pane === 'forgot') {
-          toast.info(tr('پیوند بازنشانی به ایمیلتان فرستاده شد.', 'A reset link is on its way to your email.'));
+          toast.info(a.resetSent);
         } else {
-          toast.success(pane === 'login' ? tr('خوش آمدید!', 'Welcome back!') : tr('حسابتان آماده شد — خوش آمدید!', 'Your account is ready — welcome!'));
+          toast.success(pane === 'login' ? a.welcomeBack : a.accountReady);
           go('dash');
         }
         resolve();
@@ -39,9 +38,9 @@ export function AuthPage() {
         brand={s.app.brand}
         tagline={s.app.tagline}
         perks={[
-          tr('سفارش‌ها و گفت‌وگوها در یک صفحه', 'Orders and conversations on one screen'),
-          tr('گزارش‌های زندهٔ فروش', 'Live sales reports'),
-          tr('دوزبانه و راست‌به‌چپ، روشن و تیره', 'Bilingual, RTL-native, light and dark'),
+          a.perkOrders,
+          a.perkReports,
+          a.perkBilingual,
         ]}
         mode={mode}
         onModeChange={go}

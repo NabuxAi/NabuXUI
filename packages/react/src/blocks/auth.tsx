@@ -20,84 +20,50 @@ import {
   useRef,
   useState,
 } from 'react';
-import { morphShell, reveal } from '@nabuxai/ui-core';
+import { type MessageKey, morphShell, reveal } from '@nabuxai/ui-core';
 import { cx, useBehavior, useControllable, useIsoLayoutEffect } from '../internal/hooks';
 import { Icon } from '../internal/icon';
-import { useLocale } from '../internal/provider';
+import { useT } from '../internal/provider';
 import { Button } from '../components/button';
 import { Checkbox, Field, Input } from '../components/form';
 
 export type AuthMode = 'login' | 'register' | 'forgot';
 
-/** The block's own words, in the languages the Nabu products ship. */
-const authWords = {
-  en: {
-    login: 'Sign in',
-    loginTitle: 'Welcome back',
-    loginSubtitle: 'Sign in to pick up right where you left off.',
-    register: 'Create account',
-    registerTitle: 'Get started in minutes',
-    registerSubtitle: 'A couple of details and your workspace is ready.',
-    forgot: 'Reset password',
-    forgotTitle: 'Forgot your password?',
-    forgotSubtitle: 'Enter your email and we’ll send you a reset link.',
-    email: 'Email',
-    password: 'Password',
-    name: 'Full name',
-    remember: 'Remember me',
-    forgotLink: 'Forgot password?',
-    noAccount: 'No account yet?',
-    hasAccount: 'Already have an account?',
-    backToLogin: 'Back to sign in',
-  },
-  fa: {
-    login: 'ورود',
-    loginTitle: 'خوش آمدید',
-    loginSubtitle: 'وارد شوید تا از همان‌جا ادامه دهید.',
-    register: 'ساخت حساب',
-    registerTitle: 'در چند دقیقه شروع کنید',
-    registerSubtitle: 'چند جزئیات و فضای کاری شما آماده است.',
-    forgot: 'بازنشانی رمز',
-    forgotTitle: 'رمز عبورتان را فراموش کرده‌اید؟',
-    forgotSubtitle: 'ایمیل‌تان را بنویسید تا پیوند بازنشانی بفرستیم.',
-    email: 'ایمیل',
-    password: 'رمز عبور',
-    name: 'نام و نام خانوادگی',
-    remember: 'مرا به یاد داشته باش',
-    forgotLink: 'رمز را فراموش کرده‌اید؟',
-    noAccount: 'هنوز حساب ندارید؟',
-    hasAccount: 'قبلاً حساب ساخته‌اید؟',
-    backToLogin: 'بازگشت به ورود',
-  },
-  ar: {
-    login: 'تسجيل الدخول',
-    loginTitle: 'أهلاً بعودتك',
-    loginSubtitle: 'سجّل الدخول لتكمل من حيث توقفت.',
-    register: 'إنشاء حساب',
-    registerTitle: 'ابدأ في دقائق',
-    registerSubtitle: 'بضعة تفاصيل ويصبح مساحة عملك جاهزة.',
-    forgot: 'إعادة تعيين كلمة المرور',
-    forgotTitle: 'نسيت كلمة المرور؟',
-    forgotSubtitle: 'اكتب بريدك الإلكتروني وسنرسل لك رابط إعادة التعيين.',
-    email: 'البريد الإلكتروني',
-    password: 'كلمة المرور',
-    name: 'الاسم الكامل',
-    remember: 'تذكّرني',
-    forgotLink: 'نسيت كلمة المرور؟',
-    noAccount: 'لا تملك حسابًا بعد؟',
-    hasAccount: 'لديك حساب بالفعل؟',
-    backToLogin: 'العودة لتسجيل الدخول',
-  },
-} as const;
+/** The words the card says itself, one key per mode, field and switch row. */
+export type AuthWord =
+  | 'login' | 'loginTitle' | 'loginSubtitle'
+  | 'register' | 'registerTitle' | 'registerSubtitle'
+  | 'forgot' | 'forgotTitle' | 'forgotSubtitle'
+  | 'email' | 'password' | 'name' | 'remember'
+  | 'forgotLink' | 'noAccount' | 'hasAccount' | 'backToLogin';
 
-export type AuthWord = keyof (typeof authWords)['en'];
+/** Where each of them lives in the core i18n table. */
+const WORD_KEYS: Record<AuthWord, MessageKey> = {
+  login: 'authLogin',
+  loginTitle: 'authLoginTitle',
+  loginSubtitle: 'authLoginSubtitle',
+  register: 'authRegister',
+  registerTitle: 'authRegisterTitle',
+  registerSubtitle: 'authRegisterSubtitle',
+  forgot: 'authForgot',
+  forgotTitle: 'authForgotTitle',
+  forgotSubtitle: 'authForgotSubtitle',
+  email: 'authEmail',
+  password: 'authPassword',
+  name: 'authName',
+  remember: 'authRemember',
+  forgotLink: 'authForgotLink',
+  noAccount: 'authNoAccount',
+  hasAccount: 'authHasAccount',
+  backToLogin: 'authBackToLogin',
+};
 
 type Words = Partial<Record<AuthWord, string>>;
 
 /** The block's own words in the provider's language, overridable per instance. */
 function useWords(labels?: Words) {
-  const locale = useLocale();
-  return (key: AuthWord) => labels?.[key] ?? authWords[locale][key] ?? authWords.en[key];
+  const t = useT();
+  return (key: AuthWord) => labels?.[key] ?? t(WORD_KEYS[key]);
 }
 
 const MODES: AuthMode[] = ['login', 'register', 'forgot'];

@@ -25,57 +25,9 @@ import type { IconName } from '@nabuxai/ui-core';
 import { place, playRowFlip, reveal, roveFocus, snapshotRows } from '@nabuxai/ui-core';
 import { cx, useBehavior, useControllable, useEvent, useIsoLayoutEffect } from '../internal/hooks';
 import { Icon } from '../internal/icon';
-import { SmartLink, useLocale } from '../internal/provider';
+import { SmartLink, useLocale, useT } from '../internal/provider';
 import { Avatar } from '../components/display';
 import { NumberTicker } from '../components/text';
-
-/* ---- The block's own words (kept local until they graduate into the core table) --------- */
-
-const words = {
-  en: {
-    board: 'Board',
-    addCard: 'Add a card',
-    add: 'Add',
-    cardMenu: 'Actions for {name}',
-    empty: 'No cards yet',
-    moveTo: 'Move to {column}',
-    movedTo: '{card} moved to {column}',
-    cards: '{count} cards',
-  },
-  fa: {
-    board: 'برد',
-    addCard: 'افزودن کارت',
-    add: 'افزودن',
-    cardMenu: 'کنش‌های «{name}»',
-    empty: 'هنوز کاری نیست',
-    moveTo: 'انتقال به {column}',
-    movedTo: '«{card}» به {column} منتقل شد',
-    cards: '{count} کارت',
-  },
-  ar: {
-    board: 'اللوحة',
-    addCard: 'إضافة بطاقة',
-    add: 'إضافة',
-    cancel: 'إلغاء',
-    cardMenu: 'إجراءات {name}',
-    empty: 'لا بطاقات بعد',
-    moveTo: 'نقل إلى {column}',
-    movedTo: 'نُقلت {card} إلى {column}',
-    cards: '{count} بطاقات',
-  },
-} as const;
-
-type WordKey = keyof (typeof words)['en'];
-type Language = keyof typeof words;
-
-function useWord(): (key: WordKey, params?: Record<string, string | number>) => string {
-  const locale = useLocale();
-  const language: Language = locale in words ? (locale as Language) : 'en';
-  return (key, params = {}) => {
-    const text = words[language][key] ?? words.en[key];
-    return text.replace(/\{(\w+)\}/g, (_, name: string) => String(params[name] ?? `{${name}}`));
-  };
-}
 
 /** The Intl locale: the prop, or the provider's language. */
 const INTL = { en: 'en-US', fa: 'fa-IR', ar: 'ar' } as const;
@@ -166,7 +118,7 @@ export function Kanban({
   style,
   ...rest
 }: KanbanProps) {
-  const word = useWord();
+  const t = useT();
   const language = useLocale();
   const number = useMemo(() => new Intl.NumberFormat(locale ?? INTL[language]), [locale, language]);
   const base = `nx-kanban${useId().replace(/:/g, '')}`;
@@ -193,7 +145,7 @@ export function Kanban({
     flight.current = snapshotRows(cardsOf());
     setColumns(next);
     onMove?.(move, next);
-    setAnnounced(word('movedTo', { card: card.title, column: to.title }));
+    setAnnounced(t('kanbanMovedTo', { card: card.title, column: to.title }));
   });
 
   useIsoLayoutEffect(() => {
@@ -259,7 +211,7 @@ export function Kanban({
     <section
       ref={board}
       className={cx('nx-kanban', className)}
-      aria-label={label ?? word('board')}
+      aria-label={label ?? t('kanbanBoard')}
       style={{ ...(height ? vars({ '--nx-kanban-height': height }) : null), ...style }}
       {...rest}
     >
@@ -290,8 +242,8 @@ export function Kanban({
                   setOver(null);
                 }}
                 onMove={commit}
-                menuLabel={word('cardMenu', { name: card.title })}
-                moveTo={(name: string) => word('moveTo', { column: name })}
+                menuLabel={t('kanbanCardMenu', { name: card.title })}
+                moveTo={(name: string) => t('kanbanMoveTo', { column: name })}
               />,
             );
           });
@@ -312,7 +264,7 @@ export function Kanban({
                 <span className="nx-kanban-column-count" aria-hidden="true">
                   <NumberTicker value={column.cards.length} reveal={false} locale={locale} />
                 </span>
-                <span className="nx-visually-hidden">{word('cards', { count: number.format(column.cards.length) })}</span>
+                <span className="nx-visually-hidden">{t('kanbanCards', { count: number.format(column.cards.length) })}</span>
               </header>
               <ul
                 className="nx-kanban-list"
@@ -322,7 +274,7 @@ export function Kanban({
                 onDragLeave={(event) => onDragLeave(event, column.id)}
               >
                 {items}
-                {column.cards.length === 0 && overHere === null && <li className="nx-kanban-empty">{word('empty')}</li>}
+                {column.cards.length === 0 && overHere === null && <li className="nx-kanban-empty">{t('kanbanEmpty')}</li>}
               </ul>
               {quickAdd && (
                 <div className="nx-kanban-add">
@@ -334,7 +286,7 @@ export function Kanban({
                     onClick={() => setAdding(adding === column.id ? null : column.id)}
                   >
                     <Icon name="plus" />
-                    <span>{word('addCard')}</span>
+                    <span>{t('kanbanAddCard')}</span>
                   </button>
                   <div className="nx-kanban-add-form" id={`${base}-add-${column.id}`} data-open={adding === column.id ? '' : undefined}>
                     <form className="nx-kanban-add-body" onSubmit={(event) => submit(event, column.id)}>
@@ -343,11 +295,11 @@ export function Kanban({
                         name="title"
                         type="text"
                         autoComplete="off"
-                        placeholder={addPlaceholder ?? word('addCard')}
-                        aria-label={word('addCard')}
+                        placeholder={addPlaceholder ?? t('kanbanAddCard')}
+                        aria-label={t('kanbanAddCard')}
                       />
                       <button type="submit" className="nx-kanban-add-submit">
-                        {word('add')}
+                        {t('kanbanAdd')}
                       </button>
                     </form>
                   </div>

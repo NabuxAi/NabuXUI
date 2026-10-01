@@ -46,11 +46,11 @@ const STATUS_RANK: Record<Status, number> = { active: 0, invited: 1, inactive: 2
 const STATUS_TONE: Record<Status, 'success' | 'info' | undefined> = { active: 'success', invited: 'info', inactive: undefined };
 
 /** "۱۸ دقیقه پیش" / "18m ago" — the locale's digits, measured from the shared NOW. */
-function lastSeenWord(at: number, lang: Lang) {
+function lastSeenWord(at: number, lang: Lang, justNow: string) {
   const tr = (fa: string, en: string) => (lang === 'fa' ? fa : en);
   const n = (value: number) => new Intl.NumberFormat(INTL[lang]).format(value);
   const minutes = Math.max(0, Math.round((NOW - at) / 60_000));
-  if (minutes < 1) return tr('همین حالا', 'just now');
+  if (minutes < 1) return justNow;
   if (minutes < 60) return tr(`${n(minutes)} دقیقه پیش`, `${n(minutes)}m ago`);
   const hours = Math.round(minutes / 60);
   if (hours < 24) return tr(`${n(hours)} ساعت پیش`, `${n(hours)}h ago`);
@@ -97,7 +97,7 @@ export function UsersPage() {
     setRows((prev) => prev.filter((row) => !selected.has(row.id)));
     setSelected(new Set());
     setConfirming(false);
-    toast(tr('کاربران انتخاب‌شده حذف شدند', 'The selected users were removed'));
+    toast(u.removedSelected);
   };
 
   const sendInvite = () => {
@@ -113,7 +113,7 @@ export function UsersPage() {
   /** A real download of what is on show (BOM first, so Persian opens right in Excel). */
   const exportCsv = () => {
     const head = [u.colName, u.colEmail, u.colRole, u.colStatus, u.colLastSeen];
-    const body = filtered.map((row) => [nameOf(row), row.email, roleLabel[row.role], statusLabel[row.status], lastSeenWord(row.lastSeen, lang)]);
+    const body = filtered.map((row) => [nameOf(row), row.email, roleLabel[row.role], statusLabel[row.status], lastSeenWord(row.lastSeen, lang, u.justNow)]);
     const csv = `\uFEFF${[head, ...body].map((cells) => cells.map((cell) => `"${cell.replaceAll('"', '""')}"`).join(',')).join('\n')}`;
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
     const link = document.createElement('a');
@@ -121,7 +121,7 @@ export function UsersPage() {
     link.download = 'nabu-users.csv';
     link.click();
     URL.revokeObjectURL(url);
-    toast(tr('خروجی CSV آماده شد', 'The CSV export is ready'));
+    toast(u.csvReady);
   };
 
   const columns: DataTableColumn<Member>[] = [
@@ -135,12 +135,12 @@ export function UsersPage() {
             if (el) el.indeterminate = chosen.length > 0 && chosen.length < filtered.length;
           }}
           onChange={() => setSelected(chosen.length === filtered.length ? new Set() : new Set(filtered.map((row) => row.id)))}
-          aria-label={tr('انتخاب همهٔ اعضا', 'Select every member')}
+          aria-label={u.selectAll}
         />
       ),
       width: '2.5rem',
       format: (_value, row) => (
-        <input type="checkbox" checked={selected.has(row.id)} onChange={() => toggle(row.id)} aria-label={`${tr('انتخاب', 'Select')} ${nameOf(row)}`} />
+        <input type="checkbox" checked={selected.has(row.id)} onChange={() => toggle(row.id)} aria-label={`${u.select} ${nameOf(row)}`} />
       ),
     },
     {
@@ -190,7 +190,7 @@ export function UsersPage() {
         </span>
       ),
     },
-    { key: 'lastSeen', label: u.colLastSeen, sortable: true, sortValue: (row) => row.lastSeen, format: (_value, row) => lastSeenWord(row.lastSeen, lang) },
+    { key: 'lastSeen', label: u.colLastSeen, sortable: true, sortValue: (row) => row.lastSeen, format: (_value, row) => lastSeenWord(row.lastSeen, lang, u.justNow) },
   ];
 
   const counts = {
@@ -254,7 +254,7 @@ export function UsersPage() {
         rows={filtered}
         columns={columns}
         defaultSort={{ key: 'lastSeen', direction: 'descending' }}
-        emptyText={needle || status !== 'all' ? tr('موردی مطابق فیلترها پیدا نشد', 'No one matches these filters') : u.emptyTitle}
+        emptyText={needle || status !== 'all' ? u.noMatch : u.emptyTitle}
       />
 
       <Dialog
