@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, CommandPalette, Header, Kbd, NabuXUIProvider, type NavItem, SegmentedControl, ThemeToggle, Toaster } from '@nabuxai/ui-react';
+import { Button, CommandPalette, Header, Kbd, NabuXUIProvider, type NavItem, SegmentedControl, ThemeSwitch, ThemeToggle, theme, Toaster } from '@nabuxai/ui-react';
 import { HeroSection, TextSection } from './sections/intro';
 import { FrameworksSection } from './sections/frameworks';
 import { ButtonsSection, InputsSection } from './sections/actions';
@@ -29,6 +29,18 @@ const SECTIONS: Array<{ id: string; fa: string; en: string; icon: NonNullable<Na
   { id: 'grid', fa: 'گرید و بنتو', en: 'Grid & bento', icon: 'grid' },
   { id: 'navigation', fa: 'ناوبری', en: 'Navigation', icon: 'globe' },
   { id: 'frameworks', fa: 'فریم‌ورک‌ها', en: 'Frameworks', icon: 'command' },
+];
+
+/** The morphin-style block sections: listed in the menu and the palette so every part of the page is reachable from them. */
+const BLOCK_GROUPS: Array<{ id: string; fa: string; en: string; icon: NonNullable<NavItem['children']>[number]['icon'] }> = [
+  { id: 'glass', fa: 'بلوک‌های شیشه‌ای', en: 'Glass blocks', icon: 'sparkles' },
+  { id: 'text-blocks', fa: 'بلوک‌های متن', en: 'Text blocks', icon: 'edit' },
+  { id: 'actions-blocks', fa: 'بلوک‌های کنش', en: 'Action blocks', icon: 'zap' },
+  { id: 'cards-blocks', fa: 'بلوک‌های کارت', en: 'Card blocks', icon: 'layers' },
+  { id: 'data-blocks', fa: 'بلوک‌های داده', en: 'Data blocks', icon: 'chart' },
+  { id: 'backdrops', fa: 'پس‌زمینه‌های متحرک', en: 'Animated backdrops', icon: 'image' },
+  { id: 'menus-blocks', fa: 'منو و پنل‌های شکل‌پذیر', en: 'Menus & morphing panels', icon: 'sliders' },
+  { id: 'nav-extras-blocks', fa: 'فیلتر، آمار و مرتب‌سازی', en: 'Filter, stats & sort', icon: 'grid' },
 ];
 
 function readLang(): Lang {
@@ -78,6 +90,11 @@ export function App() {
       children: SECTIONS.slice(0, 8).map((s) => ({ label: tr(s.fa, s.en), href: `#${s.id}`, icon: s.icon, description: tr('نمایش و نمونه کد', 'Demo and code') })),
     },
     {
+      label: tr('بلوک‌ها', 'Blocks'),
+      columns: 2,
+      children: BLOCK_GROUPS.map((s) => ({ label: tr(s.fa, s.en), href: `#${s.id}`, icon: s.icon })),
+    },
+    {
       label: tr('حرکت', 'Motion'),
       columns: 1,
       children: SECTIONS.slice(8).map((s) => ({ label: tr(s.fa, s.en), href: `#${s.id}`, icon: s.icon })),
@@ -99,6 +116,20 @@ export function App() {
       onValueChange={(value) => setFramework(value as Framework)}
       options={FRAMEWORKS.map((option) => ({ value: option.value, label: option.label }))}
     />
+  );
+
+  // Language and theme live in the header bar, but they must also be reachable
+  // from the menu itself: on a phone the drawer is the only comfortable place.
+  const mobileSettings = (
+    <div style={{ display: 'grid', gap: 'var(--nx-space-3)', justifyItems: 'stretch' }}>
+      {frameworkSwitch}
+      <div style={{ display: 'flex', gap: 'var(--nx-space-2)', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Button variant="ghost" size="sm" onClick={() => setLang(fa ? 'en' : 'fa')} lang={fa ? 'en' : 'fa'}>
+          {fa ? 'English' : 'فارسی'}
+        </Button>
+        <ThemeSwitch label={tr('پوسته', 'Theme')} />
+      </div>
+    </div>
   );
 
   return (
@@ -123,7 +154,7 @@ export function App() {
               </>
             }
             items={nav}
-            mobileActions={frameworkSwitch}
+            mobileActions={mobileSettings}
             actions={
               <>
                 <Button variant="ghost" size="sm" data-desktop="" onClick={() => setPalette(true)} icon="search" aria-keyshortcuts="Meta+K Control+K">
@@ -178,9 +209,16 @@ export function App() {
                 items: SECTIONS.map((s) => ({ id: s.id, label: tr(s.fa, s.en), icon: s.icon, keywords: [s.en, s.fa], onSelect: go(s.id) })),
               },
               {
+                label: tr('بلوک‌ها', 'Blocks'),
+                items: BLOCK_GROUPS.map((s) => ({ id: s.id, label: tr(s.fa, s.en), icon: s.icon, keywords: [s.en, s.fa], onSelect: go(s.id) })),
+              },
+              {
                 label: tr('فرمان‌ها', 'Commands'),
                 items: [
                   { id: 'lang', label: fa ? 'Switch to English' : 'تغییر به فارسی', icon: 'globe', onSelect: () => setLang(fa ? 'en' : 'fa') },
+                  { id: 'theme', label: tr('رفتن به حالت تیره', 'Switch to dark mode'), icon: 'moon', onSelect: () => theme.set('dark') },
+                  { id: 'theme-light', label: tr('رفتن به حالت روشن', 'Switch to light mode'), icon: 'sun', onSelect: () => theme.set('light') },
+                  { id: 'theme-system', label: tr('پیروی از سیستم', 'Follow the system theme'), icon: 'settings', onSelect: () => theme.set('system') },
                   { id: 'top', label: tr('برگشت به بالا', 'Back to top'), icon: 'arrow-up', onSelect: () => window.scrollTo({ top: 0, behavior: 'smooth' }) },
                 ],
               },
