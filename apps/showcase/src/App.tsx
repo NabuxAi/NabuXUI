@@ -14,6 +14,11 @@ import { BackdropsBlocks } from './blocks/backdrops';
 import { MenusBlocks } from './blocks/menus';
 import { NavExtrasBlocks } from './blocks/nav-extras';
 import { GlassBlocks } from './blocks/glass';
+import { PickersBlocks } from './blocks/pickers';
+import { AgentBlocks } from './blocks/agent';
+import { InteractBlocks } from './blocks/interact';
+import { ChartsPlusBlocks } from './blocks/charts-plus';
+import { EffectsBlocks } from './blocks/effects';
 
 const SECTIONS: Array<{ id: string; fa: string; en: string; icon: NonNullable<NavItem['children']>[number]['icon'] }> = [
   { id: 'text', fa: 'متن', en: 'Text', icon: 'edit' },
@@ -193,6 +198,11 @@ export function App() {
             <BackdropsBlocks />
             <MenusBlocks />
             <NavExtrasBlocks />
+            <PickersBlocks />
+            <AgentBlocks />
+            <InteractBlocks />
+            <ChartsPlusBlocks />
+            <EffectsBlocks />
           </main>
           <footer className="sc-footer">
             <div className="sc-container">

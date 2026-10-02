@@ -34,6 +34,11 @@ import { installTreeViewBlocks } from './alpine/blocks/tree-view';
 import { installGanttBlocks } from './alpine/blocks/gantt';
 import { installWizardBlocks } from './alpine/blocks/wizard';
 import { installProfileCardBlocks } from './alpine/blocks/profile-card';
+import { installPickersBlocks } from './alpine/blocks/pickers';
+import { installAgentBlocks } from './alpine/blocks/agent';
+import { installInteractBlocks } from './alpine/blocks/interact';
+import { installChartsPlusBlocks } from './alpine/blocks/charts-plus';
+import { installEffectsBlocks } from './alpine/blocks/effects';
 
 
 declare global {
@@ -79,6 +84,11 @@ function install(Alpine: AlpineLike | undefined) {
   installGanttBlocks(Alpine);
   installWizardBlocks(Alpine);
   installProfileCardBlocks(Alpine);
+  installPickersBlocks(Alpine);
+  installAgentBlocks(Alpine);
+  installInteractBlocks(Alpine);
+  installChartsPlusBlocks(Alpine);
+  installEffectsBlocks(Alpine);
 }
 
 if (window.Alpine) install(window.Alpine);

@@ -1,0 +1,2 @@
+/* Interaction blocks (React). */
+export {};

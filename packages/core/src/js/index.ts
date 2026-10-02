@@ -30,3 +30,8 @@ export * from './blocks/cards';
 export * from './blocks/data';
 export * from './blocks/menus';
 export * from './blocks/glass';
+export * from './blocks/pickers';
+export * from './blocks/agent';
+export * from './blocks/interact';
+export * from './blocks/charts-plus';
+export * from './blocks/effects';

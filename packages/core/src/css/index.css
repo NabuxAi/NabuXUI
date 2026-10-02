@@ -52,3 +52,8 @@
 @import "./blocks/gantt.css";
 @import "./blocks/wizard.css";
 @import "./blocks/profile-card.css";
+@import "./blocks/pickers.css";
+@import "./blocks/agent.css";
+@import "./blocks/interact.css";
+@import "./blocks/charts-plus.css";
+@import "./blocks/effects.css";

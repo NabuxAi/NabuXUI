@@ -55,6 +55,11 @@ export * from './blocks/tree-view';
 export * from './blocks/gantt';
 export * from './blocks/wizard';
 export * from './blocks/profile-card';
+export * from './blocks/pickers';
+export * from './blocks/agent';
+export * from './blocks/interact';
+export * from './blocks/charts-plus';
+export * from './blocks/effects';
 
 // The framework-agnostic helpers, for pages that need them directly.
 export { theme, transition, toasts, type ToastInput, type ToastTone } from '@nabuxai/ui-core';
