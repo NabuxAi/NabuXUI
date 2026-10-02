@@ -30,17 +30,22 @@ function observerFor(threshold: number, rootMargin: string): IntersectionObserve
         const state = watched.get(target);
         if (!state) continue;
 
-        if (entry.isIntersecting) {
+        // An element taller than the viewport can never show `threshold` of
+        // itself (a long card grid), so for those any intersection counts.
+        const rootHeight = entry.rootBounds?.height ?? window.innerHeight;
+        const tooTall = entry.boundingClientRect.height * threshold > rootHeight;
+        if (entry.isIntersecting && (tooTall || entry.intersectionRatio >= threshold)) {
           target.setAttribute('data-nx-revealed', '');
           if (!state.revealed) state.options.onReveal?.();
           state.revealed = true;
           if (state.options.once !== false) observer!.unobserve(target);
-        } else if (state.options.once === false) {
+        } else if (!entry.isIntersecting && state.options.once === false) {
           target.removeAttribute('data-nx-revealed');
         }
       }
     },
-    { threshold, rootMargin },
+    // 0 too, so a too-tall element gets a callback the moment it enters.
+    { threshold: [0, threshold], rootMargin },
   );
   observers.set(key, observer);
   return observer;

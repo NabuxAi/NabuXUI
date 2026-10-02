@@ -197,6 +197,11 @@
   }
 
   /* ---- Popover (generic floating panel) ------------------------------------ */
+  /* A closed [popover] leaves layout and hit-testing even when its panel class
+     sets `display: grid` — the browser's own display:none is a UA style and
+     loses to that, which left invisible menus catching clicks. */
+  [popover]:not(:popover-open, [data-open]) { display: none; }
+
   .nx-popover {
     position: fixed;
     inset: auto;
