@@ -23,8 +23,8 @@ NabuXUI یک سیستم طراحی با **یک هستهٔ مشترک** است: �
 | **Livewire / Blade** | `nabuxai/nabuxui` (composer) | تگ‌های `<x-nx::…>` + دیتای Alpine | خودکار با `@nabuxuiScripts` | رسمی (`packages/livewire`) |
 | **React — Vite یا Next.js** | `@nabuxai/ui-react` (npm) | کامپوننت‌های React | از داخل هوک‌های خودشان | رسمی (`packages/react`) |
 | **Inertia (React)** | همان `@nabuxai/ui-react` | همان کامپوننت‌ها، با `linkComponent={Link}` اینرسی | همان | رسمی — بستهٔ جداگانه‌ای وجود ندارد (`packages/inertia` فعلاً پوشهٔ خالی است) |
-| **Vue** | `@nabuxai/ui-core` | هیچ wrapper رسمی‌ای نیست — مارک‌آپ را با کلاس‌های `nx-*` خودتان می‌نویسید | خودتان از `@nabuxai/ui-core` صدا می‌زنید | CSS + رفتارهای هسته؛ کامپوننت Vue نیست |
-| **Svelte** | `@nabuxai/ui-core` | مثل Vue — مارک‌آپ با کلاس‌های `nx-*` | مثل Vue | CSS + رفتارهای هسته؛ کامپوننت Svelte نیست |
+| **Vue** | `@nabuxai/ui-core` | هیچ wrapper رسمی‌ای نیست — مارک‌آپ را با کلاس‌های `nx-*` خودتان می‌نویسید | خودتان از `@nabuxai/ui-core` صدا می‌زنید | CSS + رفتارهای هسته؛ کامپوننت Vue نیست (نمونهٔ واقعی: `apps/admin-vue`) |
+| **Svelte** | `@nabuxai/ui-core` | مثل Vue — مارک‌آپ با کلاس‌های `nx-*` | مثل Vue | CSS + رفتارهای هسته؛ کامپوننت Svelte نیست (نمونهٔ واقعی: `apps/admin-svelte`) |
 
 قرارداد کلاس‌ها در هر پنج حالت یکی است: `nx-<block>` و `nx-<block>-<part>`؛ یک
 کلاسِ بلوک در React و Blade و مارک‌آپ دستی Vue/Svelte به یک CSS می‌رسد. به همین
@@ -163,8 +163,10 @@ import '@nabuxai/ui-core/css';       // کل استایل (نسخهٔ min هم �
 نمونه‌های React و Blade زیر از کد واقعی مخزن آمده‌اند (دموی نمایشی
 `apps/showcase/src/blocks/nav-extras.tsx` و کامپوننت‌های
 `packages/livewire/resources/views/components/`). نمونه‌های Vue و Svelte برای
-همین سند نوشته شده‌اند — با همان کلاس‌ها و همان رفتارهای هسته؛ در این مخزن
-ابزار Vue/Svelte نیست، پس این دو کامپایل نشده‌اند (بخش «مرزهای این سند»).
+همین سند نوشته شده‌اند — با همان کلاس‌ها و همان رفتارهای هسته. نمونهٔ
+کامپایل‌شونده و واقعی این مسیر، دو طعم پنل‌اند: `apps/admin-vue` و
+`apps/admin-svelte` (توضیح کامل در [ADMIN.md](./ADMIN.md))؛ اسنیپت‌های این
+بخش به‌عنوان مستند مستقل می‌مانند (بخش «مرزهای این سند»).
 
 ### فیلتر چیپی — chip-filter
 
@@ -737,6 +739,10 @@ theme.watch((scheme) => …); // تغییر سیستم و تب‌های دیگر
 | precision-slider | اسلایدر دقیق با عدد رولینگ و تیک‌های پرشونده | `PrecisionSlider` | `<x-nx::precision-slider>` | بله |
 | infinite-grid | زمینهٔ نقطه‌ای بی‌پایان با spot موس | `InfiniteGrid` | `<x-nx::infinite-grid>` | `spotlight` |
 | invoice | سند فاکتور قابل‌چاپ؛ ردیف‌ها reveal و جمع‌ها رول می‌شوند | `Invoice` | `<x-nx::invoice>` | `reveal` |
+| product-card | کارت فروشگاه: زوم تصویر در قاب، قیمت پیش‌تخفیف خط‌خورده، ستارهٔ کسری و دکمهٔ افزودن که به «افزوده شد» مورف می‌شود | `ProductCard` | `<x-nx::product-card>` | بله |
+| order-tracking | مسیر سفارش تا مرحلهٔ فعلی پر می‌شود (نشان پینگ‌دار) + گزارش رویدادها و وضعیت زنده | `OrderTracking` | `<x-nx::order-tracking>` | `activityTime` + `timeOf` |
+| profile-card | کارت پروفایل روی کاور گرادیانی: آواتار روی درز، آمار رولینگ، دکمهٔ دنبال‌کردنِ مورف و تب‌های فنری | `ProfileCard` | `<x-nx::profile-card>` | `indicator` |
+| wizard | فرم چندمرحله‌ای: پن‌ها با ارتفاع مورف می‌لغزند، پرشِ ردشده می‌لرزاند و پن آخر مرور پاسخ‌هاست | `Wizard` | `<x-nx::wizard>` | `morphShell` |
 
 ### داده
 
@@ -760,6 +766,14 @@ theme.watch((scheme) => …); // تغییر سیستم و تب‌های دیگر
 | kanban | برد ستونی با درگ‌انددراپ بومی و لغزش FLIP | `Kanban` | `<x-nx::kanban>` | `snapshotRows` + `playRowFlip` |
 | timeline-feed | جریان فعالیت عمودی با اتصال گرادیانی و زمان نسبی | `TimelineFeed` | `<x-nx::timeline-feed>` | `reveal` |
 | empty-state | «هنوز چیزی نیست»: بشقاب شناور، مدار خط‌چین و هالهٔ نرم | `EmptyState` | `<x-nx::empty-state>` | `reveal` |
+| bar-chart | نمودار میله‌ای CSS؛ میله‌ها با reveal پله‌پله از خط پایه می‌رویند، tooltip با hover/focus و جدولِ هم‌ارزِ پنهان برای صفحه‌خوان | `BarColumns` | `<x-nx::bar-chart>` | `reveal` |
+| donut-chart | دونات conic-gradient؛ قطعه‌ها پیاپی در جهت ساعت پر می‌شوند و مرکز و legend ارقام می‌غلتند | `DonutRing` | `<x-nx::donut-chart>` | `reveal` |
+| gauge | گیج نیم‌دایره؛ عقربه با فنر می‌پیچد، عدد رول می‌شود و رنگ از ناحیهٔ مقدار می‌آید | `Gauge` | `<x-nx::gauge>` | `reveal` |
+| tree-view | درخت تاشو با `role="tree"`، توقف‌گاه تبِ سیّار و پیمایش کامل کیبوردی | `TreeView` | `<x-nx::tree-view>` | بله |
+| gantt | گانت: میله‌های درگ‌پذیر روی شبکهٔ روزانه، آرنج‌های وابستگی، خط امروز و زوم روز/هفته/ماه | `Gantt` | `<x-nx::gantt>` | بله |
+| todo | فهرست کارها: تیک فنری، درگ برای جابه‌جایی، شمارندهٔ رولینگ با نوار پیشرفت و افزودن سریع | `Todo` | `<x-nx::todo>` | `snapshotRows` + `playRowFlip` |
+| email | کلاینت ایمیل: ریل پوشه‌ها، فهرست پیام (نوار خوانده‌نشده + ستاره + کیبورد) و پنل خواندن با پاسخ | `Email` | `<x-nx::email>` | `autogrow` + `roveFocus` |
+| file-manager | مدیر فایل: breadcrumb، جست‌وجو، گرید/فهرست، آپلود و کشوی جزئیات از لبهٔ درون‌خطی | `FileManager` | `<x-nx::file-manager>` | بله |
 
 ### منو
 
@@ -810,8 +824,11 @@ theme.watch((scheme) => …); // تغییر سیستم و تب‌های دیگر
 
 ## مرزهای این سند
 
-- Vue و Svelte wrapper رسمی ندارند؛ نمونه‌های SFC بالا برای همین سند نوشته
-  شده‌اند و در این مخزن کامپایل نشده‌اند (ابزار Vue/Svelte در مخزن نیست).
+- Vue و Svelte wrapper رسمی ندارند؛ اسنیپت‌های SFC بالا برای همین سند نوشته
+  شده‌اند و جدا از بسته‌ها می‌مانند. اجر کامپایل‌شدهٔ همین مسیر در مخزن هست:
+  `apps/admin-vue` (vue-tsc + vite) و `apps/admin-svelte` (svelte-check + vite)،
+  دو طعم پنل که همین قرارداد را با کلاس‌های `nx-*` و رفتارهای هسته پیاده
+  می‌کنند — الگوی مرجع برای پروژهٔ Vue/Svelte خودتان.
 - `packages/inertia` فعلاً پوشهٔ خالی است؛ مسیر رسمی Inertia همان
   `@nabuxai/ui-react` با `linkComponent={Link}` است.
 - بلوک‌های `hover-nav` و `file-upload` هنوز معادل Blade ندارند (در React و

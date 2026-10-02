@@ -342,8 +342,31 @@ class NabuXUI
     /** A stable id for aria wiring when the caller gave none. */
     public static function id(string $prefix = 'nx'): string
     {
-        static $n = 0;
+        // These ids feed wire:key, so they must survive a Livewire re-render:
+        // the counter is scoped to the Livewire component being rendered — its
+        // id travels in the snapshot and Livewire hydrates a fresh object per
+        // render — and the per-call mt_rand salt is gone, so a re-render mints
+        // the same ids and the morph glides instead of swapping every keyed
+        // child. Outside Livewire, a per-request page scope keeps plain Blade
+        // renders deterministic within the page.
+        static $seq = null;
+        $seq ??= new \WeakMap();
 
-        return $prefix.'-'.base_convert((string) (++$n), 10, 36).substr(md5((string) mt_rand()), 0, 4);
+        $scope = 'page';
+        $current = class_exists(\Livewire\Livewire::class) ? \Livewire\Livewire::current() : null;
+
+        if (is_object($current) && method_exists($current, 'getId')) {
+            $scope = 'livewire:'.$current->getId();
+            $n = ($seq[$current] ?? 0) + 1;
+            $seq[$current] = $n;
+        } else {
+            $counters = app()->bound('nexui.id-counters') ? app('nexui.id-counters') : [];
+            $n = ($counters['page'] ?? 0) + 1;
+            $counters['page'] = $n;
+            app()->instance('nexui.id-counters', $counters);
+        }
+
+        return $prefix.'-'.base_convert((string) $n, 10, 36).substr(md5($scope), 0, 4);
     }
+
 }

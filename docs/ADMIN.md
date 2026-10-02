@@ -1,27 +1,43 @@
-# پنل مدیریت نابو — دو طعم از یک پوسته
+# پنل مدیریت نابو — چهار طعم از یک پوسته
 
-پنل مدیریتِ نمایشی نابو **دو بار** پیاده شده است: یک‌بار با Livewire/Blade داخل
-پلی‌گراوند (`playground/`) و یک‌بار با React خالص در `apps/admin/`. هر دو روی
-همان هسته‌اند — همان توکن‌ها، همان کلاس‌های `nx-admin-*`، همان حس حرکتی — و
-هر دو با همان قطعات ساخته شده‌اند که از بسته‌ها مصرف می‌شوند، نه کپیِ جدا.
+پنل مدیریتِ نمایشی نابو **چهار بار** پیاده شده است: یک‌بار با Livewire/Blade داخل
+پلی‌گراوند (`playground/`)، یک‌بار با React خالص در `apps/admin/` و دو بار دیگر
+با Vue و Svelte در `apps/admin-vue/` و `apps/admin-svelte/`. هر چهار طعم روی
+همان هسته‌اند — همان توکن‌ها، همان کلاس‌های `nx-admin-*`، همان حس حرکتی. طعم‌های
+Livewire و React بلوک‌های آمادهٔ بسته‌ها را مصرف می‌کنند؛ طعم‌های Vue و Svelte
+طبق قرارداد [FRAMEWORKS.md](./FRAMEWORKS.md) همان مارک‌آپ `nx-*` را دستی و با
+رفتارهای `@nabuxai/ui-core` می‌سازند — باز هم کپیِ جدا نیست: همان CSS و همان
+JS رفتاری است، فقط لایهٔ فریم‌ورک عوض می‌شود.
 
 این سند می‌گوید هر طعم چطور بالا می‌آید، چه صفحه‌هایی دارد، چطور دوزبانه و
 دو‌تم می‌شود؛ در پایان هم قراردادهایی که هر تغییرِ بعدی باید نگه دارد. برای
 قواعد ساخت بلوک به [docs/BLOCKS.md](./BLOCKS.md) و برای معماری «یک هسته، پنج
 حالت» به [docs/FRAMEWORKS.md](./FRAMEWORKS.md).
 
-## یک پوسته، دو طعم
+## یک پوسته، چهار طعم
 
 | طعم | کجا | اجرا | نشانی‌ها |
 |---|---|---|---|
 | **Livewire / Blade** | پلی‌گراوند (`playground/app/Livewire/Admin/*`) | `php artisan serve` | `/admin`، `/login`، `/register`، `/forgot-password` |
 | **React** | اپ مستقل (`apps/admin`) | `pnpm --filter admin dev` | `http://localhost:5174` با روتر هش (`#/users`…) |
+| **Vue** | اپ مستقل (`apps/admin-vue`) | `pnpm --filter admin-vue dev` | `http://localhost:5175` با روتر هش (`#/users`…) |
+| **Svelte** | اپ مستقل (`apps/admin-svelte`) | `pnpm --filter admin-svelte dev` | `http://localhost:5176` با روتر هش (`#/users`…) |
 
-هر دو طعم یک چیدمان دارند: سایدبار گروهی با نشانِ فنری زیر آیتم فعال، تاپ‌بار
+همهٔ طعم‌ها یک چیدمان دارند: سایدبار گروهی با نشانِ فنری زیر آیتم فعال، تاپ‌بار
 (جست‌وجو → پالت فرمان ⌘K، سوییچ تم، منوی زبان fa/en، زنگ فعالیت، منوی کاربر
 با خروج) و ناحیهٔ محتوا که هر صفحه خودش می‌پراند. پوستهٔ مشترک، بلوک
 `admin-shell` است (`packages/react/src/blocks/admin-shell.tsx` و
-`packages/livewire/resources/views/components/admin-shell.blade.php`).
+`packages/livewire/resources/views/components/admin-shell.blade.php`)؛ طعم‌های
+Vue و Svelte همین پوسته را با SFC بازسازی کرده‌اند
+(`apps/admin-vue/src/components/AdminShell.vue` و
+`apps/admin-svelte/src/lib/AdminShell.svelte`) با همان کلاس‌ها، همان
+popover بومیِ دراور موبایل و همان رفتارهای هسته (نشان فنری `indicator` در
+سایدبار، واژه‌های کامپوننت از `translate` هسته).
+
+دامنهٔ طعم‌ها یکسان نیست: **Livewire و React کامل‌اند** (همهٔ صفحه‌های سایدبار +
+احراز + صفحه‌های خطا)؛ **Vue و Svelte فعلاً ۹ صفحهٔ نخست پنل + نمای ورود** را
+دارند — پن‌های ثبت‌نام/فراموشی، گروه‌های فروشگاه/برنامه‌ها و صفحه‌های خطا را
+نه (روترشان فقط `PanelId | 'login'` است).
 
 ## راه‌اندازی
 
@@ -43,7 +59,10 @@ php artisan serve --port=8765   # در این پروژه سرور dev معمول
 هر پورت دیگری هم همان رفتار را دارد.
 
 روت‌ها در `playground/routes/web.php:25` — هر صفحهٔ سایدبار یک کامپوننت
-Livewire با نام روت `admin.*`:
+Livewire با نام روت `admin.*`. سایدبار پنج گروه دارد (`App\Support\Panel::nav`):
+«اصلی» (داشبورد، تحلیل‌ها، کاربران)، «فروشگاه» (محصولات، سفارش‌ها)، «کار»
+(کانبان، تقویم، گفتگو، فاکتور)، «برنامه‌ها» (ایمیل، فایل‌ها، کارها، نقش‌ها،
+خطاها) و «حساب» (پروفایل، تنظیمات):
 
 | مسیر | نام روت | کامپوننت |
 |---|---|---|
@@ -56,6 +75,15 @@ Livewire با نام روت `admin.*`:
 | `/admin/invoice` | `admin.invoice` | `…\Invoice` |
 | `/admin/profile` | `admin.profile` | `…\Profile` |
 | `/admin/settings` | `admin.settings` | `…\Settings` |
+| `/admin/products` | `admin.products` | `…\Products` |
+| `/admin/orders` | `admin.orders` | `…\Orders` |
+| `/admin/email` | `admin.email` | `…\Email` |
+| `/admin/files` | `admin.files` | `…\Files` |
+| `/admin/todo` | `admin.todo` | `…\Todo` |
+| `/admin/roles` | `admin.roles` | `…\Roles` |
+| `/admin/errors/404` | `admin.errors.404` | `…\ErrorPage` (code=404) |
+| `/admin/errors/500` | `admin.errors.500` | `…\ErrorPage` (code=500) |
+| `/admin/errors/maintenance` | `admin.errors.maintenance` | `…\ErrorPage` (code=maintenance) |
 | `/login` | `login` | `App\Livewire\Auth\Gate` (mode=login) |
 | `/register` | `register` | `…\Gate` (mode=register) |
 | `/forgot-password` | `password.request` | `…\Gate` (mode=forgot) |
@@ -89,37 +117,84 @@ pnpm --filter admin run build   # خروجی در apps/admin/dist
   ویرایش هسته بدون rebuild دیده می‌شود؛ `build` مثل هر اپ واقعی از خروجی
   ساخته‌شدهٔ بسته‌ها مصرف می‌کند.
 
+### طعم Vue (apps/admin-vue)
+
+```bash
+pnpm install                    # یک‌بار در ریشهٔ مونوریپو
+pnpm --filter admin-vue dev     # http://localhost:5175 (پورت ثابت و strictPort)
+pnpm --filter admin-vue run build    # خروجی static در apps/admin-vue/dist
+pnpm --filter admin-vue run typecheck  # vue-tsc --noEmit
+```
+
+- هیچ wrapper فریم‌ورکی مصرف نمی‌شود؛ فقط `@nabuxai/ui-core` (workspace) — CSS
+  از `@nabuxai/ui-core/css` و رفتارها از خود هسته. قرارداد همان بخش «Vue و
+  Svelte» در [FRAMEWORKS.md](./FRAMEWORKS.md) است: مارک‌آپ `nx-*` دستی،
+  cleanup رفتارها در `onBeforeUnmount`.
+- روتر هش کوچک در `apps/admin-vue/src/router.ts` — همان شناسه‌های React برای
+  ۹ صفحهٔ نخست، به‌علاوهٔ `#/login` که بیرون از پوسته رندر می‌شود.
+- زبان یک store واکنشی است (`apps/admin-vue/src/store.ts`) با همان کلید
+  `nabuxai.admin.lang` که اپ React می‌نویسد؛ دیکشنری تایپ‌شده در
+  `apps/admin-vue/src/lang.ts` (صفحه‌ها فقط مصرف می‌کنند).
+
+### طعم Svelte (apps/admin-svelte)
+
+```bash
+pnpm install                        # یک‌بار در ریشهٔ مونوریپو
+pnpm --filter admin-svelte dev      # http://localhost:5176 (پورت ثابت و strictPort)
+pnpm --filter admin-svelte run build    # خروجی static در apps/admin-svelte/dist
+pnpm --filter admin-svelte run check    # svelte-check
+```
+
+- مثل Vue، فقط `@nabuxai/ui-core` (Svelte 5 با runes)؛ state در
+  `apps/admin-svelte/src/store.svelte.ts` (ماژول `.svelte.ts` تا runeها
+  کامپایل شوند) و روتر در `router.svelte.ts`.
+- اسکریپت تم و زبان، هر دو درون‌خطی در `apps/admin-svelte/index.html` (و
+  `apps/admin-vue/index.html`) نشسته‌اند تا اولین فریم در تم و زبان درست
+  بیفتد — همان snippetای که `themeScript` هسته می‌دهد.
+
 ## فهرست صفحه‌ها
 
-هر دو طعم ۹ صفحهٔ پنل + ۳ نمای احراز دارند. ستون «شناسه» در Livewire مقدار
-`active` است و در React شناسهٔ روت/رجیستری (دو استثنا: `dashboard`↔`dash` و
-`invoice`↔`invoices`).
+Livewire و React هر دو ۱۵ صفحهٔ پنل + ۳ نمای احراز + ۳ صفحهٔ خطا دارند؛
+Vue و Svelte ۹ صفحهٔ نخست + ورود. ستون «شناسه» در Livewire مقدار `active` است
+و در React شناسهٔ روت/رجیستری (دو استثنا: `dashboard`↔`dash` و
+`invoice`↔`invoices`). ستون Vue·Svelte یعنی همان صفحه در آن دو طعم هم هست (✓).
 
-| صفحه | شناسه | Livewire | React | چه چیزی نشان می‌دهد |
-|---|---|---|---|---|
-| داشبورد | `dashboard` / `dash` | `/admin` | `#/dash` | هیرو روی پس‌زمینهٔ aurora، آمار، نمودار متریک، ماتریس نقطه‌ای/هیت‌مپ، کارت مصرف، جریان فعالیت |
-| تحلیل‌ها | `analytics` | `/admin/analytics` | `#/analytics` | کارت آنالیتیکس، نمودار متریک سه‌سنجه، کارت مصرف، جدول مقایسهٔ پلن‌ها |
-| کاربران | `users` | `/admin/users` | `#/users` | جدول/کارت کاربران با جست‌وجو و فیلتر، آواتارها، دیالوگ دعوت، حالت خالی |
-| کانبان | `kanban` | `/admin/kanban` | `#/kanban` | برد ستونی با درگ‌انددراپ بومی و لغزش FLIP |
-| تقویم | `calendar` | `/admin/calendar` | `#/calendar` | تقویم ماه (فارسی: جلالی) با اسلاید جهت‌دار و دست‌ورزی روز/رویداد |
-| گفتگو | `chat` | `/admin/chat` | `#/chat` | گفتگوی دوستونه: جست‌وجوی رشته‌ها، اکوی محلی پیام، حالت تایپ |
-| فاکتور | `invoice` / `invoices` | `/admin/invoice` | `#/invoices` | سند فاکتور قابل‌چاپ با ردیف‌های reveal و ارقام رولینگ |
-| پروفایل | `profile` | `/admin/profile` | `#/profile` | آواتار، تب‌ها، جریان فعالیت، انتخاب زبان و تم |
-| تنظیمات | `settings` | `/admin/settings` | `#/settings` | فرم‌ها، سوییچ‌ها/چک‌باکس‌ها، دیالوگ تأیید |
-| ورود | — | `/login` | `#/login` | کارت احراز، حالت login |
-| ثبت‌نام | — | `/register` | `#/register` | همان کارت، حالت register |
-| فراموشی گذرواژه | — | `/forgot-password` | `#/forgot` | همان کارت، حالت forgot |
+| صفحه | شناسه | Livewire | React | Vue·Svelte | چه چیزی نشان می‌دهد |
+|---|---|---|---|---|---|
+| داشبورد | `dashboard` / `dash` | `/admin` | `#/dash` | ✓ | هیرو روی پس‌زمینهٔ aurora، آمار، نمودار متریک، ماتریس نقطه‌ای/هیت‌مپ، کارت مصرف، جریان فعالیت |
+| تحلیل‌ها | `analytics` | `/admin/analytics` | `#/analytics` | ✓ | کارت آنالیتیکس، نمودار متریک سه‌سنجه، کارت مصرف، جدول مقایسهٔ پلن‌ها |
+| کاربران | `users` | `/admin/users` | `#/users` | ✓ | جدول/کارت کاربران با جست‌وجو و فیلتر، آواتارها، دیالوگ دعوت، حالت خالی |
+| کانبان | `kanban` | `/admin/kanban` | `#/kanban` | ✓ | برد ستونی با درگ‌انددراپ بومی و لغزش FLIP |
+| تقویم | `calendar` | `/admin/calendar` | `#/calendar` | ✓ | تقویم ماه (فارسی: جلالی) با اسلاید جهت‌دار و دست‌ورزی روز/رویداد |
+| گفتگو | `chat` | `/admin/chat` | `#/chat` | ✓ | گفتگوی دوستونه: جست‌وجوی رشته‌ها، اکوی محلی پیام، حالت تایپ |
+| فاکتور | `invoice` / `invoices` | `/admin/invoice` | `#/invoices` | ✓ | سند فاکتور قابل‌چاپ با ردیف‌های reveal و ارقام رولینگ |
+| پروفایل | `profile` | `/admin/profile` | `#/profile` | ✓ | آواتار، تب‌ها، جریان فعالیت، انتخاب زبان و تم |
+| تنظیمات | `settings` | `/admin/settings` | `#/settings` | ✓ | فرم‌ها، سوییچ‌ها/چک‌باکس‌ها، دیالوگ تأیید |
+| محصولات | `products` | `/admin/products` | `#/products` | — | گرید بلوک product-card زیر چیپ دسته و جست‌وجوی زنده؛ سبد حقیقتِ سمت سرور/صفحه است و کارت‌ها با آن صادق می‌مانند |
+| سفارش‌ها | `orders` | `/admin/orders` | `#/orders` | — | جدول سفارش‌ها با نشان وضعیت و مرتب‌سازی FLIP؛ دکمهٔ ردگیری، بلوک order-tracking را در دیالوگ باز می‌کند |
+| ایمیل | `email` | `/admin/email` | `#/email` | — | کلاینت ایمیل روی بلوک email: ریل پوشه‌ها، فهرست پیام‌ها (خوانده‌نشده + ستاره + کیبورد)، پنل خواندن و پاسخ |
+| فایل‌ها | `files` | `/admin/files` | `#/files` | — | کتابخانهٔ رسانه روی بلوک file-manager (breadcrumb، جست‌وجو، گرید/فهرست، دراپ واقعی) + گیج مصرف فضای فروشگاه |
+| کارها | `todo` | `/admin/todo` | `#/todo` | — | فهرست کارها روی بلوک todo: تیک فنری، درگ/Alt+جهت‌نما برای جابه‌جایی، افزودن سریع، پیشرفت رولینگ |
+| نقش‌ها | `roles` | `/admin/roles` | `#/roles` | — | ماتریس مجوزها: سطرها مجوزهای گروه‌بسته، ستون‌ها نقش‌ها، در هر تقاطع یک سوییچ زنده |
+| خطاها | `errors` | `/admin/errors/{404,500,maintenance}` | `#/err404` و `#/err500` و `#/maintenance` | — | صفحه‌های خطای مینیمالِ بیرون از پوسته: کد بزرگ گرادیانی + empty-state وسط‌چین |
+| ورود | — | `/login` | `#/login` | ✓ (فقط ورود) | کارت احراز، حالت login |
+| ثبت‌نام | — | `/register` | `#/register` | — | همان کارت، حالت register |
+| فراموشی گذرواژه | — | `/forgot-password` | `#/forgot` | — | همان کارت، حالت forgot |
 
 ## دوزبانگی و تم
 
-هر دو طعم فارسی-اول و انگلیسی-دوم‌اند و همهٔ متن‌ها از لایهٔ زبان می‌آید؛
+هر چهار طعم فارسی-اول و انگلیسی-دوم‌اند و همهٔ متن‌ها از لایهٔ زبان می‌آید؛
 هیچ رشته‌ای سخت‌کد نشده و جهت صفحه (`dir`) با زبان می‌چرخد.
 
 **Livewire:**
 
 - زبان در سشن است (`locale`) و میدل‌ور `App\Http\Middleware\SetLocaleFromSession`
   هر درخواست (از جمله درخواست‌های Livewire) را می‌پوشاند؛ ثبتش در
-  `playground/bootstrap/app.php`.
+  `playground/bootstrap/app.php`. تا وقتی بازدیدکننده انتخاب نکرده باشد، زبانِ
+  پیش‌فرض همان `APP_LOCALE` است (در این پلی‌گراوند `en` — `config/app.php:81`)؛
+  با `?lang=fa` و کوکی سشن، صفحه از همان درخواست بعدی `lang="fa" dir="rtl"`
+  می‌شود. (طعم‌های JS برعکس: پیش‌فرضشان fa است مگر اینکه `nabuxai.admin.lang=en`
+  ذخیره شده باشد.)
 - سوییچ با منوی زبان تاپ‌بار (`wire:model.live="locale"` از تریت
   `SwitchesDemoLocale`) یا لینک سادهٔ `?lang=fa|en`.
 - همهٔ واژه‌های پنل در `playground/lang/{fa,en}/admin.php` — دو فایل هم‌کلید.
@@ -139,13 +214,26 @@ pnpm --filter admin run build   # خروجی در apps/admin/dist
 - داده‌های نمایشی قطعی (seeded) در `apps/admin/src/data.ts` — بدون
   `Math.random` و بدون fetch — تا اسکرین‌شات‌ها و چک‌ها تکرارپذیر بمانند.
 
-**تم:** هر دو طعم همان مخزن تم هسته را می‌نویسند (`nabu.theme` در
+**Vue و Svelte:**
+
+- همان الگو، بدون کانتکست: زبان یک store ماژولی است (`store.ts` در Vue،
+  `store.svelte.ts` در Svelte) و `document` (lang/dir/title) با واکنش آن
+  دنبال می‌شود. دیکشنری تایپ‌شدهٔ کامل در `lang.ts` هر دو اپ؛ صفحه‌ها فقط
+  مصرف می‌کنند.
+- همان کلید `nabuxui.admin.lang` در localStorage — چهار طعم زبانِ ذخیره‌شدهٔ
+  کاربر را با هم تقسیم می‌کنند.
+- واژه‌هایی که کامپوننت‌های دستی خودشان می‌گویند (بستن، منو، حرکت‌های
+  کانبان…) از جدول i18n هسته با `translate()` می‌آید — کلید تازه لازم شد،
+  در `packages/core/src/js/i18n.ts` بیفزایید (قرارداد BLOCKS.md).
+
+**تم:** هر چهار طعم همان مخزن تم هسته را می‌نویسند (`nabu.theme` در
 localStorage؛ روشن/سیستم/تیره). تاپ‌بار `ThemeToggle` و صفحهٔ تنظیمات/پروفایل
 `ThemeSwitch` را می‌گذارند. در طعم React اسکریپت تم **درون‌خطی در
 `apps/admin/index.html`** است (همان snippetی که `themeScript` هسته می‌دهد) تا
-اولین فریم در تم درست رنگ بگیرد؛ در طعم Livewire همان کار را `@nabuxuiHead`
-می‌کند. جزئیات تم و RTL در [docs/FRAMEWORKS.md](./FRAMEWORKS.md) بخش‌های
-«تم روشن و تیره» و «راست‌به‌چپ».
+اولین فریم در تم درست رنگ بگیرد؛ Vue و Svelte همین کار را در `index.html`
+خودشان می‌کنند، به‌علاوهٔ اسکریپت درون‌خطی زبان؛ در طعم Livewire همان کار را
+`@nabuxuiHead` می‌کند. جزئیات تم و RTL در [docs/FRAMEWORKS.md](./FRAMEWORKS.md)
+بخش‌های «تم روشن و تیره» و «راست‌به‌چپ».
 
 ## قطعات پنل — کاتالوگ
 
@@ -163,6 +251,18 @@ localStorage؛ روشن/سیستم/تیره). تاپ‌بار `ThemeToggle` و �
 | invoice | سند فاکتور قابل‌چاپ؛ ردیف‌ها reveal و جمع‌ها رول می‌شوند | `Invoice` | `<x-nx::invoice>` | `reveal` |
 | timeline-feed | جریان فعالیت عمودی با اتصال گرادیانی و زمان نسبی | `TimelineFeed` | `<x-nx::timeline-feed>` | `reveal` |
 | empty-state | «هنوز چیزی نیست»: بشقاب شناور، مدار خط‌چین و هالهٔ نرم | `EmptyState` | `<x-nx::empty-state>` | `reveal` |
+
+دوازده بلوک تازهٔ کتابخانه (email، file-manager، todo، product-card،
+order-tracking، bar-chart، donut-chart، gauge، tree-view، gantt، wizard،
+profile-card) هم هر دو سوی React و Blade را دارند؛ ردیف کاملشان در جدول
+کاتالوگ [FRAMEWORKS.md](./FRAMEWORKS.md) است. پنل از آن‌ها در صفحه‌های تازه
+استفاده می‌کند: **product-card** و **donut-chart** در محصولات،
+**order-tracking** در سفارش‌ها (طعم React کنارش دونات وضعیت هم می‌گذارد)،
+**email** در ایمیل، **file-manager** و **gauge** در فایل‌ها، **todo** در
+کارها؛ نقش‌ها سوییچ‌های
+بنیادی و صفحهٔ خطاها empty-state را وسط‌چین می‌کند. tree-view، gantt، wizard،
+profile-card و bar-chart فعلاً دموی مستقل در `/components` دارند و صفحهٔ
+پنلی ندارند.
 
 ## دموهای مستقل کامپوننت‌ها — /components
 
@@ -212,7 +312,8 @@ layout عمومی:
   خروج) داخل ریشهٔ Livewire بمانند. layout مشترکِ HTML فقط
   `playground/resources/views/layouts/admin.blade.php` است (اسکلت + کلاس‌های `.ap-*`).
 - مقدارهای `active`: `dashboard / analytics / users / kanban / calendar / chat /
-  invoice / profile / settings` — همین idها در `App\Support\Panel::nav()`.
+  invoice / profile / settings / products / orders / email / files / todo /
+  roles` — همین idها در `App\Support\Panel::nav()`.
 - کلاس‌های چیدمان آماده: `.ap-grid`، `.ap-duo`، `.ap-stats`، `.ap-box`،
   `.ap-row`، `.ap-hero` (تعریف در layout) و `.ap-stub` برای صفحهٔ خالی.
 - زبان: فقط مصرف کنید `__('admin.<key>')` — کلیدهای fa و en کامل و هم‌کلیدند و
@@ -236,6 +337,21 @@ layout عمومی:
 - اسکریپت تم درون‌خطی در `index.html` می‌ماند (تزریق از `main.tsx` برای فریم
   اول دیر است).
 
+**Vue و Svelte — صفحه‌نویسی:**
+
+- `apps/admin-vue/src/lang.ts` و `apps/admin-svelte/src/lang.ts` را ویرایش
+  نکنید؛ کلیدهای ۹ صفحه کامل است. داخل صفحه‌ها از store بخوانید (`s.value` و
+  `tr()` در Vue؛ `strings()` و `tr()` در Svelte) و واژه‌های خود کامپوننت را
+  از i18n هسته با `translate()`.
+- رفتارها فقط از `@nabuxai/ui-core`، هر رفتار cleanup برمی‌گرداند: در Vue
+  `onBeforeUnmount` و در Svelte همان returnِ `onMount`. markup با همان کلاس‌های
+  `nx-*` که کامپوننت React/Blade رندر می‌کند — کلاس یا انیمیشن جدید نسازید.
+- افزودن صفحه یعنی: ورودی در `PANEL` داخل `App.vue`/`App.svelte` + شناسه در
+  `PanelId` روتر + کلید زبان — فعلاً نباید اتفاق بیفتد؛ هر صفحه فقط فایل خودش
+  را پر کند.
+- همان دو کلید مشترک را نگه دارید: `nabuxui.admin.lang` و `nabu.theme`، و
+  اسکریپت‌های درون‌خطی `index.html` را جابه‌جا نکنید.
+
 **پکیج‌ها:** سیم‌کشی exportها و نصب‌ها از قبل انجام شده و نباید دست بخورد —
 `packages/react/src/index.ts` همهٔ قطعات تازه را export می‌کند،
 `packages/livewire/resources/js/index.ts` هر پنج `install…Blocks` را صدا
@@ -250,7 +366,7 @@ distها هم ساخته‌شده‌اند. بعد از تغییر رفتار پ
   `playground/resources/views/components/admin/page.blade.php:22`). پوستهٔ
   admin-shell خودش پیش‌فرض fullscreen است؛ برای نمای تمام‌صفحه همان سه prop را
   از `<x-admin.page>` بردارید.
-- یک رفتار مشترکِ هر دو طعم: انتخاب آیتم سایدبار داخل دراور موبایل، دراور را
+- یک رفتار مشترکِ هر چهار طعم: انتخاب آیتم سایدبار داخل دراور موبایل، دراور را
   نمی‌بندد (`popover=auto` فقط با کلیک بیرون/Escape بسته می‌شود). اگر باید
   بسته شود، اصلاح در خود کامپوننت admin-shell (React و Alpine) انجام شود نه
   در اپ‌ها.
@@ -273,7 +389,9 @@ distها هم ساخته‌شده‌اند. بعد از تغییر رفتار پ
 `strictPort` قفل می‌کند و سرویس compose هم همان شماره را با `--port`/`--strictPort`
 صریح می‌گذارد — پس `pnpm --filter <app> dev` روی میز و `docker compose up`
 درون کانتینر همیشه به یک شماره می‌رسند و اگر پورت اشغال باشد بدترین حالت
-خروج با خطاست، نه جابه‌جایی پورت.
+خروج با خطاست، نه جابه‌جایی پورت. (میان‌برهای ریشه: `pnpm admin`،
+`pnpm admin:vue`، `pnpm admin:svelte` — dev همان اپ‌ها؛ برای build همان
+`pnpm --filter <app> run build`.)
 
 ### اجرای محلی با داکر
 
@@ -321,5 +439,9 @@ override.
 4. `php artisan test` در پلی‌گراوند.
 5. طعم React: `npx tsc -p tsconfig.json --noEmit` در `apps/admin` و
    `pnpm --filter admin run build` از ریشه.
-6. بعد از rebuild بسته‌ها: grep خروجی dist برای کلاس‌ها/رفتارهای تازه
+6. طعم Vue: `pnpm --filter admin-vue run typecheck` (vue-tsc) و
+   `pnpm --filter admin-vue run build`؛ طعم Svelte:
+   `pnpm --filter admin-svelte run check` (svelte-check) و
+   `pnpm --filter admin-svelte run build`.
+7. بعد از rebuild بسته‌ها: grep خروجی dist برای کلاس‌ها/رفتارهای تازه
    (مثل `nx-admin` در CSS و `nxKanban` در JS).

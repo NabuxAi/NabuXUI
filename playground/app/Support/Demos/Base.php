@@ -126,7 +126,7 @@ return [
             'fa' => 'فیلد چندخطی با رشد خودکار تا maxRows و همان چارچوب برچسب/راهنما/خطای ورودی.',
             'en' => 'The multi-line field that grows with its content up to maxRows, sharing the input’s label/hint/error frame.',
         ],
-        'js' => false,
+        'js' => true,
         'docs' => null,
         'props' => [
             ['name' => 'maxRows', 'type' => 'int', 'default' => 'null', 'note' => [
@@ -134,13 +134,28 @@ return [
                 'en' => 'Row ceiling before the field scrolls instead of growing.',
             ]],
             ['name' => 'label / hint / error', 'type' => 'string', 'default' => 'null', 'note' => [
-                'fa' => 'مثل input: قاب فیلد با برچسب، راهنما و خطا.',
-                'en' => 'Same as input: the label/hint/error field frame.',
+                'fa' => 'مثل input: قاب فیلد با برچسب، راهنما و خطا؛ error اگر ندهید از $errors با نام فیلد خوانده می‌شود.',
+                'en' => 'Same as input: the label/hint/error field frame; an omitted error is read from $errors by the field name.',
+            ]],
+            ['name' => 'rows / placeholder / maxlength', 'type' => 'native attrs', 'default' => '—', 'note' => [
+                'fa' => 'هر ویژگی بومی textarea مستقیم روی خود فیلد می‌نشیند؛ maxlength را خود مرورگر اجرا می‌کند.',
+                'en' => 'Any native textarea attribute lands on the control itself; maxlength is enforced by the browser.',
+            ]],
+            ['name' => 'required', 'type' => 'bool', 'default' => 'false', 'note' => [
+                'fa' => 'ستارهٔ لازم روی برچسب و required روی خود textarea.',
+                'en' => 'The required star on the label and required on the textarea itself.',
             ]],
         ],
         'code' => <<<'BLADE'
-        <x-nx::textarea label="یادداشت سفارش" hint="برای انبار‌دار"
-            :maxRows="6" wire:model.blur="state.note" />
+        <x-nx::textarea label="یادداشت سفارش" hint="برای انبار‌دار" rows="2" :maxRows="5"
+            wire:model.blur="state.note" />
+
+        <x-nx::textarea label="پاسخ تیکت" required :maxRows="8"
+            :error="$tooShort ? 'دست‌کم ۳۰ نویسه بنویسید' : null"
+            wire:model.live.debounce.300ms="state.reply" />
+
+        <x-nx::textarea label="معرفی تیم" maxlength="140" :maxRows="3"
+            wire:model.live="state.bio" />
         BLADE,
     ],
 
@@ -198,10 +213,18 @@ return [
                 'fa' => 'حالت «برخی انتخاب‌شده» — مثل انتخاب همه در جدول.',
                 'en' => 'The “some selected” state — like a table’s select-all.',
             ]],
+            ['name' => 'wire:model / $errors', 'type' => '—', 'default' => '—', 'note' => [
+                'fa' => 'همهٔ ویژگی‌های بومی (disabled، value، aria-label، wire:model…) روی خودِ input می‌نشینند؛ خطای $errors با همان نام فیلد، aria-invalid و قاب قرمز را روشن می‌کند.',
+                'en' => 'Every native attribute (disabled, value, aria-label, wire:model…) lands on the input itself; an $errors entry under the field name turns on aria-invalid and the red frame.',
+            ]],
         ],
         'code' => <<<'BLADE'
         <x-nx::checkbox label="خبرنامهٔ هفتگی" description="هر پنجشنبه، فقط محصول"
             wire:model="state.newsletter" />
+
+        <x-nx::checkbox label="پیامک تراکنش‌ها" description="شمارهٔ شما هنوز تأیید نشده" disabled />
+
+        <x-nx::checkbox label="همهٔ فاکتورها" indeterminate wire:click="selectAll" />
         BLADE,
     ],
 
@@ -209,24 +232,37 @@ return [
         'title' => ['fa' => 'سوییچ', 'en' => 'Switch'],
         'icon' => 'play',
         'oneLiner' => [
-            'fa' => 'کلید روشن/خاموش روی checkbox بومی با نقش switch؛ با برچسب، توضیح و دو اندازه.',
-            'en' => 'The on/off toggle over a native checkbox with the switch role; label, description and two sizes.',
+            'fa' => 'کلید روشن/خاموش روی checkbox بومی با نقش switch؛ با برچسب، توضیح، سه اندازه و اتصال به Livewire — یا همراهِ ذخیره یا در همان لحظهٔ چرخیدن.',
+            'en' => 'The on/off toggle over a native checkbox with the switch role; label, description, three sizes and Livewire binding — riding the form’s save, or live as it flips.',
         ],
         'js' => false,
         'docs' => null,
         'props' => [
             ['name' => 'label / description', 'type' => 'string', 'default' => 'null', 'note' => [
-                'fa' => 'برچسب و توضیح کنار کلید.',
-                'en' => 'The label and description beside the toggle.',
+                'fa' => 'برچسب و توضیح کنار کلید؛ بدون آن‌ها کلید تنها رندر می‌شود و نامش را با aria-label بدهید.',
+                'en' => 'The label and description beside the toggle; without them the bare switch renders — name it with aria-label.',
             ]],
             ['name' => 'size', 'type' => 'string', 'default' => 'md', 'note' => [
-                'fa' => 'اندازهٔ کلید: sm · md.',
-                'en' => 'Toggle size: sm · md.',
+                'fa' => 'اندازهٔ کلید: sm · md · lg — sm برای ردیف‌های جدول و lg برای کلید اصلیِ صفحه.',
+                'en' => 'Toggle size: sm · md · lg — sm for table rows, lg for a page’s main toggle.',
+            ]],
+            ['name' => 'wire:model', 'type' => 'bool', 'default' => '—', 'note' => [
+                'fa' => 'با wire:model مقدار همراه اکشن بعدی (مثل دکمهٔ ذخیره) می‌رود؛ با wire:model.live همان لحظهٔ چرخیدن به سرور می‌رسد.',
+                'en' => 'With wire:model the value rides the next action (the save button); wire:model.live posts it the moment it flips.',
+            ]],
+            ['name' => 'disabled / checked', 'type' => 'bool', 'default' => 'false', 'note' => [
+                'fa' => 'ویژگی‌های بومی به خود input می‌رسند؛ disabled و checked معنادارترین‌ها برای تنظیمات قفل‌شده‌اند.',
+                'en' => 'Native attributes land on the input itself; disabled and checked are the ones that matter for locked settings.',
             ]],
         ],
         'code' => <<<'BLADE'
         <x-nx::switch label="احراز هویت دو مرحله‌ای" description="با پیامک"
             wire:model="state.mfa" />
+
+        <x-nx::switch size="lg" wire:model.live="state.vacation"
+            aria-label="توقف ویترین" />
+
+        <x-nx::switch label="درگاه پرداخت" checked disabled />
         BLADE,
     ],
 
@@ -234,29 +270,39 @@ return [
         'title' => ['fa' => 'گروه رادیو', 'en' => 'Radio group'],
         'icon' => 'globe',
         'oneLiner' => [
-            'fa' => 'fieldset از رادیوها با legend و چیدمان عمودی/افقی — مثل انتخاب پلن صورت‌حساب.',
-            'en' => 'A fieldset of radios with a legend and vertical/horizontal layout — like picking a billing plan.',
+            'fa' => 'fieldset از رادیوهای بومی با legend، توضیح هر گزینه و چیدمان عمودی/افقی — مثل انتخاب پلن صورت‌حساب؛ فلش‌های کیبورد بین گزینه‌ها می‌گردند.',
+            'en' => 'A fieldset of native radios with a legend, per-option descriptions and vertical/horizontal layout — like picking a billing plan; arrow keys roam the options.',
         ],
         'js' => false,
         'docs' => null,
         'props' => [
             ['name' => 'options', 'type' => 'array', 'default' => '[]', 'note' => [
-                'fa' => "['monthly' => 'ماهانه'] یا فهرست ['value' => …, 'label' => …].",
-                'en' => "['monthly' => 'Monthly'] or a list of ['value' => …, 'label' => …].",
+                'fa' => "['monthly' => 'ماهانه'] یا فهرست ['value' => …, 'label' => …] با کلیدهای اختیاری description (توضیح زیر برچسب) و disabled.",
+                'en' => "['monthly' => 'Monthly'] or a list of ['value' => …, 'label' => …] with optional description (under the label) and disabled keys.",
             ]],
             ['name' => 'legend', 'type' => 'string', 'default' => 'null', 'note' => [
-                'fa' => 'عنوان گروه داخل fieldset.',
-                'en' => 'The group’s legend inside the fieldset.',
+                'fa' => 'عنوان گروه داخل fieldset؛ هم دیده می‌شود هم نام دسترس‌پذیری گروه است.',
+                'en' => 'The group’s legend inside the fieldset; both visible and the group’s accessible name.',
             ]],
             ['name' => 'orientation', 'type' => 'string', 'default' => 'vertical', 'note' => [
-                'fa' => 'چیدمان عمودی یا افقی.',
-                'en' => 'Vertical or horizontal layout.',
+                'fa' => 'چیدمان عمودی (پیش‌فرض) یا افقی؛ حالت افقی در جا جای کم می‌شکند و می‌پیچد.',
+                'en' => 'Vertical (default) or horizontal; the horizontal row wraps when space runs out.',
+            ]],
+            ['name' => 'value / name', 'type' => 'string', 'default' => 'null / خودکار', 'note' => [
+                'fa' => 'گزینهٔ فعال برای رندر سمت سرور — کنار wire:model بدهید تا checked از حقیقت بیاید؛ name اگر ندهید از wire:model ساخته می‌شود.',
+                'en' => 'The selected option for the server render — pass it beside wire:model so checked comes from the truth; name falls back to the wire:model path.',
             ]],
         ],
         'code' => <<<'BLADE'
-        <x-nx::radio-group legend="دورهٔ پرداخت" name="cycle"
-            :options="['monthly' => 'ماهانه', 'yearly' => 'سالانه']"
-            wire:model.live="state.cycle" />
+        <x-nx::radio-group legend="پلن اشتراک" :value="$plan" wire:model.live="state.plan" :options="[
+            ['value' => 'pro', 'label' => 'حرفه‌ای', 'description' => 'سفارش نامحدود و درگاه پرداخت'],
+            ['value' => 'business', 'label' => 'کسب‌وکار', 'description' => 'انبار چندشعبه‌ای'],
+        ]" />
+
+        <x-nx::radio-group legend="روش ارسال" orientation="horizontal" :value="$shipping" wire:model.live="state.shipping" :options="[
+            ['value' => 'post', 'label' => 'پست پیشتاز'],
+            ['value' => 'courier', 'label' => 'پیک موتوری', 'description' => 'فقط تهران و کرج', 'disabled' => true],
+        ]" />
         BLADE,
     ],
 
@@ -270,9 +316,13 @@ return [
         'js' => true,
         'docs' => null,
         'props' => [
+            ['name' => 'label', 'type' => 'string', 'default' => 'null', 'note' => [
+                'fa' => 'نام دسترس‌پذیریِ رِنج (aria-label) — برای صفحه‌خوان‌ها لازم است.',
+                'en' => 'The range’s accessible name (aria-label) — required for screen readers.',
+            ]],
             ['name' => 'showValue', 'type' => 'bool', 'default' => 'false', 'note' => [
-                'fa' => 'عددِ همراه دسته را نشان می‌دهد.',
-                'en' => 'Shows the value riding the thumb.',
+                'fa' => 'عددِ همراه دسته را همیشه نشان می‌دهد؛ بدون آن فقط هنگام هاور/فوکوس می‌آید.',
+                'en' => 'Keeps the value riding the thumb on screen; without it, it only appears on hover/focus.',
             ]],
             ['name' => 'startLabel / endLabel', 'type' => 'string', 'default' => 'null', 'note' => [
                 'fa' => 'برچسب دو سر مسیر (مثل «آرام» و «تند»).',
@@ -281,6 +331,10 @@ return [
             ['name' => 'decimals', 'type' => 'int', 'default' => 'null', 'note' => [
                 'fa' => 'تعداد رقم اعشار عدد نمایشی.',
                 'en' => 'Decimal places of the shown value.',
+            ]],
+            ['name' => 'min / max / step', 'type' => 'string|number', 'default' => '0 / 100 / 1', 'note' => [
+                'fa' => 'مثل هر attr دیگر مستقیم روی input بومی می‌نشینند؛ فلش‌های کیبورد دقیقاً یک step می‌روند.',
+                'en' => 'Land straight on the native input like any attr; the arrow keys move exactly one step.',
             ]],
         ],
         'code' => <<<'BLADE'
@@ -300,17 +354,27 @@ return [
         'docs' => null,
         'props' => [
             ['name' => 'for', 'type' => 'string', 'default' => 'null', 'note' => [
-                'fa' => 'id کنترل دلخواه شما؛ for برچسب و aria-describedby خطا/راهنما را وصل می‌کند.',
-                'en' => 'Your control’s id; wires the label’s for and the error/hint aria-describedby.',
+                'fa' => 'id کنترل دلخواه شما؛ for برچسب را وصل می‌کند و راهنما/خطا idهای «{for}-hint» و «{for}-error» می‌گیرند — aria-describedby را خودتان روی کنترل به همین idها بدهید.',
+                'en' => 'Your control’s id; wires the label’s for and gives the hint/error the ids “{for}-hint” and “{for}-error” — point the control’s own aria-describedby at those ids.',
             ]],
             ['name' => 'label / hint / error', 'type' => 'string', 'default' => 'null', 'note' => [
-                'fa' => 'برچسب، راهنما و پیام خطا.',
-                'en' => 'The label, helper text and error message.',
+                'fa' => 'برچسب، راهنما و پیام خطا؛ با error قاب data-invalid می‌گیرد و کنترل‌های nx-input/… سرخ می‌شوند.',
+                'en' => 'The label, helper text and error message; an error flags the frame with data-invalid and turns the nx-input/… controls red.',
+            ]],
+            ['name' => 'required', 'type' => 'bool', 'default' => 'false', 'note' => [
+                'fa' => 'ستارهٔ لازم‌بودن به برچسب می‌افزاید؛ خود required را روی کنترل بومی بگذارید.',
+                'en' => 'Adds the required star to the label; put required itself on the native control.',
             ]],
         ],
         'code' => <<<'BLADE'
-        <x-nx::field label="رنگ برند" hint="در همهٔ تم‌ها بررسی شود" for="brand-color">
-            <input type="color" id="brand-color" class="nx-input" />
+        <x-nx::field label="رنگ برند" hint="در هر دو تم بررسی شود" for="brand-color" required>
+            <input type="color" id="brand-color" class="nx-input"
+                aria-describedby="brand-color-hint" wire:model.live.debounce.200ms="state.brandColor" />
+        </x-nx::field>
+
+        <x-nx::field label="رمز عبور تازه" for="pw" required error="دست‌کم ۸ نویسه">
+            <input id="pw" class="nx-input" type="password" dir="ltr" aria-invalid="true"
+                aria-describedby="pw-hint pw-error" wire:model.live="state.password" />
         </x-nx::field>
         BLADE,
     ],
@@ -326,18 +390,27 @@ return [
         'docs' => null,
         'props' => [
             ['name' => 'name', 'type' => 'string', 'default' => '—', 'note' => [
-                'fa' => 'نام آیکون از بستهٔ هسته (packages/core/src/js/icons.ts).',
-                'en' => 'An icon name from the core set (packages/core/src/js/icons.ts).',
+                'fa' => 'نام آیکون از بستهٔ هسته (packages/core/src/js/icons.ts)؛ arrow و chevron های چپ/راست جهت‌دارند و در صفحه‌های راست‌به‌چپ خودکار آینه می‌شوند.',
+                'en' => 'An icon name from the core set (packages/core/src/js/icons.ts); left/right arrows and chevrons are directional and mirror themselves on RTL pages.',
             ]],
             ['name' => 'label', 'type' => 'string', 'default' => 'null', 'note' => [
                 'fa' => 'با label آیکون نقش img می‌گیرد؛ بدون آن aria-hidden است.',
                 'en' => 'With a label the icon becomes an img; without it it is aria-hidden.',
             ]],
+            ['name' => 'class', 'type' => 'string', 'default' => "''", 'note' => [
+                'fa' => 'کلاس‌ها به svg رد می‌شوند؛ اندازه با متن اطراف می‌آید (1.15em) و رنگ currentColor است — پس هر دو را با font-size و color والد بدهید.',
+                'en' => 'Classes pass through to the svg; size rides the surrounding text (1.15em) and colour is currentColor — set both via the parent’s font-size/color.',
+            ]],
         ],
         'code' => <<<'BLADE'
-        {{ \NabuXUI\NabuXUI::icon('check') }}
+        {{-- تزئینی — کنار متن خودش --}}
+        <x-nx::icon name="file" />
 
-        <x-nx::icon name="trend-up" label="روند صعودی" />
+        {{-- بامعنا — نقش img با برچسب دسترس‌پذیر --}}
+        <x-nx::icon name="alert-triangle" label="بارگذاری ناموفق" />
+
+        {{-- بدون کامپوننت، همان خروجی --}}
+        {{ \NabuXUI\NabuXUI::icon('check') }}
         BLADE,
     ],
 
@@ -352,12 +425,20 @@ return [
         'docs' => null,
         'props' => [
             ['name' => 'interactive / spotlight / tilt', 'type' => 'bool', 'default' => 'false', 'note' => [
-                'fa' => 'بالا آمدن hover، نور دنبال موس و خم‌شدن به سمت اشاره‌گر.',
-                'en' => 'Hover lift, a light following the pointer, and a lean toward the pointer.',
+                'fa' => 'بالا آمدن hover، نور دنبال موس و خم‌شدن به سمت اشاره‌گر (خم‌شدن لمس را نادیده می‌گیرد).',
+                'en' => 'Hover lift, a light following the pointer, and a lean toward the pointer (the lean ignores touch).',
+            ]],
+            ['name' => 'variant', 'type' => 'string', 'default' => 'default', 'note' => [
+                'fa' => 'قالب بصری سطح: default · glass · outline · gradient · inverse — مثلاً gradient برای کارت پیشنهادی و inverse برای تماس با فروش.',
+                'en' => 'The surface’s visual frame: default · glass · outline · gradient · inverse — say gradient for the recommended plan, inverse for the enterprise pitch.',
+            ]],
+            ['name' => 'size', 'type' => 'string', 'default' => 'md', 'note' => [
+                'fa' => 'اندازه: sm · md · lg — sm برای کارت کوچک کنار محتوای اصلی.',
+                'en' => 'Size: sm · md · lg — sm for the small card beside the main content.',
             ]],
             ['name' => 'href', 'type' => 'string', 'default' => 'null', 'note' => [
-                'fa' => 'با href کل کارت یک لینک می‌شود.',
-                'en' => 'With href the whole card becomes a link.',
+                'fa' => 'با href کل کارت یک لینک <a> می‌شود؛ Tab و Enter مثل هر لینکی کار می‌کنند.',
+                'en' => 'With href the whole card becomes an <a>; Tab and Enter behave like any link.',
             ]],
             ['name' => 'title / description / icon', 'type' => 'string', 'default' => 'null', 'note' => [
                 'fa' => 'سرصفحهٔ آمادهٔ کارت؛ بدنه در اسلات پیش‌فرض و پایانی در اسلات footer.',
@@ -452,26 +533,35 @@ return [
         'title' => ['fa' => 'پاپ‌اور', 'en' => 'Popover'],
         'icon' => 'external-link',
         'oneLiner' => [
-            'fa' => 'پنل سبک روی Popover API بومی با جانمایی side/align؛ برای کارت جزئیات و راهنمای غنی.',
-            'en' => 'A light panel on the native Popover API with side/align placement; for detail cards and rich hints.',
+            'fa' => 'پنل سبک روی Popover API بومی با جانمایی side/align؛ برای کارت جزئیات و راهنمای غنی — در top layer می‌ماند و Esc یا کلیک بیرون می‌بندد.',
+            'en' => 'A light panel on the native Popover API with side/align placement; for detail cards and rich hints — it lives in the top layer, Esc or light dismiss closes it.',
         ],
         'js' => true,
         'docs' => null,
         'props' => [
             ['name' => 'side / align', 'type' => 'string', 'default' => 'bottom / center', 'note' => [
-                'fa' => 'جانمایی پنل نسبت به تریگر؛ فرورفتن از سمت تریگر انیمیت می‌شود.',
-                'en' => 'Panel placement around the trigger; it scales in from the trigger side.',
+                'fa' => 'جانمایی پنل دور تریگر؛ side: top · bottom · start · end و align: start · center · end — پنل از سمت تریگر فرورفته باز می‌شود و در RTL با جهت متن می‌چرخد.',
+                'en' => 'Panel placement around the trigger; side: top · bottom · start · end, align: start · center · end — it scales in from the trigger side and follows the text direction.',
             ]],
             ['name' => 'label', 'type' => 'string', 'default' => 'null', 'note' => [
                 'fa' => 'نام دسترس‌پذیری پنل (role=dialog).',
                 'en' => 'The panel’s accessible name (role=dialog).',
             ]],
+            ['name' => 'trigger / slot', 'type' => 'slot', 'default' => '—', 'note' => [
+                'fa' => 'اسلات trigger دکمه یا لینکِ بازکننده را می‌گیرد (popovertarget و aria-expanded/controls خودکار وصل می‌شوند)؛ اسلات پیش‌فرض بدنهٔ پنل است — حتی با محتوای کنشی.',
+                'en' => 'The trigger slot takes the opening button or link (popovertarget and aria-expanded/controls are wired for you); the default slot is the panel body — interactive content included.',
+            ]],
         ],
         'code' => <<<'BLADE'
-        <x-nx::popover side="bottom" label="جزئیات دامنه">
+        <x-nx::popover side="bottom" align="end" label="جزئیات دامنه">
             <x-slot:trigger><x-nx::button variant="ghost" icon="info" icon-only aria-label="جزئیات" /></x-slot:trigger>
             <strong>api.nabu.shop</strong> — ۹۹٫۹۸٪ آپ‌تایم این ماه
         </x-nx::popover>
+
+        <x-nx::popover side="end" align="start" label="کارت سارا محمدی">
+            <x-slot:trigger><x-nx::button variant="link">@سارا</x-nx:button></x-slot:trigger>
+            داخل پنل کنش هم می‌شود گذاشت؛ فقط Esc یا کلیک بیرون می‌بندد.
+        </x-nx:popover>
         BLADE,
     ],
 
@@ -555,11 +645,26 @@ return [
                 'fa' => 'joined (چسبیده) یا separated (جدا).',
                 'en' => 'joined or separated.',
             ]],
+            ['name' => 'title (آیتم)', 'type' => 'string', 'default' => '—', 'note' => [
+                'fa' => 'عنوان accordion-item؛ همان summary می‌شود و کل ردیفِ کلیک‌شونده را می‌سازد.',
+                'en' => 'The accordion-item title; it becomes the summary and the whole clickable row.',
+            ]],
+            ['name' => 'open (آیتم)', 'type' => 'bool', 'default' => 'false', 'note' => [
+                'fa' => 'آیتم از همان رندر اول باز است؛ در حالت single فقط یکی را باز بگذارید.',
+                'en' => 'The item is open from the first render; keep just one open in single mode.',
+            ]],
         ],
         'code' => <<<'BLADE'
         <x-nx::accordion single>
-            <x-nx::accordion-item title="ارسال به کجاست؟" open>…</x-nx::accordion-item>
-            <x-nx::accordion-item title="امکان مرجوعی هست؟">…</x-nx::accordion-item>
+            <x-nx::accordion-item title="سفارشم کی می‌رسد؟" open>…پاسخ…</x-nx::accordion-item>
+            <x-nx::accordion-item title="کالا را می‌توانم برگردانم؟">…پاسخ…</x-nx::accordion-item>
+        </x-nx::accordion>
+
+        <x-nx::accordion :single="false" variant="separated">
+            <x-nx::accordion-item title="درگاه پرداخت" open>
+                <x-nx::switch label="پرداخت آنلاین" wire:model.live="state.pay.online" />
+            </x-nx::accordion-item>
+            <x-nx::accordion-item title="حساب تسویه">…فرم…</x-nx::accordion-item>
         </x-nx::accordion>
         BLADE,
     ],
@@ -613,12 +718,25 @@ return [
                 'en' => "A list of [['name' => …, 'src' => …], …].",
             ]],
             ['name' => 'max', 'type' => 'int', 'default' => '5', 'note' => [
-                'fa' => 'بیشینهٔ نمایش؛ بقیه داخل +n.',
-                'en' => 'Shown ceiling; the rest folds into +n.',
+                'fa' => 'بیشینهٔ نمایش؛ بقیه داخل +n. سقفی بالاتر از طول فهرست، همه را نشان می‌دهد.',
+                'en' => 'Shown ceiling; the rest folds into +n. A ceiling above the list’s length shows everyone.',
+            ]],
+            ['name' => 'size', 'type' => 'string', 'default' => 'md', 'note' => [
+                'fa' => 'اندازهٔ مشترک همهٔ آواتارها: xs · sm · md · lg · xl — sm برای ردیف‌های کم‌جای کارت‌ها.',
+                'en' => 'One size for every avatar: xs · sm · md · lg · xl — sm for tight card rows.',
+            ]],
+            ['name' => 'label', 'type' => 'string', 'default' => 'null', 'note' => [
+                'fa' => 'برچسب aria برای role="group"؛ نام همین جمع را به صفحه‌خوان می‌گوید.',
+                'en' => 'The aria label for role="group"; tells screen readers what the row gathers.',
             ]],
         ],
         'code' => <<<'BLADE'
-        <x-nx::avatar-group :people="$team" :max="4" label="تیم محصول" />
+        <x-nx::avatar-group
+            :people="[['name' => 'نگار رستمی'], ['name' => 'Kenji Sato'], ['name' => 'لیلا حداد']]"
+            :max="2"
+            size="sm"
+            label="تیم محصول"
+        />
         BLADE,
     ],
 
@@ -999,20 +1117,36 @@ return [
         'title' => ['fa' => 'جداکننده', 'en' => 'Divider'],
         'icon' => 'minus',
         'oneLiner' => [
-            'fa' => 'خط جداکنندهٔ بخش‌ها با role=separator؛ اسلاتی برای برچسب وسط دارد.',
-            'en' => 'The rule between sections with role=separator; a slot for a centered label.',
+            'fa' => 'خط جداکنندهٔ بخش‌ها با role=separator؛ اسلات وسطش برچسب می‌گیرد — از «یا» میان دو راه ورود تا عبارت کامل میان دو روش پرداخت.',
+            'en' => 'The rule between sections with role=separator; its middle slot takes a label — from the “or” between two ways to sign in to a whole phrase between two payment methods.',
         ],
         'js' => false,
         'docs' => null,
         'props' => [
             ['name' => 'slot', 'type' => 'string', 'default' => 'null', 'note' => [
-                'fa' => 'متن وسط خط، مثل «یا» بین دکمهٔ گوگل و فرم.',
-                'en' => 'Text in the middle of the rule, like “or” between the Google button and the form.',
+                'fa' => 'برچسب وسط خط (یک واژه مثل «یا» یا یک عبارت کامل)؛ دو طرفش خط مویی می‌کشد. بدون اسلات دو خط یکی می‌شود و گپ صفر می‌گیرد.',
+                'en' => 'The centered label (a word like “or” or a whole phrase); a hairline grows on both sides. Without a slot the two lines become one and the gap collapses.',
+            ]],
+            ['name' => 'role', 'type' => 'string', 'default' => "'separator'", 'note' => [
+                'fa' => 'همیشه روی خروجی نشسته تا صفحه‌خوان مرز بخش‌ها را بفهمد؛ جداکننده ساختاری است و فوکوس نمی‌گیرد.',
+                'en' => 'Always on the output so screen readers read the section boundary; the separator is structural and never focusable.',
+            ]],
+            ['name' => 'class / style', 'type' => 'attrs', 'default' => '—', 'note' => [
+                'fa' => 'هر ویژگی دیگر به خود div رد می‌شود؛ حاشیهٔ پیش‌فرض (var(--nx-space-6) بالا و پایین) برای جریان صفحه است و داخل ظرف gap‌دار معمولاً با style="margin-block: 0" فشرده می‌شود.',
+                'en' => 'Any other attribute lands on the div itself; the default block margin (var(--nx-space-6)) is sized for page flow and usually wants style="margin-block: 0" inside a gapped container.',
             ]],
         ],
         'code' => <<<'BLADE'
-        <x-nx::button block>ورود با گوگل</x-nx::button>
+        {{-- بدون برچسب: خط یکپارچه میان دو بخش --}}
+        <x-nx::divider />
+
+        {{-- با برچسب: «یا» میان دو راه ورود --}}
+        <x-nx::button variant="outline" icon="globe" block>ورود با گوگل</x-nx::button>
         <x-nx::divider>یا</x-nx::divider>
+        <x-nx::input label="ایمیل سازمانی" type="email" wire:model="state.email" />
+
+        {{-- داخل ظرف gap‌دار: حاشیه را فشرده کنید --}}
+        <x-nx::divider style="margin-block: 0" />
         BLADE,
     ],
 
@@ -1027,20 +1161,49 @@ return [
         'docs' => null,
         'props' => [
             ['name' => 'variant', 'type' => 'string', 'default' => 'bar', 'note' => [
-                'fa' => 'bar یا floating.',
-                'en' => 'bar or floating.',
+                'fa' => 'bar (پیش‌فرض) تمام‌عرض است و بعد از چند پیکسل اسکرول شیشه‌ای می‌شود؛ floating قرصی است که با اسکرول جمع می‌شود — نازک‌تر، لبه‌دار و باریک‌تر.',
+                'en' => 'bar (default) runs full width and turns glass after a few pixels of scroll; floating is a pill that tightens as you scroll — thinner, bordered, narrower.',
             ]],
             ['name' => 'hideOnScroll', 'type' => 'bool', 'default' => 'false', 'note' => [
-                'fa' => 'پایین‌رفتن با اسکرول به پایین و بازگشت با اسکرول به بالا.',
-                'en' => 'Hides when scrolling down, returns when scrolling up.',
+                'fa' => 'با اسکرول رو به پایین بی‌سروصدا بالا می‌رود و با اولین حرکت به بالا بی‌درنگ برمی‌گردد؛ تا وقتی چیزی داخل هدر فوکوس دارد قایم نمی‌شود.',
+                'en' => 'Slips away while the reader scrolls down and returns on the first motion back up; while anything inside it holds focus it refuses to hide.',
             ]],
-            ['name' => 'items / navigate', 'type' => 'array|bool', 'default' => '[] / false', 'note' => [
-                'fa' => 'آیتم‌های مگامنو و عبور لینک‌ها از wire:navigate.',
-                'en' => 'Mega-menu items and routing links through wire:navigate.',
+            ['name' => 'items', 'type' => 'array', 'default' => '[]', 'note' => [
+                'fa' => 'آیتم‌های مگامنو با همان ساختار mega-menu (label + children، یا href و current). بدون items هدر فقط برند و اکشن‌ها را می‌چیند و همبرگر هم نمی‌آید. نام کشوی موبایل ثابت است، پس در هر صفحه فقط یک هدرِ items‌دار بگذارید.',
+                'en' => 'The mega-menu items in the mega-menu shape (label + children, or href and current). Without items the header lays out just brand and actions — no burger either. The mobile drawer’s dialog name is fixed, so keep one header-with-items per page.',
+            ]],
+            ['name' => 'navigate', 'type' => 'bool', 'default' => 'false', 'note' => [
+                'fa' => 'لینک‌های برند، مگامنو و کشوی موبایل از wire:navigate رد می‌شوند.',
+                'en' => 'Brand, mega-menu and drawer links route through wire:navigate.',
+            ]],
+            ['name' => 'brand / brandHref', 'type' => 'slot|string', 'default' => "نام اپ / '/'", 'note' => [
+                'fa' => 'برندِ ابتدای هدر — آیکون و واژه در اسلات brand؛ بدون اسلات نام اپ می‌نشیند و brandHref (پیش‌فرض /) نشانی‌اش است.',
+                'en' => 'The header’s leading brand — icon and word in the brand slot; without the slot the app name sits there, and brandHref (default /) is its link.',
+            ]],
+            ['name' => 'label', 'type' => 'string', 'default' => 'null', 'note' => [
+                'fa' => 'نام دسترس‌پذیری راهبری؛ به aria-label مگامنو می‌رسد.',
+                'en' => 'The navigation’s accessible name; it reaches the mega menu’s aria-label.',
+            ]],
+            ['name' => 'actions / mobile-actions', 'type' => 'slot', 'default' => '—', 'note' => [
+                'fa' => 'کنش‌های انتهای هدر؛ با data-desktop یک کنش فقط دسکتاپی می‌شود (زیر ۵۶rem پنهان) و جایش را mobile-actions داخل کشوی موبایل می‌گیرد.',
+                'en' => 'The header’s closing actions; data-desktop makes one desktop-only (hidden under 56rem) and mobile-actions takes its place inside the mobile drawer.',
             ]],
         ],
         'code' => <<<'BLADE'
-        <x-nx::header variant="floating" hide-on-scroll :items="$nav" navigate>
+        <x-nx::header :items="$nav" label="راهبری اصلی" navigate>
+            <x-slot:brand>{{ \NabuXUI\NabuXUI::icon('zap') }} نابوشاپ</x-slot:brand>
+            <x-slot:actions>
+                <x-nx::theme-toggle />
+                <x-nx::button size="sm" variant="ghost" href="/login" data-desktop wire:navigate>ورود</x-nx::button>
+                <x-nx::button size="sm" variant="primary" wire:click="save">ساخت فروشگاه</x-nx::button>
+            </x-slot:actions>
+            <x-slot:mobile-actions>
+                <x-nx::button size="sm" variant="primary" block wire:click="save">ساخت فروشگاه</x-nx::button>
+            </x-slot:mobile-actions>
+        </x-nx::header>
+
+        {{-- صفحهٔ فرود: قرص شناور که با خواندن کنار می‌رود --}}
+        <x-nx::header variant="floating" hide-on-scroll brand-href="/">
             <x-slot:brand>نابو</x-slot:brand>
             <x-slot:actions><x-nx::theme-toggle /></x-slot:actions>
         </x-nx::header>
@@ -1051,22 +1214,31 @@ return [
         'title' => ['fa' => 'منوی ناوبری', 'en' => 'Nav menu'],
         'icon' => 'grid',
         'oneLiner' => [
-            'fa' => 'ناوبری افقی با نشانگر خطی که با فنر به لینک فعال/هاور می‌سرد و aria-current.',
-            'en' => 'Horizontal nav with a line indicator that springs to the active/hovered link and aria-current.',
+            'fa' => 'ناوبری افقی میان صفحه‌ها؛ قرص نرمی زیر لینک‌ها با فنر دنبال اشاره‌گر و کیبورد می‌سُرد و بیرون رفتید به صفحهٔ جاری (aria-current) برمی‌گردد.',
+            'en' => 'Horizontal page navigation; a soft pill springs after the pointer and the keyboard, and glides home to the current page (aria-current) when you step away.',
         ],
         'js' => true,
         'docs' => null,
         'props' => [
             ['name' => 'items', 'type' => 'array', 'default' => '[]', 'note' => [
-                'fa' => "فهرست [['href' => …, 'label' => …, 'current' => bool], …].",
-                'en' => "A list of ['href' => …, 'label' => …, 'current' => bool].",
+                'fa' => "فهرست [['href' => …, 'label' => …, 'current' => bool], …]؛ آیتم current پررنگ می‌شود، نقطهٔ لهجه زیرش می‌نشیند، aria-current=\"page\" می‌گیرد و نشانگر به آن برمی‌گردد — در محصول واقعی current را از URL فعلی بسازید.",
+                'en' => "A list of ['href' => …, 'label' => …, 'current' => bool]; the current item goes bold, sits on the accent dot, gets aria-current=\"page\" and owns the indicator’s home — in a real product derive current from the request URL.",
+            ]],
+            ['name' => 'label', 'type' => 'string', 'default' => 'null', 'note' => [
+                'fa' => 'نام دسترس‌پذیر خود nav (aria-label) — مثلاً «بخش‌های پنل» یا «بخش‌های صفحهٔ مشتری».',
+                'en' => 'The nav’s accessible name (aria-label) — e.g. “Panel sections” or “Customer page sections”.',
+            ]],
+            ['name' => 'navigate', 'type' => 'bool', 'default' => 'false', 'note' => [
+                'fa' => 'لینک‌ها با wire:navigate باز می‌شوند تا صفحه در جا عوض شود، بدون بارگیری کامل.',
+                'en' => 'Links ride wire:navigate so the page swaps in place, with no full reload.',
             ]],
         ],
         'code' => <<<'BLADE'
-        <x-nx::nav-menu :items="[
-            ['href' => '/analytics', 'label' => 'تحلیل'],
-            ['href' => '/members', 'label' => 'اعضا', 'current' => true],
-        ]" />
+        <x-nx::nav-menu label="بخش‌های پنل" :items="[
+            ['href' => '/panel/orders', 'label' => 'سفارش‌ها', 'current' => true],
+            ['href' => '/panel/products', 'label' => 'محصولات'],
+            ['href' => '/panel/customers', 'label' => 'مشتریان'],
+        ]" navigate />
         BLADE,
     ],
 
@@ -1074,21 +1246,38 @@ return [
         'title' => ['fa' => 'منوی موبایل', 'en' => 'Mobile menu'],
         'icon' => 'menu',
         'oneLiner' => [
-            'fa' => 'همان آیتم‌های مگامنو به‌شکل دریل‌داون چندسطحی — برای کشوی موبایل.',
-            'en' => 'The same mega-menu items as a multi-level drill-down — for the mobile drawer.',
+            'fa' => 'همان آیتم‌های مگامنو به‌شکل دریل‌داون دوسطحی برای کشوی موبایل؛ لغزش فنریِ جهت‌آگاه، مدیریت فوکوس (بازگشت به آیتم بازکننده) و پنل پنهانِ inert.',
+            'en' => 'The same mega-menu items as a two-level drill-down for the mobile drawer; a direction-aware springy slide, managed focus (returning to the opener) and an inert hidden panel.',
         ],
         'js' => true,
         'docs' => null,
         'props' => [
             ['name' => 'items', 'type' => 'array', 'default' => '[]', 'note' => [
-                'fa' => 'ساختار children دار مثل مگامنو.',
-                'en' => 'The same children-bearing structure as the mega menu.',
+                'fa' => "همان ساختار مگامنو: ['label' => …, 'href' => …, 'children' => […]]؛ آیتمِ children دار دکمهٔ دریل می‌شود و بقیه لینک‌اند — با کلید current روی لینکِ صفحهٔ جاری (aria-current). فرزندها می‌توانند icon داشته باشند.",
+                'en' => "The mega-menu structure: ['label' => …, 'href' => …, 'children' => […]; an item with children becomes a drill button, the rest are links — a current key marks the page you are on (aria-current). Children may carry an icon.",
+            ]],
+            ['name' => 'navigate', 'type' => 'bool', 'default' => 'false', 'note' => [
+                'fa' => 'روی همهٔ لینک‌ها wire:navigate می‌گذارد تا صفحه با Livewire عوض شود، بی‌رفرش — همان پرچمی که به هدر می‌دهید.',
+                'en' => 'Puts wire:navigate on every link so the page swaps through Livewire without a reload — the same flag you hand to the header.',
+            ]],
+            ['name' => 'slot', 'type' => 'any', 'default' => '—', 'note' => [
+                'fa' => 'اسلات پیش‌فرض، محتوای شما را انتهای فهرست سطح اول می‌نشیند — جداکننده و دکمه‌های خروج/ورود؛ هدر همین اسلات را از mobileActions پر می‌کند.',
+                'en' => 'The default slot lands whatever you hand it at the end of the root list — dividers and sign-out/sign-in buttons; the header fills this same slot from mobileActions.',
             ]],
         ],
         'code' => <<<'BLADE'
-        <x-nx::drawer side="start" wire:model="state.menuOpen">
-            <x-nx::mobile-menu :items="$nav" navigate />
+        {{-- کشوی موبایل: دریل‌داون + کنش‌های سنجاق‌شده در اسلات --}}
+        <x-nx::drawer side="start" wire:model="state.menuOpen" :title="config('app.name')">
+            <x-nx::mobile-menu :items="$nav" navigate>
+                <x-nx::divider style="margin-block: 0">یا</x-nx::divider>
+                <x-nx::button variant="ghost" icon="x" block wire:click="logout">خروج از حساب</x-nx::button>
+            </x-nx::mobile-menu>
         </x-nx::drawer>
+
+        {{-- یا خود هدر: زیر ۵۶rem همبرگر همین را در کشوی خودش می‌آورد --}}
+        <x-nx::header :items="$nav" navigate>
+            <x-slot:actions><x-nx::theme-toggle /></x-slot:actions>
+        </x-nx::header>
         BLADE,
     ],
 
@@ -1103,18 +1292,43 @@ return [
         'docs' => null,
         'props' => [
             ['name' => 'options', 'type' => 'array', 'default' => '[]', 'note' => [
-                'fa' => "['month' => 'ماهانه'] یا ['key' => ['label' => …, 'icon' => …, 'disabled' => …]].",
-                'en' => "['month' => 'Monthly'] or ['key' => ['label' => …, 'icon' => …, 'disabled' => …]].",
+                'fa' => "['month' => 'ماهانه'] یا ['key' => ['label' => …, 'icon' => …, 'disabled' => …]] — کلید همان value رادیو می‌شود؛ گزینهٔ disabled جای خودش را نگه می‌دارد و کم‌رنگ می‌شود.",
+                'en' => "['month' => 'Monthly'] or ['key' => ['label' => …, 'icon' => …, 'disabled' => …]] — the key becomes the radio’s value; a disabled option keeps its place and dims.",
+            ]],
+            ['name' => 'label', 'type' => 'string', 'default' => 'null', 'note' => [
+                'fa' => 'نام دسترس‌پذیری گروه (aria-label روی radiogroup) — برای صفحه‌خوان‌ها لازم است؛ رادیوها بومی‌اند و فلش‌های کیبورد در گروه می‌گردند.',
+                'en' => 'The group’s accessible name (aria-label on the radiogroup) — required for screen readers; the radios are native, so the arrow keys roam the group.',
+            ]],
+            ['name' => 'value', 'type' => 'string', 'default' => 'نخستین گزینه', 'note' => [
+                'fa' => 'گزینهٔ فعال برای رندر سمت سرور؛ کنار wire:model مقدار واقعی را بدهید تا checked از حقیقت بیاید. name اگر ندهید از مسیر wire:model ساخته می‌شود.',
+                'en' => 'The active option for the server render; pass the real value beside wire:model so checked comes from the truth. name falls back to the wire:model path.',
+            ]],
+            ['name' => 'size', 'type' => 'string', 'default' => 'null', 'note' => [
+                'fa' => 'فقط sm — کوتاه‌تر و فشرده‌تر، برای گوشهٔ نوار ابزار و ردیف‌های جدول.',
+                'en' => 'sm only — shorter and tighter, for a toolbar corner or table rows.',
+            ]],
+            ['name' => 'tone', 'type' => 'string', 'default' => 'null', 'note' => [
+                'fa' => 'accent: thumb با رنگ برند پر می‌شود و متن انتخاب‌شده روشن می‌ماند؛ پیش‌فرض thumb سطحی با متن عادی است.',
+                'en' => 'accent: the thumb fills with the brand colour and the checked label stays light; the default is a surface thumb with normal text.',
             ]],
             ['name' => 'wire:model', 'type' => 'string', 'default' => '—', 'note' => [
-                'fa' => 'گزینهٔ فعال به Livewire وصل می‌شود.',
-                'en' => 'The active option binds to Livewire.',
+                'fa' => 'گزینهٔ فعال به Livewire وصل می‌شود؛ با .live همان لحظهٔ انتخاب به سرور می‌رسد و thumb دنبال آن می‌ماند.',
+                'en' => 'The active option binds to Livewire; with .live the pick reaches the server as it happens and the thumb follows along.',
             ]],
         ],
         'code' => <<<'BLADE'
+        {{-- دورهٔ پرداخت: دو گزینه، قیمت زنده --}}
         <x-nx::segmented label="دورهٔ پرداخت"
             :options="['monthly' => 'ماهانه', 'yearly' => 'سالانه']"
-            wire:model.live="state.cycle" />
+            :value="$state['cycle']" wire:model.live="state.cycle" />
+
+        {{-- چیدمان کالاها: آیکون‌دار، برای نوار ابزار --}}
+        <x-nx::segmented size="sm" tone="accent" label="چیدمان کالاها"
+            :options="[
+                'grid' => ['label' => 'شبکه‌ای', 'icon' => 'grid'],
+                'list' => ['label' => 'فهرستی', 'icon' => 'menu'],
+            ]"
+            :value="$state['view']" wire:model.live="state.view" />
         BLADE,
     ],
 

@@ -480,4 +480,220 @@ return [
             :extra-totals="[['label' => 'مالیات بر ارزش افزوده (۹٪)', 'percent' => 0.09]]" />
         BLADE,
     ],
+
+    'product-card' => [
+        'title' => ['fa' => 'کارت محصول', 'en' => 'Product card'],
+        'icon' => 'heart',
+        'oneLiner' => [
+            'fa' => 'کارت فروشگاهی با تصویری که در قاب خودش زوم می‌شود، قیمتِ قبل از تخفیف خط‌خورده، ستاره‌هایی که تا کسرِ امتیاز پر می‌شوند و نشان موجودی (کم‌موجود نفس می‌کشد و تعدادِ مانده را می‌گوید)؛ دکمهٔ افزودن به سبد با فنر به حالت «اضافه شد» مورف می‌شود.',
+            'en' => 'The shop card: an image that zooms inside its frame on hover, the crossed-out pre-discount price, stars that fill to the fraction of the rating and a stock badge (the low one breathes and counts the units left); the add-to-cart button morphs into its added state on a spring.',
+        ],
+        'js' => true,
+        'props' => [
+            ['name' => 'title / category / href', 'type' => 'string', 'default' => 'required / null / null', 'note' => [
+                'fa' => 'نام محصول (دستهٔ کوچک بالایش) و نشانی صفحهٔ محصول؛ با href عنوان یک لینک واقعی می‌شود.',
+                'en' => 'The product’s name (its small category above) and the product page’s URL; with href the title becomes a real link.',
+            ]],
+            ['name' => 'image', 'type' => 'array', 'default' => 'null', 'note' => [
+                'fa' => "['src' => …, 'alt' => …] — قاب ۴:۵ که تصویر در آن زوم می‌کند؛ بدون تصویر، تگ‌های تخفیف/موجودی به‌جای روی عکس، لبهٔ بالای بدنه می‌نشینند.",
+                'en' => "['src' => …, 'alt' => …] — a 4:5 frame the image zooms inside; without an image the discount/stock tags ride the body’s top edge instead of over a photo.",
+            ]],
+            ['name' => 'price / compareAt / currency / decimals', 'type' => 'number / number / string / int', 'default' => '0 / null / null / 0', 'note' => [
+                'fa' => 'قیمت و قیمتِ قبل از تخفیف (خط می‌خورد و درصدِ پس‌انداز از خود همین دو حساب می‌شود)، واحد پول (متن آزاد مثل «تومان») و ارقام اعشار — همه با ارقام زبان صفحه.',
+                'en' => 'The price and the pre-discount one (crossed out, its whole-percent saving computed from the pair), the currency (free text like “toman”) and the fraction digits — all in the page’s own digits.',
+            ]],
+            ['name' => 'rating / ratingCount', 'type' => 'number / int', 'default' => 'null', 'note' => [
+                'fa' => 'امتیاز ۰ تا ۵ — ستاره‌ها تا کسر آن پر می‌شوند و برای صفحه‌خوان «X از ۵» خوانده می‌شود؛ ratingCount شمار نظرها با واژهٔ خود زبان.',
+                'en' => 'A 0–5 rating — the stars fill to its fraction and screen readers get “X of 5”; ratingCount tallies the reviews in the reader’s own word.',
+            ]],
+            ['name' => 'stock / stockCount', 'type' => 'string / int', 'default' => 'null', 'note' => [
+                'fa' => 'in | low | out — «موجود»، «فقط N عدد مانده» (نشان نفس‌کش) و «ناموجود» که دکمه را ازکار می‌اندازد؛ stockCount فقط با low معنا دارد.',
+                'en' => 'in | low | out — in stock, “only N left” (a breathing badge) and out, which disables the button; stockCount only matters for low.',
+            ]],
+            ['name' => 'inCart / addAction / removeAction', 'type' => 'bool / string', 'default' => 'false / null / null', 'note' => [
+                'fa' => 'in-cart مرجع حقیقت از بیرون است؛ بدون اکشن‌ها همه‌چیز سمت مرورگر می‌ماند و رویدادهای nx-add / nx-remove (با title و price) حباب می‌کنند. با add-action="addToCart" متد لایووایر شما پس از چرخش خوش‌بینانه با (title, price) صدا زده می‌شود و دکمه تا پایان رفت‌وبرگشت درنگ می‌کند.',
+                'en' => 'in-cart is the truth from outside; without the actions everything stays client-side and the nx-add / nx-remove events (carrying title and price) bubble. With add-action="addToCart" your Livewire method fires after the optimistic flip with (title, price), the button holding still for the round-trip.',
+            ]],
+            ['name' => 'labels / locale', 'type' => 'array / string', 'default' => '[] / زبان اپ', 'note' => [
+                'fa' => 'بازنویسی واژه‌های داخلی (افزودن/اضافه شد/حذف/موجودی‌ها با جای‌نشین {count} و {value}) و زبان ارقام و واژه‌ها — واژه‌های پیش‌فرض از i18n هسته (fa/en/ar).',
+                'en' => 'Overrides for the built-in words (add/added/remove and the stock states with {count} and {value} placeholders) and the digits-and-words locale — defaults come from the core i18n table (fa/en/ar).',
+            ]],
+        ],
+        'code' => <<<'BLADE'
+        <x-nx::product-card title="هدفون بی‌سیم نابو B2" category="صدا" href="#"
+            :image="['src' => $photo, 'alt' => 'هدفون نابو B2، نمای روبه‌رو']"
+            :price="4850000" :compareAt="6900000" currency="تومان"
+            :rating="4.5" :ratingCount="1284" stock="in" />
+
+        {{-- کم‌موجود: نشانِ نفس‌کش با تعدادِ مانده می‌سازد --}}
+        <x-nx::product-card title="اسپیکر کتابی نابو Mini" :price="2190000" currency="تومان"
+            stock="low" :stockCount="2" />
+
+        {{-- متصل به لایووایر: متد شما پس از چرخش خوش‌بینانه صدا زده می‌شود --}}
+        <x-nx::product-card title="پایهٔ شارژ بی‌سیم نابو" :price="890000" currency="تومان"
+            add-action="addToCart" remove-action="removeFromCart" />
+
+            {{-- بدون اتصال: رویدادها را خودتان می‌گیرید --}}
+        <x-nx::product-card :price="149000" currency="تومان" title="کابل تخت نابو"
+            x-on:nx-add="$wire.ping('به سبد اضافه شد')" />
+        BLADE,
+    ],
+
+    'order-tracking' => [
+        'title' => ['fa' => 'رهگیری سفارش', 'en' => 'Order tracking'],
+        'icon' => 'zap',
+        'oneLiner' => [
+            'fa' => 'مسیر سفارش به‌صورت یک خط افقی که تا گام جاری پر می‌شود (نشانگر پینگ‌زن در حین حرکت)، گزارش رویدادها با دوخت رنگی زیرش و وضعیت زنده روی نشان — با wire:poll بدون کلیک تازه می‌شود.',
+            'en' => 'Where an order is and how it got there: a horizontal route that fills up to the current step (a pinging marker while it travels), a tone-stitched event log beneath, and the live status on a badge — refreshes itself under wire:poll.',
+        ],
+        'js' => true,
+        'props' => [
+            ['name' => 'steps', 'type' => 'array', 'default' => '[]', 'note' => [
+                'fa' => 'کلیدهای هر گام: id، title، description، icon، time (تاریخ → زمان نسبی، یا برچسب) و state (complete | current | upcoming) که بر current مقدم است.',
+                'en' => 'Step keys: id, title, description, icon, time (a date → relative time, or a plain label) and state (complete | current | upcoming), which wins over current.',
+            ]],
+            ['name' => 'current', 'type' => 'string | int', 'default' => 'null', 'note' => [
+                'fa' => 'شناسه یا اندیس گام جاری؛ گام‌های قبلش کامل و بعدش در انتظار خوانده می‌شوند.',
+                'en' => 'The current step’s id or index; the steps before it read as complete, the ones after as upcoming.',
+            ]],
+            ['name' => 'events', 'type' => 'array', 'default' => '[]', 'note' => [
+                'fa' => 'کلیدها: id، title، description، place، tone (success | warning | info | danger)، icon و time؛ خالی باشد، خود بلوک خبر می‌دهد.',
+                'en' => 'Keys: id, title, description, place, tone (success | warning | info | danger), icon, time; empty and the block says so itself.',
+            ]],
+            ['name' => 'status / statusLabel / live', 'type' => 'string / string / bool', 'default' => 'null / null / true', 'note' => [
+                'fa' => 'وضعیت روی status-badge: running | success | failed | queued | canceled؛ متن دلخواه و این‌که نقطهٔ وضعیت نفس بکشد.',
+                'en' => 'The status on the badge: running | success | failed | queued | canceled; a custom label and whether its dot breathes.',
+            ]],
+            ['name' => 'number / carrier / eta', 'type' => 'string', 'default' => 'null', 'note' => [
+                'fa' => 'شمارهٔ سفارش (عدد باشد با ارقام همان زبان قالب‌بندی می‌شود)، شرکت حمل و تحویل تخمینی در سربرگ.',
+                'en' => 'The order number (numeric ones get locale digits), the carrier and the expected delivery in the header.',
+            ]],
+            ['name' => 'label / labels / locale', 'type' => 'string / array / string', 'default' => 'null / [] / null', 'note' => [
+                'fa' => 'نام دسترس‌پذیر کارت، بازنویسی واژه‌های خود بلوک و locale ارقام و تاریخ‌ها.',
+                'en' => 'The card’s accessible name, overrides for the block’s own words, and the locale for digits and dates.',
+            ]],
+            ['name' => 'wire:poll و x-on:*', 'type' => 'attribute', 'default' => '—', 'note' => [
+                'fa' => 'هر attribute سیمی/رویدادی به ریشه می‌رسد — wire:poll.30s="checkOrder" کل بلوک را با state تازه سرور مورف می‌کند.',
+                'en' => 'Any wire/event attribute lands on the root — wire:poll.30s="checkOrder" morphs the whole block into its fresh server state.',
+            ]],
+        ],
+        'code' => <<<'BLADE'
+        <x-nx::order-tracking number="۱۴۰۴-۰۸۲۱۵" status="running" carrier="پست ایران" eta="۲ روز دیگر"
+            :steps="[
+                ['id' => 'placed', 'title' => 'ثبت سفارش', 'icon' => 'file', 'time' => now()->subDays(2)],
+                ['id' => 'transit', 'title' => 'در مسیر', 'icon' => 'zap'],
+                ['id' => 'done', 'title' => 'تحویل شد', 'icon' => 'home'],
+            ]"
+            current="transit"
+            :events="[['title' => 'بسته از مرکز توزیع خارج شد', 'place' => 'قم', 'time' => now()->subHours(2), 'tone' => 'success']]" />
+        BLADE,
+    ],
+
+    'profile-card' => [
+        'title' => ['fa' => 'کارت پروفایل', 'en' => 'Profile card'],
+        'icon' => 'user',
+        'oneLiner' => [
+            'fa' => 'پروفایل روی کاور گرادیانی: آواتار روی درز کاور می‌نشیند، آمارها ارقام‌شان را می‌غلتانند، دکمهٔ دنبال‌کردن با تعویض آیکون و کراس‌فید برچسب بین دو حالت مورف می‌شود و تب‌های کوچک نشانگر فنری می‌آورند.',
+            'en' => 'A profile over a gradient cover: the avatar rides the cover/body seam, the stats roll their digits, the follow button morphs between its two states (icon swap + label crossfade) and the small tabs carry a springing indicator.',
+        ],
+        'js' => true,
+        'props' => [
+            ['name' => 'name / href', 'type' => 'string', 'default' => 'required / null', 'note' => [
+                'fa' => 'نام پروفایل — حرف‌های اولش آواتارِ بدون عکس را می‌سازند؛ با href نام به مقصد لینک می‌شود.',
+                'en' => 'The profile’s name — its first letters become the photo-less avatar; with href the name becomes a link.',
+            ]],
+            ['name' => 'role / handle', 'type' => 'string', 'default' => 'null', 'note' => [
+                'fa' => 'نقش زیر نام و هندل مونو (@…) کنار آن.',
+                'en' => 'The role under the name and the mono @handle beside it.',
+            ]],
+            ['name' => 'avatar / cover', 'type' => 'array', 'default' => 'null', 'note' => [
+                'fa' => "['src' => …, 'alt' => …]: عکس آواتار روی درز کاور و بدنه می‌نشیند و عکسِ کاور روی گرادیان برند می‌افتد؛ اگر عکس آواتار لود نشود، حرف‌های اول نام می‌آیند.",
+                'en' => "['src' => …, 'alt' => …]: the avatar photo rides the cover/body seam and the cover photo sits over the brand gradient; a failed avatar image falls back to the name’s initials.",
+            ]],
+            ['name' => 'status / verified', 'type' => 'string / bool', 'default' => 'null / false', 'note' => [
+                'fa' => 'نقطهٔ حضور روی لبهٔ آواتار (online | busy | away — فقط «آنلاین» نفس می‌کشد) و مهر طلایی تأیید کنار نام.',
+                'en' => 'The presence dot on the avatar’s rim (online | busy | away — only “online” breathes) and the gold verified seal beside the name.',
+            ]],
+            ['name' => 'stats / followersStat', 'type' => 'array / int', 'default' => '[] / null', 'note' => [
+                'fa' => 'ردیف‌های [\'label\' => …, \'value\' => …] با ارقام خود صفحه؛ followersStat اندیسِ آمارِ دنبال‌کننده است که با دکمه ±۱ می‌غلتد تا عددِ خود سرور برسد.',
+                'en' => 'Rows of [\'label\' => …, \'value\' => …] in the page’s own digits; followersStat is the index of the follower figure that rolls ±1 with the button until the server’s number lands.',
+            ]],
+            ['name' => 'following / followAction / unfollowAction', 'type' => 'bool / string', 'default' => 'false / null', 'note' => [
+                'fa' => 'دکمه از حالت دنبال‌شده شروع می‌کند (حقیقت، رندر سرور است)؛ با نام متد لایووایر، پس از چرخش خوش‌بینانه صدا زده می‌شود و دکمه تا رفت‌وبرگشت درنگ می‌کند؛ بدون آن‌ها رویداد nx-follow / nx-unfollow حباب می‌کند.',
+                'en' => 'The button starts in its followed state (the server’s render is the truth); naming a Livewire method calls it after the optimistic flip while the button waits the round-trip out — without them the nx-follow / nx-unfollow events bubble.',
+            ]],
+            ['name' => 'messageHref / messageAction', 'type' => 'string', 'default' => 'null', 'note' => [
+                'fa' => 'دکمهٔ پیام: با message-href یک لینک می‌شود، با message-action متد لایووایر صدا زده می‌شود؛ بدون هر دو رویداد nx-message.',
+                'en' => 'The message button: message-href turns it into a link, message-action calls a Livewire method; without either, the nx-message event.',
+            ]],
+            ['name' => 'tabs / tab / labels', 'type' => 'array / string / array', 'default' => '[] / null / []', 'note' => [
+                'fa' => "تب‌ها به‌شکل ['about' => 'درباره'] با اسلاتی هم‌نام هر کلید؛ تب نخست باز است و نشانگر فنری روی انتخاب می‌لغزد؛ labels واژه‌های خود کارت و locale ارقام و اعلام‌ها را بازنویسی می‌کند.",
+                'en' => "Tabs as ['about' => 'About'] with a slot named after each key; the first tab opens and a springing indicator slides onto the choice; labels overrides the card’s own words and locale the digits and announcements.",
+            ]],
+        ],
+        'code' => <<<'BLADE'
+        <x-nx::profile-card name="نگار رستمی" role="نویسنده و مدرس تایپوگرافی فارسی" handle="@negar-types"
+            href="#" status="online" verified
+            :avatar="['src' => $avatar, 'alt' => '']" :cover="['src' => $cover, 'alt' => '']"
+            :stats="[
+                ['label' => 'دنبال‌کننده', 'value' => 12840],
+                ['label' => 'دنبال‌شده', 'value' => 812],
+                ['label' => 'نوشته', 'value' => 146],
+            ]"
+            :followers-stat="0" :tabs="['about' => 'درباره', 'activity' => 'فعالیت']"
+            x-on:nx-follow="$wire.ping('دنبال شد')" x-on:nx-unfollow="$wire.ping('لغو شد')">
+            <x-slot:about><p>…زندگی‌نامه…</p></x-slot:about>
+            <x-slot:activity><ul>…کارهای تازه…</ul></x-slot:activity>
+        </x-nx::profile-card>
+        BLADE,
+    ],
+
+    'wizard' => [
+        'title' => ['fa' => 'فرم چندگامی (ویزارد)', 'en' => 'Wizard'],
+        'icon' => 'check-circle',
+        'oneLiner' => [
+            'fa' => 'پوستهٔ فرم چندگامی: نوار پیشرفت، گام‌های تمام‌شده که می‌توان به آن‌ها بازپرید، پن‌هایی که می‌لغزند و ارتفاع کارت مورف می‌شود، اعتبارسنجیِ خودِ فرم در هر گام (لرزش + خطا + فوکوس) و پن بازبینی که پاسخ‌ها را از خودِ کنترل‌ها می‌خواند.',
+            'en' => 'A multi-step form shell: a progress bar, completed steps you can jump back to, panes that glide while the card’s height morphs, the form’s own validation on every hop (shake, error, focus) and a review pane that reads the answers back from the controls.',
+        ],
+        'js' => true,
+        'props' => [
+            ['name' => 'steps', 'type' => 'array', 'default' => '[]', 'note' => [
+                'fa' => 'هر گام: [\'id\' => …, \'title\' => …, \'description\' => …]؛ فیلدهای هر گام در اسلاتی به نام step + StudlyCase شناسه‌اش می‌نشیند (stepAccount برای id account) و وقتی id ندارد، step1، step2 و…',
+                'en' => 'Each step: [\'id\' => …, \'title\' => …, \'description\' => …]; its fields go in the slot named step + the StudlyCase of its id (stepAccount for id account), or step1, step2, … when it has none.',
+            ]],
+            ['name' => 'review', 'type' => 'bool', 'default' => 'true', 'note' => [
+                'fa' => 'پن بازبینی پایانی با دکمهٔ ویرایش هر گام؛ با false آخرین گام خودش دکمهٔ ثبت می‌شود.',
+                'en' => 'The final review pane with a per-step edit button; with false the last step carries the submit itself.',
+            ]],
+            ['name' => 'step', 'type' => 'int', 'default' => '0', 'note' => [
+                'fa' => 'گام آغازین؛ برای ادامهٔ فرم نیمه‌کاره — گام‌های پیشین «تمام‌شده» رندر می‌شوند و دکمهٔ بازگشت‌شان فعال است.',
+                'en' => 'The opening step; for resuming a draft — the steps before it render as completed with their jump-back buttons live.',
+            ]],
+            ['name' => 'labels / locale', 'type' => 'array / string', 'default' => '[] / null', 'note' => [
+                'fa' => 'بازنویسی واژه‌های خود ویزارد برای همین نمونه (review، submit، progress، of، announce، invalid، edit، editStep، empty، yes، back، next) و زبان ارقام و اعلام‌ها؛ پیش‌فرض‌ها از i18n هسته می‌آیند.',
+                'en' => 'Override the wizard’s own words for one instance (review, submit, progress, of, announce, invalid, edit, editStep, empty, yes, back, next) and the locale of its digits and announcements; the defaults come from the core i18n.',
+            ]],
+            ['name' => 'wire:submit / action', 'type' => '—', 'default' => 'null', 'note' => [
+                'fa' => 'ریشه یک <form> ساده است و اتریبیوت‌ها روی آن می‌نشینند؛ «بعدی» تا گذشتن گامِ جلو از اعتبارسنجی خود فرم رد نمی‌شود و ثبت نهایی همهٔ پن‌ها را فعال می‌کند تا هیچ پاسخی گم نشود — ورودی‌های wire:model داخل پن‌ها کار می‌کنند.',
+                'en' => 'The root is a plain <form> and attributes land on it; “next” is refused until the step in view passes the form’s own validation, and the final submit re-enables every pane first so no answer is dropped — wire:model inputs work inside the panes.',
+            ]],
+            ['name' => 'رویدادها / data-nx-summary', 'type' => '—', 'default' => '—', 'note' => [
+                'fa' => 'nx-step-change با هر پرش (همراه اندیس گام) و nx-submit درست پیش از ارسال حباب می‌کند؛ data-nx-summary روی هر کنترل پرسشِ همان ردیف را در بازبینی می‌دهد (off آن را از فهرست بیرون می‌گذارد).',
+                'en' => 'nx-step-change bubbles on every hop (carrying the step index) and nx-submit just before the form goes out; data-nx-summary on a control names its row in the review (off leaves it out).',
+            ]],
+        ],
+        'code' => <<<'BLADE'
+        <x-nx::wizard heading="ساخت فضای کاری" subtitle="سه گام و آماده"
+            :steps="[
+                ['id' => 'identity', 'title' => 'هویت', 'description' => 'نام و زمینهٔ کار'],
+                ['id' => 'team', 'title' => 'همکاران', 'description' => 'دعوت و نقش‌ها'],
+            ]"
+            wire:submit="save('فضای کاری ساخته شد')">
+            <x-slot:stepIdentity>
+                <x-nx::input name="wz-name" label="نام فضای کاری" required data-nx-summary="نام فضای کاری" />
+            </x-slot:stepIdentity>
+            <x-slot:stepTeam><!-- …فیلدهای گام دوم… --></x-slot:stepTeam>
+        </x-nx::wizard>
+        BLADE,
+    ],
 ];

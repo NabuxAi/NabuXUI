@@ -20,6 +20,15 @@
     box-sizing: border-box;
   }
 
+  /* Alpine's convention: x-cloak hides pre-init markup (hidden panels, the
+     "nothing selected" ghost) until Alpine strips the attribute, so the page
+     neither flashes nor exposes it to assistive tech with JS off. !important
+     rides above this layer: an unlayered app display rule would otherwise win
+     against a layered normal-priority declaration. */
+  [x-cloak] {
+    display: none !important;
+  }
+
   /* Persian and Arabic read best when Vazirmatn also sets the Latin punctuation around them. */
   :where(:lang(fa), :lang(ar), :lang(ur)) {
     --nx-font-sans: "Vazirmatn", "Inter", ui-sans-serif, system-ui, sans-serif;

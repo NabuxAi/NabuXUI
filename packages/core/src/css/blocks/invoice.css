@@ -288,6 +288,14 @@
     .nx-invoice-total { min-inline-size: 100%; }
   }
 
+  /* Under reduced motion the sections land together and the figures settle on
+     their values — the same terms as paper below. */
+  @media (prefers-reduced-motion: reduce) {
+    .nx-invoice [data-nx-reveal],
+    .nx-invoice [data-nx-reveal] > * { transition-delay: 0ms; }
+    .nx-invoice .nx-digit-track { transition: none; }
+  }
+
   /* ---- Paper: no chrome, no motion, digits settled ---------------------------- */
   @media print {
     .nx-invoice {
