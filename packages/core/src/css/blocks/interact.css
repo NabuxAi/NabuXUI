@@ -1,3 +1,1328 @@
-/* Interaction blocks — see docs/BLOCKS.md. */
+/*
+ * Blocks: interaction.
+ *
+ *   Hold to confirm      a destructive button that fills (bar or ring) while held; early release drains it
+ *   Slide to confirm     a thumb dragged along a track; the label fades with progress; springs home if short
+ *   Inline edit          text that becomes an input in place; the width morphs; saving / error states
+ *   Odometer             a number whose digits roll in masked columns, up or down the wheel
+ *   Undo snackbar        a stack of "Deleted · Undo" bars with a draining timer that pauses on hover/focus
+ *   Sortable list        drag by the handle (siblings step aside, FLIP on drop) or reorder from the keyboard
+ *   Lightbox             thumbnails that grow into a full-screen viewer; zoom, pan, swipe, captions
+ *   Compare slider       before/after images split by a divider driven by a native range
+ *   Swipe actions        a row that slides aside to reveal actions; a full swipe fires the primary one
+ *   Password strength    a segmented meter, a rule checklist that ticks off, and a show/hide toggle
+ *
+ * Behaviour: js/blocks/interact.ts. Press feedback is the shared 0.96 on
+ * :active; [data-static] switches it off.
+ */
 @layer nx.components {
+  :is(.nx-hold, .nx-slide-confirm-thumb, .nx-snackbar-undo, .nx-swipe-action, .nx-lightbox-thumb, .nx-inline-edit-display):active:not(:disabled, [aria-disabled="true"], [data-static]) {
+    scale: calc(1 - 0.04 * var(--nx-motion));
+  }
+
+  /* The contextual icon swap: both icons stay in the DOM, one blurs out as the other arrives. */
+  :is(.nx-hold-icon, .nx-slide-confirm-icon, .nx-password-toggle, .nx-password-tick) {
+    display: inline-grid;
+    place-items: center;
+
+    > * {
+      grid-area: 1 / 1;
+      display: inline-grid;
+      transition-property: scale, opacity, filter;
+      transition-duration: 300ms;
+      transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+    }
+
+    > [data-off] {
+      opacity: 0;
+      scale: calc(1 - 0.75 * var(--nx-motion));
+      filter: blur(4px);
+    }
+  }
+
+  /* ---- Hold to confirm ------------------------------------------------------- *
+   *   <button class="nx-hold" data-variant="bar|ring" data-tone="danger|accent" data-state="idle|holding|done"
+   *           aria-describedby="hint">
+   *     <span class="nx-hold-fill" aria-hidden="true"></span>                     (bar)
+   *     <span class="nx-hold-icon" aria-hidden="true">
+   *       <svg class="nx-hold-ring">…<circle class="nx-hold-ring-bar" pathLength="1"/></svg>  (ring)
+   *       <span>trash</span><span data-off>check</span>
+   *     </span>
+   *     <span class="nx-hold-label"><span>Hold to delete</span><span data-off aria-hidden="true">Deleted</span></span>
+   *   </button>
+   * --_p (0–1) is written every frame while held, and drains on early release.
+   * ------------------------------------------------------------------------- */
+  .nx-hold {
+    --_tone: var(--nx-danger);
+    --_tone-text: var(--nx-danger-text);
+    --_tone-soft: var(--nx-danger-soft);
+    --_h: 2.75rem;
+    --_radius: var(--nx-radius-md);
+
+    position: relative;
+    isolation: isolate;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-space-2);
+    min-block-size: var(--_h);
+    padding-inline: 1.1rem;
+    overflow: clip;
+    border: 1px solid color-mix(in oklab, var(--_tone) 35%, var(--nx-border));
+    border-radius: var(--_radius);
+    background: var(--nx-surface);
+    color: var(--_tone-text);
+    font: 600 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: var(--nx-shadow-xs);
+    transition-property: scale, background-color, border-color, color;
+    transition-duration: var(--nx-spring-snappy-duration), var(--nx-dur-base), var(--nx-dur-base), var(--nx-dur-base);
+    transition-timing-function: var(--nx-spring-snappy), var(--nx-ease-out), var(--nx-ease-out), var(--nx-ease-out);
+
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+    &:is(:disabled, [aria-disabled="true"]) { cursor: not-allowed; opacity: 0.5; }
+
+    &[data-tone="accent"] { --_tone: var(--nx-accent); --_tone-text: var(--nx-accent-text); --_tone-soft: var(--nx-accent-soft); }
+    &[data-tone="warning"] { --_tone: var(--nx-warning); --_tone-text: var(--nx-warning-text); --_tone-soft: var(--nx-warning-soft); }
+    &[data-size="sm"] { --_h: 2.25rem; --_radius: var(--nx-radius-sm); padding-inline: 0.85rem; }
+    &[data-size="lg"] { --_h: 3.25rem; --_radius: var(--nx-radius-lg); padding-inline: 1.4rem; font-size: var(--nx-text-md); }
+
+    /* Held from the keyboard there is no :active, so the press shows here too. */
+    &[data-state="holding"]:not([data-static]) { scale: calc(1 - 0.03 * var(--nx-motion)); }
+
+    &[data-state="done"] {
+      --_tone: var(--nx-success);
+      --_tone-text: var(--nx-success-text);
+      --_tone-soft: var(--nx-success-soft);
+      background: var(--nx-success-soft);
+    }
+
+    &[data-state="done"] :is(.nx-hold-icon, .nx-hold-label) > :not([data-off]) {
+      opacity: 0;
+      scale: calc(1 - 0.75 * var(--nx-motion));
+      filter: blur(4px);
+    }
+    &[data-state="done"] :is(.nx-hold-icon, .nx-hold-label) > [data-off] { opacity: 1; scale: 1; filter: none; }
+  }
+
+  .nx-hold-fill {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: color-mix(in oklab, var(--_tone) 20%, transparent);
+    transform-origin: left center;
+    scale: var(--_p) 1;
+
+    &:dir(rtl) { transform-origin: right center; }
+  }
+
+  .nx-hold[data-state="done"] .nx-hold-fill { scale: 1; background: transparent; }
+
+  .nx-hold-label {
+    display: inline-grid;
+
+    > * {
+      grid-area: 1 / 1;
+      transition-property: scale, opacity, filter;
+      transition-duration: 300ms;
+      transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+    }
+    > [data-off] { opacity: 0; filter: blur(4px); scale: calc(1 - 0.08 * var(--nx-motion)); }
+  }
+
+  .nx-hold-icon {
+    position: relative;
+    inline-size: 1.25rem;
+    block-size: 1.25rem;
+
+    .nx-icon { inline-size: 1.05rem; block-size: 1.05rem; }
+  }
+
+  /* Ring: the progress runs around the icon instead of across the button. */
+  .nx-hold-ring {
+    position: absolute;
+    inset: -0.3rem;
+    inline-size: calc(100% + 0.6rem);
+    block-size: calc(100% + 0.6rem);
+    rotate: -90deg;
+    fill: none;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    pointer-events: none;
+
+    circle { stroke: color-mix(in oklab, var(--_tone) 18%, transparent); }
+    .nx-hold-ring-bar {
+      stroke: var(--_tone);
+      stroke-dasharray: 1;
+      stroke-dashoffset: calc(1 - var(--_p));
+    }
+  }
+
+  .nx-hold:not([data-variant="ring"]) .nx-hold-ring { display: none; }
+  .nx-hold[data-variant="ring"] .nx-hold-fill { display: none; }
+  .nx-hold[data-variant="ring"] .nx-hold-icon { margin-inline-end: 0.2rem; }
+  .nx-hold[data-state="done"] .nx-hold-ring { opacity: 0; transition: opacity var(--nx-dur-base) var(--nx-ease-out); }
+
+  /* ---- Slide to confirm ------------------------------------------------------ *
+   *   <div class="nx-slide-confirm" data-tone="accent|danger|success" data-state="idle|dragging|done">
+   *     <span class="nx-slide-confirm-fill" aria-hidden="true"></span>
+   *     <span class="nx-slide-confirm-label" aria-hidden="true"><span>Slide to pay</span><span data-off>Paid</span></span>
+   *     <button class="nx-slide-confirm-thumb" role="slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+   *       <span class="nx-slide-confirm-icon">…arrow…<span data-off>…check…</span></span>
+   *     </button>
+   *   </div>
+   * --_x is the thumb's travel along the inline axis (px), --_p its fraction.
+   * ------------------------------------------------------------------------- */
+  .nx-slide-confirm {
+    --_tone: var(--nx-accent);
+    --_tone-contrast: var(--nx-accent-contrast);
+    --_pad: 0.3rem;
+    --_thumb: 2.9rem;
+    --_radius: var(--nx-radius-full);
+
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    align-items: center;
+    inline-size: 100%;
+    max-inline-size: 22rem;
+    block-size: calc(var(--_thumb) + var(--_pad) * 2);
+    padding-inline: var(--_pad);
+    overflow: clip;
+    border-radius: var(--_radius);
+    background: var(--nx-surface-2);
+    box-shadow: inset 0 0 0 1px var(--nx-border), inset 0 1px 2px color-mix(in oklab, var(--nx-text) 8%, transparent);
+    user-select: none;
+    -webkit-user-select: none;
+
+    &[data-tone="danger"] { --_tone: var(--nx-danger); --_tone-contrast: var(--nx-accent-contrast); }
+    &[data-tone="success"] { --_tone: var(--nx-success); --_tone-contrast: var(--nx-accent-contrast); }
+    &[data-state="done"] { --_tone: var(--nx-success); }
+    &[aria-disabled="true"] { opacity: 0.5; }
+  }
+
+  .nx-slide-confirm-fill {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    z-index: -1;
+    inline-size: calc(var(--_x, 0px) + var(--_thumb) + var(--_pad) * 2);
+    border-radius: inherit;
+    background: color-mix(in oklab, var(--_tone) calc(10% + 18% * var(--_p)), transparent);
+    transition:
+      inline-size var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy),
+      background-color var(--nx-dur-base) var(--nx-ease-out);
+  }
+
+  .nx-slide-confirm-label {
+    grid-area: 1 / 1;
+    display: grid;
+    place-items: center;
+    padding-inline: calc(var(--_thumb) + var(--nx-space-3));
+    color: var(--nx-text-muted);
+    font: 600 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    white-space: nowrap;
+    pointer-events: none;
+
+    > * {
+      grid-area: 1 / 1;
+      transition-property: opacity, translate, filter;
+      transition-duration: 300ms;
+      transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+    }
+
+    /* The idle label fades and drifts with the thumb; a sheen runs through it. */
+    > :not([data-off]) {
+      opacity: calc(1 - var(--_p) * 1.8);
+      translate: calc(var(--_p) * 18px * var(--nx-dir) * var(--nx-motion)) 0;
+      background: linear-gradient(90deg, var(--nx-text-muted) 0 40%, var(--nx-text) 50%, var(--nx-text-muted) 60% 100%) 0 0 / 250% 100%;
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      animation: nx-slide-sheen 2.6s linear infinite;
+    }
+
+    > [data-off] { opacity: 0; color: var(--nx-success-text); translate: 0 calc(6px * var(--nx-motion)); }
+  }
+
+  .nx-slide-confirm[data-state="dragging"] .nx-slide-confirm-label > :not([data-off]),
+  .nx-slide-confirm[data-dragging] .nx-slide-confirm-label > :not([data-off]) { transition-duration: 0ms; }
+
+  .nx-slide-confirm[data-state="done"] .nx-slide-confirm-label {
+    > :not([data-off]) { opacity: 0; }
+    > [data-off] { opacity: 1; translate: 0; }
+  }
+
+  @keyframes nx-slide-sheen { from { background-position: 100% 0; } to { background-position: -50% 0; } }
+
+  .nx-slide-confirm-thumb {
+    grid-area: 1 / 1;
+    justify-self: start;
+    display: grid;
+    place-items: center;
+    inline-size: var(--_thumb);
+    block-size: var(--_thumb);
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: calc(var(--_radius) - var(--_pad));
+    background: var(--_tone);
+    color: var(--_tone-contrast);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), 0 1px 2px rgb(0 0 0 / 0.14), 0 6px 16px -6px color-mix(in oklab, var(--_tone) 70%, transparent);
+    cursor: grab;
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+    translate: calc(var(--_x, 0px) * var(--nx-dir)) 0;
+    transition-property: translate, scale, background-color;
+    transition-duration: var(--nx-spring-bouncy-duration), var(--nx-spring-snappy-duration), var(--nx-dur-base);
+    transition-timing-function: var(--nx-spring-bouncy), var(--nx-spring-snappy), var(--nx-ease-out);
+
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+    &[aria-disabled="true"] { cursor: default; }
+    .nx-icon { inline-size: 1.2rem; block-size: 1.2rem; }
+  }
+
+  .nx-slide-confirm[data-dragging] {
+    .nx-slide-confirm-thumb { cursor: grabbing; transition-duration: 0ms, var(--nx-spring-snappy-duration), var(--nx-dur-base); }
+    .nx-slide-confirm-fill { transition-duration: 0ms, var(--nx-dur-base); }
+  }
+
+  .nx-slide-confirm[data-state="done"] .nx-slide-confirm-icon {
+    > :not([data-off]) { opacity: 0; scale: calc(1 - 0.75 * var(--nx-motion)); filter: blur(4px); }
+    > [data-off] { opacity: 1; scale: 1; filter: none; }
+  }
+
+  /* ---- Inline edit ----------------------------------------------------------- *
+   *   <div class="nx-inline-edit" data-state="idle|editing|saving|error">
+   *     <button class="nx-inline-edit-display" type="button"><span class="nx-inline-edit-text">Q3 roadmap</span>
+   *       <span class="nx-inline-edit-pen" aria-hidden="true">✎</span></button>
+   *     <span class="nx-inline-edit-field">
+   *       <span class="nx-inline-edit-sizer" aria-hidden="true">Q3 roadmap</span>
+   *       <input class="nx-inline-edit-input" aria-label="…">
+   *     </span>
+   *     <span class="nx-inline-edit-status" aria-live="polite">…spinner or the error…</span>
+   *   </div>
+   * The sizer and the input share one grid cell, so the field is as wide as
+   * its text; the switch between display and field morphs the width (JS).
+   * ------------------------------------------------------------------------- */
+  .nx-inline-edit {
+    --_pad-x: 0.4rem;
+    --_radius: var(--nx-radius-sm);
+
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    max-inline-size: 100%;
+    vertical-align: middle;
+    font: inherit;
+    color: inherit;
+
+    &[data-size="lg"] { font-size: var(--nx-text-xl); font-weight: 650; }
+  }
+
+  .nx-inline-edit-display {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+    margin: 0;
+    margin-inline: calc(var(--_pad-x) * -1);
+    padding: 0.15em var(--_pad-x);
+    border: 0;
+    border-radius: var(--_radius);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    cursor: text;
+    transition-property: background-color, scale;
+    transition-duration: var(--nx-dur-fast), var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-ease-out), var(--nx-spring-snappy);
+
+    &:hover { background: var(--nx-surface-2); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+  }
+
+  .nx-inline-edit-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &[data-placeholder] { color: var(--nx-text-subtle); }
+  }
+
+  .nx-inline-edit-pen {
+    display: inline-flex;
+    color: var(--nx-text-subtle);
+    opacity: 0.55;
+    transition: opacity var(--nx-dur-fast) var(--nx-ease-out);
+
+    .nx-icon { inline-size: 0.85em; block-size: 0.85em; }
+  }
+
+  .nx-inline-edit-display:is(:hover, :focus-visible) .nx-inline-edit-pen { opacity: 1; }
+
+  .nx-inline-edit-field {
+    display: none;
+    grid-template-areas: "cell";
+    min-inline-size: 3ch;
+    max-inline-size: 100%;
+    margin-inline: calc(var(--_pad-x) * -1);
+  }
+
+  .nx-inline-edit:is([data-state="editing"], [data-state="saving"], [data-state="error"]) {
+    .nx-inline-edit-display { display: none; }
+    .nx-inline-edit-field { display: inline-grid; }
+  }
+
+  :is(.nx-inline-edit-sizer, .nx-inline-edit-input) {
+    grid-area: cell;
+    min-inline-size: 0;
+    padding: 0.15em var(--_pad-x);
+    font: inherit;
+    letter-spacing: inherit;
+    white-space: pre;
+  }
+
+  .nx-inline-edit-sizer {
+    visibility: hidden;
+    overflow: hidden;
+    /* Room for the caret after the last character. */
+    padding-inline-end: calc(var(--_pad-x) + 2px);
+  }
+
+  .nx-inline-edit-input {
+    inline-size: 100%;
+    margin: 0;
+    border: 0;
+    border-radius: var(--_radius);
+    background: var(--nx-surface);
+    color: inherit;
+    box-shadow: 0 0 0 1px var(--nx-accent-border), 0 0 0 4px var(--nx-accent-soft);
+    outline: none;
+    transition: box-shadow var(--nx-dur-base) var(--nx-ease-out);
+
+    &:read-only { color: var(--nx-text-muted); }
+  }
+
+  .nx-inline-edit[data-state="error"] .nx-inline-edit-input {
+    box-shadow: 0 0 0 1px var(--nx-danger), 0 0 0 4px var(--nx-danger-soft);
+    animation: nx-shake 400ms var(--nx-ease-out);
+  }
+
+  .nx-inline-edit-status {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-1);
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+    font-weight: 500;
+    white-space: nowrap;
+
+    &:empty { display: none; }
+    .nx-spinner { --_size: 0.95em; --_thickness: 2px; color: var(--nx-accent); }
+  }
+
+  .nx-inline-edit[data-state="idle"] .nx-inline-edit-status { display: none; }
+  .nx-inline-edit[data-state="error"] .nx-inline-edit-status { color: var(--nx-danger-text); animation: nx-rise var(--nx-dur-slow) var(--nx-ease-out); }
+  .nx-inline-edit[data-state="saved"] .nx-inline-edit-status { color: var(--nx-success-text); }
+
+  /* ---- Odometer -------------------------------------------------------------- *
+   *   <span class="nx-odometer">
+   *     <span class="nx-odometer-sr nx-visually-hidden">۱٬۲۸۴</span>
+   *     <span class="nx-odometer-roll" aria-hidden="true">
+   *       <span class="nx-odometer-col" data-kind="digit" [data-rolling]>
+   *         <span class="nx-odometer-strip"><span class="nx-odometer-cell">۷</span>…</span>
+   *       </span>
+   *     </span>
+   *   </span>
+   * Each rolling column stacks the characters it passes; the strip slides on a
+   * spring (WAAPI), and the mask softens the edges while it moves.
+   * ------------------------------------------------------------------------- */
+  .nx-odometer {
+    --_lh: 1.15em;
+
+    display: inline-flex;
+    font-variant-numeric: tabular-nums;
+    line-height: var(--_lh);
+    vertical-align: bottom;
+  }
+
+  .nx-odometer-roll {
+    display: inline-flex;
+    direction: ltr;
+    unicode-bidi: isolate;
+  }
+
+  .nx-odometer-col {
+    position: relative;
+    display: inline-block;
+    block-size: var(--_lh);
+    overflow: clip;
+    overflow-clip-margin: 0.1em;
+    text-align: center;
+
+    &[data-rolling] {
+      mask-image: linear-gradient(to bottom, transparent, black 24%, black 76%, transparent);
+    }
+  }
+
+  .nx-odometer-strip {
+    display: flex;
+    flex-direction: column;
+    will-change: transform;
+  }
+
+  .nx-odometer-cell {
+    display: block;
+    block-size: var(--_lh);
+    white-space: pre;
+
+    &:empty::before { content: "\200b"; }
+  }
+
+  /* ---- Undo snackbar --------------------------------------------------------- *
+   *   <section class="nx-snackbars" data-position="bottom-center|bottom-start|bottom-end" aria-label="…">
+   *     <ol class="nx-snackbar-list" aria-live="polite">
+   *       <li class="nx-snackbar" data-state="open|closing" [data-paused] style="--_duration: 6000ms">
+   *         <span class="nx-snackbar-icon">…</span>
+   *         <p class="nx-snackbar-message">Conversation archived</p>
+   *         <button class="nx-snackbar-undo">Undo</button>
+   *         <button class="nx-snackbar-close" aria-label="Dismiss">×</button>
+   *         <span class="nx-snackbar-timer" aria-hidden="true"><i></i></span>
+   *       </li>
+   * ------------------------------------------------------------------------- */
+  .nx-snackbars {
+    position: fixed;
+    inset-block: auto var(--nx-space-6);
+    inset-inline: 0;
+    block-size: auto;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    z-index: var(--nx-z-toast);
+    inline-size: min(100% - 2rem, 28rem);
+    margin-inline: auto;
+    pointer-events: none;
+
+    &[data-position="bottom-start"] { margin-inline: var(--nx-space-6) auto; }
+    &[data-position="bottom-end"] { margin-inline: auto var(--nx-space-6); }
+    &[data-position="inline"] { position: relative; inset: auto; z-index: auto; margin: 0; inline-size: 100%; }
+  }
+
+  .nx-snackbar-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--nx-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nx-snackbar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-3);
+    min-block-size: 3.25rem;
+    padding-block: 0.5rem;
+    padding-inline: 0.9rem 0.45rem;
+    overflow: clip;
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-surface-inverse);
+    color: var(--nx-text-inverse);
+    box-shadow: var(--nx-shadow-lg);
+    pointer-events: auto;
+    transition-property: opacity, translate, scale;
+    transition-duration: var(--nx-spring-gentle-duration);
+    transition-timing-function: var(--nx-spring-gentle);
+
+    @starting-style {
+      opacity: 0;
+      translate: 0 calc(16px * var(--nx-motion));
+      scale: calc(1 - 0.05 * var(--nx-motion));
+    }
+
+    &[data-state="closing"] {
+      opacity: 0;
+      translate: 0 calc(8px * var(--nx-motion));
+      transition-duration: 150ms;
+      transition-timing-function: var(--nx-ease-in);
+    }
+
+    /* Only the three newest stay on screen; older ones wait their turn. */
+    &:nth-last-child(n + 4) { display: none; }
+  }
+
+  .nx-snackbar-icon {
+    display: inline-flex;
+    flex: none;
+    color: color-mix(in oklab, var(--nx-text-inverse) 70%, transparent);
+
+    .nx-icon { inline-size: 1.1rem; block-size: 1.1rem; }
+  }
+
+  .nx-snackbar-message {
+    flex: 1;
+    min-inline-size: 0;
+    margin: 0;
+    font-size: var(--nx-text-sm);
+    font-weight: 500;
+    line-height: 1.4;
+  }
+
+  .nx-snackbar-undo {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 0.35rem;
+    min-block-size: 2.25rem;
+    padding-inline: 0.75rem;
+    border: 0;
+    border-radius: var(--nx-radius-md);
+    background: color-mix(in oklab, var(--nx-text-inverse) 12%, transparent);
+    color: inherit;
+    font: 650 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    cursor: pointer;
+    transition-property: background-color, scale;
+    transition-duration: var(--nx-dur-fast), var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-ease-out), var(--nx-spring-snappy);
+
+    &:hover { background: color-mix(in oklab, var(--nx-text-inverse) 20%, transparent); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+    svg { inline-size: 1rem; block-size: 1rem; }
+    svg:dir(rtl) { scale: -1 1; }
+  }
+
+  .nx-snackbar-close {
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--nx-radius-md);
+    background: transparent;
+    color: color-mix(in oklab, var(--nx-text-inverse) 65%, transparent);
+    cursor: pointer;
+
+    &:hover { color: var(--nx-text-inverse); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+    .nx-icon { inline-size: 1rem; block-size: 1rem; }
+  }
+
+  .nx-snackbar-timer {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    block-size: 2px;
+    background: color-mix(in oklab, var(--nx-text-inverse) 10%, transparent);
+
+    i {
+      display: block;
+      block-size: 100%;
+      background: color-mix(in oklab, var(--nx-text-inverse) 55%, transparent);
+      transform-origin: left center;
+      animation: nx-snackbar-drain var(--_duration, 6000ms) linear forwards;
+
+      &:dir(rtl) { transform-origin: right center; }
+    }
+  }
+
+  .nx-snackbar[data-paused] .nx-snackbar-timer i { animation-play-state: paused; }
+  @keyframes nx-snackbar-drain { to { scale: 0 1; } }
+
+  /* ---- Sortable list --------------------------------------------------------- *
+   *   <div class="nx-sortable" [data-sorting]>
+   *     <ol class="nx-sortable-list">
+   *       <li class="nx-sortable-item" data-nx-sort-key="a" [data-dragging] [data-grabbed]>
+   *         <button class="nx-sortable-handle" data-nx-sort-handle aria-pressed="false" aria-label="Reorder …">⋮⋮</button>
+   *         <div class="nx-sortable-body">…</div>
+   *       </li>
+   *     </ol>
+   *     <p class="nx-visually-hidden" id="…">instructions</p>
+   *     <span class="nx-visually-hidden" data-nx-sort-live aria-live="assertive"></span>
+   *   </div>
+   * The dragged item follows --_dy; the others step aside by --_shift.
+   * ------------------------------------------------------------------------- */
+  .nx-sortable { position: relative; }
+
+  .nx-sortable-list {
+    display: grid;
+    gap: var(--nx-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nx-sortable-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding: 0.55rem;
+    padding-inline-end: 0.9rem;
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-surface);
+    box-shadow: var(--nx-shadow-xs);
+    translate: 0 calc(var(--_shift, 0px) + var(--_dy, 0px));
+    transition-property: translate, scale, box-shadow, background-color;
+    transition-duration: var(--nx-spring-gentle-duration), var(--nx-spring-snappy-duration), var(--nx-dur-base), var(--nx-dur-fast);
+    transition-timing-function: var(--nx-spring-gentle), var(--nx-spring-snappy), var(--nx-ease-out), var(--nx-ease-out);
+
+    &[data-dragging] {
+      z-index: 2;
+      scale: calc(1 + 0.02 * var(--nx-motion));
+      box-shadow: var(--nx-shadow-lg), 0 0 0 1px var(--nx-accent-border);
+      transition-duration: 0ms, var(--nx-spring-snappy-duration), var(--nx-dur-base), var(--nx-dur-fast);
+    }
+
+    &[data-grabbed] {
+      z-index: 1;
+      background: color-mix(in oklab, var(--nx-accent-soft) 60%, var(--nx-surface));
+      box-shadow: var(--nx-shadow-md), 0 0 0 2px var(--nx-accent);
+    }
+  }
+
+  .nx-sortable[data-settling] .nx-sortable-item { transition: none; }
+
+  .nx-sortable-handle {
+    display: inline-grid;
+    flex: none;
+    place-items: center;
+    inline-size: 2rem;
+    block-size: 2.25rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--nx-radius-sm);
+    background: transparent;
+    color: var(--nx-text-subtle);
+    cursor: grab;
+    touch-action: none;
+    transition: color var(--nx-dur-fast) var(--nx-ease-out), background-color var(--nx-dur-fast) var(--nx-ease-out);
+
+    &:hover { color: var(--nx-text); background: var(--nx-surface-2); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+    &[aria-pressed="true"] { color: var(--nx-accent-text); background: var(--nx-accent-soft); }
+    svg { inline-size: 1.1rem; block-size: 1.1rem; }
+  }
+
+  .nx-sortable-item[data-dragging] .nx-sortable-handle { cursor: grabbing; }
+  .nx-sortable[data-sorting] { user-select: none; -webkit-user-select: none; }
+
+  .nx-sortable-body {
+    flex: 1;
+    min-inline-size: 0;
+  }
+
+  /* ---- Lightbox -------------------------------------------------------------- *
+   *   <div class="nx-lightbox-gallery">
+   *     <ul class="nx-lightbox-grid"><li><button class="nx-lightbox-thumb"><img …></button></li>…</ul>
+   *     <dialog class="nx-lightbox" aria-label="…">
+   *       <div class="nx-lightbox-bar"><span class="nx-lightbox-counter">3 / 12</span> …tools…</div>
+   *       <div class="nx-lightbox-stage" [data-zoomed] [data-gesture] data-nav="next|prev">
+   *         <img class="nx-lightbox-image" …>
+   *       </div>
+   *       <button class="nx-lightbox-nav" data-dir="prev|next">…</button>
+   *       <p class="nx-lightbox-caption">…</p>
+   *     </dialog>
+   *   </div>
+   * The viewer is always dark (ink), whatever the theme, so photos read true.
+   * ------------------------------------------------------------------------- */
+  .nx-lightbox-grid {
+    --_cols: 3;
+
+    display: grid;
+    grid-template-columns: repeat(var(--_cols), minmax(0, 1fr));
+    gap: var(--nx-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    > li { display: grid; }
+  }
+
+  .nx-lightbox-thumb {
+    display: block;
+    inline-size: 100%;
+    aspect-ratio: var(--_ratio, 4 / 3);
+    margin: 0;
+    padding: 0;
+    overflow: clip;
+    border: 0;
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-surface-2);
+    cursor: zoom-in;
+    transition: scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+
+    img {
+      display: block;
+      inline-size: 100%;
+      block-size: 100%;
+      object-fit: cover;
+      outline: 1px solid rgb(0 0 0 / 0.1);
+      outline-offset: -1px;
+      border-radius: inherit;
+      transition: scale var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .nx-lightbox-thumb:hover img { scale: calc(1 + 0.04 * var(--nx-motion)); }
+  }
+
+  html:has(.nx-lightbox[open]) { overflow: hidden; }
+
+  .nx-lightbox {
+    --_ink: var(--nx-ink-950);
+    --_fg: var(--nx-ink-50);
+
+    position: fixed;
+    inset: 0;
+    inline-size: 100%;
+    max-inline-size: none;
+    block-size: 100dvh;
+    max-block-size: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--_fg);
+    overflow: hidden;
+    overscroll-behavior: contain;
+
+    &[open] {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      grid-template-columns: auto 1fr auto;
+    }
+
+    &::backdrop {
+      background: color-mix(in oklab, var(--_ink) calc(94% - 40% * var(--_dismiss, 0)), transparent);
+      backdrop-filter: blur(10px);
+    }
+
+    &[open]:not([data-morph]) {
+      animation: nx-fade-in var(--nx-dur-base) var(--nx-ease-out);
+      &::backdrop { animation: nx-fade-in var(--nx-dur-base) var(--nx-ease-out); }
+    }
+
+    &[data-state="closing"] {
+      opacity: 0;
+      transition: opacity 200ms var(--nx-ease-in);
+      &::backdrop { opacity: 0; transition: opacity 200ms var(--nx-ease-in); }
+    }
+  }
+
+  .nx-lightbox-bar {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--nx-space-3);
+    padding: var(--nx-space-3) var(--nx-space-4);
+    z-index: 1;
+  }
+
+  .nx-lightbox-counter {
+    font: 600 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    font-variant-numeric: tabular-nums;
+    color: color-mix(in oklab, var(--_fg) 75%, transparent);
+  }
+
+  .nx-lightbox-tools {
+    display: flex;
+    gap: var(--nx-space-1);
+  }
+
+  :is(.nx-lightbox-tool, .nx-lightbox-nav) {
+    display: inline-grid;
+    place-items: center;
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--nx-radius-full);
+    background: color-mix(in oklab, var(--_fg) 10%, transparent);
+    color: var(--_fg);
+    cursor: pointer;
+    transition-property: background-color, scale, opacity;
+    transition-duration: var(--nx-dur-fast), var(--nx-spring-snappy-duration), var(--nx-dur-fast);
+    transition-timing-function: var(--nx-ease-out), var(--nx-spring-snappy), var(--nx-ease-out);
+
+    &:hover { background: color-mix(in oklab, var(--_fg) 18%, transparent); }
+    &:active:not(:disabled) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ink-50); outline-offset: 2px; }
+    &:disabled { opacity: 0.3; cursor: default; }
+    .nx-icon { inline-size: 1.2rem; block-size: 1.2rem; }
+  }
+
+  .nx-lightbox-nav {
+    grid-row: 2;
+    align-self: center;
+    margin-inline: var(--nx-space-3);
+    z-index: 1;
+
+    &[data-dir="prev"] { grid-column: 1; }
+    &[data-dir="next"] { grid-column: 3; }
+  }
+
+  @media (pointer: coarse) {
+    .nx-lightbox-nav { display: none; }
+  }
+
+  .nx-lightbox-stage {
+    grid-row: 2;
+    grid-column: 1 / -1;
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-block-size: 0;
+    padding-inline: clamp(var(--nx-space-2), 6vw, 5rem);
+    overflow: hidden;
+    touch-action: none;
+    cursor: zoom-in;
+    user-select: none;
+    -webkit-user-select: none;
+
+    &[data-zoomed] { cursor: grab; }
+    &[data-zoomed][data-gesture] { cursor: grabbing; }
+  }
+
+  .nx-lightbox-image {
+    display: block;
+    max-inline-size: 100%;
+    max-block-size: 100%;
+    inline-size: auto;
+    block-size: auto;
+    object-fit: contain;
+    border-radius: var(--nx-radius-sm);
+    outline: 1px solid rgb(255 255 255 / 0.1);
+    outline-offset: -1px;
+    box-shadow: var(--nx-shadow-xl);
+    translate: calc(var(--_pan-x, 0px) + var(--_swipe-x, 0px)) calc(var(--_pan-y, 0px) + var(--_swipe-y, 0px));
+    scale: calc(var(--_zoom, 1) * (1 - 0.12 * var(--_dismiss, 0)));
+    -webkit-user-drag: none;
+    transition-property: translate, scale;
+    transition-duration: var(--nx-spring-gentle-duration);
+    transition-timing-function: var(--nx-spring-gentle);
+  }
+
+  .nx-lightbox-stage[data-gesture] .nx-lightbox-image { transition-duration: 0ms; }
+  .nx-lightbox-stage[data-gesture="wheel"] .nx-lightbox-image { transition-duration: 120ms; transition-timing-function: var(--nx-ease-out); }
+
+  .nx-lightbox-stage[data-nav="next"] .nx-lightbox-image { animation: nx-lightbox-from-end 320ms cubic-bezier(0.2, 0, 0, 1); }
+  .nx-lightbox-stage[data-nav="prev"] .nx-lightbox-image { animation: nx-lightbox-from-start 320ms cubic-bezier(0.2, 0, 0, 1); }
+
+  @keyframes nx-lightbox-from-end {
+    from { opacity: 0; translate: calc(48px * var(--nx-dir) * var(--nx-motion)) 0; }
+  }
+  @keyframes nx-lightbox-from-start {
+    from { opacity: 0; translate: calc(-48px * var(--nx-dir) * var(--nx-motion)) 0; }
+  }
+
+  .nx-lightbox-caption {
+    grid-column: 1 / -1;
+    max-inline-size: 48rem;
+    margin: 0 auto;
+    padding: var(--nx-space-3) var(--nx-space-4) var(--nx-space-5);
+    color: color-mix(in oklab, var(--_fg) 82%, transparent);
+    font-size: var(--nx-text-sm);
+    line-height: 1.6;
+    text-align: center;
+
+    &:empty { display: none; }
+  }
+
+  ::view-transition-group(nx-lightbox-hero) {
+    animation-duration: var(--nx-spring-soft-duration);
+    animation-timing-function: var(--nx-spring-soft);
+  }
+  ::view-transition-old(nx-lightbox-hero),
+  ::view-transition-new(nx-lightbox-hero) {
+    block-size: 100%;
+    object-fit: cover;
+    overflow: clip;
+  }
+
+  /* ---- Compare slider -------------------------------------------------------- *
+   *   <div class="nx-compare" data-orientation="horizontal|vertical" style="--_pos: 50%">
+   *     <img class="nx-compare-img" data-side="after" …>
+   *     <img class="nx-compare-img" data-side="before" …>        (clipped to the start of the divider)
+   *     <span class="nx-compare-tag" data-side="before">Before</span> <span … data-side="after">After</span>
+   *     <span class="nx-compare-divider" aria-hidden="true"><span class="nx-compare-knob">‹›</span></span>
+   *     <input class="nx-compare-range" type="range" min="0" max="100" step="0.5" aria-label="…">
+   *   </div>
+   * The invisible range covers the images: it does the dragging, the keys and
+   * the right-to-left mapping natively; the JS only mirrors its value.
+   * ------------------------------------------------------------------------- */
+  .nx-compare {
+    --_pos: 50%;
+
+    position: relative;
+    display: grid;
+    overflow: clip;
+    aspect-ratio: var(--_ratio, 16 / 10);
+    border-radius: var(--nx-radius-xl);
+    background: var(--nx-surface-2);
+    user-select: none;
+    -webkit-user-select: none;
+    outline: 1px solid rgb(0 0 0 / 0.1);
+    outline-offset: -1px;
+  }
+
+  .nx-compare-img {
+    grid-area: 1 / 1;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+    pointer-events: none;
+    -webkit-user-drag: none;
+
+    &[data-side="before"] { clip-path: inset(0 calc(100% - var(--_pos)) 0 0); }
+    &[data-side="before"]:dir(rtl) { clip-path: inset(0 0 0 calc(100% - var(--_pos))); }
+  }
+
+  .nx-compare[data-orientation="vertical"] .nx-compare-img[data-side="before"] { clip-path: inset(0 0 calc(100% - var(--_pos)) 0); }
+
+  .nx-compare-tag {
+    position: absolute;
+    inset-block-start: var(--nx-space-3);
+    z-index: 1;
+    padding: 0.3rem 0.6rem;
+    border-radius: var(--nx-radius-full);
+    background: color-mix(in oklab, var(--nx-ink-950) 55%, transparent);
+    color: var(--nx-ink-50);
+    font: 600 var(--nx-text-xs) / 1 var(--nx-font-sans);
+    backdrop-filter: blur(6px);
+    pointer-events: none;
+    transition: opacity var(--nx-dur-base) var(--nx-ease-out);
+
+    &[data-side="before"] { inset-inline-start: var(--nx-space-3); }
+    &[data-side="after"] { inset-inline-end: var(--nx-space-3); }
+  }
+
+  .nx-compare[data-orientation="vertical"] .nx-compare-tag {
+    &[data-side="before"] { inset-block-start: var(--nx-space-3); inset-inline-start: var(--nx-space-3); }
+    &[data-side="after"] { inset-block: auto var(--nx-space-3); inset-inline-start: var(--nx-space-3); inset-inline-end: auto; }
+  }
+
+  .nx-compare-divider {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: var(--_pos);
+    z-index: 2;
+    inline-size: 2px;
+    margin-inline-start: -1px;
+    background: var(--nx-ink-50);
+    box-shadow: 0 0 0 1px rgb(0 0 0 / 0.12), 0 0 12px rgb(0 0 0 / 0.25);
+    pointer-events: none;
+  }
+
+  .nx-compare[data-orientation="vertical"] .nx-compare-divider {
+    inset-inline: 0;
+    inset-block: var(--_pos) auto;
+    inline-size: auto;
+    block-size: 2px;
+    margin: -1px 0 0;
+  }
+
+  .nx-compare-knob {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: 50%;
+    display: grid;
+    grid-auto-flow: column;
+    place-items: center;
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-ink-50);
+    color: var(--nx-ink-900);
+    box-shadow: var(--nx-shadow-md);
+    translate: -50% -50%;
+    transition: scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+
+    &:dir(rtl) { translate: 50% -50%; }
+    .nx-icon { inline-size: 1rem; block-size: 1rem; }
+  }
+
+  .nx-compare[data-orientation="vertical"] .nx-compare-knob { rotate: 90deg; }
+  .nx-compare[data-dragging] .nx-compare-knob { scale: calc(1 - 0.06 * var(--nx-motion)); }
+  .nx-compare:has(.nx-compare-range:focus-visible) .nx-compare-knob { outline: 2px solid var(--nx-ring); outline-offset: 3px; }
+
+  .nx-compare-range {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    inline-size: 100%;
+    block-size: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: ew-resize;
+    appearance: none;
+    background: transparent;
+    touch-action: pan-y;
+
+    &::-webkit-slider-thumb { appearance: none; inline-size: 1px; block-size: 100%; }
+    &::-moz-range-thumb { inline-size: 1px; block-size: 100%; border: 0; }
+  }
+
+  .nx-compare[data-orientation="vertical"] .nx-compare-range {
+    writing-mode: vertical-lr;
+    direction: ltr;
+    cursor: ns-resize;
+    touch-action: pan-x;
+
+    &::-webkit-slider-thumb { inline-size: 100%; block-size: 1px; }
+  }
+
+  /* ---- Swipe actions --------------------------------------------------------- *
+   *   <div class="nx-swipe-row" [data-open="start|end"] [data-armed] [data-dragging]>
+   *     <div class="nx-swipe-actions" data-side="start"><button class="nx-swipe-action" data-tone="accent" data-primary>…</button></div>
+   *     <div class="nx-swipe-actions" data-side="end">…</div>
+   *     <div class="nx-swipe-content">…the row…</div>
+   *   </div>
+   * --_x moves the content (physical px); --_reveal is how far the side is shown.
+   * ------------------------------------------------------------------------- */
+  .nx-swipe-row {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    overflow: clip;
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-surface-2);
+    --_abs: max(var(--_x, 0px), var(--_x, 0px) * -1);
+  }
+
+  .nx-swipe-actions {
+    position: absolute;
+    inset-block: 0;
+    z-index: 0;
+    display: flex;
+    inline-size: max-content;
+    min-inline-size: var(--_abs);
+    opacity: 0;
+    transition: opacity var(--nx-dur-fast) var(--nx-ease-out);
+
+    &[data-side="start"] { inset-inline-start: 0; }
+    &[data-side="end"] { inset-inline-end: 0; flex-direction: row-reverse; }
+  }
+
+  .nx-swipe-row[data-side="start"] .nx-swipe-actions[data-side="start"],
+  .nx-swipe-row[data-side="end"] .nx-swipe-actions[data-side="end"],
+  .nx-swipe-actions:focus-within { opacity: 1; }
+
+  .nx-swipe-action {
+    --_bg: var(--nx-surface-3);
+    --_fg: var(--nx-text);
+
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    inline-size: 4.75rem;
+    padding: 0 var(--nx-space-2);
+    border: 0;
+    background: var(--_bg);
+    color: var(--_fg);
+    font: 600 var(--nx-text-xs) / 1.1 var(--nx-font-sans);
+    cursor: pointer;
+    transition-property: flex-grow, scale, background-color;
+    transition-duration: var(--nx-spring-snappy-duration), var(--nx-spring-snappy-duration), var(--nx-dur-fast);
+    transition-timing-function: var(--nx-spring-snappy), var(--nx-spring-snappy), var(--nx-ease-out);
+
+    &[data-tone="accent"] { --_bg: var(--nx-accent); --_fg: var(--nx-accent-contrast); }
+    &[data-tone="danger"] { --_bg: var(--nx-danger); --_fg: var(--nx-accent-contrast); }
+    &[data-tone="success"] { --_bg: var(--nx-success); --_fg: var(--nx-accent-contrast); }
+    &[data-tone="warning"] { --_bg: var(--nx-warning); --_fg: var(--nx-ink-950); }
+    &[data-tone="gold"] { --_bg: var(--nx-gold); --_fg: var(--nx-gold-contrast); }
+    &[data-primary] { flex-grow: 1; }
+
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: -4px; }
+
+    .nx-icon {
+      inline-size: 1.25rem;
+      block-size: 1.25rem;
+      scale: calc(0.8 + 0.2 * var(--_reveal, 0));
+      transition: scale var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy);
+    }
+  }
+
+  .nx-swipe-row[data-armed] .nx-swipe-action[data-primary] .nx-icon { scale: calc(1 + 0.15 * var(--nx-motion)); }
+
+  .nx-swipe-content {
+    position: relative;
+    z-index: 1;
+    background: var(--nx-surface);
+    translate: var(--_x, 0px) 0;
+    touch-action: pan-y;
+    transition: translate var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+  }
+
+  .nx-swipe-row[data-dragging] .nx-swipe-content { transition-duration: 0ms; cursor: grabbing; }
+  .nx-swipe-row[data-fired] .nx-swipe-content { transition: translate 260ms var(--nx-ease-in); }
+
+  /* ---- Password strength ----------------------------------------------------- *
+   *   <div class="nx-password nx-field" data-score="0…4" [data-empty]>
+   *     <label class="nx-label">Password</label>
+   *     <div class="nx-input-group"><input class="nx-input" type="password">
+   *       <button class="nx-password-toggle" aria-pressed="false">eye<span data-off>eye-off</span></button></div>
+   *     <div class="nx-password-meter"><span class="nx-password-bars"><i></i>×4</span>
+   *       <span class="nx-password-label" aria-live="polite">Fair</span></div>
+   *     <ul class="nx-password-rules"><li [data-met]><span class="nx-password-tick">…</span>8+ characters</li></ul>
+   *   </div>
+   * ------------------------------------------------------------------------- */
+  .nx-password {
+    --_tone: var(--nx-border-strong);
+    --_tone-text: var(--nx-text-muted);
+    --_filled: 0;
+
+    &[data-score="0"]:not([data-empty]) { --_tone: var(--nx-danger); --_tone-text: var(--nx-danger-text); --_filled: 1; }
+    &[data-score="1"] { --_tone: var(--nx-danger); --_tone-text: var(--nx-danger-text); --_filled: 1; }
+    &[data-score="2"] { --_tone: var(--nx-warning); --_tone-text: var(--nx-warning-text); --_filled: 2; }
+    &[data-score="3"] { --_tone: var(--nx-info); --_tone-text: var(--nx-info-text); --_filled: 3; }
+    &[data-score="4"] { --_tone: var(--nx-success); --_tone-text: var(--nx-success-text); --_filled: 4; }
+  }
+
+  .nx-password .nx-input-group { padding-inline-end: 0.3rem; }
+
+  .nx-password-toggle {
+    flex: none;
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--nx-radius-sm);
+    background: transparent;
+    color: var(--nx-text-muted);
+    cursor: pointer;
+
+    &:hover { color: var(--nx-text); background: var(--nx-surface-2); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 1px; }
+    svg { inline-size: 1.15rem; block-size: 1.15rem; }
+
+    &[aria-pressed="true"] {
+      > :not([data-off]) { opacity: 0; scale: calc(1 - 0.75 * var(--nx-motion)); filter: blur(4px); }
+      > [data-off] { opacity: 1; scale: 1; filter: none; }
+    }
+  }
+
+  .nx-password-meter {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-3);
+  }
+
+  .nx-password-bars {
+    display: grid;
+    flex: 1;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.3rem;
+
+    i {
+      position: relative;
+      block-size: 0.3rem;
+      overflow: clip;
+      border-radius: var(--nx-radius-full);
+      background: var(--nx-surface-3);
+
+      &::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: var(--_tone);
+        transform-origin: left center;
+        scale: 0 1;
+        transition-property: scale, background-color;
+        transition-duration: var(--nx-spring-gentle-duration), var(--nx-dur-base);
+        transition-timing-function: var(--nx-spring-gentle), var(--nx-ease-out);
+        transition-delay: calc(var(--_i, 0) * 40ms), 0ms;
+      }
+      &:dir(rtl)::after { transform-origin: right center; }
+
+      &:nth-child(1) { --_i: 0; --_n: 1; }
+      &:nth-child(2) { --_i: 1; --_n: 2; }
+      &:nth-child(3) { --_i: 2; --_n: 3; }
+      &:nth-child(4) { --_i: 3; --_n: 4; }
+    }
+  }
+
+  .nx-password[data-score="0"]:not([data-empty]) .nx-password-bars i:nth-child(-n + 1)::after,
+  .nx-password[data-score="1"] .nx-password-bars i:nth-child(-n + 1)::after,
+  .nx-password[data-score="2"] .nx-password-bars i:nth-child(-n + 2)::after,
+  .nx-password[data-score="3"] .nx-password-bars i:nth-child(-n + 3)::after,
+  .nx-password[data-score="4"] .nx-password-bars i:nth-child(-n + 4)::after { scale: 1 1; }
+
+  .nx-password-label {
+    min-inline-size: 5.5rem;
+    color: var(--_tone-text);
+    font-size: var(--nx-text-sm);
+    font-weight: 600;
+    text-align: end;
+    transition: color var(--nx-dur-base) var(--nx-ease-out);
+  }
+
+  .nx-password-rules {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+    gap: var(--nx-space-1) var(--nx-space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: var(--nx-space-2);
+      color: var(--nx-text-muted);
+      font-size: var(--nx-text-sm);
+      transition: color var(--nx-dur-base) var(--nx-ease-out);
+    }
+
+    li[data-met] { color: var(--nx-text); }
+  }
+
+  .nx-password-tick {
+    flex: none;
+    inline-size: 1.1rem;
+    block-size: 1.1rem;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface-3);
+    color: var(--nx-text-subtle);
+    transition: background-color var(--nx-dur-base) var(--nx-ease-out), color var(--nx-dur-base) var(--nx-ease-out);
+
+    svg { inline-size: 0.75rem; block-size: 0.75rem; }
+  }
+
+  .nx-password-rules li[data-met] .nx-password-tick {
+    background: var(--nx-success);
+    color: var(--nx-accent-contrast);
+
+    > :not([data-off]) { opacity: 0; scale: calc(1 - 0.75 * var(--nx-motion)); filter: blur(4px); }
+    > [data-off] { opacity: 1; scale: 1; filter: none; }
+  }
+
+  /* ---- Reduced motion -------------------------------------------------------- */
+  @media (prefers-reduced-motion: reduce) {
+    .nx-slide-confirm-label > :not([data-off]) { animation: none; color: var(--nx-text-muted); background: none; }
+    :is(.nx-sortable-item, .nx-swipe-content, .nx-slide-confirm-thumb, .nx-lightbox-image) { transition-duration: 0ms; }
+  }
 }

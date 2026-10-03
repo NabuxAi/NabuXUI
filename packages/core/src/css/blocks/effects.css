@@ -1,3 +1,1242 @@
-/* Effects blocks — see docs/BLOCKS.md. */
+/*
+ * Blocks: Effects & layout motion — see docs/BLOCKS.md.
+ *
+ *   .nx-beam            a light segment travelling around an element's border
+ *   .nx-goo             pills that melt into each other (SVG goo filter)
+ *   .nx-glitch          chromatic glitch on hover or on a loop
+ *   .nx-typewriter      typed phrases with a caret
+ *   .nx-resizable       split panes with draggable separators
+ *   .nx-scroll-progress reading progress: a top bar or a ring
+ *   .nx-auto-height     a frame that springs to its content's height
+ *   .nx-island          the morphing dynamic-island pill
+ *   .nx-tour            onboarding spotlight with a step popover
+ *   .nx-image-reveal    an image that resolves out of pixel noise
+ *
+ * Every loop stops (or settles on a still frame) under reduced motion, every
+ * travel distance is multiplied by --nx-motion.
+ */
+
+/* The beam's head, turning around the element. Registered so it can animate. */
+@property --_beam-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+/* How far the noise has dissolved around the revealed image. */
+@property --_reveal-hole {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 0%;
+}
+
 @layer nx.components {
+  /* ---- Border beam -------------------------------------------------------------
+   * Two pseudo-elements the size of the border box, both masked down to a ring
+   * (content-box excluded): ::before is the crisp beam, ::after a wider, blurred
+   * copy for the glow. The beam is a conic gradient whose start angle turns, so
+   * the bright head runs around the edge and its tail fades behind it.
+   *   --nx-beam-size      length of the beam, as an angle (default 70deg)
+   *   --nx-beam-duration  one lap (default 6s)
+   *   --nx-beam-width     ring thickness (default 1.5px)
+   *   --nx-beam-from/-to  tail and head colours
+   *   --nx-beam-delay     offset when several beams share a page
+   * The wrapped element keeps its own border; the beam rides on top of it.
+   * It uses ::before and ::after, so put the class on a wrapper when the
+   * element already draws its own pseudo-elements. */
+  .nx-beam {
+    --nx-beam-size: 70deg;
+    --nx-beam-duration: 6s;
+    --nx-beam-width: 1.5px;
+    --nx-beam-from: var(--nx-accent);
+    --nx-beam-to: var(--nx-cyan-400);
+    --nx-beam-delay: 0s;
+    position: relative;
+    isolation: isolate;
+  }
+
+  .nx-beam[data-tone='gold'] {
+    --nx-beam-from: var(--nx-gold-600);
+    --nx-beam-to: var(--nx-gold-300);
+  }
+
+  .nx-beam[data-tone='violet'] {
+    --nx-beam-from: var(--nx-violet-500);
+    --nx-beam-to: var(--nx-cyan-300);
+  }
+
+  .nx-beam[data-tone='success'] {
+    --nx-beam-from: var(--nx-success);
+    --nx-beam-to: var(--nx-cyan-300);
+  }
+
+  .nx-beam::before,
+  .nx-beam::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    padding: var(--nx-beam-width);
+    border-radius: inherit;
+    pointer-events: none;
+    background: conic-gradient(
+      from var(--_beam-angle),
+      transparent 0deg calc(360deg - var(--nx-beam-size)),
+      color-mix(in oklab, var(--nx-beam-from) 70%, transparent) calc(360deg - var(--nx-beam-size) * 0.55),
+      var(--nx-beam-to) calc(360deg - 3deg),
+      transparent 360deg
+    );
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+    animation: nx-beam-turn var(--nx-beam-duration) linear var(--nx-beam-delay) infinite;
+  }
+
+  /* The glow: wider ring, blurred, softer. */
+  .nx-beam::after {
+    inset: calc(var(--nx-beam-width) * -3);
+    padding: calc(var(--nx-beam-width) * 5);
+    border-radius: inherit;
+    filter: blur(5px);
+    opacity: 0.55;
+  }
+
+  .nx-beam[data-reverse]::before,
+  .nx-beam[data-reverse]::after {
+    animation-direction: reverse;
+  }
+
+  .nx-beam[data-paused]::before,
+  .nx-beam[data-paused]::after {
+    animation-play-state: paused;
+  }
+
+  @keyframes nx-beam-turn {
+    to { --_beam-angle: 360deg; }
+  }
+
+  /* Reduced motion: a still, even glow along the whole edge instead of a moving head. */
+  @media (prefers-reduced-motion: reduce) {
+    .nx-beam::before,
+    .nx-beam::after {
+      animation: none;
+      background: linear-gradient(135deg, var(--nx-beam-from), var(--nx-beam-to));
+    }
+    .nx-beam::before { opacity: 0.7; }
+    .nx-beam::after { opacity: 0.3; }
+  }
+
+  /* ---- Goo stack -----------------------------------------------------------------
+   * Two copies of the same list, stacked in one grid cell. The back copy holds
+   * only solid pill shapes and runs through the SVG goo filter (blur, then a
+   * hard alpha threshold), so pills close together melt into one shape; the
+   * front copy holds the real, crisp content with a transparent background.
+   * Both copies animate with the same classes and timings, so they stay in
+   * step. Resting, the gap is tiny and the stack is one blob; hover or focus
+   * opens it and the pills split apart with a gentle spring. */
+  .nx-goo {
+    --_gap: 3px;
+    display: grid;
+    inline-size: min(100%, 22rem);
+    margin-inline: auto;
+  }
+
+  .nx-goo:is(:hover, :focus-within),
+  .nx-goo[data-state='split'] {
+    --_gap: 14px;
+  }
+
+  .nx-goo[data-state='merged'] {
+    --_gap: 3px;
+  }
+
+  .nx-goo-filter {
+    position: absolute;
+    inline-size: 0;
+    block-size: 0;
+    overflow: hidden;
+  }
+
+  .nx-goo-layer {
+    grid-area: 1 / 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--_gap);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    transition: gap var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+  }
+
+  .nx-goo-blobs {
+    filter: var(--_goo);
+    pointer-events: none;
+  }
+
+  .nx-goo-pill {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-3);
+    inline-size: 100%;
+    min-block-size: 3rem;
+    padding-block: var(--nx-space-2);
+    padding-inline: var(--nx-space-4) var(--nx-space-2);
+    border-radius: var(--nx-radius-full);
+    font-size: var(--nx-text-sm);
+  }
+
+  .nx-goo-blobs .nx-goo-pill {
+    background: var(--nx-surface-inverse);
+  }
+
+  .nx-goo-blobs .nx-goo-pill > * {
+    visibility: hidden;
+  }
+
+  .nx-goo-items .nx-goo-pill {
+    color: var(--nx-text-inverse);
+  }
+
+  .nx-goo-icon {
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 1.75rem;
+    block-size: 1.75rem;
+    border-radius: var(--nx-radius-full);
+    background: color-mix(in oklab, var(--nx-text-inverse) 14%, transparent);
+  }
+
+  .nx-goo-icon svg {
+    inline-size: 1rem;
+    block-size: 1rem;
+  }
+
+  .nx-goo-label {
+    flex: 1;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .nx-goo-dismiss {
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 2rem;
+    block-size: 2rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--nx-radius-full);
+    background: transparent;
+    color: inherit;
+    opacity: 0.7;
+    cursor: pointer;
+    transition-property: scale, opacity, background-color;
+    transition-duration: var(--nx-dur-fast);
+  }
+
+  .nx-goo-dismiss svg {
+    inline-size: 1rem;
+    block-size: 1rem;
+  }
+
+  .nx-goo-dismiss:hover {
+    opacity: 1;
+    background: color-mix(in oklab, var(--nx-text-inverse) 14%, transparent);
+  }
+
+  .nx-goo-dismiss:active {
+    scale: calc(1 - 0.04 * var(--nx-motion));
+  }
+
+  .nx-goo-dismiss:focus-visible {
+    outline: 2px solid var(--nx-ring);
+    outline-offset: 2px;
+    opacity: 1;
+  }
+
+  /* A new pill buds off the top of the stack. */
+  .nx-goo-pill[data-state='enter'] {
+    animation: nx-goo-in var(--nx-spring-gentle-duration) var(--nx-spring-gentle) both;
+  }
+
+  /* A dismissed pill pinches off toward the inline end. */
+  .nx-goo-pill[data-state='leave'] {
+    animation: nx-goo-out 220ms var(--nx-ease-in) both;
+  }
+
+  @keyframes nx-goo-in {
+    from {
+      translate: 0 calc(-70% * var(--nx-motion));
+      scale: 0.95;
+      opacity: 0;
+    }
+  }
+
+  @keyframes nx-goo-out {
+    to {
+      translate: calc(40% * var(--nx-dir) * var(--nx-motion)) 0;
+      scale: 0.95;
+      opacity: 0;
+    }
+  }
+
+  /* ---- Glitch text -------------------------------------------------------------------
+   * The real text once (.nx-glitch-text), plus two aria-hidden copies behind it
+   * in two hues. In bursts, each copy shows only a horizontal band of itself
+   * (clip-path) shifted a few pixels sideways — the chromatic split. Bands cut
+   * across the whole line, so joined scripts are never broken into letters.
+   * data-trigger: hover (default; also when a link or button around it is
+   * hovered or focused) | loop (a burst every few seconds) | always. */
+  .nx-glitch {
+    position: relative;
+    display: inline-block;
+    isolation: isolate;
+  }
+
+  .nx-glitch-text {
+    position: relative;
+  }
+
+  .nx-glitch-layer {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0;
+    pointer-events: none;
+    user-select: none;
+    white-space: inherit;
+  }
+
+  .nx-glitch-layer[data-layer='a'] { color: var(--nx-cyan-500); }
+  .nx-glitch-layer[data-layer='b'] { color: var(--nx-danger); }
+
+  :is(.nx-glitch[data-trigger='hover']:hover, .nx-glitch[data-trigger='hover']:focus-visible, :is(a, button):is(:hover, :focus-visible) .nx-glitch[data-trigger='hover'], .nx-glitch[data-trigger='always']) > .nx-glitch-layer {
+    opacity: 0.9;
+    animation: nx-glitch-a 0.9s steps(1, end) infinite;
+  }
+
+  :is(.nx-glitch[data-trigger='hover']:hover, .nx-glitch[data-trigger='hover']:focus-visible, :is(a, button):is(:hover, :focus-visible) .nx-glitch[data-trigger='hover'], .nx-glitch[data-trigger='always']) > .nx-glitch-layer[data-layer='b'] {
+    animation-name: nx-glitch-b;
+    animation-duration: 1.1s;
+  }
+
+  :is(.nx-glitch[data-trigger='hover']:hover, .nx-glitch[data-trigger='hover']:focus-visible, :is(a, button):is(:hover, :focus-visible) .nx-glitch[data-trigger='hover'], .nx-glitch[data-trigger='always']) > .nx-glitch-text {
+    animation: nx-glitch-jitter 0.9s steps(1, end) infinite;
+  }
+
+  .nx-glitch[data-trigger='loop'] > .nx-glitch-layer {
+    opacity: 0.9;
+    animation: nx-glitch-burst-a 3.6s steps(1, end) infinite;
+  }
+
+  .nx-glitch[data-trigger='loop'] > .nx-glitch-layer[data-layer='b'] {
+    animation-name: nx-glitch-burst-b;
+  }
+
+  .nx-glitch[data-trigger='loop'] > .nx-glitch-text {
+    animation: nx-glitch-burst-jitter 3.6s steps(1, end) infinite;
+  }
+
+  @keyframes nx-glitch-a {
+    0% { clip-path: inset(8% 0 72% 0); translate: calc(-3px * var(--nx-motion)) 0; }
+    20% { clip-path: inset(55% 0 20% 0); translate: calc(3px * var(--nx-motion)) 0; }
+    40% { clip-path: inset(30% 0 52% 0); translate: calc(-2px * var(--nx-motion)) 0; }
+    60% { clip-path: inset(78% 0 4% 0); translate: calc(4px * var(--nx-motion)) 0; }
+    80% { clip-path: inset(18% 0 60% 0); translate: calc(-4px * var(--nx-motion)) 0; }
+  }
+
+  @keyframes nx-glitch-b {
+    0% { clip-path: inset(62% 0 14% 0); translate: calc(3px * var(--nx-motion)) 0; }
+    25% { clip-path: inset(12% 0 70% 0); translate: calc(-3px * var(--nx-motion)) 0; }
+    50% { clip-path: inset(40% 0 40% 0); translate: calc(2px * var(--nx-motion)) 0; }
+    75% { clip-path: inset(84% 0 2% 0); translate: calc(-4px * var(--nx-motion)) 0; }
+  }
+
+  @keyframes nx-glitch-jitter {
+    0%, 30%, 70% { translate: 0 0; }
+    10% { translate: calc(1px * var(--nx-motion)) 0; }
+    50% { translate: calc(-1px * var(--nx-motion)) 0; }
+  }
+
+  /* Loop: idle for most of the period, then a short burst. */
+  @keyframes nx-glitch-burst-a {
+    0%, 84%, 100% { clip-path: inset(50% 0 50% 0); translate: 0 0; }
+    86% { clip-path: inset(10% 0 70% 0); translate: calc(-3px * var(--nx-motion)) 0; }
+    89% { clip-path: inset(58% 0 16% 0); translate: calc(4px * var(--nx-motion)) 0; }
+    92% { clip-path: inset(32% 0 48% 0); translate: calc(-2px * var(--nx-motion)) 0; }
+    95% { clip-path: inset(76% 0 6% 0); translate: calc(3px * var(--nx-motion)) 0; }
+  }
+
+  @keyframes nx-glitch-burst-b {
+    0%, 85%, 100% { clip-path: inset(50% 0 50% 0); translate: 0 0; }
+    87% { clip-path: inset(64% 0 12% 0); translate: calc(3px * var(--nx-motion)) 0; }
+    90% { clip-path: inset(14% 0 68% 0); translate: calc(-4px * var(--nx-motion)) 0; }
+    94% { clip-path: inset(44% 0 36% 0); translate: calc(2px * var(--nx-motion)) 0; }
+  }
+
+  @keyframes nx-glitch-burst-jitter {
+    0%, 85%, 91%, 97%, 100% { translate: 0 0; }
+    87% { translate: calc(1px * var(--nx-motion)) 0; }
+    93% { translate: calc(-1px * var(--nx-motion)) 0; }
+  }
+
+  /* Reduced motion: no flicker. Hover and "always" keep a still, offset split. */
+  @media (prefers-reduced-motion: reduce) {
+    .nx-glitch > .nx-glitch-layer,
+    .nx-glitch > .nx-glitch-text {
+      animation: none !important;
+    }
+    .nx-glitch[data-trigger='loop'] > .nx-glitch-layer { opacity: 0; }
+    .nx-glitch > .nx-glitch-layer[data-layer='a'] { translate: -1px 0; }
+    .nx-glitch > .nx-glitch-layer[data-layer='b'] { translate: 1px 0; }
+  }
+
+  /* ---- Typewriter ---------------------------------------------------------------------
+   * The accessible text is the phrases, once, in .nx-visually-hidden; the typed
+   * line and caret are aria-hidden. The caret is solid while letters move and
+   * blinks while the phrase holds. data-caret: bar (default) | block | none. */
+  .nx-typewriter {
+    display: inline;
+  }
+
+  .nx-typewriter-line {
+    display: inline;
+    white-space: pre-wrap;
+  }
+
+  .nx-typewriter-text {
+    color: inherit;
+  }
+
+  .nx-typewriter-caret {
+    display: inline-block;
+    inline-size: max(2px, 0.08em);
+    block-size: 1.05em;
+    margin-inline-start: 0.06em;
+    vertical-align: -0.12em;
+    border-radius: 1px;
+    background: var(--nx-accent);
+    animation: nx-typewriter-blink 1.05s steps(1, end) infinite;
+  }
+
+  .nx-typewriter[data-caret='block'] .nx-typewriter-caret {
+    inline-size: 0.55em;
+    opacity: 0.85;
+  }
+
+  .nx-typewriter[data-caret='none'] .nx-typewriter-caret {
+    display: none;
+  }
+
+  .nx-typewriter:is([data-state='typing'], [data-state='deleting']) .nx-typewriter-caret {
+    animation: none;
+  }
+
+  @keyframes nx-typewriter-blink {
+    50% { opacity: 0; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-typewriter-caret { animation: none; }
+  }
+
+  /* ---- Resizable panels ---------------------------------------------------------------
+   * Pane sizes are flex-grow weights (written by resizablePanels), so the panes
+   * always fill the group whatever its size. Handles are 1px rules with a 13px
+   * invisible hit area and a grip that lights up on hover, focus and drag.
+   * Collapsing (double-click / Enter) springs flex-grow while data-animating. */
+  .nx-resizable {
+    display: flex;
+    inline-size: 100%;
+    block-size: 100%;
+    min-inline-size: 0;
+    min-block-size: 0;
+  }
+
+  .nx-resizable[data-orientation='vertical'] {
+    flex-direction: column;
+  }
+
+  .nx-resizable-pane {
+    position: relative;
+    flex: 1 1 0px;
+    min-inline-size: 0;
+    min-block-size: 0;
+    overflow: auto;
+  }
+
+  .nx-resizable-pane > * {
+    transition: opacity var(--nx-dur-fast) var(--nx-ease-out);
+  }
+
+  .nx-resizable-pane[data-collapsed] {
+    overflow: hidden;
+  }
+
+  .nx-resizable-pane[data-collapsed] > * {
+    opacity: 0;
+  }
+
+  .nx-resizable[data-animating] > .nx-resizable-pane {
+    transition: flex-grow var(--nx-spring-soft-duration) var(--nx-spring-soft);
+  }
+
+  .nx-resizable[data-dragging] {
+    user-select: none;
+    cursor: col-resize;
+  }
+
+  .nx-resizable[data-orientation='vertical'][data-dragging] {
+    cursor: row-resize;
+  }
+
+  /* Iframes and editors under the pointer must not swallow the drag. */
+  .nx-resizable[data-dragging] > .nx-resizable-pane {
+    pointer-events: none;
+  }
+
+  .nx-resizable-handle {
+    position: relative;
+    z-index: 1;
+    flex: none;
+    inline-size: 1px;
+    background: var(--nx-border);
+    cursor: col-resize;
+    touch-action: none;
+    outline: none;
+    transition: background-color var(--nx-dur-fast) var(--nx-ease-out);
+  }
+
+  .nx-resizable[data-orientation='vertical'] > .nx-resizable-handle {
+    inline-size: auto;
+    block-size: 1px;
+    cursor: row-resize;
+  }
+
+  /* The hit area. */
+  .nx-resizable-handle::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline: -6px;
+  }
+
+  .nx-resizable[data-orientation='vertical'] > .nx-resizable-handle::before {
+    inset-block: -6px;
+    inset-inline: 0;
+  }
+
+  /* The grip. */
+  .nx-resizable-handle::after {
+    content: '';
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: 50%;
+    inline-size: 6px;
+    block-size: 2rem;
+    translate: calc(-50% * var(--nx-dir)) -50%;
+    border: 1px solid var(--nx-border-strong);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface);
+    box-shadow: var(--nx-shadow-xs);
+    transition-property: background-color, border-color, scale;
+    transition-duration: var(--nx-dur-fast);
+    transition-timing-function: var(--nx-ease-out);
+  }
+
+  .nx-resizable[data-orientation='vertical'] > .nx-resizable-handle::after {
+    inline-size: 2rem;
+    block-size: 6px;
+  }
+
+  .nx-resizable-handle:is(:hover, [data-dragging]) {
+    background: var(--nx-accent-border);
+  }
+
+  .nx-resizable-handle:is(:hover, :focus-visible, [data-dragging])::after {
+    border-color: var(--nx-accent);
+    background: var(--nx-accent);
+  }
+
+  .nx-resizable-handle[data-dragging]::after {
+    scale: 1.15;
+  }
+
+  .nx-resizable-handle:focus-visible::after {
+    outline: 2px solid var(--nx-ring);
+    outline-offset: 2px;
+  }
+
+  /* ---- Scroll progress -------------------------------------------------------------------
+   * --nx-scroll (0–1) comes from scrollProgress(). For the page bar the browser's
+   * own scroll timeline drives the fill where it exists (smoother, off the main
+   * thread); data-source="element" (an article, or a scrolling box) always
+   * follows the number. Bar: a hairline across the top. Circle: a back-to-top
+   * button whose ring fills, appearing once reading has started. */
+  .nx-scroll-progress[data-variant='bar'] {
+    position: fixed;
+    inset-block-start: 0;
+    inset-inline: 0;
+    z-index: var(--nx-z-sticky);
+    block-size: 3px;
+    pointer-events: none;
+    background: color-mix(in oklab, var(--nx-accent) 12%, transparent);
+  }
+
+  .nx-scroll-progress[data-variant='bar'][data-position='sticky'] {
+    position: sticky;
+  }
+
+  .nx-scroll-progress[data-variant='bar'][data-position='static'] {
+    position: relative;
+  }
+
+  .nx-scroll-progress-fill {
+    display: block;
+    block-size: 100%;
+    background: var(--nx-gradient-brand);
+    transform-origin: 0 50%;
+    scale: var(--nx-scroll, 0) 1;
+  }
+
+  [dir='rtl'] .nx-scroll-progress-fill {
+    transform-origin: 100% 50%;
+  }
+
+  @supports (animation-timeline: scroll()) {
+    .nx-scroll-progress:not([data-source='element']) .nx-scroll-progress-fill {
+      animation: nx-scroll-progress-fill linear both;
+      animation-timeline: scroll(root block);
+    }
+    .nx-scroll-progress:not([data-source='element']) .nx-scroll-progress-ring-fill {
+      animation: nx-scroll-progress-ring linear both;
+      animation-timeline: scroll(root block);
+    }
+  }
+
+  @keyframes nx-scroll-progress-fill {
+    from { scale: 0 1; }
+    to { scale: 1 1; }
+  }
+
+  @keyframes nx-scroll-progress-ring {
+    from { stroke-dashoffset: 100; }
+    to { stroke-dashoffset: 0; }
+  }
+
+  .nx-scroll-progress[data-variant='circle'] {
+    position: fixed;
+    inset-block-end: var(--nx-space-6);
+    inset-inline-end: var(--nx-space-6);
+    z-index: var(--nx-z-sticky);
+    display: grid;
+    place-items: center;
+    inline-size: 3rem;
+    block-size: 3rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    box-shadow: var(--nx-shadow-lg), 0 0 0 1px var(--nx-border);
+    cursor: pointer;
+    opacity: 0;
+    scale: 0.95;
+    translate: 0 calc(8px * var(--nx-motion));
+    pointer-events: none;
+    transition-property: opacity, scale, translate;
+    transition-duration: 150ms, var(--nx-spring-snappy-duration), var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-ease-out), var(--nx-spring-snappy), var(--nx-spring-snappy);
+  }
+
+  .nx-scroll-progress[data-variant='circle'][data-position='static'],
+  .nx-scroll-progress[data-variant='circle'][data-position='sticky'] {
+    position: sticky;
+    inset-block-end: var(--nx-space-4);
+    margin-inline-start: auto;
+  }
+
+  .nx-scroll-progress[data-variant='circle'][data-started] {
+    opacity: 1;
+    scale: 1;
+    translate: 0 0;
+    pointer-events: auto;
+    transition-duration: var(--nx-dur-base), var(--nx-spring-snappy-duration), var(--nx-spring-snappy-duration);
+  }
+
+  .nx-scroll-progress[data-variant='circle']:active {
+    scale: calc(1 - 0.04 * var(--nx-motion));
+  }
+
+  .nx-scroll-progress[data-variant='circle']:focus-visible {
+    outline: 2px solid var(--nx-ring);
+    outline-offset: 2px;
+  }
+
+  .nx-scroll-progress-ring {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    rotate: -90deg;
+    fill: none;
+    stroke-width: 3;
+  }
+
+  .nx-scroll-progress-ring-track {
+    stroke: var(--nx-border);
+  }
+
+  .nx-scroll-progress-ring-fill {
+    stroke: var(--nx-accent);
+    stroke-linecap: round;
+    stroke-dasharray: 100;
+    stroke-dashoffset: calc(100 - var(--nx-scroll, 0) * 100);
+  }
+
+  .nx-scroll-progress[data-complete] .nx-scroll-progress-ring-fill {
+    stroke: var(--nx-success);
+  }
+
+  .nx-scroll-progress-icon {
+    inline-size: 1.125rem;
+    block-size: 1.125rem;
+  }
+
+  /* ---- Auto height ------------------------------------------------------------------------
+   * autoHeight() springs the frame between the old and new height of its first
+   * child; the frame clips only while it moves. `data-collapsed` closes it to
+   * zero — animated by the browser itself where interpolate-size exists. */
+  .nx-auto-height {
+    display: block;
+  }
+
+  .nx-auto-height[data-animating] {
+    overflow: clip;
+  }
+
+  .nx-auto-height[data-collapsed] {
+    block-size: 0;
+    overflow: clip;
+  }
+
+  .nx-auto-height[data-collapsed] > * {
+    opacity: 0;
+  }
+
+  .nx-auto-height > * {
+    transition: opacity var(--nx-dur-base) var(--nx-ease-out);
+  }
+
+  @supports (interpolate-size: allow-keywords) {
+    .nx-auto-height {
+      interpolate-size: allow-keywords;
+      transition: block-size var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+    }
+  }
+
+  /* ---- Dynamic island ---------------------------------------------------------------------
+   * A dark pill (dark in both themes, ringed so it holds on a dark page) whose
+   * width, height and radius spring toward the active view's size (--_w, --_h,
+   * --_r from dynamicIsland()). Views sit centred on top of each other; the
+   * current one fades in from a light blur as the old one fades out, so the
+   * content cross-fades while the shape morphs. */
+  .nx-island {
+    position: relative;
+    inline-size: var(--_w, 7.5rem);
+    block-size: var(--_h, 2.25rem);
+    max-inline-size: 100%;
+    margin-inline: auto;
+    overflow: clip;
+    border-radius: var(--_r, 18px);
+    background: var(--nx-ink-950);
+    color: var(--nx-ink-50);
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--nx-ink-50) 10%, transparent), var(--nx-shadow-lg);
+    transition-property: inline-size, block-size, border-radius;
+    transition-duration: var(--nx-spring-gentle-duration);
+    transition-timing-function: var(--nx-spring-gentle);
+  }
+
+  .nx-island[data-instant],
+  .nx-island[data-instant] > .nx-island-view {
+    transition: none;
+  }
+
+  .nx-island-view {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 50%;
+    inline-size: max-content;
+    max-inline-size: min(26rem, calc(100vw - 2rem));
+    translate: calc(-50% * var(--nx-dir)) 0;
+    padding-block: var(--nx-space-2);
+    padding-inline: var(--nx-space-3);
+    opacity: 0;
+    scale: 0.96;
+    filter: blur(4px);
+    transition-property: opacity, scale, filter;
+    transition-duration: 150ms, 150ms, 150ms;
+    transition-timing-function: var(--nx-ease-out);
+  }
+
+  .nx-island-view[data-current] {
+    opacity: 1;
+    scale: 1;
+    filter: none;
+    transition-duration: var(--nx-dur-base), var(--nx-spring-gentle-duration), var(--nx-dur-base);
+    transition-timing-function: var(--nx-ease-out), var(--nx-spring-gentle), var(--nx-ease-out);
+    transition-delay: 70ms;
+  }
+
+  .nx-island-view[data-size='expanded'] {
+    padding: var(--nx-space-4);
+    min-inline-size: min(20rem, calc(100vw - 2rem));
+  }
+
+  .nx-island-row {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-3);
+  }
+
+  .nx-island-row[data-spread] {
+    justify-content: space-between;
+  }
+
+  .nx-island-stack {
+    display: grid;
+    gap: var(--nx-space-1);
+    min-inline-size: 0;
+  }
+
+  .nx-island-title {
+    font-weight: 600;
+    font-size: var(--nx-text-sm);
+    line-height: 1.3;
+  }
+
+  .nx-island-sub {
+    font-size: var(--nx-text-xs);
+    color: color-mix(in oklab, var(--nx-ink-50) 62%, transparent);
+  }
+
+  .nx-island-figure {
+    font: 600 var(--nx-text-sm) / 1 var(--nx-font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nx-island-avatar {
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 2.5rem;
+    block-size: 2.5rem;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-gradient-brand);
+    color: var(--nx-ink-50);
+    font-weight: 700;
+  }
+
+  .nx-island-dot {
+    flex: none;
+    inline-size: 0.5rem;
+    block-size: 0.5rem;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-success);
+  }
+
+  .nx-island-actions {
+    display: flex;
+    gap: var(--nx-space-3);
+    margin-block-start: var(--nx-space-3);
+  }
+
+  .nx-island-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-space-2);
+    min-block-size: 2.5rem;
+    padding-inline: var(--nx-space-4);
+    border: 0;
+    border-radius: var(--nx-radius-full);
+    background: color-mix(in oklab, var(--nx-ink-50) 14%, transparent);
+    color: var(--nx-ink-50);
+    font: inherit;
+    font-size: var(--nx-text-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition-property: scale, background-color;
+    transition-duration: var(--nx-dur-fast);
+  }
+
+  .nx-island-btn[data-icon-only] {
+    inline-size: 2.5rem;
+    padding: 0;
+  }
+
+  .nx-island-btn svg {
+    inline-size: 1.125rem;
+    block-size: 1.125rem;
+  }
+
+  .nx-island-btn:hover {
+    background: color-mix(in oklab, var(--nx-ink-50) 22%, transparent);
+  }
+
+  .nx-island-btn[data-tone='danger'] { background: var(--nx-danger); }
+  .nx-island-btn[data-tone='success'] { background: var(--nx-success); }
+
+  .nx-island-btn:active {
+    scale: calc(1 - 0.04 * var(--nx-motion));
+  }
+
+  .nx-island-btn:focus-visible,
+  .nx-island-toggle:focus-visible {
+    outline: 2px solid var(--nx-ring);
+    outline-offset: 2px;
+  }
+
+  /* A view's whole surface as one button (compact → expanded). */
+  .nx-island-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-3);
+    inline-size: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: inherit;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .nx-island-wave {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    block-size: 1rem;
+  }
+
+  .nx-island-wave > i {
+    inline-size: 3px;
+    block-size: 100%;
+    border-radius: 2px;
+    background: var(--nx-success);
+    transform-origin: 50% 50%;
+    animation: nx-island-wave 0.9s var(--nx-ease-in-out) infinite alternate;
+    animation-delay: calc(var(--nx-i, 0) * -0.17s);
+  }
+
+  @keyframes nx-island-wave {
+    from { scale: 1 0.3; }
+    to { scale: 1 1; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-island-wave > i { animation: none; scale: 1 0.6; }
+  }
+
+  /* ---- Spotlight tour -----------------------------------------------------------------------
+   * A fixed layer over the page: a transparent catcher swallows clicks, the
+   * hole's enormous spread shadow dims everything but the cut-out, and the hole
+   * springs from target to target. The popover is placed by place() and scales
+   * out of the target; with no target it sits centred like a dialog. */
+  .nx-tour {
+    position: fixed;
+    inset: 0;
+    z-index: var(--nx-z-overlay);
+  }
+
+  /* Shown in the top layer as a manual popover: drop the UA popover box. */
+  .nx-tour[popover] {
+    inline-size: auto;
+    block-size: auto;
+    max-inline-size: none;
+    max-block-size: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    overflow: visible;
+    background: transparent;
+    color: inherit;
+  }
+
+  .nx-tour-catcher {
+    position: fixed;
+    inset: 0;
+  }
+
+  .nx-tour-hole {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: var(--_w, 0px);
+    height: var(--_h, 0px);
+    translate: var(--_x, 50vw) var(--_y, 50vh);
+    border-radius: var(--nx-radius-lg);
+    box-shadow:
+      0 0 0 2px var(--nx-accent),
+      0 0 0 6px color-mix(in oklab, var(--nx-accent) 25%, transparent),
+      0 0 0 200vmax color-mix(in oklab, var(--nx-ink-950) 58%, transparent);
+    pointer-events: none;
+    animation: nx-tour-dim var(--nx-dur-base) var(--nx-ease-out) both;
+    transition-property: translate, width, height;
+    transition-duration: var(--nx-spring-gentle-duration);
+    transition-timing-function: var(--nx-spring-gentle);
+  }
+
+  .nx-tour[data-centered] .nx-tour-hole {
+    --_w: 0px;
+    --_h: 0px;
+    --_x: 50vw;
+    --_y: 50vh;
+    box-shadow: 0 0 0 200vmax color-mix(in oklab, var(--nx-ink-950) 58%, transparent);
+  }
+
+  @keyframes nx-tour-dim {
+    from { opacity: 0; }
+  }
+
+  .nx-tour-pop {
+    position: fixed;
+    inline-size: min(22rem, calc(100vw - 24px));
+    display: grid;
+    gap: var(--nx-space-3);
+    padding: var(--nx-space-5);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-xl);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    box-shadow: var(--nx-shadow-xl);
+    transform-origin: var(--nx-origin, 50% 0);
+    outline: none;
+    animation: nx-tour-pop-in var(--nx-spring-snappy-duration) var(--nx-spring-snappy) both;
+  }
+
+  .nx-tour-pop[data-centered] {
+    left: 50%;
+    top: 50%;
+    translate: -50% -50%;
+    transform-origin: 50% 50%;
+  }
+
+  .nx-tour-pop:focus-visible {
+    outline: 2px solid var(--nx-ring);
+    outline-offset: 2px;
+  }
+
+  @keyframes nx-tour-pop-in {
+    from {
+      opacity: 0;
+      scale: 0.95;
+    }
+  }
+
+  .nx-tour-step {
+    margin: 0;
+    font-size: var(--nx-text-xs);
+    font-weight: 600;
+    color: var(--nx-accent-text);
+  }
+
+  .nx-tour-title {
+    margin: 0;
+    font: 700 var(--nx-text-lg) / 1.3 var(--nx-font-display);
+  }
+
+  .nx-tour-body {
+    margin: 0;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+    line-height: 1.6;
+  }
+
+  .nx-tour-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--nx-space-3);
+    margin-block-start: var(--nx-space-1);
+  }
+
+  .nx-tour-dots {
+    display: flex;
+    gap: 6px;
+  }
+
+  .nx-tour-dots > i {
+    inline-size: 6px;
+    block-size: 6px;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-border-strong);
+    transition-property: inline-size, background-color;
+    transition-duration: var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-spring-snappy);
+  }
+
+  .nx-tour-dots > i[data-current] {
+    inline-size: 18px;
+    background: var(--nx-accent);
+  }
+
+  .nx-tour-actions {
+    display: flex;
+    gap: var(--nx-space-2);
+  }
+
+  /* ---- Image reveal ---------------------------------------------------------------------------
+   * A framed image that starts as a blurred placeholder (or the aurora
+   * gradient) under animated pixel noise whose cells get finer as progress
+   * grows. Once the image has loaded and no progress is pending, the noise
+   * dissolves outward from the centre while the image sharpens out of a blur
+   * and settles from a slight zoom. Under reduced motion it is a cross-fade. */
+  .nx-image-reveal {
+    position: relative;
+    isolation: isolate;
+    overflow: clip;
+    aspect-ratio: var(--_ratio, 4 / 3);
+    border-radius: var(--nx-radius-xl);
+    background: var(--nx-surface-2);
+    outline: 1px solid color-mix(in oklab, var(--nx-text) 10%, transparent);
+    outline-offset: -1px;
+  }
+
+  .nx-image-reveal-placeholder,
+  .nx-image-reveal-img,
+  .nx-image-reveal-noise {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  .nx-image-reveal-placeholder {
+    object-fit: cover;
+    filter: blur(20px) saturate(1.2);
+    scale: 1.12;
+    transition: opacity 600ms var(--nx-ease-out);
+  }
+
+  div.nx-image-reveal-placeholder {
+    background: var(--nx-gradient-aurora);
+    opacity: 0.45;
+  }
+
+  .nx-image-reveal-img {
+    object-fit: cover;
+    opacity: 0;
+    filter: blur(18px);
+    scale: calc(1 + 0.06 * var(--nx-motion));
+    transition-property: opacity, filter, scale;
+    transition-duration: 450ms, 800ms, var(--nx-spring-soft-duration);
+    transition-timing-function: var(--nx-ease-out), var(--nx-ease-out), var(--nx-spring-soft);
+  }
+
+  .nx-image-reveal-noise {
+    color: var(--nx-text);
+    image-rendering: pixelated;
+    opacity: 0.85;
+    --_reveal-hole: 0%;
+    -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent var(--_reveal-hole), #000 calc(var(--_reveal-hole) + 22%));
+    mask-image: radial-gradient(circle at 50% 50%, transparent var(--_reveal-hole), #000 calc(var(--_reveal-hole) + 22%));
+    transition: --_reveal-hole 900ms var(--nx-ease-out), opacity 900ms var(--nx-ease-out);
+  }
+
+  .nx-image-reveal[data-loaded]:not([data-pending]) .nx-image-reveal-img {
+    opacity: 1;
+    filter: none;
+    scale: 1;
+  }
+
+  .nx-image-reveal[data-loaded]:not([data-pending]) .nx-image-reveal-placeholder {
+    opacity: 0;
+  }
+
+  .nx-image-reveal[data-loaded]:not([data-pending]) .nx-image-reveal-noise {
+    --_reveal-hole: 130%;
+    opacity: 0;
+  }
+
+  .nx-image-reveal-status {
+    position: absolute;
+    inset-block-end: var(--nx-space-3);
+    inset-inline-start: var(--nx-space-3);
+    display: grid;
+    gap: 6px;
+    min-inline-size: 9rem;
+    padding: var(--nx-space-2) var(--nx-space-3);
+    border: 1px solid var(--nx-glass-border);
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-glass);
+    -webkit-backdrop-filter: blur(12px) saturate(1.4);
+    backdrop-filter: blur(12px) saturate(1.4);
+    color: var(--nx-text);
+    font-size: var(--nx-text-xs);
+    font-weight: 600;
+    transition-property: opacity, translate;
+    transition-duration: 150ms;
+    transition-timing-function: var(--nx-ease-out);
+  }
+
+  .nx-image-reveal-status-row {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--nx-space-3);
+  }
+
+  .nx-image-reveal-status-row > span:last-child {
+    font-variant-numeric: tabular-nums;
+    color: var(--nx-text-muted);
+  }
+
+  .nx-image-reveal-bar {
+    block-size: 3px;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-border);
+    overflow: hidden;
+  }
+
+  .nx-image-reveal-bar > i {
+    display: block;
+    block-size: 100%;
+    background: var(--nx-gradient-brand);
+    transform-origin: 0 50%;
+    scale: var(--_p, 0) 1;
+    transition: scale var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+  }
+
+  [dir='rtl'] .nx-image-reveal-bar > i {
+    transform-origin: 100% 50%;
+  }
+
+  .nx-image-reveal[data-loaded]:not([data-pending]) .nx-image-reveal-status {
+    opacity: 0;
+    translate: 0 calc(8px * var(--nx-motion));
+    pointer-events: none;
+  }
+
+  .nx-image-reveal[data-error] .nx-image-reveal-status {
+    color: var(--nx-danger-text);
+  }
+
+  .nx-image-reveal-error,
+  .nx-image-reveal[data-error] .nx-image-reveal-label {
+    display: none;
+  }
+
+  .nx-image-reveal[data-error] .nx-image-reveal-error {
+    display: inline;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-image-reveal-img { filter: none; }
+    .nx-image-reveal-noise { -webkit-mask-image: none; mask-image: none; }
+  }
 }

@@ -1,3 +1,1168 @@
-/* Pickers & inputs blocks — see docs/BLOCKS.md. */
+/*
+ * Blocks: pickers & inputs — combobox, tag input, context menu, hover card,
+ * bottom sheet, date-range picker, time picker, number field.
+ *
+ * Shared floating surface (every popover of the group):
+ *   <div class="nx-picker-pop nx-…-popover" popover="auto|manual" data-side>   ← scales out of --nx-origin
+ *
+ * Combobox
+ *   <div class="nx-combobox" [data-open] [data-disabled]>
+ *     <div class="nx-combobox-field">
+ *       <input class="nx-combobox-input" role="combobox" aria-expanded aria-controls aria-activedescendant aria-autocomplete="list">
+ *       <button class="nx-combobox-clear" aria-label/> <button class="nx-combobox-toggle" tabindex="-1"/>
+ *     <div class="nx-picker-pop nx-combobox-popover" popover="manual">
+ *       <ul class="nx-combobox-list" role="listbox">
+ *         <li class="nx-combobox-option" role="option" aria-selected [data-active] [aria-disabled]>
+ *           <span class="nx-combobox-option-label">Ber<mark>lin</mark></span><span class="nx-combobox-option-desc"/>
+ *           <span class="nx-combobox-check"><svg/></span>
+ *       <p class="nx-combobox-empty" role="status"/>
+ *
+ * Tag input
+ *   <div class="nx-taginput" [data-full]>
+ *     <div class="nx-taginput-field">
+ *       <ul class="nx-taginput-chips"><li class="nx-taginput-chip" data-state="enter|idle|exit" [data-flash]>
+ *         <span>label</span><button class="nx-taginput-chip-remove"/></li>…</ul>
+ *       <input class="nx-taginput-input">
+ *     <p class="nx-taginput-meta"><span class="nx-taginput-count"/></p>
+ *     <div class="nx-picker-pop nx-taginput-popover" popover="manual"><ul role="listbox"> … nx-combobox-option …
+ *
+ * Context menu
+ *   <div class="nx-ctxmenu" tabindex="0" [data-pressing]> …area content…
+ *     <div class="nx-picker-pop nx-ctxmenu-menu" popover="auto" role="menu">
+ *       <button class="nx-ctxmenu-item" role="menuitem" [data-tone="danger"] [aria-haspopup] [aria-disabled]>
+ *         <svg class="nx-icon"/><span class="nx-ctxmenu-label"/><kbd class="nx-ctxmenu-shortcut"/></button>
+ *       <hr class="nx-ctxmenu-sep" role="separator">
+ *       <div class="nx-picker-pop nx-ctxmenu-menu" data-sub popover="auto">…</div>
+ *
+ * Hover card
+ *   <span class="nx-hovercard"><span class="nx-hovercard-trigger">…link…</span>
+ *     <span class="nx-picker-pop nx-hovercard-card" popover="manual">…</span></span>   ← a span, so it may sit inside a <p>
+ *
+ * Bottom sheet
+ *   <dialog class="nx-bsheet" data-snap [data-dragging]>                  ← --nx-sheet-y / --nx-sheet-full from core bottomSheet()
+ *     <header class="nx-bsheet-head"><span class="nx-bsheet-handle" role="slider"/><h2 class="nx-bsheet-title"/></header>
+ *     <div class="nx-bsheet-body">…</div></dialog>
+ *
+ * Date-range picker
+ *   <div class="nx-daterange">
+ *     <button class="nx-daterange-trigger"><span class="nx-daterange-value"/></button>
+ *     <div class="nx-picker-pop nx-daterange-popover" popover="auto" role="dialog">
+ *       <ul class="nx-daterange-presets"><li><button class="nx-daterange-preset" aria-pressed/></li>…</ul>
+ *       <div class="nx-daterange-months"><section class="nx-daterange-month">
+ *         <header class="nx-daterange-head"><button class="nx-daterange-nav"/><h3/></header>
+ *         <div class="nx-daterange-grid" role="grid"><div role="row"><span class="nx-daterange-weekday"/>…
+ *           <button class="nx-daterange-day" data-mark="start|end|middle|single" [data-preview] [data-today]/>
+ *       <footer class="nx-daterange-foot"><p class="nx-daterange-summary"/>…</footer>
+ *
+ * Time picker
+ *   <div class="nx-timepicker" role="group">
+ *     <div class="nx-timepicker-wheels"><span class="nx-timepicker-band"/>
+ *       <ul class="nx-timepicker-wheel" role="listbox" tabindex="0"><li class="nx-timepicker-option" role="option" aria-selected/>…</ul>
+ *       <span class="nx-timepicker-sep">:</span> …
+ *
+ * Number field
+ *   <div class="nx-numfield">
+ *     <label class="nx-numfield-label">  ← drag to scrub
+ *     <div class="nx-numfield-group">
+ *       <button class="nx-numfield-step" data-dir="down"/>
+ *       <span class="nx-numfield-box"><input class="nx-numfield-input" role="spinbutton"><span class="nx-numfield-display nx-number"/></span>
+ *       <button class="nx-numfield-step" data-dir="up"/>
+ */
 @layer nx.components {
+  /* ==== Shared floating surface ======================================================= */
+  .nx-picker-pop {
+    --_pad: 0.375rem;
+    --_radius: var(--nx-radius-lg);
+
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    padding: var(--_pad);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--_radius);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    box-shadow: var(--nx-shadow-xl);
+    z-index: var(--nx-z-dropdown);
+    transform-origin: var(--nx-origin, top center);
+    opacity: 0;
+    scale: calc(1 - 0.05 * var(--nx-motion));
+    translate: 0 calc(-4px * var(--nx-motion));
+    /* Closing: quick and plain. */
+    transition:
+      opacity var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-dur-fast) var(--nx-ease-out),
+      translate var(--nx-dur-fast) var(--nx-ease-out),
+      display var(--nx-dur-fast) allow-discrete,
+      overlay var(--nx-dur-fast) allow-discrete;
+
+    &[data-side="top"] { translate: 0 calc(4px * var(--nx-motion)); }
+  }
+
+  .nx-picker-pop:where(:popover-open, [data-open]) {
+    opacity: 1;
+    scale: 1;
+    translate: 0 0;
+    /* Opening: the snappy spring, out of the trigger. */
+    transition:
+      opacity var(--nx-dur-base) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+      translate var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+      display var(--nx-dur-base) allow-discrete,
+      overlay var(--nx-dur-base) allow-discrete;
+
+    @starting-style {
+      opacity: 0;
+      scale: calc(1 - 0.05 * var(--nx-motion));
+    }
+  }
+
+  .nx-picker-pop:not([popover]):not([data-open]) { display: none; }
+
+  /* ==== Field shell (combobox, tag input) =============================================== */
+  :where(.nx-combobox-field, .nx-taginput-field) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
+    min-block-size: 2.75rem;
+    padding: 0.3125rem;
+    padding-inline-start: 0.75rem;
+    border: 1px solid var(--nx-border-strong);
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-surface);
+    box-shadow: var(--nx-shadow-xs);
+    cursor: text;
+    transition:
+      border-color var(--nx-dur-fast) var(--nx-ease-out),
+      box-shadow var(--nx-dur-base) var(--nx-ease-out);
+
+    &:hover { border-color: color-mix(in oklab, var(--nx-border-strong) 70%, var(--nx-text)); }
+    &:focus-within {
+      border-color: var(--nx-accent);
+      box-shadow: var(--nx-shadow-xs), 0 0 0 4px var(--nx-accent-soft);
+    }
+  }
+
+  :where(.nx-combobox-input, .nx-taginput-input) {
+    flex: 1 1 6rem;
+    min-inline-size: 0;
+    padding: 0.375rem 0;
+    border: 0;
+    background: transparent;
+    color: var(--nx-text);
+    font: 400 var(--nx-text-sm) / 1.4 var(--nx-font-sans);
+
+    &:focus-visible { outline: none; }
+    &::placeholder { color: var(--nx-text-subtle); }
+  }
+
+  /* ==== Combobox ====================================================================== */
+  .nx-combobox {
+    position: relative;
+    display: grid;
+    gap: 0.375rem;
+    min-inline-size: 0;
+  }
+
+  .nx-combobox-field { flex-wrap: nowrap; }
+
+  .nx-combobox[data-disabled] .nx-combobox-field {
+    background: var(--nx-surface-2);
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  :where(.nx-combobox-clear, .nx-combobox-toggle) {
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 2rem;
+    block-size: 2rem;
+    padding: 0;
+    border: 0;
+    border-radius: calc(var(--nx-radius-md) - 0.3125rem);
+    background: transparent;
+    color: var(--nx-text-subtle);
+    cursor: pointer;
+    transition:
+      color var(--nx-dur-fast) var(--nx-ease-out),
+      background-color var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-dur-fast) var(--nx-ease-out),
+      opacity var(--nx-dur-fast) var(--nx-ease-out),
+      rotate var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+
+    &:hover { color: var(--nx-text); background: var(--nx-surface-2); }
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+    .nx-icon { inline-size: 1rem; block-size: 1rem; }
+  }
+
+  /* The clear button holds its place, so the field never jumps as it appears. */
+  .nx-combobox-clear[data-hidden] {
+    opacity: 0;
+    scale: 0.95;
+    pointer-events: none;
+  }
+
+  .nx-combobox[data-open] .nx-combobox-toggle { rotate: 180deg; }
+
+  .nx-combobox-popover,
+  .nx-taginput-popover { max-inline-size: min(28rem, calc(100vw - 1rem)); }
+
+  :where(.nx-combobox-list) {
+    display: grid;
+    gap: 1px;
+    max-block-size: min(17rem, 50vh);
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    list-style: none;
+    scroll-padding-block: var(--_pad, 0.375rem);
+  }
+
+  .nx-combobox-option {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-block-size: 2.5rem;
+    padding: 0.375rem 0.625rem;
+    border-radius: calc(var(--nx-radius-lg) - 0.375rem);
+    color: var(--nx-text);
+    font-size: var(--nx-text-sm);
+    cursor: pointer;
+    user-select: none;
+    /* Moving with the keyboard is instant; only the first paint staggers in. */
+    animation: nx-picker-row-in 200ms var(--nx-ease-out) both;
+    animation-delay: calc(min(var(--nx-i, 0), 8) * 30ms);
+
+    &[data-active] { background: var(--nx-surface-2); }
+    &[aria-selected="true"] { color: var(--nx-accent-text); }
+    &[aria-selected="true"] .nx-combobox-option-label { font-weight: 600; }
+    &[aria-disabled="true"] { opacity: 0.45; cursor: not-allowed; }
+    &[hidden] { display: none; }
+  }
+
+  @keyframes nx-picker-row-in {
+    from { opacity: 0; translate: 0 calc(-4px * var(--nx-motion)); }
+  }
+
+  .nx-combobox-option-text {
+    display: grid;
+    flex: 1;
+    min-inline-size: 0;
+  }
+
+  .nx-combobox-option-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    mark {
+      padding: 0;
+      border-radius: 2px;
+      background: transparent;
+      color: inherit;
+      font-weight: 650;
+      text-decoration: underline;
+      text-decoration-color: var(--nx-accent);
+      text-decoration-thickness: 2px;
+      text-underline-offset: 3px;
+    }
+  }
+
+  .nx-combobox-option-desc {
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-xs);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .nx-combobox-option > .nx-icon:first-child {
+    flex: none;
+    inline-size: 1rem;
+    block-size: 1rem;
+    color: var(--nx-text-muted);
+  }
+
+  /* The check: a contextual swap — scale 0.25 → 1, blurred in, both states kept. */
+  .nx-combobox-check {
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 1rem;
+    block-size: 1rem;
+    color: var(--nx-accent);
+    opacity: 0;
+    scale: 0.25;
+    filter: blur(4px);
+    transition:
+      opacity 300ms cubic-bezier(0.2, 0, 0, 1),
+      scale 300ms cubic-bezier(0.2, 0, 0, 1),
+      filter 300ms cubic-bezier(0.2, 0, 0, 1);
+
+    .nx-icon { inline-size: 1rem; block-size: 1rem; }
+  }
+
+  .nx-combobox-option[aria-selected="true"] .nx-combobox-check {
+    opacity: 1;
+    scale: 1;
+    filter: blur(0);
+  }
+
+  .nx-combobox-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-space-2);
+    margin: 0;
+    padding: var(--nx-space-5) var(--nx-space-3);
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+    text-align: center;
+
+    &[hidden] { display: none; }
+  }
+
+  .nx-combobox-spinner {
+    inline-size: 0.875rem;
+    block-size: 0.875rem;
+    border: 2px solid var(--nx-border-strong);
+    border-block-start-color: var(--nx-accent);
+    border-radius: var(--nx-radius-full);
+    animation: nx-picker-spin 700ms linear infinite;
+  }
+
+  @keyframes nx-picker-spin { to { rotate: 1turn; } }
+
+  /* ==== Tag input ===================================================================== */
+  .nx-taginput {
+    display: grid;
+    gap: 0.375rem;
+    min-inline-size: 0;
+  }
+
+  .nx-taginput-field { padding-inline-start: 0.3125rem; }
+
+  .nx-taginput-chips {
+    display: contents;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nx-taginput-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    max-inline-size: 100%;
+    block-size: 1.875rem;
+    padding-inline: 0.625rem 0.25rem;
+    border: 1px solid var(--nx-accent-border);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-accent-soft);
+    color: var(--nx-accent-text);
+    font: 500 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    white-space: nowrap;
+    transform-origin: center;
+    transition:
+      opacity var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy),
+      background-color var(--nx-dur-fast) var(--nx-ease-out),
+      border-color var(--nx-dur-fast) var(--nx-ease-out),
+      color var(--nx-dur-fast) var(--nx-ease-out);
+
+    > span { overflow: hidden; text-overflow: ellipsis; }
+
+    /* Pop in on the bouncy spring, from 0.95 (never from nothing). */
+    @starting-style {
+      opacity: 0;
+      scale: calc(1 - 0.05 * var(--nx-motion));
+    }
+
+    &[data-state="exit"] {
+      opacity: 0;
+      scale: calc(1 - 0.05 * var(--nx-motion));
+      pointer-events: none;
+      transition-duration: var(--nx-dur-fast);
+      transition-timing-function: var(--nx-ease-out);
+    }
+
+    /* A duplicate: the existing chip flashes (colour + shake, not motion alone). */
+    &[data-flash] {
+      border-color: var(--nx-warning);
+      background: var(--nx-warning-soft);
+      color: var(--nx-warning-text);
+      animation: nx-picker-shake 360ms var(--nx-ease-out);
+    }
+
+    /* Backspace once on an empty input arms the last chip; again removes it. */
+    &[data-armed] {
+      border-color: var(--nx-danger);
+      background: var(--nx-danger-soft);
+      color: var(--nx-danger-text);
+    }
+  }
+
+  @keyframes nx-picker-shake {
+    20% { translate: calc(-3px * var(--nx-motion)) 0; }
+    45% { translate: calc(3px * var(--nx-motion)) 0; }
+    70% { translate: calc(-2px * var(--nx-motion)) 0; }
+  }
+
+  .nx-taginput-chip-remove {
+    display: grid;
+    place-items: center;
+    inline-size: 1.375rem;
+    block-size: 1.375rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--nx-radius-full);
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    opacity: 0.7;
+    transition:
+      opacity var(--nx-dur-fast) var(--nx-ease-out),
+      background-color var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-dur-fast) var(--nx-ease-out);
+
+    &:hover { opacity: 1; background: color-mix(in oklab, currentColor 14%, transparent); }
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 1px; opacity: 1; }
+    .nx-icon { inline-size: 0.8125rem; block-size: 0.8125rem; }
+  }
+
+  .nx-taginput-input { padding-inline: 0.4375rem; }
+
+  .nx-taginput[data-full] .nx-taginput-input::placeholder { color: transparent; }
+
+  .nx-taginput-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--nx-space-3);
+    margin: 0;
+    color: var(--nx-text-subtle);
+    font-size: var(--nx-text-xs);
+  }
+
+  .nx-taginput-count { font-variant-numeric: tabular-nums; }
+  .nx-taginput[data-full] .nx-taginput-count { color: var(--nx-warning-text); }
+
+  /* ==== Context menu ================================================================== */
+  .nx-ctxmenu {
+    position: relative;
+    border-radius: var(--nx-radius-lg);
+    -webkit-touch-callout: none;
+    transition: scale var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+    /* A finger resting for the long press: the area sinks a touch as it fills. */
+    &[data-pressing] { scale: calc(1 - 0.02 * var(--nx-motion)); transition-duration: 500ms; transition-timing-function: linear; }
+  }
+
+  .nx-ctxmenu-menu {
+    --_pad: 0.3125rem;
+
+    min-inline-size: 13rem;
+    max-inline-size: min(20rem, calc(100vw - 1rem));
+    /* Right click is frequent: the menu arrives quickly, with only a touch of spring. */
+    translate: 0 0;
+  }
+
+  /* Display only while open: a closed popover keeps the browser's display: none. */
+  .nx-ctxmenu-menu:where(:popover-open, [data-open]) { display: grid; }
+
+  .nx-ctxmenu-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    inline-size: 100%;
+    min-block-size: 2.25rem;
+    padding: 0.375rem 0.625rem;
+    border: 0;
+    border-radius: calc(var(--nx-radius-lg) - var(--_pad));
+    background: transparent;
+    color: var(--nx-text);
+    font: 450 var(--nx-text-sm) / 1.3 var(--nx-font-sans);
+    text-align: start;
+    cursor: pointer;
+    user-select: none;
+    transition:
+      background-color var(--nx-dur-instant) var(--nx-ease-out),
+      color var(--nx-dur-instant) var(--nx-ease-out);
+
+    &:is(:hover, :focus-visible, [data-open]):not([aria-disabled="true"]) {
+      outline: none;
+      background: var(--nx-surface-2);
+    }
+    &:focus-visible { box-shadow: inset 0 0 0 2px var(--nx-ring); }
+    &[data-tone="danger"] { color: var(--nx-danger-text); }
+    &[data-tone="danger"]:is(:hover, :focus-visible) { background: var(--nx-danger-soft); }
+    &[aria-disabled="true"] { opacity: 0.45; cursor: not-allowed; }
+
+    > .nx-icon { flex: none; inline-size: 1rem; block-size: 1rem; color: var(--nx-text-muted); }
+    &[data-tone="danger"] > .nx-icon { color: currentColor; }
+  }
+
+  .nx-ctxmenu-label { flex: 1; min-inline-size: 0; }
+
+  .nx-ctxmenu-shortcut {
+    margin-inline-start: auto;
+    color: var(--nx-text-subtle);
+    font: 500 var(--nx-text-xs) / 1 var(--nx-font-mono);
+    letter-spacing: var(--nx-tracking-wide, 0);
+  }
+
+  .nx-ctxmenu-sub-arrow {
+    margin-inline-start: auto;
+    inline-size: 0.875rem;
+    block-size: 0.875rem;
+    color: var(--nx-text-subtle);
+  }
+
+  .nx-ctxmenu-sep {
+    block-size: 1px;
+    margin: 0.25rem 0.375rem;
+    border: 0;
+    background: var(--nx-border);
+  }
+
+  .nx-ctxmenu-heading {
+    margin: 0;
+    padding: 0.5rem 0.625rem 0.25rem;
+    color: var(--nx-text-subtle);
+    font: 600 var(--nx-text-xs) / 1 var(--nx-font-sans);
+    letter-spacing: var(--nx-tracking-wide, 0);
+    text-transform: uppercase;
+  }
+
+  /* ==== Hover card ==================================================================== */
+  .nx-hovercard { display: inline; }
+  .nx-hovercard-trigger { display: inline; }
+
+  .nx-hovercard-card {
+    --_pad: var(--nx-space-4);
+    --_radius: var(--nx-radius-xl);
+
+    inline-size: min(var(--nx-hovercard-width, 20rem), calc(100vw - 1rem));
+    padding: var(--_pad);
+    font-style: normal;
+    font-weight: 400;
+    text-align: start;
+    white-space: normal;
+    box-shadow: var(--nx-shadow-xl), inset 0 1px 0 var(--nx-highlight);
+  }
+
+  .nx-hovercard-card:where(:popover-open, [data-open]) {
+    display: block;
+    /* Hover cards arrive a little softer than menus: the gentle spring. */
+    transition:
+      opacity var(--nx-dur-base) var(--nx-ease-out),
+      scale var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      display var(--nx-dur-base) allow-discrete,
+      overlay var(--nx-dur-base) allow-discrete;
+  }
+
+  /* ==== Bottom sheet ================================================================== */
+  :root:has(.nx-bsheet:modal) { overflow: hidden; }
+
+  .nx-bsheet {
+    --_full: var(--nx-sheet-full, 90dvh);
+    --_y: var(--nx-sheet-y, 0px);
+
+    position: fixed;
+    inset: auto 0 0;
+    display: flex;
+    flex-direction: column;
+    inline-size: min(40rem, 100vw);
+    block-size: var(--_full);
+    max-block-size: none;
+    max-inline-size: none;
+    margin: 0 auto;
+    padding: 0;
+    border: 1px solid var(--nx-border);
+    border-block-end: 0;
+    border-radius: var(--nx-radius-2xl) var(--nx-radius-2xl) 0 0;
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    box-shadow: var(--nx-shadow-xl), inset 0 1px 0 var(--nx-highlight);
+    overflow: hidden;
+    /* The visible height is a translate: transforms only, never block-size. */
+    translate: 0 100%;
+    transition:
+      translate var(--nx-dur-base) var(--nx-ease-out),
+      display var(--nx-dur-base) allow-discrete,
+      overlay var(--nx-dur-base) allow-discrete;
+
+    &:not([open]) { display: none; }
+
+    &::backdrop {
+      background: transparent;
+      transition:
+        background-color var(--nx-dur-slow) var(--nx-ease-out),
+        display var(--nx-dur-slow) allow-discrete,
+        overlay var(--nx-dur-slow) allow-discrete;
+    }
+
+    /* Reduced motion: no slide, a fade. */
+    @media (prefers-reduced-motion: reduce) {
+      translate: 0 var(--_y);
+      opacity: 0;
+      transition: opacity var(--nx-dur-fast) var(--nx-ease-out), display var(--nx-dur-fast) allow-discrete, overlay var(--nx-dur-fast) allow-discrete;
+    }
+  }
+
+  .nx-bsheet[open] {
+    translate: 0 var(--_y);
+    /* Snapping rides the soft spring: a large surface arriving without overshoot. */
+    transition:
+      translate var(--nx-spring-soft-duration) var(--nx-spring-soft),
+      display var(--nx-dur-base) allow-discrete,
+      overlay var(--nx-dur-base) allow-discrete;
+
+    @starting-style { translate: 0 100%; }
+
+    &::backdrop { background: var(--nx-backdrop, rgb(0 0 0 / 0.45)); }
+
+    @media (prefers-reduced-motion: reduce) {
+      opacity: 1;
+      @starting-style { opacity: 0; }
+    }
+  }
+
+  @starting-style {
+    .nx-bsheet[open]::backdrop { background: transparent; }
+  }
+
+  /* Under the finger: no transition, the sheet follows exactly. */
+  .nx-bsheet[data-dragging] { transition: none; }
+
+  .nx-bsheet-head {
+    display: grid;
+    justify-items: center;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-2) var(--nx-space-5) var(--nx-space-3);
+    border-block-end: 1px solid var(--nx-border);
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+  }
+
+  .nx-bsheet[data-dragging] .nx-bsheet-head { cursor: grabbing; }
+
+  .nx-bsheet-handle {
+    display: block;
+    inline-size: 2.75rem;
+    block-size: 1.25rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: inherit;
+
+    &::before {
+      content: "";
+      display: block;
+      inline-size: 100%;
+      block-size: 0.3125rem;
+      margin-block: 0.46875rem;
+      border-radius: var(--nx-radius-full);
+      background: var(--nx-border-strong);
+      transition: background-color var(--nx-dur-fast) var(--nx-ease-out), scale var(--nx-dur-fast) var(--nx-ease-out);
+    }
+
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; border-radius: var(--nx-radius-sm); }
+  }
+
+  .nx-bsheet:is([data-dragging], :has(.nx-bsheet-handle:focus-visible)) .nx-bsheet-handle::before {
+    background: var(--nx-accent);
+    scale: 1.15 1;
+  }
+
+  .nx-bsheet-titles {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--nx-space-3);
+    inline-size: 100%;
+  }
+
+  .nx-bsheet-title { margin: 0; font: 650 var(--nx-text-lg) / 1.3 var(--nx-font-display); }
+
+  .nx-bsheet-body {
+    flex: 1;
+    min-block-size: 0;
+    padding: var(--nx-space-4) var(--nx-space-5) var(--nx-space-6);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .nx-bsheet-close {
+    display: grid;
+    place-items: center;
+    inline-size: 2rem;
+    block-size: 2rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface-2);
+    color: var(--nx-text-muted);
+    cursor: pointer;
+    transition: background-color var(--nx-dur-fast) var(--nx-ease-out), scale var(--nx-dur-fast) var(--nx-ease-out);
+
+    &:hover { background: var(--nx-surface-3); color: var(--nx-text); }
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+    .nx-icon { inline-size: 1rem; block-size: 1rem; }
+  }
+
+  /* ==== Date-range picker ============================================================= */
+  .nx-daterange { display: inline-grid; min-inline-size: 0; }
+
+  .nx-daterange-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    min-block-size: 2.75rem;
+    padding: 0.5rem 0.875rem;
+    border: 1px solid var(--nx-border-strong);
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-surface);
+    box-shadow: var(--nx-shadow-xs);
+    color: var(--nx-text);
+    font: 500 var(--nx-text-sm) / 1.3 var(--nx-font-sans);
+    text-align: start;
+    cursor: pointer;
+    transition:
+      border-color var(--nx-dur-fast) var(--nx-ease-out),
+      box-shadow var(--nx-dur-base) var(--nx-ease-out),
+      scale var(--nx-dur-fast) var(--nx-ease-out);
+
+    &:hover { border-color: color-mix(in oklab, var(--nx-border-strong) 70%, var(--nx-text)); }
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+    &[aria-expanded="true"] { border-color: var(--nx-accent); box-shadow: var(--nx-shadow-xs), 0 0 0 4px var(--nx-accent-soft); }
+    > .nx-icon { inline-size: 1rem; block-size: 1rem; color: var(--nx-text-muted); }
+  }
+
+  .nx-daterange-value[data-empty] { color: var(--nx-text-subtle); }
+
+  .nx-daterange-popover {
+    --_pad: var(--nx-space-3);
+    --_radius: var(--nx-radius-xl);
+
+    grid-template-columns: auto 1fr;
+    gap: var(--nx-space-3);
+    max-inline-size: calc(100vw - 1rem);
+    max-block-size: calc(100dvh - 1rem);
+    overflow: auto;
+  }
+
+  .nx-daterange-popover:where(:popover-open, [data-open]) { display: grid; }
+
+  .nx-daterange-presets {
+    display: grid;
+    align-content: start;
+    gap: 2px;
+    min-inline-size: 9rem;
+    margin: 0;
+    padding: 0 0 0 0;
+    padding-inline-end: var(--nx-space-3);
+    border-inline-end: 1px solid var(--nx-border);
+    list-style: none;
+  }
+
+  .nx-daterange-preset {
+    inline-size: 100%;
+    padding: 0.5rem 0.625rem;
+    border: 0;
+    border-radius: var(--nx-radius-md);
+    background: transparent;
+    color: var(--nx-text-muted);
+    font: 500 var(--nx-text-sm) / 1.2 var(--nx-font-sans);
+    text-align: start;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color var(--nx-dur-fast) var(--nx-ease-out),
+      color var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-dur-fast) var(--nx-ease-out);
+
+    &:hover { background: var(--nx-surface-2); color: var(--nx-text); }
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 0; }
+    &[aria-pressed="true"] { background: var(--nx-accent-soft); color: var(--nx-accent-text); }
+  }
+
+  .nx-daterange-main { display: grid; gap: var(--nx-space-3); min-inline-size: 0; }
+
+  .nx-daterange-months {
+    display: grid;
+    grid-template-columns: repeat(var(--nx-daterange-months, 2), minmax(0, 1fr));
+    gap: var(--nx-space-5);
+  }
+
+  .nx-daterange-month { display: grid; align-content: start; gap: var(--nx-space-2); }
+
+  .nx-daterange-head {
+    display: grid;
+    grid-template-columns: 2rem 1fr 2rem;
+    align-items: center;
+    min-block-size: 2rem;
+
+    h3 { grid-column: 2; grid-row: 1; margin: 0; font: 600 var(--nx-text-sm) / 1.2 var(--nx-font-sans); text-align: center; }
+  }
+
+  .nx-daterange-nav {
+    display: grid;
+    place-items: center;
+    inline-size: 2rem;
+    block-size: 2rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--nx-radius-md);
+    background: transparent;
+    color: var(--nx-text-muted);
+    cursor: pointer;
+    transition: background-color var(--nx-dur-fast) var(--nx-ease-out), scale var(--nx-dur-fast) var(--nx-ease-out);
+
+    &:hover { background: var(--nx-surface-2); color: var(--nx-text); }
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+    &[data-at="next"] { grid-column: 3; grid-row: 1; }
+    &[data-at="prev"] { grid-column: 1; grid-row: 1; }
+    .nx-icon { inline-size: 1rem; block-size: 1rem; }
+  }
+
+  /* Every month carries both arrows; only the outer ones show (one month on phones keeps both). */
+  .nx-daterange-month:not(:first-child) .nx-daterange-nav[data-at="prev"],
+  .nx-daterange-month:not(:last-child) .nx-daterange-nav[data-at="next"] { visibility: hidden; }
+
+  .nx-daterange-grid { display: grid; gap: 2px; }
+
+  /* A month switch slides the grids toward where the new month comes from. */
+  .nx-daterange-months[data-enter] .nx-daterange-grid { animation: nx-daterange-in var(--nx-spring-gentle-duration) var(--nx-spring-gentle) both; }
+  .nx-daterange-months[data-enter="prev"] { --_from: -1; }
+  .nx-daterange-months[data-enter="next"] { --_from: 1; }
+
+  @keyframes nx-daterange-in {
+    from { opacity: 0; translate: calc(16px * var(--_from, 1) * var(--nx-dir) * var(--nx-motion)) 0; }
+  }
+
+  .nx-daterange-row {
+    display: grid;
+    grid-template-columns: repeat(7, 2.375rem);
+  }
+
+  .nx-daterange-weekday {
+    display: grid;
+    place-items: center;
+    block-size: 1.75rem;
+    color: var(--nx-text-subtle);
+    font: 500 var(--nx-text-xs) / 1 var(--nx-font-sans);
+  }
+
+  .nx-daterange-cell {
+    position: relative;
+    display: grid;
+    place-items: center;
+    block-size: 2.375rem;
+
+    /* The band behind the range: half-cells at its ends so it meets the round day. */
+    &::before {
+      content: "";
+      position: absolute;
+      inset-block: 0.1875rem;
+      inset-inline: 0;
+      background: var(--nx-accent-soft);
+      opacity: 0;
+      transition: opacity var(--nx-dur-fast) var(--nx-ease-out);
+    }
+
+    &[data-mark="middle"]::before { opacity: 1; }
+    &[data-mark="start"]::before { opacity: 1; inset-inline-start: 50%; }
+    &[data-mark="end"]::before { opacity: 1; inset-inline-end: 50%; }
+    &[data-preview]::before { background: color-mix(in oklab, var(--nx-accent-soft) 55%, transparent); }
+    /* Round off the band at the week's edges. */
+    &:first-child::before { border-start-start-radius: var(--nx-radius-full); border-end-start-radius: var(--nx-radius-full); }
+    &:last-child::before { border-start-end-radius: var(--nx-radius-full); border-end-end-radius: var(--nx-radius-full); }
+  }
+
+  .nx-daterange-day {
+    position: relative;
+    display: grid;
+    place-items: center;
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--nx-radius-full);
+    background: transparent;
+    color: var(--nx-text);
+    font: 500 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+    transition:
+      background-color var(--nx-dur-fast) var(--nx-ease-out),
+      color var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+
+    &:hover { background: var(--nx-surface-2); }
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 1px; }
+    &:disabled { color: var(--nx-text-subtle); opacity: 0.5; cursor: not-allowed; }
+    &[data-today]::after {
+      content: "";
+      position: absolute;
+      inset-block-end: 0.25rem;
+      inline-size: 0.25rem;
+      block-size: 0.25rem;
+      border-radius: var(--nx-radius-full);
+      background: currentColor;
+    }
+  }
+
+  .nx-daterange-cell:is([data-mark="start"], [data-mark="end"], [data-mark="single"]) .nx-daterange-day {
+    background: var(--nx-accent);
+    color: var(--nx-accent-contrast);
+    box-shadow: var(--nx-shadow-sm);
+  }
+
+  .nx-daterange-cell[data-preview]:is([data-mark="start"], [data-mark="end"]) .nx-daterange-day {
+    background: color-mix(in oklab, var(--nx-accent) 70%, var(--nx-surface));
+  }
+
+  .nx-daterange-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--nx-space-3);
+    padding-block-start: var(--nx-space-3);
+    border-block-start: 1px solid var(--nx-border);
+  }
+
+  .nx-daterange-summary {
+    margin: 0;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+  }
+
+  .nx-daterange-actions { display: flex; gap: var(--nx-space-2); }
+
+  @media (max-width: 40rem) {
+    .nx-daterange-popover { grid-template-columns: 1fr; }
+    .nx-daterange-popover:where(:popover-open, [data-open]) { display: grid; }
+
+  .nx-daterange-presets {
+      display: flex;
+      overflow-x: auto;
+      padding-inline-end: 0;
+      padding-block-end: var(--nx-space-2);
+      border-inline-end: 0;
+      border-block-end: 1px solid var(--nx-border);
+    }
+    .nx-daterange-months { --nx-daterange-months: 1; }
+    .nx-daterange-month + .nx-daterange-month { display: none; }
+    .nx-daterange-month:first-child .nx-daterange-nav[data-at="next"] { visibility: visible; }
+  }
+
+  /* ==== Time picker =================================================================== */
+  .nx-timepicker {
+    --_row: 2.5rem;
+    --_rows: 5;
+
+    display: inline-grid;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-2);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-xl);
+    background: var(--nx-surface);
+    box-shadow: var(--nx-shadow-sm);
+  }
+
+  .nx-timepicker-wheels {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-space-1);
+    direction: ltr; /* hh : mm reads left to right in every script */
+  }
+
+  /* The selection band sits behind the centred row. */
+  .nx-timepicker-band {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-start: 50%;
+    block-size: var(--_row);
+    translate: 0 -50%;
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-surface-2);
+    box-shadow: inset 0 0 0 1px var(--nx-border);
+    pointer-events: none;
+  }
+
+  .nx-timepicker-wheel {
+    position: relative;
+    inline-size: 3.5rem;
+    block-size: calc(var(--_row) * var(--_rows));
+    margin: 0;
+    padding: calc(var(--_row) * (var(--_rows) - 1) / 2) 0;
+    overflow-y: auto;
+    list-style: none;
+    scroll-snap-type: y mandatory;
+    scrollbar-width: none;
+    overscroll-behavior: contain;
+    border-radius: var(--nx-radius-md);
+    /* The rows fade toward the edges like a drum. */
+    mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
+
+    &::-webkit-scrollbar { display: none; }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+    &[data-period] { inline-size: 4rem; }
+  }
+
+  .nx-timepicker-option {
+    display: grid;
+    place-items: center;
+    block-size: var(--_row);
+    color: var(--nx-text-muted);
+    font: 500 var(--nx-text-lg) / 1 var(--nx-font-sans);
+    font-variant-numeric: tabular-nums;
+    scroll-snap-align: center;
+    cursor: pointer;
+    user-select: none;
+    scale: calc(1 - min(var(--nx-wheel-d, 0), 2) * 0.08 * var(--nx-motion));
+    transition: color var(--nx-dur-fast) var(--nx-ease-out);
+
+    &[aria-selected="true"] { color: var(--nx-text); font-weight: 650; }
+    &[aria-disabled="true"] { opacity: 0.35; cursor: not-allowed; }
+  }
+
+  .nx-timepicker-wheel[data-period] .nx-timepicker-option { font-size: var(--nx-text-sm); }
+
+  .nx-timepicker-sep {
+    position: relative;
+    color: var(--nx-text-muted);
+    font: 650 var(--nx-text-lg) / 1 var(--nx-font-sans);
+  }
+
+  .nx-timepicker-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--nx-space-2);
+    padding-inline: var(--nx-space-1);
+  }
+
+  .nx-timepicker-value {
+    margin: 0;
+    color: var(--nx-text-muted);
+    font: 500 var(--nx-text-sm) / 1.2 var(--nx-font-sans);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ==== Number field ================================================================== */
+  .nx-numfield {
+    display: inline-grid;
+    gap: 0.375rem;
+    min-inline-size: 0;
+  }
+
+  .nx-numfield-label {
+    justify-self: start;
+    color: var(--nx-text);
+    font: 500 var(--nx-text-sm) / 1.3 var(--nx-font-sans);
+    cursor: ew-resize;
+    user-select: none;
+    touch-action: pan-y;
+    transition: color var(--nx-dur-fast) var(--nx-ease-out);
+
+    &[data-scrubbing] { color: var(--nx-accent-text); }
+  }
+
+  .nx-numfield-hint { margin: 0; color: var(--nx-text-subtle); font-size: var(--nx-text-xs); }
+
+  .nx-numfield-group {
+    --_pad: 0.25rem;
+
+    display: inline-grid;
+    grid-template-columns: auto minmax(4rem, 1fr) auto;
+    align-items: center;
+    padding: var(--_pad);
+    border: 1px solid var(--nx-border-strong);
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-surface);
+    box-shadow: var(--nx-shadow-xs);
+    transition:
+      border-color var(--nx-dur-fast) var(--nx-ease-out),
+      box-shadow var(--nx-dur-base) var(--nx-ease-out);
+
+    &:focus-within { border-color: var(--nx-accent); box-shadow: var(--nx-shadow-xs), 0 0 0 4px var(--nx-accent-soft); }
+  }
+
+  .nx-numfield[data-disabled] .nx-numfield-group { background: var(--nx-surface-2); opacity: 0.7; }
+
+  .nx-numfield-step {
+    display: grid;
+    place-items: center;
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    padding: 0;
+    border: 0;
+    border-radius: calc(var(--nx-radius-md) - var(--_pad));
+    background: var(--nx-surface-2);
+    color: var(--nx-text);
+    cursor: pointer;
+    touch-action: manipulation;
+    transition:
+      background-color var(--nx-dur-fast) var(--nx-ease-out),
+      opacity var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-dur-fast) var(--nx-ease-out);
+
+    &:hover:not(:disabled) { background: var(--nx-surface-3); }
+    &:is(:active, [data-holding]):not(:disabled) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+    .nx-icon { inline-size: 1rem; block-size: 1rem; }
+  }
+
+  .nx-numfield-box {
+    position: relative;
+    display: grid;
+    min-inline-size: 0;
+  }
+
+  .nx-numfield-input {
+    grid-area: 1 / 1;
+    inline-size: 100%;
+    min-inline-size: 0;
+    padding: 0.375rem 0.5rem;
+    border: 0;
+    background: transparent;
+    color: var(--nx-text);
+    font: 600 var(--nx-text-base) / 1.3 var(--nx-font-sans);
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+
+    &:focus-visible { outline: none; }
+  }
+
+  /* At rest the rolling copy shows the value; while typing, the input does. */
+  .nx-numfield-display {
+    grid-area: 1 / 1;
+    place-self: center;
+    font: 600 var(--nx-text-base) / 1.3 var(--nx-font-sans);
+    pointer-events: none;
+  }
+
+  .nx-numfield-box:not(:focus-within) .nx-numfield-input { color: transparent; }
+  .nx-numfield-box:focus-within .nx-numfield-display { visibility: hidden; }
+
+  .nx-numfield-unit { color: var(--nx-text-muted); font-weight: 500; }
 }

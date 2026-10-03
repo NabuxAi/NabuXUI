@@ -1,3 +1,646 @@
-/* Charts plus blocks — see docs/BLOCKS.md. */
+/*
+ * Charts plus — advanced SVG charts on top of the base chart chrome
+ * (css/components/chart.css: .nx-chart, -head, -legend, -plot, -svg, -tick,
+ * -gridline, -line, -tooltip). Geometry: js/blocks/charts-plus.ts.
+ *
+ *   <figure class="nx-chart nx-stacked-area|nx-stacked-bar|nx-composed-chart|nx-brush-chart|
+ *                  nx-forecast|nx-radar|nx-radial-bar" data-nx-reveal>
+ *     <div class="nx-chart-head"> title · <ul class="nx-chart-legend"> <button class="nx-chart-toggle" aria-pressed> </ul> </div>
+ *     <div class="nx-chart-plot" tabindex="0"> <svg class="nx-chart-svg">…</svg>
+ *       <div class="nx-chart-tooltip" data-frost>…</div> </div>
+ *     <table class="nx-visually-hidden">…the same data…</table>
+ *   </figure>
+ *
+ *   <div class="nx-chart-loading" data-variant="line|bar|donut|area" role="status" aria-busy="true">
+ *
+ * Shared extras: a ping dot on the latest value (.nx-chart-ping), max/min
+ * markers (.nx-chart-marker), hatched / duotone fills (SVG <pattern> and
+ * hard-stop gradients from chartFillDefs) and the frosted tooltip.
+ * Series colours are --nx-chart-1…7 in fixed order; text stays in text tokens.
+ */
 @layer nx.components {
+  /* ---- Legend that toggles series ------------------------------------------------------- */
+
+  .nx-chart-toggle {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    margin: calc(var(--nx-space-1) * -1) calc(var(--nx-space-2) * -1);
+    padding: var(--nx-space-1) var(--nx-space-2);
+    border: 0;
+    border-radius: var(--nx-radius-full);
+    background: transparent;
+    color: var(--nx-text-muted);
+    font: inherit;
+    cursor: pointer;
+    transition-property: scale, background-color, color, opacity;
+    transition-duration: var(--nx-dur-fast);
+    transition-timing-function: var(--nx-ease-out);
+
+    &:hover { background: var(--nx-surface-2); color: var(--nx-text); }
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+
+    .nx-legend-swatch { transition: background-color var(--nx-dur-fast) var(--nx-ease-out), box-shadow var(--nx-dur-fast) var(--nx-ease-out); }
+
+    /* Off: the swatch goes hollow and the name is struck — never motion alone. */
+    &[aria-pressed="false"] {
+      color: var(--nx-text-subtle);
+      text-decoration: line-through;
+      text-decoration-color: color-mix(in oklab, currentColor 60%, transparent);
+
+      .nx-legend-swatch { background: transparent; box-shadow: inset 0 0 0 1.5px var(--nx-series); }
+    }
+  }
+
+  .nx-legend-swatch[data-fill="hatched"] {
+    background: repeating-linear-gradient(45deg, var(--nx-series) 0 1.5px, color-mix(in oklab, var(--nx-series) 22%, transparent) 1.5px 3.5px);
+  }
+
+  .nx-legend-swatch[data-fill="duotone"] {
+    background: linear-gradient(var(--nx-series) 50%, color-mix(in oklab, var(--nx-series) 42%, var(--nx-surface)) 50%);
+  }
+
+  .nx-legend-swatch[data-shape="dash"] {
+    inline-size: 0.875rem;
+    block-size: 2px;
+    border-radius: 1px;
+    background: linear-gradient(90deg, var(--nx-series) 0 40%, transparent 40% 60%, var(--nx-series) 60%);
+  }
+
+  /* ---- Frosted tooltip -------------------------------------------------------------------- */
+
+  .nx-chart-tooltip[data-frost] {
+    border-color: var(--nx-glass-border, var(--nx-border));
+    background: color-mix(in oklab, var(--nx-surface) 74%, transparent);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    backdrop-filter: blur(14px) saturate(160%);
+    box-shadow: var(--nx-shadow-lg), inset 0 1px 0 color-mix(in oklab, #fff 14%, transparent);
+  }
+
+  .nx-chart-tooltip-row[data-total] {
+    margin-block-start: var(--nx-space-1);
+    padding-block-start: var(--nx-space-1);
+    border-block-start: 1px solid var(--nx-border);
+
+    .nx-chart-tooltip-key { background: transparent; }
+  }
+
+  .nx-chart-tooltip-key[data-shape="dash"] {
+    background: linear-gradient(90deg, var(--nx-series) 0 40%, transparent 40% 60%, var(--nx-series) 60%);
+  }
+
+  .nx-chart-tooltip-key[data-shape="rect"] { block-size: 0.5rem; inline-size: 0.5rem; border-radius: 2px; }
+
+  /* ---- Shared marks ------------------------------------------------------------------------- */
+
+  /* A ping on the latest value: a solid dot and a ring that breathes outward. */
+  .nx-chart-ping {
+    fill: var(--nx-series, var(--nx-chart-1));
+    stroke: var(--nx-surface);
+    stroke-width: 2;
+  }
+
+  .nx-chart-ping-ring {
+    fill: var(--nx-series, var(--nx-chart-1));
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: nx-chart-ping 2s var(--nx-ease-out) 1.2s infinite;
+  }
+
+  @keyframes nx-chart-ping {
+    0% { opacity: 0.45; scale: 1; }
+    80%, 100% { opacity: 0; scale: 3.4; }
+  }
+
+  /* Max / min markers: a ringed dot and a small pill that names the value. */
+  .nx-chart-marker {
+    pointer-events: none;
+    transition: opacity var(--nx-dur-base) var(--nx-ease-out) 900ms;
+
+    circle { fill: var(--nx-surface); stroke: var(--nx-series, var(--nx-chart-1)); stroke-width: 2; }
+    rect { fill: var(--nx-surface); stroke: var(--nx-border); stroke-width: 1; }
+    text { fill: var(--nx-text); font-size: 10.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .nx-chart-marker-kind { fill: var(--nx-text-subtle); font-weight: 500; }
+  }
+
+  .nx-chart-hitband { fill: transparent; }
+
+  .nx-chart-hover {
+    fill: var(--nx-text);
+    fill-opacity: 0;
+    transition: fill-opacity var(--nx-dur-fast) var(--nx-ease-out);
+
+    &[data-active] { fill-opacity: 0.04; }
+  }
+
+  /* ---- Stacked area -------------------------------------------------------------------------- */
+
+  .nx-chart-layer {
+    stroke: none;
+    transition: opacity var(--nx-dur-base) var(--nx-ease-out), translate 900ms var(--nx-ease-out);
+    transition-delay: calc(var(--nx-i, 0) * 80ms + 200ms), calc(var(--nx-i, 0) * 80ms + 200ms);
+  }
+
+  .nx-chart-layer[data-fill="solid"] { opacity: 0.85; }
+  .nx-stacked-area .nx-chart-line { stroke-width: 1.5; }
+
+  :where(.nx-js) .nx-chart[data-nx-reveal]:not([data-nx-revealed]) .nx-chart-layer {
+    opacity: 0;
+    translate: 0 calc(10px * var(--nx-motion));
+  }
+
+  /* ---- Stacked / grouped bars ------------------------------------------------------------------- */
+
+  .nx-chart-col {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    transition:
+      scale var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      opacity var(--nx-dur-base) var(--nx-ease-out);
+    transition-delay: calc(min(var(--nx-i, 0), 14) * 55ms), 0ms;
+  }
+
+  .nx-stacked-bar[data-orientation="horizontal"] .nx-chart-col { transform-origin: 0% 50%; }
+  .nx-stacked-bar[data-orientation="horizontal"][data-rtl] .nx-chart-col { transform-origin: 100% 50%; }
+
+  .nx-chart-seg {
+    stroke: var(--nx-surface);
+    stroke-width: 1.25;
+    paint-order: stroke;
+    transition: filter var(--nx-dur-fast) var(--nx-ease-out);
+  }
+
+  .nx-chart-seg-label {
+    fill: var(--nx-text);
+    font-size: 10.5px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    paint-order: stroke;
+    stroke: var(--nx-surface);
+    stroke-width: 3px;
+    stroke-linejoin: round;
+    pointer-events: none;
+  }
+
+  :is(.nx-stacked-bar, .nx-composed-chart)[data-active] .nx-chart-col:not([data-active]) { opacity: 0.45; }
+  .nx-chart-col[data-active] .nx-chart-seg { filter: brightness(1.06) saturate(1.08); }
+
+  :where(.nx-js) .nx-stacked-bar[data-nx-reveal]:not([data-nx-revealed]) .nx-chart-col { scale: 1 0; }
+  :where(.nx-js) .nx-stacked-bar[data-orientation="horizontal"][data-nx-reveal]:not([data-nx-revealed]) .nx-chart-col { scale: 0 1; }
+  :where(.nx-js) .nx-composed-chart[data-nx-reveal]:not([data-nx-revealed]) .nx-chart-col { scale: 1 0; }
+
+  .nx-chart-cat {
+    fill: var(--nx-text-muted);
+    font-size: 11px;
+  }
+
+  /* ---- Composed: the second axis wears the line's colour as a small key ------------------------ */
+
+  .nx-chart-axis-title {
+    fill: var(--nx-text-subtle);
+    font-size: 10.5px;
+    font-weight: 500;
+  }
+
+  .nx-composed-chart .nx-chart-line { stroke-width: 2.25; }
+
+  .nx-chart-dot {
+    fill: var(--nx-surface);
+    stroke: var(--nx-series, var(--nx-chart-1));
+    stroke-width: 2;
+    transition: r var(--nx-dur-fast) var(--nx-ease-out);
+
+    &[data-active] { r: 5; fill: var(--nx-series, var(--nx-chart-1)); stroke: var(--nx-surface); }
+  }
+
+  /* ---- Forecast ------------------------------------------------------------------------------------ */
+
+  .nx-chart-future {
+    fill: var(--nx-surface-2);
+    opacity: 0.55;
+  }
+
+  .nx-chart-forecast {
+    fill: none;
+    stroke: var(--nx-series, var(--nx-chart-1));
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-dasharray: 5 6;
+    vector-effect: non-scaling-stroke;
+    transition: opacity 500ms var(--nx-ease-out) 1000ms;
+
+    &[data-animate] { animation: nx-chart-march 900ms linear infinite; }
+  }
+
+  @keyframes nx-chart-march { to { stroke-dashoffset: -11; } }
+
+  .nx-chart-band {
+    fill: var(--nx-series, var(--nx-chart-1));
+    fill-opacity: 0.13;
+    stroke: var(--nx-series, var(--nx-chart-1));
+    stroke-opacity: 0.25;
+    stroke-width: 1;
+    stroke-dasharray: 2 3;
+    vector-effect: non-scaling-stroke;
+    transition: opacity 600ms var(--nx-ease-out) 900ms;
+  }
+
+  .nx-chart-today {
+    line { stroke: var(--nx-text-subtle); stroke-width: 1; stroke-dasharray: 3 3; vector-effect: non-scaling-stroke; }
+    rect { fill: var(--nx-text); }
+    text { fill: var(--nx-bg); font-size: 10px; font-weight: 600; }
+  }
+
+  :where(.nx-js) .nx-chart[data-nx-reveal]:not([data-nx-revealed]) :is(.nx-chart-forecast, .nx-chart-band, .nx-chart-marker, .nx-chart-ping, .nx-chart-ping-ring) {
+    opacity: 0;
+  }
+
+  .nx-chart-ping { transition: opacity var(--nx-dur-base) var(--nx-ease-out) 1000ms; }
+
+  /* ---- Brush ----------------------------------------------------------------------------------------- */
+
+  .nx-brush {
+    --_pad-start: 44px;
+    --_pad-end: 12px;
+
+    position: relative;
+    direction: ltr;
+    block-size: var(--nx-brush-height, 3.5rem);
+    margin-inline: var(--_pad-start) var(--_pad-end);
+    border-radius: var(--nx-radius-sm);
+    background: color-mix(in oklab, var(--nx-surface-2) 70%, transparent);
+    box-shadow: inset 0 0 0 1px var(--nx-border);
+    touch-action: none;
+  }
+
+  .nx-brush-svg {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    overflow: visible;
+    pointer-events: none;
+
+    .nx-chart-line { stroke-width: 1.25; stroke-dasharray: none; }
+    .nx-chart-area { fill-opacity: 0.14; opacity: 1; translate: none; }
+  }
+
+  .nx-brush-shade {
+    position: absolute;
+    inset-block: 0;
+    background: color-mix(in oklab, var(--nx-bg) 58%, transparent);
+    pointer-events: none;
+    transition: inline-size 80ms linear, left 80ms linear;
+
+    &[data-edge="start"] { left: 0; border-start-start-radius: inherit; border-end-start-radius: inherit; }
+    &[data-edge="end"] { right: 0; border-start-end-radius: inherit; border-end-end-radius: inherit; }
+  }
+
+  .nx-brush-window {
+    appearance: none;
+    position: absolute;
+    inset-block: 0;
+    z-index: 1;
+    min-inline-size: 6px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--nx-accent-border, var(--nx-accent));
+    border-radius: var(--nx-radius-sm);
+    background: color-mix(in oklab, var(--nx-accent) 8%, transparent);
+    cursor: grab;
+    transition: background-color var(--nx-dur-fast) var(--nx-ease-out), box-shadow var(--nx-dur-fast) var(--nx-ease-out);
+
+    &:hover { background: color-mix(in oklab, var(--nx-accent) 13%, transparent); }
+    &[data-dragging] { cursor: grabbing; background: color-mix(in oklab, var(--nx-accent) 16%, transparent); box-shadow: var(--nx-shadow-glow); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+  }
+
+  /* The edges are native range inputs laid over the track: only their thumbs take the pointer. */
+  .nx-brush-input {
+    --_thumb: 10px;
+
+    appearance: none;
+    position: absolute;
+    inset-block: 0;
+    left: calc(var(--_thumb) / -2);
+    z-index: 2;
+    inline-size: calc(100% + var(--_thumb));
+    block-size: 100%;
+    margin: 0;
+    background: transparent;
+    pointer-events: none;
+    outline: none;
+
+    &::-webkit-slider-runnable-track { block-size: 100%; background: transparent; border: 0; }
+    &::-moz-range-track { block-size: 100%; background: transparent; border: 0; }
+
+    &::-webkit-slider-thumb {
+      appearance: none;
+      inline-size: var(--_thumb);
+      block-size: 70%;
+      margin-block-start: 0;
+      border: 0;
+      border-radius: 4px;
+      background: var(--nx-surface);
+      box-shadow: 0 0 0 1px var(--nx-border-strong), var(--nx-shadow-sm);
+      pointer-events: auto;
+      cursor: ew-resize;
+      translate: 0 21%;
+      transition: scale var(--nx-dur-fast) var(--nx-ease-out), box-shadow var(--nx-dur-fast) var(--nx-ease-out);
+    }
+
+    &::-moz-range-thumb {
+      inline-size: var(--_thumb);
+      block-size: 70%;
+      border: 0;
+      border-radius: 4px;
+      background: var(--nx-surface);
+      box-shadow: 0 0 0 1px var(--nx-border-strong), var(--nx-shadow-sm);
+      pointer-events: auto;
+      cursor: ew-resize;
+    }
+
+    &:active::-webkit-slider-thumb { scale: calc(1 + 0.08 * var(--nx-motion)) calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 2px var(--nx-ring), var(--nx-shadow-sm); }
+    &:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 2px var(--nx-ring), var(--nx-shadow-sm); }
+  }
+
+  .nx-brush-readout {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--nx-space-3);
+    margin: 0;
+    padding-inline-start: 44px;
+    font-size: var(--nx-text-xs);
+    color: var(--nx-text-muted);
+    font-variant-numeric: tabular-nums;
+
+    output { color: var(--nx-text); font-weight: 600; }
+  }
+
+  .nx-brush-chart .nx-chart-svg path { transition: none; }
+
+  /* ---- Radar ------------------------------------------------------------------------------------------ */
+
+  .nx-radar .nx-chart-svg { max-inline-size: var(--nx-radar-size, 22rem); margin-inline: auto; }
+  .nx-radar .nx-chart-plot { display: grid; justify-items: center; }
+
+  .nx-radar-ring {
+    fill: none;
+    stroke: var(--nx-chart-grid);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+
+    &:nth-child(even) { fill: color-mix(in oklab, var(--nx-surface-2) 55%, transparent); }
+  }
+
+  .nx-radar-spoke {
+    stroke: var(--nx-chart-grid);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+    transition: stroke var(--nx-dur-fast) var(--nx-ease-out);
+
+    &[data-active] { stroke: var(--nx-border-strong); }
+  }
+
+  .nx-radar-label {
+    fill: var(--nx-text-muted);
+    font-size: 11px;
+    transition: fill var(--nx-dur-fast) var(--nx-ease-out);
+
+    &[data-active] { fill: var(--nx-text); font-weight: 600; }
+  }
+
+  .nx-radar-shape {
+    fill: var(--nx-series, var(--nx-chart-1));
+    fill-opacity: 0.16;
+    stroke: var(--nx-series, var(--nx-chart-1));
+    stroke-width: 2;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+    transform-box: view-box;
+    transform-origin: 50% 50%;
+    transition:
+      scale var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      opacity var(--nx-dur-base) var(--nx-ease-out),
+      fill-opacity var(--nx-dur-fast) var(--nx-ease-out);
+    transition-delay: calc(var(--nx-i, 0) * 120ms), calc(var(--nx-i, 0) * 120ms), 0ms;
+
+    &[data-off] { opacity: 0; scale: 0.92; }
+  }
+
+  .nx-radar:has(.nx-chart-toggle:hover) .nx-radar-shape { fill-opacity: 0.08; }
+
+  .nx-radar-dot {
+    fill: var(--nx-series, var(--nx-chart-1));
+    stroke: var(--nx-surface);
+    stroke-width: 2;
+    opacity: 0;
+    transition: opacity var(--nx-dur-fast) var(--nx-ease-out);
+
+    &[data-active] { opacity: 1; }
+  }
+
+  :where(.nx-js) .nx-radar[data-nx-reveal]:not([data-nx-revealed]) .nx-radar-shape {
+    opacity: 0;
+    scale: calc(1 - 0.7 * var(--nx-motion));
+  }
+
+  /* ---- Radial bars --------------------------------------------------------------------------------- */
+
+  .nx-radial-bar-body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-space-5) var(--nx-space-8);
+  }
+
+  .nx-radial-bar-dial {
+    position: relative;
+    display: grid;
+    place-items: center;
+    inline-size: var(--nx-radial-size, 13rem);
+    aspect-ratio: 1;
+    flex: none;
+
+    .nx-chart-svg { grid-area: 1 / 1; }
+  }
+
+  .nx-radial-track {
+    fill: none;
+    stroke: var(--nx-surface-3);
+    stroke-width: var(--_t);
+    stroke-linecap: round;
+  }
+
+  .nx-radial-value {
+    fill: none;
+    stroke: var(--nx-series, var(--nx-chart-1));
+    stroke-width: var(--_t);
+    stroke-linecap: round;
+    stroke-dasharray: var(--_v) 100;
+    transition:
+      stroke-dasharray 1200ms var(--nx-ease-out) calc(var(--nx-i, 0) * 110ms),
+      opacity var(--nx-dur-base) var(--nx-ease-out),
+      stroke-width var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+
+    &[data-empty] { opacity: 0; }
+    &[data-active] { stroke-width: calc(var(--_t) + 1.5); }
+  }
+
+  .nx-radial-bar[data-active] .nx-radial-value:not([data-active]) { opacity: 0.4; }
+
+  :where(.nx-js) .nx-radial-bar[data-nx-reveal]:not([data-nx-revealed]) .nx-radial-value {
+    stroke-dasharray: 0 100;
+    opacity: 0;
+  }
+
+  .nx-radial-bar-center {
+    grid-area: 1 / 1;
+    display: grid;
+    justify-items: center;
+    gap: 0.1rem;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  .nx-radial-bar-value { font: 700 var(--nx-text-2xl) / 1.1 var(--nx-font-sans); font-variant-numeric: tabular-nums; }
+  .nx-radial-bar-label { max-inline-size: 7rem; font-size: var(--nx-text-xs); color: var(--nx-text-muted); }
+
+  .nx-radial-bar-list {
+    display: grid;
+    gap: var(--nx-space-2);
+    min-inline-size: min(100%, 13rem);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nx-radial-bar-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: var(--nx-space-2) var(--nx-space-3);
+    padding: var(--nx-space-1) var(--nx-space-2);
+    margin-inline: calc(var(--nx-space-2) * -1);
+    border-radius: var(--nx-radius-sm);
+    font-size: var(--nx-text-sm);
+    transition: background-color var(--nx-dur-fast) var(--nx-ease-out);
+
+    &[data-active] { background: var(--nx-surface-2); }
+
+    strong { font-variant-numeric: tabular-nums; }
+    small { grid-column: 2 / -1; color: var(--nx-text-subtle); font-size: var(--nx-text-xs); }
+  }
+
+  /* ---- Loading skeleton ------------------------------------------------------------------------------ */
+
+  .nx-chart-loading {
+    position: relative;
+    display: grid;
+    gap: var(--nx-space-4);
+    min-inline-size: 0;
+  }
+
+  .nx-chart-loading-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--nx-space-3);
+  }
+
+  .nx-chart-loading-lines {
+    display: grid;
+    gap: var(--nx-space-2);
+  }
+
+  .nx-chart-loading-bone {
+    display: block;
+    block-size: 0.7rem;
+    inline-size: var(--_w, 8rem);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface-3);
+
+    &[data-size="lg"] { block-size: 0.95rem; }
+  }
+
+  .nx-chart-loading-plot {
+    position: relative;
+    overflow: hidden;
+    block-size: var(--nx-chart-loading-height, 15rem);
+    border-radius: var(--nx-radius-md);
+
+    svg { display: block; inline-size: 100%; block-size: 100%; }
+
+    /* The shimmer: a soft highlight sweeping toward inline-end. */
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent 0%, color-mix(in oklab, var(--nx-surface) 70%, transparent) 50%, transparent 100%);
+      translate: calc(-100% * var(--nx-dir, 1)) 0;
+      animation: nx-chart-shimmer 1.7s var(--nx-ease-in-out, ease-in-out) infinite;
+    }
+  }
+
+  @keyframes nx-chart-shimmer {
+    to { translate: calc(100% * var(--nx-dir, 1)) 0; }
+  }
+
+  .nx-chart-loading-grid { stroke: var(--nx-chart-grid); stroke-width: 1; vector-effect: non-scaling-stroke; }
+  .nx-chart-loading-shape { fill: var(--nx-surface-3); }
+  .nx-chart-loading-wash { fill: var(--nx-surface-2); }
+
+  .nx-chart-loading-line {
+    fill: none;
+    stroke: var(--nx-surface-3);
+    stroke-width: 3;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .nx-chart-loading-ring {
+    fill: none;
+    stroke: var(--nx-surface-3);
+    stroke-width: 14;
+  }
+
+  .nx-chart-loading[data-variant="donut"] .nx-chart-loading-plot {
+    inline-size: var(--nx-chart-loading-height, 12rem);
+    margin-inline: auto;
+    border-radius: 50%;
+  }
+
+  .nx-chart-loading-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--nx-space-3);
+  }
+
+  /* ---- Reduced motion and forced colours ------------------------------------------------------------- */
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-chart-ping-ring { animation: none; opacity: 0.2; scale: 1.8; }
+    .nx-chart-forecast[data-animate] { animation: none; }
+    .nx-chart-loading-plot::after { animation: nx-chart-loading-pulse 2.4s ease-in-out infinite; translate: none; background: color-mix(in oklab, var(--nx-surface) 35%, transparent); }
+    .nx-chart-col, .nx-radar-shape { transition-property: opacity; }
+  }
+
+  @keyframes nx-chart-loading-pulse {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 1; }
+  }
+
+  :where(.nx-js:not(.nx-live)) :is(.nx-stacked-area, .nx-stacked-bar, .nx-composed-chart, .nx-forecast, .nx-radar, .nx-radial-bar)[data-nx-reveal]:not([data-nx-revealed]) :is(.nx-chart-layer, .nx-chart-col, .nx-radar-shape, .nx-radial-value, .nx-chart-forecast, .nx-chart-band, .nx-chart-marker, .nx-chart-ping) {
+    animation: nx-reveal-failsafe 1ms 2.5s forwards;
+  }
+
+  @media (forced-colors: active) {
+    .nx-chart-layer, .nx-chart-seg, .nx-radial-value, .nx-radar-shape, .nx-chart-band { forced-color-adjust: none; }
+    .nx-brush-window { border-color: Highlight; }
+  }
 }
