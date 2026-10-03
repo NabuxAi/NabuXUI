@@ -97,17 +97,19 @@
     };
 
     $intl = class_exists(\IntlDateFormatter::class);
-    $fmt = function (int $date, int $time, int $at) use ($intl, $locale) {
+    // Styles by name so nothing touches IntlDateFormatter when ext-intl is missing.
+    $fmt = function (string $date, string $time, int $at) use ($intl, $locale) {
         if (! $intl) return null;
+        $style = fn (string $name) => constant(\IntlDateFormatter::class.'::'.strtoupper($name));
 
-        return (string) (new \IntlDateFormatter($locale, $date, $time))->format($at);
+        return (string) (new \IntlDateFormatter($locale, $style($date), $style($time)))->format($at);
     };
     // "10:24" today, a medium date any older day — for the list rows.
     $listWhen = function ($time) use ($moment, $fmt) {
         $at = $moment($time);
         if ($at === null) return is_string($time) && $time !== '' ? ['label' => $time, 'iso' => null] : null;
         $sameDay = date('Ymd', $at) === date('Ymd');
-        $label = $fmt($sameDay ? \IntlDateFormatter::NONE : \IntlDateFormatter::MEDIUM, $sameDay ? \IntlDateFormatter::SHORT : \IntlDateFormatter::NONE, $at)
+        $label = $fmt($sameDay ? 'none' : 'medium', $sameDay ? 'short' : 'none', $at)
             ?? ($sameDay ? date('H:i', $at) : date('M j', $at));
 
         return ['label' => $label, 'iso' => date('c', $at)];
@@ -117,7 +119,7 @@
         $at = $moment($time);
         if ($at === null) return is_string($time) && $time !== '' ? ['label' => $time, 'iso' => null] : null;
 
-        return ['label' => $fmt(\IntlDateFormatter::MEDIUM, \IntlDateFormatter::SHORT, $at) ?? date('M j, Y H:i', $at), 'iso' => date('c', $at)];
+        return ['label' => $fmt('medium', 'short', $at) ?? date('M j, Y H:i', $at), 'iso' => date('c', $at)];
     };
 
     $snippetOf = function (string $body) {
