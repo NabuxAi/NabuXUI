@@ -343,4 +343,50 @@ return [
         <x-nx::password-strength wire:model.live="password" label="گذرواژه" :user-inputs="[$name, $email]" />
         BLADE,
     ],
+
+    'pull-cord' => [
+        'title' => ['fa' => 'ریسمان کشویی', 'en' => 'Pull cord'],
+        'icon' => 'zap',
+        'oneLiner' => [
+            'fa' => 'طنابی واقعی با فیزیک ورمله از لبهٔ بالای هر جعبه‌ای آویزان است: بگیریدش، بکشید پایین تا روشن شود و رها کنید — فنر برمی‌گردد و لرزشش می‌ایستد. برای کلید چراغ، تغییر تم، یا هر کار دوهالحال.',
+            'en' => 'A real rope — verlet physics, gravity, wobble — hanging from the top edge of any box: grab it, pull it down until it lights up, let go — it springs home and settles. For the lamp switch, a theme toggle, any playful on/off.',
+        ],
+        'js' => true,
+        'docs' => null,
+        'props' => [
+            ['name' => 'label', 'type' => 'string', 'default' => "__('nabuxui::ui.pullCord')", 'note' => [
+                'fa' => 'نام دسترس‌پذیر دستگیره.',
+                'en' => 'Accessible name of the knob.',
+            ]],
+            ['name' => 'trigger', 'type' => 'number', 'default' => '72', 'note' => [
+                'fa' => 'چند پیکسل پایین بکشیم تا «مسلح» شود؛ رهاکردنِ کمتر از این بی‌اثر است.',
+                'en' => 'How many px of pull arm it; releasing below this does nothing.',
+            ]],
+            ['name' => 'segments', 'type' => 'number', 'default' => '12', 'note' => [
+                'fa' => 'تکه‌های شبیه‌سازی طناب؛ بیشتر یعنی خمِ نرم‌تر و هزینهٔ بیشتر.',
+                'en' => 'Simulated rope segments; more bends softer and costs more.',
+            ]],
+            ['name' => 'tone', 'type' => 'string', 'default' => "'accent'", 'note' => [
+                'fa' => 'accent · gold · violet · success — درخشش دستگیره هنگام مسلح شدن.',
+                'en' => 'accent · gold · violet · success — the armed knob’s glow.',
+            ]],
+            ['name' => 'height', 'type' => 'string', 'default' => 'null', 'note' => [
+                'fa' => 'بلوکی جعبه؛ طناب تا لبهٔ پایین آن می‌رسد.',
+                'en' => 'The box’s block size; the rope fills it.',
+            ]],
+            ['name' => 'action', 'type' => 'string', 'default' => 'null', 'note' => [
+                'fa' => 'متد Livewire که پس از رها کردن صدا زده می‌شود؛ رویداد nx-cord-pull هم همیشه ارسال می‌شود.',
+                'en' => 'A Livewire method called on release; the nx-cord-pull event always fires too.',
+            ]],
+        ],
+        'code' => <<<'BLADE'
+        <div x-data="{ lit: false }" x-on:nx-cord-pull="lit = ! lit">
+            <x-nx::pull-cord label="چراغ مطالعه" tone="gold" height="14rem" />
+            <div x-bind:class="lit && 'nx-beam'" data-tone="gold">…لامپ…</div>
+        </div>
+
+        {{-- or straight to Livewire --}}
+        <x-nx::pull-cord action="lightSwitch" tone="violet" height="12rem" />
+        BLADE,
+    ],
 ];

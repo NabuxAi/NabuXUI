@@ -3,7 +3,7 @@
  * slide-to-confirm, the rolling odometer, the undo snackbar's timer, the
  * sortable list (pointer drag + keyboard reorder with FLIP), the lightbox's
  * stage (zoom, pan, swipe) and its open/close morph, the compare slider, swipe
- * actions, and the password scoring.
+ * actions, the password scoring, and the pull cord's verlet rope.
  *
  * As everywhere in NabuXUI, the motion lives in css/blocks/interact.css; these
  * measure, write custom properties and attributes, call back, and clean up.
@@ -1679,4 +1679,244 @@ export function passwordStrength(password: string, { minLength = 8, userInputs =
   let score: PasswordStrength['score'] = entropy < 28 ? 0 : entropy < 40 ? 1 : entropy < 56 ? 2 : entropy < 72 ? 3 : 4;
   if (chars.length < minLength && score > 1) score = 1;
   return { score, entropy: Math.round(entropy * 10) / 10, rules };
+}
+
+/* ---- Pull cord ------------------------------------------------------------------------ */
+
+export interface RopePoint {
+  x: number;
+  y: number;
+  px: number;
+  py: number;
+}
+
+/**
+ * One Verlet step for a hanging rope: points[0] is the pin on the ceiling,
+ * every free point carries gravity and damping, then `passes` rounds of
+ * distance constraints pull the chain back together. Pure maths so it can be
+ * tested on its own; the DOM part is pullCord below.
+ */
+export function ropeStep(
+  points: RopePoint[],
+  { gravity = 1400, damping = 0.985, segmentLength, passes = 5, dt = 1 / 60 }: {
+    gravity?: number;
+    damping?: number;
+    segmentLength: number;
+    passes?: number;
+    dt?: number;
+  },
+): void {
+  for (let i = 1; i < points.length; i++) {
+    const point = points[i]!;
+    const vx = (point.x - point.px) * damping;
+    const vy = (point.y - point.py) * damping + gravity * dt * dt;
+    point.px = point.x;
+    point.py = point.y;
+    point.x += vx;
+    point.y += vy;
+  }
+  for (let pass = 0; pass < passes; pass++) {
+    for (let i = 0; i < points.length - 1; i++) {
+      const a = points[i]!;
+      const b = points[i + 1]!;
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const dist = Math.hypot(dx, dy) || 0.0001;
+      const offset = (dist - segmentLength) / dist / 2;
+      if (i === 0) {
+        // The pinned end does not move; the neighbour carries the whole correction.
+        b.x -= dx * offset * 2;
+        b.y -= dy * offset * 2;
+      } else {
+        a.x += dx * offset;
+        a.y += dy * offset;
+        b.x -= dx * offset;
+        b.y -= dy * offset;
+      }
+    }
+    points[0]!.x = points[0]!.px;
+    points[0]!.y = points[0]!.py;
+  }
+}
+
+export interface PullCordOptions {
+  /** Vertical pull (px) past which the cord counts as pulled; release fires. */
+  trigger?: number;
+  /** How many segments the rope is simulated with (3–24). */
+  segments?: number;
+  /** Fired once when the cord passes the trigger and is let go. */
+  onPull?: () => void;
+  /** Fired as the cord arms (true) and un-arms (false) while held. */
+  onArm?: (armed: boolean) => void;
+}
+
+/**
+ * A ceiling pull-cord with a real rope: verlet integration, gravity and a
+ * grab that drags the end along. Past `trigger` px of pull the cord arms
+ * (data-nx-armed on the root); letting go fires onPull and flings the knob
+ * home so the rope springs and wobbles. A deliberate gesture, so touch works
+ * too; reduced motion skips the simulation and treats it as a plain
+ * pull-and-release with the state as the only feedback.
+ */
+export function pullCord(el: HTMLElement, options: PullCordOptions = {}): Cleanup {
+  if (!isBrowser) return () => {};
+  const reduced = prefersReducedMotion();
+  const segments = Math.max(3, Math.min(24, options.segments ?? 12));
+
+  const svg = el.querySelector('svg.nx-pull-cord-rope');
+  const knob = el.querySelector<HTMLElement>('.nx-pull-cord-knob');
+  const knobEl = (knob ?? el) as HTMLElement;
+  let points: RopePoint[] = [];
+  let width = 10;
+  let height = 40;
+  let half = 17; // knob radius; the rope's end is the knob's centre
+  let rest = 32; // resting cord length in px (~55% down the box; the rest is pull room)
+  let armedAt = 72; // effective trigger, clamped to the pull room the box allows
+  let raf = 0;
+  let simUntil = 0; // keep simulating until this timestamp, then reset
+  let down = false;
+  let armed = false;
+
+  const resize = () => {
+    const rect = el.getBoundingClientRect();
+    width = Math.max(10, rect.width);
+    height = Math.max(40, rect.height);
+    half = (knob?.offsetWidth ?? 34) / 2;
+    rest = Math.max(24, Math.round(height * 0.55) - half);
+    armedAt = Math.min(options.trigger ?? 72, Math.max(24, (height - rest - half) * 0.8));
+    svg?.setAttribute('viewBox', `0 0 ${Math.round(width)} ${Math.round(height)}`);
+    const cx = width / 2;
+    points = Array.from({ length: segments + 1 }, (_, i) => ({ x: cx, y: (rest * i) / segments, px: cx, py: (rest * i) / segments }));
+  };
+
+  const draw = () => {
+    if (!svg || !knob) return;
+    const path = svg.querySelector('path');
+    if (path && points.length > 2) {
+      // Quadratic segments through midpoints render the sag with one path.
+      let d = `M ${points[0]!.x.toFixed(1)} ${points[0]!.y.toFixed(1)}`;
+      for (let i = 1; i < points.length - 1; i++) {
+        const a = points[i]!;
+        const b = points[i + 1]!;
+        d += ` Q ${a.x.toFixed(1)} ${a.y.toFixed(1)} ${((a.x + b.x) / 2).toFixed(1)} ${((a.y + b.y) / 2).toFixed(1)}`;
+      }
+      const end = points[points.length - 1]!;
+      d += ` L ${end.x.toFixed(1)} ${end.y.toFixed(1)}`;
+      path.setAttribute('d', d);
+    }
+    const end = points[points.length - 1]!;
+    // The knob's top-left corner starts at the mount; move its centre onto the rope's end.
+    knob.style.transform = `translate(${(end.x - width / 2).toFixed(1)}px, ${(end.y - half).toFixed(1)}px)`;
+  };
+
+  const tick = () => {
+    ropeStep(points, { segmentLength: rest / segments });
+    draw();
+    if (performance.now() > simUntil && !down) {
+      raf = 0;
+      resize();
+      draw();
+      return;
+    }
+    raf = requestAnimationFrame(tick);
+  };
+
+  const wake = (ms = 1500) => {
+    if (!raf) raf = requestAnimationFrame(tick);
+    simUntil = Math.max(simUntil, performance.now() + ms);
+  };
+
+  const setArmed = (value: boolean) => {
+    if (armed === value) return;
+    armed = value;
+    if (value) el.setAttribute('data-nx-armed', '');
+    else el.removeAttribute('data-nx-armed');
+    options.onArm?.(value);
+  };
+
+  const local = (event: PointerEvent) => {
+    const rect = el.getBoundingClientRect();
+    return {
+      x: event.clientX - rect.left,
+      y: Math.min(height - half, Math.max(half * 0.5, event.clientY - rect.top)),
+    };
+  };
+
+  const onDown = (event: PointerEvent) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    down = true;
+    knobEl.setPointerCapture?.(event.pointerId);
+    if (!reduced) wake(4000);
+  };
+
+  const onMove = (event: PointerEvent) => {
+    if (!down) return;
+    const { x, y } = local(event);
+    const end = points[points.length - 1]!;
+    if (reduced) {
+      const pull = Math.max(0, y - rest);
+      end.x = width / 2;
+      end.y = rest + pull;
+      end.px = end.x;
+      end.py = end.y;
+      setArmed(pull >= armedAt);
+      draw();
+      return;
+    }
+    end.x = x;
+    end.y = y;
+    end.px = x;
+    end.py = y - 1; // a hair of upward bias keeps the rope taut under the pointer
+    setArmed(y - rest >= armedAt);
+  };
+
+  const onUp = (event: PointerEvent) => {
+    if (!down) return;
+    down = false;
+    knobEl.releasePointerCapture?.(event.pointerId);
+    const end = points[points.length - 1]!;
+    if (reduced) {
+      const wasArmed = armed;
+      setArmed(false);
+      end.y = rest;
+      end.py = rest;
+      end.x = width / 2;
+      draw();
+      if (wasArmed) options.onPull?.();
+      return;
+    }
+    if (armed) {
+      // Fling the knob home; the simulation carries the spring and wobble.
+      end.py = end.y + Math.max(22, (end.y - rest) * 0.5);
+      setArmed(false);
+      wake(1600);
+      options.onPull?.();
+    } else {
+      wake(600);
+    }
+  };
+
+  resize();
+  draw();
+  const observer = new ResizeObserver(() => {
+    if (!down && !raf) {
+      resize();
+      draw();
+    }
+  });
+  observer.observe(el);
+
+  knobEl.addEventListener('pointerdown', onDown);
+  knobEl.addEventListener('pointermove', onMove);
+  knobEl.addEventListener('pointerup', onUp);
+  knobEl.addEventListener('pointercancel', onUp);
+
+  return () => {
+    cancelAnimationFrame(raf);
+    observer.disconnect();
+    knobEl.removeEventListener('pointerdown', onDown);
+    knobEl.removeEventListener('pointermove', onMove);
+    knobEl.removeEventListener('pointerup', onUp);
+    knobEl.removeEventListener('pointercancel', onUp);
+  };
 }

@@ -11,6 +11,7 @@
  *   Compare slider       before/after images split by a divider driven by a native range
  *   Swipe actions        a row that slides aside to reveal actions; a full swipe fires the primary one
  *   Password strength    a segmented meter, a rule checklist that ticks off, and a show/hide toggle
+ *   Pull cord            a cord with a verlet rope; pull it past the trigger and let go to fire
  *
  * Behaviour: js/blocks/interact.ts. Press feedback is the shared 0.96 on
  * :active; [data-static] switches it off.
@@ -1320,9 +1321,97 @@
     > [data-off] { opacity: 1; scale: 1; filter: none; }
   }
 
+  /* ---- Pull cord --------------------------------------------------------------- *
+   *   <div class="nx-pull-cord" style="block-size: 12rem" data-tone="gold">
+   *     <svg class="nx-pull-cord-rope"><path /></svg>
+   *     <button class="nx-pull-cord-knob" aria-label="…">…</button>
+   *   </div>
+   *
+   * A cord hanging from the top edge: the JS simulates the rope (verlet) and
+   * moves the knob with a transform; CSS only dresses it. Armed (pulled past
+   * the trigger) the knob glows and the mount lights up. Works in any
+   * container — the SVG stretches to the root's box.
+   */
+  .nx-pull-cord {
+    --_color: var(--nx-accent);
+    position: relative;
+    overflow: visible;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+
+    &[data-tone='gold'] { --_color: var(--nx-gold); }
+    &[data-tone='violet'] { --_color: var(--nx-violet-500); }
+    &[data-tone='success'] { --_color: var(--nx-success); }
+  }
+
+  .nx-pull-cord-rope {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    overflow: visible;
+    pointer-events: none;
+
+    path {
+      fill: none;
+      stroke: color-mix(in oklab, var(--nx-text-muted) 80%, transparent);
+      stroke-width: 2;
+      stroke-linecap: round;
+    }
+  }
+
+  .nx-pull-cord-knob {
+    position: absolute;
+    inset-inline-start: calc(50% - 1.05rem);
+    inset-block-start: 0;
+    inline-size: 2.1rem;
+    block-size: 2.1rem;
+    padding: 0;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    background: linear-gradient(var(--nx-surface-2), var(--nx-surface));
+    color: var(--nx-text-muted);
+    box-shadow: var(--nx-shadow-sm), inset 0 1px 0 color-mix(in oklab, white 12%, transparent);
+    cursor: grab;
+    will-change: transform;
+
+    svg { inline-size: 1rem; block-size: 1rem; transition: rotate var(--nx-dur-base) var(--nx-spring-snappy); }
+    &:active { cursor: grabbing; }
+    &:focus-visible { outline: 2px solid var(--_color); outline-offset: 3px; }
+  }
+
+  /* The ceiling mount: a small plate the rope hangs from, lit while armed. */
+  .nx-pull-cord::before {
+    content: '';
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: calc(50% - 1.6rem);
+    block-size: 0.5rem;
+    border-radius: 0 0 var(--nx-radius-sm) var(--nx-radius-sm);
+    background: color-mix(in oklab, var(--_color) 24%, var(--nx-surface-3));
+    transition: background-color var(--nx-dur-base) var(--nx-ease-out), box-shadow var(--nx-dur-base) var(--nx-ease-out);
+  }
+
+  .nx-pull-cord[data-nx-armed] {
+    .nx-pull-cord-knob {
+      border-color: color-mix(in oklab, var(--_color) 55%, var(--nx-border));
+      color: var(--_color);
+      box-shadow: 0 0 0 4px color-mix(in oklab, var(--_color) 18%, transparent),
+        0 0 18px color-mix(in oklab, var(--_color) 45%, transparent), var(--nx-shadow-sm);
+
+      svg { rotate: 180deg; }
+    }
+
+    &::before { box-shadow: 0 4px 14px color-mix(in oklab, var(--_color) 35%, transparent); }
+  }
+
   /* ---- Reduced motion -------------------------------------------------------- */
   @media (prefers-reduced-motion: reduce) {
     .nx-slide-confirm-label > :not([data-off]) { animation: none; color: var(--nx-text-muted); background: none; }
     :is(.nx-sortable-item, .nx-swipe-content, .nx-slide-confirm-thumb, .nx-lightbox-image) { transition-duration: 0ms; }
+    .nx-pull-cord-knob svg { transition: none; }
   }
 }

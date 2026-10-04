@@ -7,6 +7,7 @@ return [
     'dismiss' => 'تجاهل',
     'copy' => 'نسخ',
     'copied' => 'تم النسخ',
+    'pullCord' => 'اسحب للتبديل',
     'loading' => 'جارٍ التحميل',
     'notifications' => 'الإشعارات',
     'search' => 'بحث',

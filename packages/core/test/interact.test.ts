@@ -7,6 +7,7 @@ import {
   odometerDiff,
   odometerSteps,
   passwordStrength,
+  ropeStep,
   rubberBand,
   sortShifts,
   sortTargetIndex,
@@ -156,5 +157,35 @@ describe('reorder logic', () => {
     expect(onChange).toHaveBeenCalledWith(['b', 'c', 'a']);
     stop();
     root.remove();
+  });
+});
+
+describe('ropeStep', () => {
+  const hanging = (count: number, gap: number) =>
+    Array.from({ length: count }, (_, i) => ({ x: 0, y: i * gap, px: 0, py: i * gap }));
+
+  it('keeps the pin nailed to the ceiling', () => {
+    const points = hanging(6, 10);
+    for (let i = 0; i < 30; i++) ropeStep(points, { segmentLength: 10 });
+    expect(points[0]).toEqual({ x: 0, y: 0, px: 0, py: 0 });
+  });
+
+  it('settles into a chain of near-equal segments', () => {
+    const points = hanging(8, 10);
+    // Kick the middle so the rope has real motion to settle from.
+    points[4]!.x += 24;
+    for (let i = 0; i < 240; i++) ropeStep(points, { segmentLength: 10 });
+    const gaps = points.slice(1).map((p, i) => Math.hypot(p.x - points[i]!.x, p.y - points[i]!.y));
+    for (const gap of gaps) expect(Math.abs(gap - 10)).toBeLessThan(0.5);
+  });
+
+  it('drops a pushed rope and catches it at the pinned end', () => {
+    const points = hanging(5, 10);
+    points[3]!.x += 30; // a sideways shove
+    for (let i = 0; i < 120; i++) ropeStep(points, { segmentLength: 10 });
+    // The tail hangs no higher than where the chain can reach: pin + 4 segments.
+    const tail = points[points.length - 1]!;
+    expect(tail.y).toBeLessThanOrEqual(40.5);
+    expect(tail.y).toBeGreaterThan(0);
   });
 });

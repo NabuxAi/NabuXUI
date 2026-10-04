@@ -263,4 +263,45 @@ return [
             wire:model.live="guests" />
         BLADE,
     ],
+
+    'gradient-studio' => [
+        'title' => ['fa' => 'استودیو گرادیان', 'en' => 'Gradient studio'],
+        'icon' => 'wand',
+        'oneLiner' => [
+            'fa' => 'میز کار کوچک ساختن گرادیان به سبک ابزارهای طراحی: نوار پیش‌نمایش زنده، توقف‌های رنگی که اضافه و حذف می‌شوند، زاویهٔ کشیدنی و خروجی CSS که با یک کلیک کپی می‌شود. ترکیبی از کامپوننت‌های همین پکیج.',
+            'en' => 'A small design-tool bench for gradients: a live preview bar, colour stops you add and remove, a draggable angle and a CSS output that copies in one click. Composed from this package’s own components.',
+        ],
+        'js' => true,
+        'docs' => null,
+        'props' => [
+            ['name' => 'x-data (stops)', 'type' => 'array', 'default' => '[]', 'note' => [
+                'fa' => 'هر توقف: color و pos (۰ تا ۱۰۰). بیرون از کامپوننت مدیریت می‌شود؛ این دمو فقط ترکیب است.',
+                'en' => 'Each stop: color and pos (0–100). Owned outside; this demo is a composition.',
+            ]],
+            ['name' => 'angle', 'type' => 'number', 'default' => '135', 'note' => [
+                'fa' => 'زاویهٔ گرادیان خطی؛ با اسلایدر دقت تنظیم می‌شود.',
+                'en' => 'The linear gradient’s angle; set with the precision slider.',
+            ]],
+            ['name' => 'kind', 'type' => 'string', 'default' => "'linear'", 'note' => [
+                'fa' => 'linear · radial · conic.',
+                'en' => 'linear · radial · conic.',
+            ]],
+        ],
+        'code' => <<<'BLADE'
+        <div x-data="{
+            stops: [{ color: '#5647e6', pos: 0 }, { color: '#f4a93c', pos: 100 }],
+            angle: 135, kind: 'linear',
+            get css() {
+                const list = [...this.stops].sort((a, b) => a.pos - b.pos)
+                    .map(s => `${s.color} ${s.pos}%`).join(', ');
+                return this.kind === 'linear' ? `linear-gradient(${this.angle}deg, ${list})`
+                    : this.kind === 'radial' ? `radial-gradient(circle, ${list})`
+                    : `conic-gradient(from ${this.angle}deg, ${list})`;
+            },
+        }">
+            <div x-bind:style="`background: ${css}`" style="block-size: 6rem; border-radius: 1rem"></div>
+            {{-- stop rows, the precision slider for the angle, and the copy button --}}
+        </div>
+        BLADE,
+    ],
 ];

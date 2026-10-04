@@ -7,6 +7,7 @@ return [
     'dismiss' => 'Dismiss',
     'copy' => 'Copy',
     'copied' => 'Copied',
+    'pullCord' => 'Pull to toggle',
     'loading' => 'Loading',
     'notifications' => 'Notifications',
     'search' => 'Search',

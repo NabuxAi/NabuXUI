@@ -7,6 +7,7 @@ return [
     'dismiss' => 'بستن',
     'copy' => 'کپی',
     'copied' => 'کپی شد',
+    'pullCord' => 'برای تغییر بکشید',
     'loading' => 'در حال بارگذاری',
     'notifications' => 'اعلان‌ها',
     'search' => 'جست‌وجو',

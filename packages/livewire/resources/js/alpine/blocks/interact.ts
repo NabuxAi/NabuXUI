@@ -21,6 +21,7 @@ import {
   morphWidth,
   openLightbox,
   passwordStrength,
+  pullCord,
   slideToConfirm,
   snackbarTimer,
   sortable,
@@ -513,4 +514,24 @@ export function installInteractBlocks(Alpine: AlpineLike): void {
       return options.scores?.[this.result().score] ?? '';
     },
   }));
+
+  /* ---- Pull cord: the rope is simulated in core; release dispatches nx-cord-pull ------- */
+  Alpine.data('nxPullCord', (options: { trigger?: number; segments?: number; action?: string | null } = {}) => {
+    let stop: Cleanup = () => {};
+    return {
+      init(this: Self<object>) {
+        stop = pullCord(this.$root, {
+          trigger: options.trigger,
+          segments: options.segments,
+          onPull: () => {
+            void callWire(this, options.action);
+            this.$dispatch('nx-cord-pull');
+          },
+        });
+      },
+      destroy() {
+        stop();
+      },
+    };
+  });
 }
