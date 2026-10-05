@@ -73,6 +73,10 @@
   }
 
   .nx-timeline-feed-node {
+    /* The connector ::before owns (1/1) too: node and line share the cell while
+       the body sits beside them. Without the explicit areas auto-placement
+       shunts the node into column 2 and squeezes the body into the node's track. */
+    grid-area: 1 / 1;
     display: grid;
     place-items: center;
     inline-size: var(--_node);
@@ -91,6 +95,7 @@
   .nx-timeline-feed-item:is(:hover, :focus-within) .nx-timeline-feed-node { scale: calc(1 + 0.08 * var(--nx-motion)); }
 
   .nx-timeline-feed-body {
+    grid-area: 1 / 2;
     display: grid;
     gap: 0.125rem;
     align-content: center;

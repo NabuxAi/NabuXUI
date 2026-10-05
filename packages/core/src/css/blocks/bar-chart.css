@@ -106,6 +106,10 @@
     justify-content: center;
     gap: var(--nx-space-1);
     block-size: 100%;
+    /* Take the group's width: grouped bars grow toward the 2.75rem cap and
+       centre inside it; a flex-basis-0 container would collapse to its
+       0.25rem floor when a group holds a single series. */
+    flex: 1 1 0;
     min-inline-size: 0;
     transition: opacity var(--nx-dur-base) var(--nx-ease-out);
   }
@@ -136,6 +140,7 @@
 
   /* A stack grows as one column: the spring sits on the container, not the segments. */
   .nx-bar-chart-bars[data-stacked] {
+    flex: 0 0 auto;
     flex-direction: column-reverse;
     justify-content: flex-start;
     gap: 2px;
