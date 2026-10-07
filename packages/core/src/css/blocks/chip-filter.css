@@ -26,6 +26,7 @@
     --_fade: 1.5rem;
 
     min-inline-size: 0;
+    max-inline-size: 100%;
   }
 
   .nx-chip-filter-row {

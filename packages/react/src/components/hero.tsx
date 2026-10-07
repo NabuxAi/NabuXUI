@@ -6,7 +6,7 @@ import { SmartLink } from '../internal/provider';
 import { Badge } from './feedback';
 import { TextReveal } from './text';
 
-export type BackdropVariant = 'aurora' | 'grid' | 'stars' | 'beams' | 'dots';
+export type BackdropVariant = 'aurora' | 'grid' | 'stars' | 'beams' | 'dots' | 'mesh' | 'stripes';
 
 /** A decorative backdrop, pure CSS. Place it first inside a positioned section. */
 export function Backdrop({ variant = 'aurora', className, style }: { variant?: BackdropVariant; className?: string; style?: CSSProperties }) {

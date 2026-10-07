@@ -78,7 +78,7 @@ export function Snippet({ react, blade, inertia, vue, svelte }: SnippetCode) {
         );
 
   return (
-    <div style={{ display: 'grid', gap: 'var(--nx-space-2)' }}>
+    <div className="sc-snippet">
       <p className="sc-demo-title">
         {tr('نمونه کد', 'Code sample')} · {SNIPPET_NAMES[framework]}
       </p>

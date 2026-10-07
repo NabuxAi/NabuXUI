@@ -1381,7 +1381,7 @@
   }
 
   .nx-audio-room-title {
-    max-inline-size: 12rem;
+    max-inline-size: min(12rem, 30vw);
     overflow: hidden;
     text-overflow: ellipsis;
   }

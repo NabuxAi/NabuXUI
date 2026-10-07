@@ -55,6 +55,9 @@
 
   :where(.nx-visually-hidden):where(:not(:focus-within, :active)) {
     position: absolute !important;
+    /* Pinned to the start edge: left at its static spot inside a sideways
+       scroller, it would sit beyond the page and widen it on phones. */
+    inset-inline-start: 0;
     clip-path: inset(50%) !important;
     overflow: hidden !important;
     width: 1px !important;
@@ -64,6 +67,27 @@
     border: 0 !important;
     white-space: nowrap !important;
   }
+
+  /* Touch: small controls answer to a 44px finger target without changing how they look. */
+  @media (pointer: coarse) {
+    :where(.nx-chip-remove, .nx-multiselect-chip-remove, .nx-taginput-chip-remove, .nx-json-toggle, .nx-stream-cite, .nx-diff-view, .nx-terminal-filter, .nx-promo-bar-link) {
+      position: relative;
+
+      &::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        inline-size: max(100%, 2.75rem);
+        block-size: max(100%, 2.75rem);
+        translate: -50% -50%;
+      }
+    }
+  }
+
+  /* A table sizes to its content whatever its width says; fixed layout lets the
+     hidden data tables of charts shrink instead of widening the page. */
+  :where(table.nx-visually-hidden):where(:not(:focus-within, :active)) { table-layout: fixed !important; }
 
   .nx-icon {
     inline-size: 1.15em;

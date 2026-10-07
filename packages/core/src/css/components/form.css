@@ -380,6 +380,7 @@
   .nx-otp {
     position: relative;
     display: inline-flex;
+    max-inline-size: 100%;
     direction: ltr;
   }
 
@@ -400,14 +401,18 @@
   .nx-otp-slots {
     display: flex;
     align-items: center;
-    gap: var(--nx-space-2);
+    gap: clamp(0.25rem, 1.6vw, var(--nx-space-2));
+    min-inline-size: 0;
   }
 
   .nx-otp-slot {
     position: relative;
     display: grid;
     place-items: center;
+    /* Six slots and a separator still fit a 320px phone: slots give way down to 2.25rem. */
+    flex: 0 1 3rem;
     inline-size: 3rem;
+    min-inline-size: 2.25rem;
     block-size: 3.5rem;
     border: 1px solid var(--nx-border-strong);
     border-radius: var(--nx-radius-md);

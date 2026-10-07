@@ -197,6 +197,9 @@
     display: grid;
     justify-items: center;
     gap: var(--nx-space-4);
+    /* The cards are absolutely placed, so the ring has no width of its own to give. */
+    inline-size: 100%;
+    min-inline-size: 0;
   }
 
   .nx-ring-stage {
@@ -350,6 +353,7 @@
     font: 500 var(--nx-text-sm) / 1 var(--nx-font-mono);
     font-variant-numeric: tabular-nums;
     text-align: center;
+    white-space: nowrap;
   }
 
   /* ---- Expandable stack -------------------------------------------------------- *
@@ -694,10 +698,20 @@
     list-style: none;
   }
 
+  /* A phone keeps the cards readable: a swipeable row that snaps card by card,
+     instead of squeezing everyone into the width until names break. */
   @container (width < 36rem) {
-    .nx-team-list { --_overlap: 0.42; }
-    .nx-team-card { padding: var(--nx-space-3); }
-    .nx-team-name { font-size: var(--nx-text-sm); }
+    .nx-team-list {
+      --_w: var(--nx-team-card-width-narrow, 9.5rem);
+      --_overlap: 0.14;
+      justify-content: flex-start;
+      padding-inline: var(--nx-space-4);
+      scroll-snap-type: x mandatory;
+      scroll-padding-inline: var(--nx-space-4);
+    }
+    .nx-team-item { scroll-snap-align: start; }
+    .nx-team-card { padding: var(--nx-space-4) var(--nx-space-3); }
+    .nx-team-name { font-size: var(--nx-text-base); }
     .nx-team-role { font-size: var(--nx-text-xs); }
   }
 

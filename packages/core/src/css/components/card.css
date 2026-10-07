@@ -207,6 +207,10 @@
 
     display: flex;
     justify-content: center;
+    /* Negative percentage overlaps count as zero when the stack is sized to its
+       content, so cap it at its container or the cards would widen the page. */
+    min-inline-size: 0;
+    max-inline-size: 100%;
     margin: 0;
     padding: var(--nx-space-6) 0;
     list-style: none;
@@ -228,9 +232,16 @@
     & + & { margin-inline-start: var(--_overlap); }
   }
 
-  .nx-stack:is(:hover, :focus-within) {
-    .nx-stack-item { rotate: 0deg; }
-    .nx-stack-item + .nx-stack-item { margin-inline-start: var(--nx-space-3); }
+  /* Fanning out needs room and a pointer: on phones the stack stays stacked. */
+  @media (hover: hover) and (pointer: fine) {
+    .nx-stack:is(:hover, :focus-within) {
+      .nx-stack-item { rotate: 0deg; }
+      .nx-stack-item + .nx-stack-item { margin-inline-start: var(--nx-space-3); }
+    }
+  }
+
+  @media (max-width: 40rem) {
+    .nx-stack { --_overlap: var(--nx-stack-overlap-narrow, -68%); }
   }
 
   .nx-stack-item:is(:hover, :focus-within) {

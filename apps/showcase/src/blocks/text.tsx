@@ -2,7 +2,6 @@
 import type { CSSProperties } from 'react';
 import {
   HeroBackdrop,
-  type HeroBackdropVariant,
   Badge,
   Button,
   DitherBackdrop,
@@ -16,8 +15,6 @@ import {
 import { Demo, Section } from '../Section';
 import { useTr } from '../lang';
 
-/** `mesh` and `stripes` are pure-CSS backdrop variants; HeroBackdropVariant does not list them yet. */
-const ShaderBackdrop = HeroBackdrop as (props: { variant: HeroBackdropVariant | 'mesh' | 'stripes'; className?: string; style?: CSSProperties }) => ReturnType<typeof HeroBackdrop>;
 
 const LANGUAGES = ['English', 'Español', 'Français', 'Deutsch', '日本語', '中文', 'العربية', 'فارسی', 'हिन्दी', 'Português', '한국어', 'Türkçe'];
 
@@ -67,7 +64,7 @@ export function TextBlocks() {
 <ScrollScramble title="Decoding every script" items={['English', '日本語', 'فارسی']} />
 <RollText href="/work">Work</RollText>
 <PulseButton icon="play">Play the reel</PulseButton>
-<Backdrop variant="mesh" />   <Backdrop variant="stripes" />   <DitherBackdrop />`,
+<HeroBackdrop variant="mesh" />   <HeroBackdrop variant="stripes" />   <DitherBackdrop />`,
         blade: `<x-nx::text-hero title="Write in every language" highlight="every language"
     :stickers="[['shape' => 'star', 'position' => 'top-start'], ['shape' => 'heart', 'position' => 'bottom-end']]">
     <x-slot:actions><x-nx::button variant="primary">Start writing</x-nx::button></x-slot:actions>
@@ -193,7 +190,7 @@ export function TextBlocks() {
 
         <Demo wide bare>
           <div style={panel}>
-            <ShaderBackdrop variant="mesh" />
+            <HeroBackdrop variant="mesh" />
             <p className="sc-demo-title">{tr('پس‌زمینهٔ مش و دکمهٔ تپنده', 'Mesh backdrop and pulse button')}</p>
             <h3 style={display}>Light, in every colour of the language</h3>
             <p style={lead}>Luz · Lumière · Licht · 光 · نور — a mesh of lights over a wireframe floor.</p>
@@ -205,7 +202,7 @@ export function TextBlocks() {
 
         <Demo wide bare>
           <div style={{ ...panel, minBlockSize: '24rem' }}>
-            <ShaderBackdrop variant="stripes" />
+            <HeroBackdrop variant="stripes" />
             <p className="sc-demo-title">{tr('پس‌زمینهٔ نوارها', 'Stripes backdrop')}</p>
             <h3 style={display}>Signals on every line</h3>
             <p style={lead}>Señales · Signaux · Signale · 信号 — pulses of light, each at its own speed.</p>

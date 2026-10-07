@@ -47,11 +47,13 @@ export interface ToasterProps {
   position?: ToasterPosition;
   /** Another store, if the page runs more than one (rare). */
   store?: ToastStore;
+  /** `ripple`: a ring spreads from each toast as it lands. */
+  effect?: 'ripple';
   className?: string;
 }
 
 /** Render once near the root; then call `toast(...)` from anywhere. */
-export function Toaster({ position = 'bottom-end', store = defaultStore, className }: ToasterProps) {
+export function Toaster({ position = 'bottom-end', store = defaultStore, effect, className }: ToasterProps) {
   const t = useT();
   const items = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
   const section = useRef<HTMLElement>(null);
@@ -95,6 +97,7 @@ export function Toaster({ position = 'bottom-end', store = defaultStore, classNa
       ref={section}
       className={cx('nx-toaster', className)}
       data-position={position}
+      data-effect={effect}
       aria-label={t('notifications')}
       {...{ popover: 'manual' }}
       onPointerEnter={store.pause}

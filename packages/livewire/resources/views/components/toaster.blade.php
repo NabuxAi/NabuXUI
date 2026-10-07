@@ -1,9 +1,10 @@
 {{--
     Once per layout: <x-nx::toaster />. Shows toasts from $this->toast() (Livewire),
     NabuXUI::flashToast() (after a redirect), and $nxToast() / window.NabuXUI.toast() in the browser.
+    effect="ripple": a ring spreads from each toast as it lands.
 --}}
-@props(['position' => 'bottom-end'])
-<section {{ $attributes->class('nx-toaster')->merge(['data-position' => $position, 'aria-label' => __('nabuxui::ui.notifications'), 'popover' => 'manual']) }}
+@props(['position' => 'bottom-end', 'effect' => null])
+<section {{ $attributes->class('nx-toaster')->merge(['data-position' => $position, 'data-effect' => $effect, 'aria-label' => __('nabuxui::ui.notifications'), 'popover' => 'manual']) }}
     x-data="nxToaster(@js(\NabuXUI\NabuXUI::flashedToasts()))" wire:ignore data-navigate-persist
     @nx-toast.window="push($event.detail)" @pointerenter="pause()" @pointerleave="resume()" @focusin="pause()"
     @focusout="if (! $root.contains($event.relatedTarget)) resume()">
