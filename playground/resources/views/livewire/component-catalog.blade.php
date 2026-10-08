@@ -55,7 +55,7 @@
             </div>
 
             @if (count($demos) === 0)
-                <section class="pg-box">
+                <section class="pg-box" wire:key="demos-empty">
                     <x-nx::empty-state icon="search" :title="$say('Nothing found', 'چیزی پیدا نشد')"
                         :description="$say('No demo matches this search in this group. Clear the filters and try another name.', 'دمویی با این جست‌وجو در این گروه نیست. فیلترها را پاک کنید و نام دیگری را امتحان کنید.')">
                         <x-slot:actions>
@@ -64,9 +64,17 @@
                     </x-nx::empty-state>
                 </section>
             @else
-                <x-nx::grid min="17rem">
+                {{--
+                    The grid runs without the reveal stagger: the reveal marks the
+                    grid client-side (data-nx-revealed) and Livewire's morph strips
+                    that attribute on every filter/search update, leaving the cards
+                    permanently invisible — the observer has already unobserved.
+                    Cards carry stable keys so the morph patches only what changed.
+                --}}
+                <x-nx::grid min="17rem" :stagger="false" wire:key="demos-grid">
                     @foreach ($demos as $demo)
-                        <x-nx::card interactive :href="'/components/'.$demo['group'].'/'.$demo['slug']" wire:navigate
+                        <x-nx::card interactive wire:key="demo-{{ $demo['group'] }}-{{ $demo['slug'] }}"
+                            :href="'/components/'.$demo['group'].'/'.$demo['slug']" wire:navigate
                             :icon="$demo['icon'] ?? 'grid'" :title="$demo['title']" :description="$demo['oneLiner']">
                             <x-slot:footer>
                                 <div class="pg-row" style="gap: .5rem">
