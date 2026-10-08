@@ -37,6 +37,11 @@
         color: var(--fl-text);
         display: grid;
         gap: .75rem;
+        /* As a grid item with min-width:auto this root once refused to shrink
+           below its content's intrinsic width (429px at 375px viewport) and
+           the whole window overflowed the demo card. Zero the automatic
+           minimum so the minmax(0, 1fr) track can always clamp it. */
+        min-inline-size: 0;
     }
     html[data-theme="dark"] .flnav-root {
         --fl-accent: #4CC2FF;
@@ -67,6 +72,7 @@
 
     .flnav-app {
         inline-size: min(100%, 30rem); margin-inline: auto; block-size: 23rem;
+        min-inline-size: 0;
         display: flex; flex-direction: column; border-radius: 8px; overflow: clip;
         background: var(--fl-window);
         box-shadow: 0 24px 48px rgba(0, 0, 0, .16), 0 0 0 1px var(--fl-card-stroke);
@@ -113,6 +119,28 @@
     .flnav-specs div:last-child { border-block-end: 0; }
     .flnav-specs span { color: var(--fl-text-2); }
     .flnav-hint { margin: 0; text-align: center; font-size: .72rem; color: var(--fl-text-2); }
+
+    /* On phones the demo card is ~243px wide inside its padding, so the
+       expanded 256px pane (272px with its padding) can never fit beside the
+       details panel. Real NavigationView answers the same squeeze by dropping
+       to its compact rail, so below 29rem — the width under which the card
+       interior drops under ~331px — mirror the data-collapsed styling. */
+    @media (max-width: 29rem) {
+        .flnav-app .flnav-pane { inline-size: 3rem; padding-inline: .25rem; }
+        .flnav-app .flnav-lbl { display: none; }
+    }
+
+    /* The "Important props" table that the demo page renders after this
+       partial hides its rows until a scroll observer marks it revealed
+       (data-nx-revealed); a full-page capture never scrolls, so the body was
+       captured empty in both themes, and its nowrap cells pushed the fourth
+       column past the viewport edge on phones. This rule ships only with this
+       partial, so it is page-scoped: show the rows unconditionally and let the
+       cells wrap on narrow screens. */
+    .nx-js .nx-data-table[data-nx-reveal]:not([data-nx-revealed]) tbody tr { opacity: 1; translate: none; }
+    @media (max-width: 48rem) {
+        .nx-data-table thead th, .nx-data-table tbody td { white-space: normal; padding-inline: .5rem; }
+    }
 
     @media (prefers-reduced-motion: reduce) {
         .flnav-pane, .flnav-pill, .flnav-item, .flnav-burger { transition: none; }

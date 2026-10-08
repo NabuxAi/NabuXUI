@@ -86,9 +86,17 @@
        renders empty. Show the rows unconditionally; this partial only loads
        on this page, so the override is page-scoped. */
     .nx-page .pg .nx-data-table[data-nx-reveal] tbody tr { opacity: 1; translate: none; }
-    /* Long "What it does" notes force nowrap width past 375px and clip the
-       last column at the table's scroll edge — let cells wrap instead. */
-    .nx-page .pg .nx-data-table td { white-space: normal; }
+    /* At phone widths the shared "Important props" table's nowrap cells run
+       past the inline edge: the wide Default values ('64 · 112 · 152',
+       'collapse') plus the nowrap «What it does» header push the last column
+       off a 375px screen, so every note line is cut mid-word. Let this
+       page's table cells wrap — and slim the cell padding there — scoped
+       through :has(.m3bar-root), so it never reaches another demo page. */
+    @media (max-width: 480px) {
+        .pg:has(.m3bar-root) .nx-data-table :is(th, td) {
+            white-space: normal; padding-inline: .5rem; overflow-wrap: break-word;
+        }
+    }
 </style>
 
 <section class="pg-box" style="justify-items: center">

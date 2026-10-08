@@ -134,6 +134,15 @@
     :where(.nx-js) .pg:has(.mcpop-root) .nx-data-table[data-nx-reveal] tbody tr {
         opacity: 1; translate: none;
     }
+    /* The shared snippet below this stage sets the mono stack (JetBrains
+       Mono), which has no Persian glyphs; the sample word on the snippet's
+       first line — گزینه‌ها, the label right after aria-expanded="false">
+       in the anchor button — fell through to a mismatched system fallback:
+       mangled, unjoined letters colliding with the adjacent code
+       punctuation, in either theme. Let Persian resolve into Vazirmatn,
+       already loaded by the layout, while Latin code keeps the mono face —
+       scoped through :has(.mcpop-root), so it never reaches another page. */
+    .pg:has(.mcpop-root) pre code { font-family: var(--nx-font-mono), "Vazirmatn", sans-serif; }
     /* At phone widths the table's nowrap cells and the snippet's long lines
        run past the inline edge; let this page's table and snippet wrap so
        nothing is read as cut off. */

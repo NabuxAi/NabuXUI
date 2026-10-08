@@ -142,8 +142,26 @@
        state with !important (a plain override loses the (0,3,2) fight); :has()
        keeps this scoped to pages hosting this partial. */
     body:has(.flcmd-root) .nx-data-table tbody tr { opacity: 1 !important; translate: none !important; animation: none !important; }
+    /* Cells may wrap, but word-internal breaking stays out of the code-like
+       columns: `overflow-wrap: anywhere` on every cell is what split «Type»,
+       «Default», «overflow», «menu-bar», «'optional'» and «'side · below'»
+       mid-word on phones. Prop/Type/Default hold code tokens, so each stays
+       on one line — even the hyphen in «menu-bar» must not become a wrap
+       point. Only the prose column («What it does») breaks inside a word —
+       and because `anywhere` (unlike `break-word`) collapses that column's
+       min-content, all four columns still fit a 375px viewport. Under 30rem
+       tighten font and padding (desktop.blade.php's props-table idiom) so the
+       prose column is wide enough that its words fit without breaking. */
     body:has(.flcmd-root) .nx-data-table th,
-    body:has(.flcmd-root) .nx-data-table td { white-space: normal; overflow-wrap: anywhere; }
+    body:has(.flcmd-root) .nx-data-table td { white-space: normal; }
+    body:has(.flcmd-root) .nx-data-table th:not(:last-child),
+    body:has(.flcmd-root) .nx-data-table td:not(:last-child) { white-space: nowrap; }
+    body:has(.flcmd-root) .nx-data-table th:last-child,
+    body:has(.flcmd-root) .nx-data-table td:last-child { overflow-wrap: anywhere; }
+    @media (max-width: 30rem) {
+        body:has(.flcmd-root) .nx-data-table th,
+        body:has(.flcmd-root) .nx-data-table td { padding: .5rem .625rem; font-size: var(--nx-text-xs); }
+    }
 
     @media (prefers-reduced-motion: reduce) {
         .flcmd-btn, .flcmd-file, .flcmd-menubtn { transition: none; }

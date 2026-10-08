@@ -33,6 +33,10 @@
         font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
         color: var(--fl-text);
         display: grid;
+        /* minmax(0, 1fr), not auto: an auto track sizes to the strip's
+           min-content (three 9.5rem tabs + the «+»), which at phone widths
+           balloons the window card past the «Real scenarios» card. */
+        grid-template-columns: minmax(0, 1fr);
         gap: .75rem;
     }
     html[data-theme="dark"] .fltab-root {
@@ -74,6 +78,7 @@
 
     .fltab-app {
         position: relative; inline-size: min(100%, 30rem); margin-inline: auto;
+        min-inline-size: 0; /* grid-item auto minimum would keep the card at strip min-content */
         border-radius: 8px; overflow: clip; background: var(--fl-window);
         box-shadow: 0 24px 48px rgba(0, 0, 0, .16), 0 0 0 1px var(--fl-card-stroke);
     }
@@ -120,6 +125,26 @@
     .fltab-page > p { margin: .4rem 0 0; font-size: .8rem; line-height: 2; }
     .fltab-meta { display: flex; flex-wrap: wrap; gap: .35rem 1.1rem; margin-block-start: .8rem; padding-block-start: .5rem; border-block-start: 1px solid var(--fl-divider); font-size: .68rem; color: var(--fl-text-2); }
     .fltab-hint { margin: 0; text-align: center; font-size: .72rem; color: var(--fl-text-2); }
+
+    /* The shared «Important props» table this page renders below the stage
+       reveals its rows on scroll: tbody rows sit at opacity: 0 until an
+       IntersectionObserver stamps [data-nx-revealed] on the table, and once
+       .nx-live is set the 2.5s CSS failsafe is off — so a full-page capture,
+       which never scrolls, sees a header with an empty body. Keep this page's
+       rows visible; scoped through :has(.fltab-root) so it never reaches
+       another demo page. */
+    :where(.nx-js) .pg:has(.fltab-root) .nx-data-table[data-nx-reveal] tbody tr {
+        opacity: 1; translate: none;
+    }
+    /* At phone widths the table's nowrap cells run past the inline edge, and
+       the tab chrome needs to tighten so three tabs plus the «+» fit inside
+       the window card. */
+    @media (max-width: 480px) {
+        .pg:has(.fltab-root) .nx-data-table :is(th, td) {
+            white-space: normal; padding-inline: .5rem; overflow-wrap: break-word;
+        }
+        .fltab-tab { padding-inline: .45rem; gap: .3rem; }
+    }
 
     @media (prefers-reduced-motion: reduce) {
         .fltab-tab, .fltab-x, .fltab-add { transition: none; }

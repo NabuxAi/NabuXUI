@@ -78,6 +78,16 @@
        capture shows header columns over an empty body. Keep the rows of the
        table on this page (guarded by :has so the rule never leaks) visible. */
     .pg:has(.m3chip-root) .nx-data-table[data-nx-reveal]:not([data-nx-revealed]) tbody tr { opacity: 1; translate: none; }
+    /* At phone widths the shared "Important props" table's nowrap cells run
+       past the inline edge, so the "What it does" column starts outside the
+       viewport (a capture shows only «ass…», «Un…», «Th…» and a clipped
+       «Wh…» header). Let this page's table cells wrap — scoped through
+       :has(.m3chip-root), so it never reaches another demo page. */
+    @media (max-width: 480px) {
+        .pg:has(.m3chip-root) .nx-data-table :is(th, td) {
+            white-space: normal; padding-inline: .5rem; overflow-wrap: break-word;
+        }
+    }
     @media (prefers-reduced-motion: reduce) {
         .m3chip-root * { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
     }

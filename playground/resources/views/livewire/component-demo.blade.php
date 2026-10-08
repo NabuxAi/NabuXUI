@@ -32,6 +32,15 @@
     $prevTitle = $prev ? DemoCatalog::pick(DemoCatalog::find($prev['group'], $prev['slug'])['title'] ?? '', $locale) : null;
     $nextTitle = $next ? DemoCatalog::pick(DemoCatalog::find($next['group'], $next['slug'])['title'] ?? '', $locale) : null;
 @endphp
+<style>
+    /* Scoped to the ids this very template emits: below 640px the props-table
+       cells may wrap and the snippet pre soft-wraps, so the 4th column and the
+       code stay visible at the 375px edge (the core keeps nowrap by default). */
+    @media (max-width: 639.98px) {
+        [aria-labelledby="demo-props-title"] .nx-data-table :is(th, td) { white-space: normal; padding-inline: .5rem; }
+        [aria-labelledby="demo-snippet-title"] pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+    }
+</style>
 <div>
     <main class="nx-page" wire:transition.navigate="nx-page">
         <div class="pg">

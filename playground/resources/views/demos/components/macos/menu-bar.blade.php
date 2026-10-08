@@ -133,6 +133,16 @@
        Livewire pages — so in static captures the table looks empty. Mirror that
        failsafe on this page: the rows are always rendered. */
     :where(.nx-js) .nx-data-table[data-nx-reveal]:not([data-nx-revealed]) tbody tr { opacity: 1; translate: none; }
+    /* At phone widths the props table's nowrap cells and the snippet's long
+       lines run past the inline edge — the fourth column read as "W…/Th…" and
+       the snippet itself clipped. Let this page's table cells and snippet wrap,
+       scoped through :has(.mcmenu-root), so it never loads on another page. */
+    @media (max-width: 480px) {
+        body:has(.mcmenu-root) .nx-data-table :is(th, td) {
+            white-space: normal; padding-inline: .5rem; overflow-wrap: break-word;
+        }
+        body:has(.mcmenu-root) pre code { white-space: pre-wrap; overflow-wrap: anywhere; }
+    }
 </style>
 
 <section class="pg-box mcmenu-root">

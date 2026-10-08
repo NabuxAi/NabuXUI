@@ -151,6 +151,24 @@
         opacity: 1;
         translate: none;
     }
+
+    /* The same table on phones: its cells are nowrap by default
+       (.nx-data-table th, td), so the four columns — above all the long
+       "What it does" notes — cannot fit a 375px viewport and the last column
+       was clipped mid-word at the page edge ("standard · a…", "The Win11 (…",
+       "Light acces…"). Let cells wrap at spaces and let the note column break
+       inside words too (tokens like #005FB8); on wide screens every line still
+       fits, so nothing changes there. Under 30rem ease the cell padding so
+       all four columns truly fit. Scoped to this demo page via the
+       .flbtn-root ancestor. */
+    html:has(.flbtn-root) .nx-data-table th,
+    html:has(.flbtn-root) .nx-data-table td { white-space: normal; }
+    html:has(.flbtn-root) .nx-data-table th:last-child,
+    html:has(.flbtn-root) .nx-data-table td:last-child { overflow-wrap: anywhere; }
+    @media (max-width: 30rem) {
+        html:has(.flbtn-root) .nx-data-table th,
+        html:has(.flbtn-root) .nx-data-table td { padding: .625rem .75rem; }
+    }
 </style>
 
 <section class="pg-box" style="gap: 1rem">

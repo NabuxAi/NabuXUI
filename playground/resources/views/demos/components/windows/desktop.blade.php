@@ -653,8 +653,9 @@
     /* Mobile */
     @media (max-width: 480px) {
         .fldesk-hide-sm { display: none; }
-        /* Props table: let the columns wrap so the last one is not clipped off-edge. */
-        .nx-data-table th, .nx-data-table td { white-space: normal; }
+        /* Props table: wrap the cells and tighten them so the whole table
+           fits the narrow screen instead of clipping its last column. */
+        .nx-data-table th, .nx-data-table td { white-space: normal; padding-inline: .5rem; font-size: var(--nx-text-xs); }
         .fldesk-side { inline-size: 5.5rem; }
         .fldesk-fdate, .fldesk-read { display: none; }
         .fldesk-mlist { inline-size: 9rem; }

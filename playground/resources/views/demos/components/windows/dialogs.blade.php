@@ -189,12 +189,21 @@
         opacity: 1; translate: none;
     }
     @media (max-width: 480px) {
+        /* Fixed column widths, so the wide «What it does» prose column keeps
+           its share instead of being starved by the auto layout (its
+           overflow-wrap collapse) or pushed past the phone edge. break-word
+           (not anywhere) keeps each column's min-content honest, and the
+           12px token size is what lets every value — «primary/secondary»,
+           «'directional'» — stay on one line at 375px. */
+        .pg:has(.fldlg-root) .nx-data-table table { table-layout: fixed; }
         .pg:has(.fldlg-root) .nx-data-table :is(th, td) {
-            white-space: normal; padding-inline: .5rem;
+            white-space: normal; padding-inline: .375rem; overflow-wrap: break-word;
+            font-size: var(--nx-text-xs);
         }
-        .pg:has(.fldlg-root) .nx-data-table :is(th, td):last-child {
-            overflow-wrap: anywhere;
-        }
+        .pg:has(.fldlg-root) .nx-data-table th:nth-child(1) { inline-size: 19.5%; }
+        .pg:has(.fldlg-root) .nx-data-table th:nth-child(2) { inline-size: 18.5%; }
+        .pg:has(.fldlg-root) .nx-data-table th:nth-child(3) { inline-size: 24.5%; }
+        .pg:has(.fldlg-root) .nx-data-table th:nth-child(4) { inline-size: 37.5%; }
     }
 </style>
 

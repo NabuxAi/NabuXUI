@@ -29,26 +29,31 @@
         font-family: system-ui, -apple-system, "Vazirmatn", sans-serif;
     }
     html[data-theme="dark"] .mcspot-root {
-        --mcspot-text: #F5F5F5; --mcspot-text2: #A5A5AA; --mcspot-accent: #0A84FF;
+        --mcspot-text: #F5F5F5; --mcspot-text2: #B4B4BC; --mcspot-accent: #0A84FF;
         --mcspot-hair: rgba(255, 255, 255, .15); --mcspot-div: rgba(255, 255, 255, .1);
-        --mcspot-glass: rgba(40, 40, 40, .85);
+        --mcspot-glass: rgba(28, 28, 30, .92);
         --mcspot-wall: linear-gradient(140deg, #182338 0%, #3D2F4E 52%, #66422D 100%);
     }
     @media (prefers-color-scheme: dark) {
         html:not([data-theme="light"]) .mcspot-root {
-            --mcspot-text: #F5F5F5; --mcspot-text2: #A5A5AA; --mcspot-accent: #0A84FF;
+            --mcspot-text: #F5F5F5; --mcspot-text2: #B4B4BC; --mcspot-accent: #0A84FF;
             --mcspot-hair: rgba(255, 255, 255, .15); --mcspot-div: rgba(255, 255, 255, .1);
-            --mcspot-glass: rgba(40, 40, 40, .85);
+            --mcspot-glass: rgba(28, 28, 30, .92);
             --mcspot-wall: linear-gradient(140deg, #182338 0%, #3D2F4E 52%, #66422D 100%);
         }
     }
 
     .mcspot-stage {
         position: relative; overflow: clip; min-block-size: 26rem; border-radius: var(--nx-radius-2xl);
-        background: var(--mcspot-wall); display: grid; place-items: center; padding: 1.5rem;
+        background: var(--mcspot-wall);
+    }
+    /* The desktop layer takes the dim+blur so the filter never reaches the
+       glass panel or its text — the panel is a sibling, not a child. */
+    .mcspot-desk {
+        position: absolute; inset: 0; display: grid; place-items: center; padding: 1.5rem;
         transition: filter .3s;
     }
-    .mcspot-stage[data-hot] { filter: blur(5px) brightness(.55); }
+    .mcspot-desk[data-hot] { filter: blur(3px) brightness(.6); }
     .mcspot-mag {
         position: relative; z-index: 1; display: grid; place-items: center; gap: 8px;
         padding: 18px; border: 0; border-radius: 50%; cursor: pointer;
@@ -61,10 +66,10 @@
 
     .mcspot-overlay {
         position: absolute; inset: 0; z-index: 40; display: grid; place-items: start center;
-        padding: 2.5rem 1rem; background: rgba(10, 10, 12, .25); backdrop-filter: blur(2px);
+        padding: 2.5rem 1rem; background: rgba(10, 10, 12, .32);
     }
     .mcspot-panel {
-        display: grid; grid-template-rows: auto minmax(0, 1fr); inline-size: min(90vw, 680px); max-inline-size: 100%;
+        display: grid; grid-template-rows: auto minmax(0, 1fr); inline-size: min(100%, 680px); max-inline-size: 100%;
         max-block-size: 100%; border-radius: 12px; overflow: clip;
         background: var(--mcspot-glass); backdrop-filter: blur(40px) saturate(1.5);
         box-shadow: 0 24px 80px rgba(0, 0, 0, .35), 0 0 0 .5px var(--mcspot-hair);
@@ -123,7 +128,12 @@
         font-size: 10.5px; color: var(--mcspot-text2);
     }
     .mcspot-root :is(button, input):focus-visible { outline: 2px solid var(--mcspot-accent); outline-offset: 2px; }
-    @media (max-width: 620px) { .mcspot-body { grid-template-columns: minmax(0, 1fr); } .mcspot-preview { display: none; } }
+    @media (max-width: 620px) {
+        .mcspot-body { grid-template-columns: minmax(0, 1fr); }
+        .mcspot-preview { display: none; }
+        .mcspot-overlay { padding: 1.5rem .75rem; }
+        .mcspot-results { max-block-size: 216px; }
+    }
 </style>
 
 <section class="pg-box mcspot-root">
@@ -166,21 +176,22 @@
                 show() { this.open = true; this.q = ''; this.sel = this.flat[0] ? this.flat[0].id : ''; this.$nextTick(() => this.$refs.field && this.$refs.field.focus()) },
                 hot(e) { if ((e.metaKey || e.ctrlKey) && ! e.shiftKey && ! e.altKey && e.key.toLowerCase() === 'k') { e.preventDefault(); this.open ? this.open = false : this.show() } },
             }"
-         :data-hot="open ? '' : null"
          x-on:keydown.window="hot($event)"
          x-on:keydown.escape.window="open = false">
-        <button type="button" class="mcspot-mag" :aria-expanded="open ? 'true' : 'false'"
-                aria-label="{{ $say('Open Spotlight', 'باز کردن Spotlight') }}" x-on:click="show()">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/></svg>
-            <small aria-hidden="true">⌘K</small>
-        </button>
+        <div class="mcspot-desk" :data-hot="open ? '' : null">
+            <button type="button" class="mcspot-mag" :aria-expanded="open ? 'true' : 'false'"
+                    aria-label="{{ $say('Open Spotlight', 'باز کردن Spotlight') }}" x-on:click="show()">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/></svg>
+                <small aria-hidden="true">⌘K</small>
+            </button>
+        </div>
 
         <div class="mcspot-overlay" x-show="open" x-cloak x-transition.opacity.duration.180ms x-on:click.self="open = false">
             <div class="mcspot-panel" role="dialog" aria-modal="true" aria-label="Spotlight">
                 <div class="mcspot-fieldrow">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/></svg>
                     <input type="text" x-ref="field" x-model="q"
-                           :placeholder="fa ? 'جست‌وجوی Spotlight' : 'Spotlight Search'"
+                           placeholder="{{ $say('Spotlight Search', 'جست‌وجوی Spotlight') }}"
                            aria-label="{{ $say('Spotlight search', 'جست‌وجوی Spotlight') }}"
                            x-on:keydown.down.prevent="move(1)"
                            x-on:keydown.up.prevent="move(-1)"

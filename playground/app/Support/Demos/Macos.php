@@ -415,7 +415,10 @@ return [
         'code' => <<<'BLADE'
         <div class="mcnotif" data-expanded="false">
             <img class="mcnotif-icon" src="mail.png" alt="">
-            <div><b>ایمیل</b><p>سارا: جلسه فردا…</p></div>
+            <div>
+                <b>ایمیل</b>
+                <p>سارا: جلسه فردا…‏</p>
+            </div>
         </div>
 
         <style>

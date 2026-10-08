@@ -167,6 +167,26 @@
     .mcctl-stepper svg { inline-size: 8px; block-size: 5px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
     .mcctl-root :is(button, input):focus-visible { outline: 2px solid var(--mcctl-accent); outline-offset: 2px; }
     @media (prefers-reduced-motion: reduce) { .mcctl-bubble, .mcctl-check i, .mcctl-radio i { transition: none; } }
+
+    /* The shared snippet below this stage sets the mono stack, which has no
+       Persian glyphs; the sample Persian words fell through to a mismatched
+       system fallback — cramped and colliding with the adjacent code
+       punctuation (<button>…, <i></i>…, <b>…) in either theme. Let Persian
+       resolve into Vazirmatn, already loaded by the layout, while Latin code
+       keeps the mono face — scoped through :has(.mcctl-root), so it never
+       reaches another demo page. */
+    .pg:has(.mcctl-root) pre code { font-family: var(--nx-font-mono), "Vazirmatn", sans-serif; }
+
+    /* At phone widths the shared "Important props" table's nowrap cells and
+       the snippet's long lines run past the inline edge and are read as cut
+       off; let this page's table and snippet wrap so every value stays
+       visible — same remedy the popover page ships for its own table. */
+    @media (max-width: 480px) {
+        .pg:has(.mcctl-root) .nx-data-table :is(th, td) {
+            white-space: normal; padding-inline: .5rem; overflow-wrap: break-word;
+        }
+        .pg:has(.mcctl-root) pre code { white-space: pre-wrap; overflow-wrap: anywhere; }
+    }
 </style>
 
 <section class="pg-box mcctl-root">

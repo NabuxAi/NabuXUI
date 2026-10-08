@@ -72,11 +72,25 @@
         color: var(--mcsheet-text); background: var(--mcsheet-ctrl); box-shadow: var(--mcsheet-ctrl-sh);
     }
     .mcsheet-btn:hover { background: color-mix(in srgb, var(--mcsheet-ctrl) 88%, var(--mcsheet-text) 12%); }
-    /* Narrow window: tighter toolbar so the centred title keeps real room. */
+    /* Narrow window: tighter toolbar so the centred title keeps real room.
+       The bar is a nowrap flex row, so below ~19.5rem of stage the decorative
+       lights step aside (a real Mac window is never this small) — otherwise the
+       two toolbar buttons overflow the window and get clipped at the demo box
+       edge on phones. */
     @container (max-inline-size: 22rem) {
         .mcsheet-bar { gap: 8px; padding-inline: 8px; }
         .mcsheet-lights { gap: 6px; }
-        .mcsheet-btn { padding-inline: 7px; font-size: 11px; }
+        .mcsheet-btn { padding-inline: 5px; font-size: 10.5px; }
+        .mcsheet-panel { padding: 12px; }
+        .mcsheet-go { padding-inline: 12px; }
+        .mcsheet-row { gap: 8px; padding: 8px 9px; }
+    }
+    @container (max-inline-size: 19.5rem) {
+        .mcsheet-lights { display: none; }
+        .mcsheet-title { text-align: start; }
+    }
+    @container (max-inline-size: 14rem) {
+        .mcsheet-title { display: none; }
     }
 
     .mcsheet-content { position: relative; display: grid; align-content: start; gap: 2px; padding: 10px; overflow: auto; transition: opacity .3s, filter .3s; }
@@ -134,47 +148,19 @@
 
     /* The demo page around this partial: the props table hides its rows until a
        scroll-reveal observer fires (and .nx-live disables the 2.5s CSS failsafe),
-       so a static capture shows a header with an empty body; its nowrap cells and
-       the snippet also cut at the edge on phones. Pages hosting this partial pin
-       them to the readable state — scoped here, off this demo's page it never loads. */
+       so a static capture shows a header with an empty body, and the platform's
+       nowrap cells cut at the edge on phones. Letting cells wrap at spaces only
+       (plain normal — never anywhere, whose 1ch min-content crushed "Prop" into
+       "Pr op") keeps every column at its longest word: sheet, position and
+       'under toolbar' stay whole. The snippet also wraps at spaces, slightly
+       smaller, so its lines never cut at the edge. Scoped here: off this demo's
+       page it never loads. */
     body:has(.mcsheet-root) .nx-data-table tbody tr { opacity: 1; translate: none; animation: none; }
     body:has(.mcsheet-root) .nx-data-table th,
-    body:has(.mcsheet-root) .nx-data-table td { white-space: normal; overflow-wrap: anywhere; }
-    body:has(.mcsheet-root) pre code { white-space: pre-wrap; overflow-wrap: anywhere; }
+    body:has(.mcsheet-root) .nx-data-table td { white-space: normal; }
+    body:has(.mcsheet-root) pre code { white-space: pre-wrap; overflow-wrap: normal; font-size: .9em; }
 
     @media (prefers-reduced-motion: reduce) { .mcsheet-panel { transition: none; } .mcsheet-content { transition: none; } }
-    /* DEBUG PROBES — remove before finishing */
-    html { outline: 6px solid red; outline-offset: -6px; }
-    body { outline: 6px solid lime; outline-offset: -12px; }
-    .pg { outline: 6px solid blue; outline-offset: -18px; }
-    .mcsheet-root { outline: 6px solid magenta; outline-offset: -24px; }
-</style>
-<script>
-    window.addEventListener('load', () => {
-        const d = document.documentElement, b = document.body;
-        const pg = document.querySelector('.pg');
-        const box = document.querySelector('.pg-box');
-        const stage = document.querySelector('.mcsheet-stage');
-        const win = document.querySelector('.mcsheet-win');
-        const info = [
-            'innerW:' + window.innerWidth,
-            'docSW:' + d.scrollWidth,
-            'docCW:' + d.clientWidth,
-            'bodySW:' + b.scrollWidth,
-            'pgW:' + (pg ? Math.round(pg.getBoundingClientRect().width) : 'n/a'),
-            'boxW:' + (box ? Math.round(box.getBoundingClientRect().width) : 'n/a'),
-            'stageW:' + (stage ? Math.round(stage.getBoundingClientRect().width) : 'n/a'),
-            'winW:' + (win ? Math.round(win.getBoundingClientRect().width) : 'n/a'),
-            'scrollX:' + window.scrollX,
-        ].join(' | ');
-        const p = document.createElement('pre');
-        p.id = 'dbg';
-        p.textContent = info;
-        p.style.cssText = 'position:fixed;top:0;left:0;z-index:99999;background:#fff;color:#000;font:14px monospace;padding:6px';
-        document.body.appendChild(p);
-    });
-</script>
-<style>
 </style>
 
 <section class="pg-box mcsheet-root">
@@ -240,7 +226,7 @@
                   data-open :data-open="sheet ? '' : null" x-on:submit.prevent="saveSheet()">
                 <label for="mcsheet-name">{{ $say('Scene name', 'نام صحنه') }}</label>
                 <input id="mcsheet-name" type="text" x-ref="field" x-model="name" x-on:keydown.enter.prevent="saveSheet()"
-                       :placeholder="$say('e.g. Night view', 'مثلاً: نمای شب')">
+                       placeholder="{{ $say('e.g. Night view', 'مثلاً: نمای شب') }}">
                 <div class="mcsheet-foot">
                     <button type="button" class="mcsheet-go" x-on:click="closeSheet()">{{ $say('Cancel', 'انصراف') }}</button>
                     <button type="submit" class="mcsheet-go" data-default x-on:click="saveSheet()">{{ $say('Save', 'ذخیره') }}</button>

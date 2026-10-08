@@ -144,6 +144,25 @@
     @media (prefers-reduced-motion: reduce) {
         .flsel-check svg, .flsel-radio::after, .flsel-fill, .flsel-thumb { transition: none; }
     }
+
+    /* The page's "Important props" table: the reveal-on-view pipeline holds its
+       body rows at opacity 0 until JS reveals them, so a snapshot taken in that
+       window shows a header over an empty body. Keep the rows visible on this
+       page from the first paint. Scoped to this demo via the .flsel-root
+       ancestor, so no other page's table changes. */
+    html:has(.flsel-root) .nx-data-table[data-nx-reveal]:not([data-nx-revealed]) tbody tr {
+        opacity: 1;
+        translate: none;
+    }
+    /* The long note cells must wrap instead of pushing the table past the
+       viewport edge (mobile clipped the last header column mid-word). */
+    html:has(.flsel-root) .nx-data-table th,
+    html:has(.flsel-root) .nx-data-table td { white-space: normal; }
+    @media (max-width: 30rem) {
+        html:has(.flsel-root) .nx-data-table table { font-size: .75rem; }
+        html:has(.flsel-root) .nx-data-table th,
+        html:has(.flsel-root) .nx-data-table td { padding-inline: .5rem; }
+    }
 </style>
 
 <section class="pg-box" style="gap: 1rem">

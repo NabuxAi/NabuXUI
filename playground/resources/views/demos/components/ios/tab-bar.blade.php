@@ -57,7 +57,14 @@
     .iotab-batt::before { content: ''; position: absolute; inset: 1.5px; inset-inline-end: 5px; border-radius: 2px; background: var(--ios-label); }
     .iotab-batt::after { content: ''; position: absolute; inset-block: 3px; inset-inline-end: -3px; inline-size: 2px; border-radius: 0 2px 2px 0; background: var(--ios-label-3); }
 
-    .iotab-body { flex: 1; overflow-y: auto; scrollbar-width: none; padding: .6rem .9rem 7.5rem; }
+    .iotab-body { flex: 1; overflow-y: auto; scrollbar-width: none; padding: .6rem .9rem 7.5rem;
+                  /* Rows at rest can land on the bottom strip and get sliced mid-glyph
+                     by the dark home indicator at the screen edge; keep that strip
+                     clear (flat zero) and dissolve content back in just above it,
+                     completing the fade at the glass bar's bottom edge so rows stay
+                     fully opaque behind the bar's blur. */
+                  -webkit-mask-image: linear-gradient(to top, transparent 0, transparent .8rem, #000 1.5rem);
+                  mask-image: linear-gradient(to top, transparent 0, transparent .8rem, #000 1.5rem); }
     .iotab-body::-webkit-scrollbar { display: none; }
     .iotab-hello { font: 700 1.55rem/-apple-system, system-ui, sans-serif; margin: .4rem 0 .9rem; }
     .iotab-hero { position: relative; display: flex; align-items: center; gap: .8rem; padding: .9rem; border-radius: 14px; overflow: clip;

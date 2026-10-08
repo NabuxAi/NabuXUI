@@ -33,6 +33,11 @@
         font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
         color: var(--fl-text);
         display: grid;
+        /* minmax(0, 1fr), not auto: an auto track sizes to the titlebar's
+           min-content (the nowrap title + the fixed 138px caption cluster),
+           which at phone widths balloons the demo past the card and clips
+           the desktop's end edge against the screen. */
+        grid-template-columns: minmax(0, 1fr);
         gap: .75rem;
     }
     .flwin-root button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
@@ -41,6 +46,9 @@
 
     .flwin-desktop {
         position: relative; overflow: clip; display: grid; place-items: center;
+        /* Same clamp one level down: an auto track would size to the
+           window's min-content and spill past the clamped root track. */
+        grid-template-columns: minmax(0, 1fr);
         min-block-size: 23rem; padding: 2.25rem 1.25rem 3.25rem; border-radius: 8px;
         background:
             radial-gradient(120% 90% at 78% 8%, rgba(80, 160, 255, .45), transparent 55%),
@@ -48,7 +56,11 @@
             linear-gradient(158deg, #0B2C52, #11407A 52%, #1A5BA6);
     }
     .flwin-clock {
-        position: absolute; inset-block-end: .75rem; inset-inline-start: 50%; translate: -50% 0;
+        /* inset-inline: 0 + margin-inline: auto centers in both directions;
+           translate: -50% would flip meaning in RTL and poke the pill past
+           the desktop's clipped start edge. */
+        position: absolute; inset-block-end: .75rem; inset-inline: 0;
+        margin-inline: auto; inline-size: fit-content;
         display: flex; align-items: center; gap: .5rem; padding: .3rem .85rem; border-radius: 999px;
         font-size: .7rem; color: #EAF3FF; background: rgba(255, 255, 255, .12);
         box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16);
@@ -110,6 +122,17 @@
     .flwin-body p + p { margin-block-start: .35rem; }
     .flwin-status { display: flex; flex-wrap: wrap; gap: .35rem 1.1rem; align-items: center; padding: .35rem .875rem; font-size: .68rem; color: var(--fl-text-2); }
     .flwin-hint { margin: 0; text-align: center; font-size: .72rem; color: var(--fl-text-2); }
+
+    /* Demo-page chrome repair, scoped to this page's props table: the shared
+       data-table keeps every cell on one line, so at phone widths the long
+       "What it does" notes run past the card and read cut off mid-word. Pages
+       hosting this partial let the cells wrap instead — off this page, where
+       .flwin-root never exists, it never loads. Only the note column (the
+       last) may break inside a word; the short columns keep whole words. */
+    @media (max-width: 48rem) {
+        body:has(.flwin-root) .nx-data-table :is(th, td) { white-space: normal; padding-inline: .5rem; }
+        body:has(.flwin-root) .nx-data-table :is(th, td):last-child { overflow-wrap: anywhere; }
+    }
 
     @media (prefers-reduced-motion: reduce) {
         .flwin-window, .flwin-caption button, .flwin-layout button { transition: none; }
@@ -195,7 +218,11 @@
                 </div>
                 <div class="flwin-body">
                     <p><strong>{{ $say('Product meeting notes — Mehr 7', 'یادداشت جلسهٔ محصول — ۷ مهر') }}</strong></p>
-                    <p>{{ $say('1. Command bar redesign lands by Mehr 14.<br>2. Review the acrylic feedback thread.<br>3. Next call: Tuesday, 10:00.', '۱. بازطراحی نوار فرمان تا ۱۴ مهر تکمیل شود.<br>۲. بازخورد کاربران دربارهٔ آکریلیک بررسی شود.<br>۳. قرار بعدی: سه‌شنبه ساعت ۱۰ صبح.') }}</p>
+                    <p>
+                        {{ $say('1. Command bar redesign lands by Mehr 14.', '۱. بازطراحی نوار فرمان تا ۱۴ مهر تکمیل شود.') }}<br>
+                        {{ $say('2. Review the acrylic feedback thread.', '۲. بازخورد کاربران دربارهٔ آکریلیک بررسی شود.') }}<br>
+                        {{ $say('3. Next call: Tuesday, 10:00.', '۳. قرار بعدی: سه‌شنبه ساعت ۱۰ صبح.') }}
+                    </p>
                 </div>
                 <div class="flwin-status">
                     <span>{{ $say('Ln 4, Col 18', 'خط ۴، ستون ۱۸') }}</span>

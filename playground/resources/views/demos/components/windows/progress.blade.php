@@ -32,6 +32,9 @@
         color: var(--fl-text);
         display: grid;
         gap: .75rem;
+        /* This root is a grid item of .pg-box; keep min-inline-size at 0 so the
+           demo grid's intrinsic two-track width can never push it past the stage. */
+        min-inline-size: 0;
     }
     html[data-theme="dark"] .flprg-root {
         --fl-accent: #4CC2FF;
@@ -76,7 +79,10 @@
     .flprg-root button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
     .flprg-root :focus-visible { outline: 2px solid var(--fl-focus); outline-offset: 1px; border-radius: 4px; }
 
-    .flprg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1rem; max-inline-size: 34rem; margin-inline: auto; inline-size: 100%; }
+    /* min() inside minmax: at card-stage widths a bare 15rem minimum makes the
+       auto-fit grid keep two tracks (~31rem intrinsic) even when its container
+       is one track wide, and the second card leaves the page at phone widths. */
+    .flprg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr)); gap: 1rem; max-inline-size: 34rem; margin-inline: auto; inline-size: 100%; }
     .flprg-card {
         padding: 1rem 1.25rem 1.25rem; border-radius: 8px; background: var(--fl-window);
         box-shadow: 0 24px 48px rgba(0, 0, 0, .14), 0 0 0 1px var(--fl-card-stroke);
@@ -141,6 +147,24 @@
     @media (prefers-reduced-motion: reduce) {
         .flprg-ind i, .flprg-orb { animation: none; opacity: .6; }
         .flprg-bar > i, .flprg-btn { transition: none; }
+    }
+
+    /* The shared «Important props» table this page renders below the stage
+       reveals its rows on scroll: tbody rows sit at opacity: 0 until an
+       IntersectionObserver stamps [data-nx-revealed] on the table, and once
+       .nx-live is set the 2.5s CSS failsafe is off — so a full-page capture,
+       which never scrolls, sees a header with an empty body. Keep this page's
+       rows visible; scoped through :has(.flprg-root) so it never reaches
+       another demo page. */
+    :where(.nx-js) .pg:has(.flprg-root) .nx-data-table[data-nx-reveal] tbody tr {
+        opacity: 1; translate: none;
+    }
+    /* At phone widths the table's nowrap cells run past the inline edge and
+       the last header column is read as cut off; let this page's cells wrap. */
+    @media (max-width: 480px) {
+        .pg:has(.flprg-root) .nx-data-table :is(th, td) {
+            white-space: normal; padding-inline: .5rem; overflow-wrap: break-word;
+        }
     }
 </style>
 

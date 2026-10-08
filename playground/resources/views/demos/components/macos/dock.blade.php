@@ -100,6 +100,17 @@
     @media (max-width: 640px) {
         .mcdock-tray { --mcdock-base: 34px; --mcdock-grow: 16px; gap: 3px; padding: 5px; border-radius: 17px; }
     }
+
+    /* The wrapper (livewire/component-demo) renders this demo's props table and
+       snippet around the partial, and at narrow widths their nowrap cells and long
+       code lines clip at the edge. Scoped to this demo's page only through
+       .mcdock-root — this partial is its only source — let them wrap instead. */
+    @media (max-width: 768px) {
+        .pg:has(.mcdock-root) .nx-data-table th,
+        .pg:has(.mcdock-root) .nx-data-table td { white-space: normal; padding-inline: .6rem; }
+        .pg:has(.mcdock-root) .nx-data-table td:last-child { overflow-wrap: anywhere; }
+        .pg:has(.mcdock-root) section:has(#demo-snippet-title) pre code { white-space: pre-wrap; overflow-wrap: anywhere; }
+    }
 </style>
 
 <section class="pg-box mcdock-root">

@@ -113,6 +113,27 @@
     .mcside-pane small { color: var(--mcside-text2); font-size: 12px; }
     .mcside-root :is(button, input):focus-visible { outline: 2px solid var(--mcside-accent); outline-offset: 2px; }
     @media (prefers-reduced-motion: reduce) { .mcside-list, .mcside-row, .mcside-pane { transition: none; scroll-behavior: auto; } }
+
+    /* The shared snippet below this stage sets the mono stack, which has no
+       Persian glyphs; the sample Persian words fell through to a mismatched
+       system fallback — reordered mid-word («هاپروژه») and colliding with the
+       adjacent code punctuation (<h4>…, <span>…, <button>…) in either theme.
+       Let Persian resolve into Vazirmatn, already loaded by the layout, while
+       Latin code keeps the mono face — scoped through :has(.mcside-root), so
+       it never reaches another demo page. */
+    .pg:has(.mcside-root) pre code { font-family: var(--nx-font-mono), "Vazirmatn", sans-serif; }
+
+    /* At phone widths the shared "Important props" table's nowrap cells and
+       the snippet's long lines run past the inline edge — the fourth column
+       read as "Wha…/Tigh…" and the snippet itself clipped. Let this page's
+       table and snippet wrap so every value stays visible — same remedy the
+       controls page ships for its own table. */
+    @media (max-width: 480px) {
+        .pg:has(.mcside-root) .nx-data-table :is(th, td) {
+            white-space: normal; padding-inline: .5rem; overflow-wrap: break-word;
+        }
+        .pg:has(.mcside-root) pre code { white-space: pre-wrap; overflow-wrap: anywhere; }
+    }
 </style>
 
 <section class="pg-box mcside-root">
