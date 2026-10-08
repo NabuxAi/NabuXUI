@@ -4,6 +4,7 @@
  * its own (slots for the code, the value bubble, drag-and-drop, the composer).
  */
 import { burst, copyText } from '@nabuxai/ui-core';
+import { afterMorph } from './morph';
 import { renderNumber } from './number';
 import type { AlpineLike, Magics } from './types';
 
@@ -49,10 +50,11 @@ export function installForms(Alpine: AlpineLike): void {
   Alpine.data('nxSlider', (locale?: string, format?: Intl.NumberFormatOptions) => ({
     shown: '',
 
-    init(this: Self<{ sync: () => void }>) {
+    init(this: Self<{ shown: string; stopMorph?: () => void; sync: () => void }>) {
       this.sync();
       this.$refs.input.addEventListener('input', () => this.sync());
-      document.addEventListener('livewire:morph.updated', () => this.sync());
+      // Livewire may set the value from the server; re-read it after a morph.
+      this.stopMorph = afterMorph(this.$root, () => this.sync());
     },
 
     sync(this: Self<{ shown: string }>) {

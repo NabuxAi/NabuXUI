@@ -6,6 +6,7 @@
  */
 import { indicator } from '@nabuxai/ui-core';
 import type { AlpineLike, Magics } from '../types';
+import { afterMorph } from '../morph';
 
 type Self<T> = T & Magics;
 type Ind = ReturnType<typeof indicator>;
@@ -22,9 +23,9 @@ export function installChipFilterBlocks(Alpine: AlpineLike): void {
   // The radios carry wire:model themselves; this part only follows them.
   Alpine.data('nxChipFilter', () => ({
     ind: null as Ind | null,
-    onMorph: null as (() => void) | null,
+    stopMorph: null as (() => void) | null,
 
-    init(this: Self<{ ind: Ind | null; onMorph: (() => void) | null; move: (scroll?: boolean) => void }>) {
+    init(this: Self<{ ind: Ind | null; stopMorph: (() => void) | null; move: (scroll?: boolean) => void }>) {
       const row = this.$refs.row;
       this.ind = indicator(row);
       this.move();
@@ -34,14 +35,14 @@ export function installChipFilterBlocks(Alpine: AlpineLike): void {
         this.move(true);
         this.$dispatch('nx-change', { value: input.value });
       });
-      // Livewire may set the checked radio from the server.
-      this.onMorph = () => this.$nextTick(() => this.move());
-      document.addEventListener('livewire:morph.updated', this.onMorph);
+      // Livewire may set the checked radio from the server, and its morph
+      // wipes the indicator vars this wrote — re-place the thumb after each.
+      this.stopMorph = afterMorph(this.$root as HTMLElement, () => this.move());
     },
 
-    destroy(this: { ind: Ind | null; onMorph: (() => void) | null }) {
+    destroy(this: { ind: Ind | null; stopMorph: (() => void) | null }) {
       this.ind?.destroy();
-      if (this.onMorph) document.removeEventListener('livewire:morph.updated', this.onMorph);
+      this.stopMorph?.();
     },
 
     move(this: Self<{ ind: Ind | null }>, scroll = false) {

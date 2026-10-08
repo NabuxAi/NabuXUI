@@ -6,6 +6,7 @@
  * a figure's data-value and the digits roll to the new number.
  */
 import { type Cleanup, reveal } from '@nabuxai/ui-core';
+import { afterMorph } from '../morph';
 import { renderNumber } from '../number';
 import type { AlpineLike, Magics } from '../types';
 
@@ -25,13 +26,12 @@ export function installStatStripBlocks(Alpine: AlpineLike): void {
       this.cleanups.push(reveal(this.$root, { once: true, stagger: true, onReveal: () => (this.shown = true) }));
       this.sync();
       // Livewire morphs drop what scripts wrote: re-apply it and re-read the values.
-      this.onMorph = () => this.sync();
-      document.addEventListener('livewire:morph.updated', this.onMorph);
+      this.onMorph = afterMorph(this.$root, () => this.sync());
     },
 
-    destroy(this: { cleanups: Cleanup[]; onMorph: () => void }) {
+    destroy(this: { cleanups: Cleanup[]; onMorph?: () => void }) {
       this.cleanups.forEach((stop) => stop());
-      document.removeEventListener('livewire:morph.updated', this.onMorph);
+      this.onMorph?.();
     },
 
     sync(this: Self<{ shown: boolean; cleanups: Cleanup[]; rolls: WeakMap<HTMLElement, { rolled: boolean }> }>) {

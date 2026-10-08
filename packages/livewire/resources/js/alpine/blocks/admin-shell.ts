@@ -10,6 +10,7 @@
  * wiring for <x-nx::admin-shell> automatically.
  */
 import { type Cleanup, type PlaceOptions, indicator, lightDismiss, place, roveFocus } from '@nabuxai/ui-core';
+import { afterMorph } from '../morph';
 import type { AlpineLike, Magics } from '../types';
 
 type Self<T> = T & Magics;
@@ -148,17 +149,16 @@ export function installAdminShellBlocks(Alpine: AlpineLike): void {
         this.$watch('collapsed', () => this.$nextTick(() => navs.forEach(({ ctrl }) => ctrl.refresh())));
 
         // Livewire may re-render the sidebar from the server; re-scan and re-place.
-        onMorph = () => this.$nextTick(() => {
+        onMorph = afterMorph(this.$root, () => {
           this.rescan();
           this.move();
         });
-        document.addEventListener('livewire:morph.updated', onMorph);
       },
 
       destroy(this: Self<{ rescan: () => void }>) {
         this.rescan();
         drawer?.destroy();
-        if (onMorph) document.removeEventListener('livewire:morph.updated', onMorph);
+        if (onMorph) onMorph();
       },
 
       /** (Re)attach one indicator per nav in the shell — the inline one and the drawer's copy. */

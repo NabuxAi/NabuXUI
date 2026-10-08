@@ -19,6 +19,7 @@ import {
   prefersReducedMotion,
   shakeAndBurst,
 } from '@nabuxai/ui-core';
+import { afterMorph } from '../morph';
 import type { AlpineLike, Magics } from '../types';
 
 type Self<T> = T & Magics;
@@ -147,13 +148,12 @@ export function installActionsBlocks(Alpine: AlpineLike): void {
       };
       this.recount();
       // Livewire may tick boxes from the server.
-      document.addEventListener('livewire:morph.updated', this.recount);
+      this.cancel = afterMorph(this.$root, this.recount);
     },
 
     destroy(this: { stops: Cleanup[]; cancel: Cleanup; recount: () => void }) {
       this.stops.forEach((stop) => stop());
       this.cancel();
-      document.removeEventListener('livewire:morph.updated', this.recount);
     },
 
     inputs(this: Self<object>) {

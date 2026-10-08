@@ -3,6 +3,7 @@
  * drill-down — the moving highlight comes from the core indicator.
  */
 import { indicator, roveFocus } from '@nabuxai/ui-core';
+import { afterMorph } from './morph';
 import type { AlpineLike, Magics } from './types';
 
 type Self<T> = T & Magics;
@@ -45,16 +46,18 @@ export function installNavigation(Alpine: AlpineLike): void {
   Alpine.data('nxSegmented', () => ({
     ind: null as Ind | null,
 
-    init(this: Self<{ ind: Ind | null; move: () => void }>) {
+    init(this: Self<{ ind: Ind | null; move: () => void; stopMorph?: () => void }>) {
       this.ind = indicator(this.$root);
       this.move();
       this.$root.addEventListener('change', () => this.move());
-      // Livewire may set the checked radio from the server.
-      document.addEventListener('livewire:morph.updated', () => this.move());
+      // Livewire may set the checked radio from the server, and its morph
+      // wipes the indicator vars — re-place after every update.
+      this.stopMorph = afterMorph(this.$root, () => this.move());
     },
 
-    destroy(this: { ind: Ind | null }) {
+    destroy(this: { ind: Ind | null; stopMorph?: () => void }) {
       this.ind?.destroy();
+      this.stopMorph?.();
     },
 
     move(this: Self<{ ind: Ind | null }>) {
