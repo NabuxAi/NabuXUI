@@ -9,11 +9,16 @@
     nx-select → selectDay(), nx-month → trackMonth(). wire:model binds
     selectedDay so the aside's buttons can drive the grid in reverse — a
     server-side value lands in the Alpine `model` and the grid slides over.
-    Right (end): the «در راه» list of upcoming events, each dot carrying the
+    The wrapper's wire:key carries eventsStamp (max event id), so creating
+    an event through «رویداد تازه» swaps the whole grid for a fresh server
+    render — Alpine would otherwise keep repainting from the events it was
+    born with and drop the new chip at the next pick.
+    Right (end): «رویدادهای روز انتخابی» — the picked day's own records —
+    above the «در راه» list of upcoming events, each dot carrying the
     record's own color through the design system's semantic variables.
 --}}
 <section class="nx-calpage" aria-label="تقویم">
-    <header class="nx-calpage-head" data-nx-reveal x-data x-nx-reveal>
+    <header class="nx-calpage-head" x-data>
         <p class="nx-calpage-sub">{{ $subheading }}</p>
         <p class="nx-calpage-week" role="status">
             {{ \NabuXUI\NabuXUI::icon('sparkles') }}
@@ -22,7 +27,7 @@
     </header>
 
     <div class="nx-calpage-body">
-        <div class="nx-calpage-grid" data-nx-reveal x-data x-nx-reveal>
+        <div class="nx-calpage-grid" x-data wire:key="calendar-{{ $eventsStamp }}">
             <x-nx::calendar
                 :events="$calendarEvents"
                 :value="$selectedDay"
@@ -34,7 +39,37 @@
             />
         </div>
 
-        <aside class="nx-calpage-side" data-nx-reveal x-data x-nx-reveal aria-labelledby="nx-calpage-side-title">
+        <aside class="nx-calpage-side" x-data aria-labelledby="nx-calpage-side-title">
+            @if ($selectedDay)
+                {{-- Feature A: the picked day's own records, with the «رویداد تازه» shortcut beside the title. --}}
+                <section class="nx-calpage-day" aria-labelledby="nx-calpage-day-title">
+                    <div class="nx-calpage-day-head">
+                        <h4 class="nx-calpage-day-title" id="nx-calpage-day-title">رویدادهای روز انتخابی</h4>
+                        <button type="button" class="nx-calpage-add" wire:click="mountAction('createEvent')">
+                            {{ \NabuXUI\NabuXUI::icon('plus') }}
+                            <span>رویداد تازه</span>
+                        </button>
+                    </div>
+                    @if (count($dayEvents))
+                        <ul class="nx-calpage-events">
+                            @foreach ($dayEvents as $event)
+                                <li>
+                                    <div class="nx-calpage-event" data-static>
+                                        <span class="nx-calpage-dot" style="background: {{ $event['cssColor'] }}" aria-hidden="true"></span>
+                                        <span class="nx-calpage-event-body">
+                                            <span class="nx-calpage-event-title">{{ $event['title'] }}</span>
+                                        </span>
+                                        <span class="nx-calpage-day-time">{{ $event['time'] }}</span>
+                                    </div>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @else
+                        <p class="nx-calpage-empty">برای این روز رویدادی نیست؛ با دکمهٔ «رویداد تازه» یکی اضافه کنید.</p>
+                    @endif
+                </section>
+            @endif
+
             <h3 class="nx-calpage-side-title" id="nx-calpage-side-title">
                 {{ \NabuXUI\NabuXUI::icon('arrow-right') }}
                 <span>در راه</span>
@@ -89,6 +124,16 @@
     .nx-calpage-event-meta { color: var(--nx-text-muted); font-size: var(--nx-text-xs); }
     .nx-calpage-tag { flex: none; padding: 2px var(--nx-space-2); border-radius: 999px; background: var(--nx-accent-soft); color: var(--nx-accent); font-size: var(--nx-text-xs); font-weight: 600; }
     .nx-calpage-empty { margin: 0; color: var(--nx-text-muted); }
+
+    /* «رویدادهای روز انتخابی»: the picked day's own agenda, above «در راه». */
+    .nx-calpage-day { padding-bottom: var(--nx-space-3); margin-bottom: var(--nx-space-3); border-bottom: 1px solid var(--nx-border); }
+    .nx-calpage-day-head { display: flex; align-items: center; justify-content: space-between; gap: var(--nx-space-2); margin-bottom: var(--nx-space-2); }
+    .nx-calpage-day-title { flex: 1; min-inline-size: 0; margin: 0; font: 700 var(--nx-text-sm) / 1.3 var(--nx-font-display); color: var(--nx-text); }
+    .nx-calpage-add { display: inline-flex; align-items: center; gap: var(--nx-space-1); padding: var(--nx-space-1) var(--nx-space-2); border: 1px solid transparent; border-radius: var(--nx-radius-md); background: var(--nx-accent-soft); color: var(--nx-accent); font-size: var(--nx-text-xs); font-weight: 600; cursor: pointer; transition: border-color 0.2s ease, background-color 0.2s ease; }
+    .nx-calpage-add:hover { border-color: var(--nx-accent); }
+    .nx-calpage-add .nx-icon { inline-size: 0.9rem; block-size: 0.9rem; }
+    .nx-calpage-day .nx-calpage-event { cursor: default; }
+    .nx-calpage-day-time { flex: none; color: var(--nx-text-muted); font-size: var(--nx-text-xs); font-weight: 600; }
 
     @media (max-width: 56rem) {
         .nx-calpage-body { grid-template-columns: 1fr; }

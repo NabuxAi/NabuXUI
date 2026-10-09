@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Resources\Orders\OrderResource;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\Task;
@@ -15,11 +16,13 @@ use NabuXUI\NabuXUI;
 /**
  * The panel's home (/filament) in the Nabu admin mood: an aurora hero that
  * greets by the hour of day, over four stat cards of live database numbers
- * (orders by status, paid revenue, active products, open tasks). The
- * sparklines are NabuXUI's server-rendered paths and every figure goes
- * through NabuXUI::formatNumber, so digits follow the panel locale. The
- * panel's own widgets (account, info) still render below, via the
- * inherited widget grid.
+ * (orders by status, paid revenue, active products, open tasks). Under the
+ * cards sit two live widgets: the six newest orders as a link-to-the-row
+ * table, and the open tasks on an nx-todo board whose checkbox ticks write
+ * straight to the database through toggleTask(). The sparklines are
+ * NabuXUI's server-rendered paths and every figure goes through
+ * NabuXUI::formatNumber, so digits follow the panel locale. The panel's own
+ * widgets (account, info) still render below, via the inherited widget grid.
  */
 class Dashboard extends BaseDashboard
 {
@@ -29,6 +32,19 @@ class Dashboard extends BaseDashboard
             View::make('filament.pages.dashboard-overview')
                 ->viewData(fn (): array => $this->overviewData()),
             $this->getWidgetsContentComponent(),
+        ]);
+    }
+
+    /**
+     * The todo board's tick: the checkbox writes the task's status to the
+     * database, so the strike-through survives reloads. Unchecking a done
+     * task sends it back to the todo pile. The page re-renders afterwards,
+     * so the stat card's open count follows along.
+     */
+    public function toggleTask(string $task, bool $done): void
+    {
+        Task::query()->whereKey((int) $task)->update([
+            'status' => $done ? 'done' : 'todo',
         ]);
     }
 
@@ -58,6 +74,63 @@ class Dashboard extends BaseDashboard
         $openByStatus = $openTasks->groupBy('status')->map->count();
 
         $format = fn (float|int $value): string => NabuXUI::formatNumber($value);
+
+        // The live widgets: the six newest orders as rows (each one links
+        // into its resource page), and the whole task board split into an
+        // open pile and a struck-through done pile. The done pile sorts by
+        // updated_at, so the task ticked a moment ago is always on top.
+        $recentOrders = Order::query()
+            ->orderByDesc('ordered_at')
+            ->orderByDesc('id')
+            ->limit(6)
+            ->get(['id', 'number', 'customer_name', 'status', 'total'])
+            ->map(fn (Order $order): array => [
+                'id' => $order->getKey(),
+                'number' => $order->number,
+                'customer' => $order->customer_name,
+                'url' => OrderResource::getUrl('view', ['record' => $order->getKey()]),
+                'badge' => match ($order->status) {
+                    'paid' => 'success',
+                    'shipped' => 'running',
+                    'cancelled' => 'canceled',
+                    default => 'queued',
+                },
+                'statusLabel' => match ($order->status) {
+                    'pending' => 'در انتظار پرداخت',
+                    'paid' => 'پرداخت‌شده',
+                    'shipped' => 'ارسال‌شده',
+                    'cancelled' => 'لغوشده',
+                    default => $order->status,
+                },
+                'total' => (float) $order->total,
+            ])
+            ->all();
+
+        $taskGroups = [
+            [
+                'id' => 'open',
+                'title' => 'باز',
+                'tone' => 'info',
+                'tasks' => Task::query()
+                    ->whereIn('status', ['todo', 'doing'])
+                    ->orderBy('due_at')
+                    ->orderBy('id')
+                    ->get(['id', 'title'])
+                    ->map(fn (Task $task): array => ['id' => (string) $task->getKey(), 'title' => $task->title, 'done' => false])
+                    ->all(),
+            ],
+            [
+                'id' => 'done',
+                'title' => 'انجام‌شده',
+                'tone' => 'success',
+                'tasks' => Task::query()
+                    ->where('status', 'done')
+                    ->orderByDesc('updated_at')
+                    ->get(['id', 'title'])
+                    ->map(fn (Task $task): array => ['id' => (string) $task->getKey(), 'title' => $task->title, 'done' => true])
+                    ->all(),
+            ],
+        ];
 
         return [
             'greeting' => $this->greeting(),
@@ -113,6 +186,17 @@ class Dashboard extends BaseDashboard
                     ),
                 ],
             ],
+            'recentOrders' => $recentOrders,
+            'recentOrdersLabel' => 'سفارش‌های اخیر',
+            'recentOrdersCaption' => '۶ سفارش آخر، مرتب بر اساس زمان سفارش',
+            'allOrdersLabel' => 'همهٔ سفارش‌ها',
+            'taskGroups' => $taskGroups,
+            'tasksLabel' => 'تسک‌های باز',
+            'tasksCaption' => sprintf(
+                'باز %s · انجام‌شده %s — تیک هر تسک وضعیتش را ذخیره می‌کند',
+                $format($openTasks->count()),
+                $format(Task::query()->where('status', 'done')->count()),
+            ),
         ];
     }
 

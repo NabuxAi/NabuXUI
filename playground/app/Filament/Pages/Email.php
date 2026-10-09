@@ -18,6 +18,21 @@ use UnitEnum;
  * keeps the picked folder in sync so Livewire renders agree with Alpine;
  * reply-action="sendReply" acknowledges the composer. The navigation
  * badge carries the unread tally in the panel's digits.
+ *
+ * On top of that sit two real, persisted features of the page itself:
+ *
+ *  - «خواندن همه»: markAllRead() flips every unread inbox message to
+ *    is_read in one query — the navigation badge, the page toolbar and
+ *    the block's own folder badges all fall to zero (the latter through
+ *    the nx-email-unread-cleared browser event that rewrites the block's
+ *    live Alpine rows, which otherwise survive a morph with stale flags).
+ *
+ *  - آرشیو: archiveEmail()/restoreEmail() move a row between folder =
+ *    inbox and folder = archive in the database; the nx-email-moved
+ *    event keeps the Alpine row's folder in step so the message leaves
+ *    the inbox the moment it is archived. The «بایگانی‌شده‌ها» tab on the
+ *    toolbar switches to the archived folder (nx-email-folder drives the
+ *    block's pick()), where the open message offers «بازگردانی».
  */
 class Email extends Page
 {
@@ -39,7 +54,7 @@ class Email extends Page
 
     public function mount(): void
     {
-        $this->subheading = 'صندوق ورودی روی دیتابیس؛ با باز کردن هر پیام خوانده‌شده علامت می‌خورد و شمارندهٔ ناخواندهٔ ناوبری به‌روز می‌شود.';
+        $this->subheading = 'صندوق ورودی روی دیتابیس؛ با باز کردن هر پیام خوانده‌شده علامت می‌خورد. «خواندن همه» همهٔ پیام‌های ناخوانده را یک‌جا می‌خواند و «بایگانی» هر پیام را به بایگانی می‌برد — از زبانهٔ «بایگانی‌شده‌ها» می‌توانید آن را به صندوق ورودی برگردانید.';
     }
 
     /**
@@ -64,6 +79,96 @@ class Email extends Page
             $this->dispatch('refresh-sidebar');
             $this->dispatch('refresh-topbar');
         }
+    }
+
+    /**
+     * «خواندن همه»: every unread message of the inbox becomes read in one
+     * update, the toolbar/counters re-render at zero, and the browser
+     * event rewrites the block's live Alpine rows (their unread flags)
+     * so its folder badges empty out without waiting for a reload.
+     */
+    public function markAllRead(): void
+    {
+        $marked = EmailModel::query()
+            ->where('folder', 'inbox')
+            ->where('is_read', false)
+            ->update(['is_read' => true]);
+
+        if ($marked === 0) {
+            return;
+        }
+
+        $this->dispatch('nx-email-unread-cleared', folder: 'inbox');
+        $this->dispatch('refresh-sidebar');
+        $this->dispatch('refresh-topbar');
+
+        Notification::make()
+            ->title('همهٔ پیام‌ها خوانده شد')
+            ->body(NabuXUI::formatNumber($marked, 0).' پیام ناخواندهٔ صندوق ورودی خوانده‌شده علامت خورد.')
+            ->success()
+            ->send();
+    }
+
+    /**
+     * آرشیو: the open (or addressed) message moves to folder = archive in
+     * the database; nx-email-moved flips the Alpine row's folder so the
+     * row leaves the inbox list the same instant.
+     */
+    public function archiveEmail(string $messageId): void
+    {
+        $this->moveEmail($messageId, 'archive');
+    }
+
+    /**
+     * The archived tab's restore: the message returns to folder = inbox.
+     */
+    public function restoreEmail(string $messageId): void
+    {
+        $this->moveEmail($messageId, 'inbox');
+    }
+
+    /** The shared body of archive/restore: one folder flip, one event. */
+    protected function moveEmail(string $messageId, string $folder): void
+    {
+        if (! in_array($folder, EmailModel::FOLDERS, true)) {
+            return;
+        }
+
+        $email = EmailModel::query()->find($messageId);
+
+        if ($email === null || $email->folder === $folder) {
+            return;
+        }
+
+        $email->forceFill(['folder' => $folder])->save();
+
+        $this->dispatch('nx-email-moved', id: (string) $email->getKey(), folder: $folder);
+
+        $archived = $folder === 'archive';
+
+        Notification::make()
+            ->title($archived ? 'پیام بایگانی شد' : 'پیام به صندوق ورودی بازگشت')
+            ->body($archived
+                ? 'پیام از صندوق ورودی به بایگانی منتقل شد؛ از زبانهٔ «بایگانی‌شده‌ها» قابل بازگشت است.'
+                : 'پیام دوباره در صندوق ورودی قرار گرفت.')
+            ->success()
+            ->send();
+    }
+
+    /**
+     * The toolbar's folder tabs (inbox | archive): remember the pick and
+     * drive the block's own pick() through a browser event, so the rail,
+     * the tabs and Alpine agree without a full reload.
+     */
+    public function switchFolder(string $folder): void
+    {
+        if (! in_array($folder, EmailModel::FOLDERS, true) || $folder === $this->folder) {
+            return;
+        }
+
+        $this->folder = $folder;
+
+        $this->dispatch('nx-email-folder', folder: $folder);
     }
 
     /**
@@ -125,15 +230,23 @@ class Email extends Page
      * Fresh rows on every render, shaped for the block: the two real
      * folders replace the six built-ins, and every record maps onto the
      * message shape (id, from, subject, body, time, unread, folder).
+     * The toolbar's numbers (unread in the inbox, the archive tally and
+     * the open message's folder) come from the same single query.
      *
      * @return array<string, mixed>
      */
     protected function getViewData(): array
     {
+        $emails = EmailModel::query()
+            ->orderByDesc('received_at')
+            ->get();
+
+        $open = $this->openId === ''
+            ? null
+            : $emails->first(fn (EmailModel $email): bool => (string) $email->getKey() === $this->openId);
+
         return [
-            'messages' => EmailModel::query()
-                ->orderByDesc('received_at')
-                ->get()
+            'messages' => $emails
                 ->map(fn (EmailModel $email): array => [
                     'id' => (string) $email->getKey(),
                     'from' => [
@@ -156,6 +269,11 @@ class Email extends Page
             ],
             'open' => $this->openId,
             'folder' => $this->folder,
+            'inboxUnread' => $emails->where('folder', 'inbox')->where('is_read', false)->count(),
+            'archivedCount' => $emails->where('folder', 'archive')->count(),
+            // The toolbar's archive/restore button reads the open message's
+            // current folder to decide which way it points.
+            'openFolder' => $open?->folder,
         ];
     }
 }

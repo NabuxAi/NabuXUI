@@ -32,6 +32,9 @@ class AdminPanelProvider extends PanelProvider
             // plugin owns the palette and the font.
             ->path('filament')
             ->login()
+            // Filament v5's profile page (name / email / password); it picks
+            // up the NabuXUI theme like every other panel page.
+            ->profile()
             ->plugin(NabuXuiPlugin::make())
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
