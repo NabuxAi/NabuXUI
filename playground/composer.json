@@ -7,10 +7,12 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "filament/filament": "^5.10",
         "laravel/framework": "^13.17",
         "laravel/tinker": "^3.0",
         "livewire/livewire": "^4.4",
-        "nabuxai/nabuxui": "@dev"
+        "nabuxai/nabuxui": "@dev",
+        "nabuxai/nabuxui-filament": "@dev"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -89,6 +91,13 @@
         "name": "nabuxui",
         "type": "path",
         "url": "..",
+        "options": {
+            "symlink": true
+        }
+    }, {
+        "name": "nabuxui-filament",
+        "type": "path",
+        "url": "../packages/filament",
         "options": {
             "symlink": true
         }
