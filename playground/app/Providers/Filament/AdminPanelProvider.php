@@ -28,13 +28,11 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             // The playground's own Livewire admin demo owns /admin — the
-            // Filament panel lives beside it under /filament.
+            // Filament panel lives beside it under /filament. The NabuXUI
+            // plugin owns the palette and the font.
             ->path('filament')
             ->login()
             ->plugin(NabuXuiPlugin::make())
-            ->colors([
-                'primary' => Color::Amber,
-            ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([

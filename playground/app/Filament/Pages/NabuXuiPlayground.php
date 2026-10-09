@@ -12,12 +12,19 @@ use Filament\Schemas\Components\EmbeddedSchema;
 use Filament\Schemas\Components\Form;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use NabuXUI\Filament\Forms\Components\NxCheckbox;
 use NabuXUI\Filament\Forms\Components\NxChipFilter;
+use NabuXUI\Filament\Forms\Components\NxCombobox;
 use NabuXUI\Filament\Forms\Components\NxMultiSelect;
+use NabuXUI\Filament\Forms\Components\NxNumberField;
+use NabuXUI\Filament\Forms\Components\NxOtp;
+use NabuXUI\Filament\Forms\Components\NxRadioGroup;
 use NabuXUI\Filament\Forms\Components\NxRating;
 use NabuXUI\Filament\Forms\Components\NxSegmented;
+use NabuXUI\Filament\Forms\Components\NxSelect;
 use NabuXUI\Filament\Forms\Components\NxSlider;
 use NabuXUI\Filament\Forms\Components\NxTagInput;
+use NabuXUI\Filament\Forms\Components\NxTimePicker;
 use NabuXUI\Filament\Forms\Components\NxToggle;
 
 /**
@@ -85,6 +92,16 @@ class NabuXuiPlayground extends Page
             NxMultiSelect::make('stack')->label('Stack')->placeholder('Pick a few…')
                 ->options(['php' => 'PHP', 'typescript' => 'TypeScript', 'vue' => 'Vue', 'swift' => 'Swift']),
             NxTagInput::make('tags')->label('Tags')->suggestions(['Livewire', 'Alpine', 'Filament', 'NabuXUI']),
+            NxSelect::make('region')->label('Region')->placeholder('Choose…')
+                ->options(['eu' => 'Europe', 'mena' => 'MENA', 'apac' => 'APAC']),
+            NxRadioGroup::make('billing')->label('Billing cycle')->default('monthly')
+                ->options(['monthly' => 'Monthly', 'yearly' => 'Yearly']),
+            NxCheckbox::make('terms')->label('Send me the monthly digest'),
+            NxNumberField::make('seats')->label('Seats')->min(1)->max(500)->step(1)->default(12),
+            NxCombobox::make('country')->label('Country')->placeholder('Search countries…')
+                ->options(['de' => 'Germany', 'tr' => 'Türkiye', 'ae' => 'United Arab Emirates', 'jp' => 'Japan']),
+            NxTimePicker::make('deploy_at')->label('Deploy at')->minuteStep(5),
+            NxOtp::make('access_code')->label('Access code')->length(6)->alphanumeric(),
             TextInput::make('name')->label('Plain Filament control (for contrast)'),
         ];
     }
