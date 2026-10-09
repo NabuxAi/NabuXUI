@@ -22,7 +22,7 @@
                 ['id' => 'general', 'label' => $say('General', 'عمومی'), 'icon' => 'settings', 'children' => [
                     ['id' => 'name', 'label' => $say('Workspace name', 'نام ورک‌اسپیس'), 'icon' => 'edit', 'description' => $say('Shown to teammates', 'به هم‌کاران نشان داده می‌شود')],
                     ['id' => 'region', 'label' => $say('Region', 'منطقه'), 'icon' => 'globe', 'children' => [
-                        ['id' => 'tehran', 'label' => $say('Tehran', 'تهران')],
+                        ['id' => 'istanbul', 'label' => $say('Istanbul', 'استانبول')],
                         ['id' => 'frankfurt', 'label' => $say('Frankfurt', 'فرانکفورت')],
                         ['id' => 'tokyo', 'label' => $say('Tokyo', 'توکیو')],
                     ]],

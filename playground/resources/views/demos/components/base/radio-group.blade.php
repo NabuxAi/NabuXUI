@@ -27,8 +27,8 @@
     $shippingOptions = [
         ['value' => 'post', 'label' => $say('Post — priority mail', 'پست پیشتاز')],
         ['value' => 'tipax', 'label' => $say('Tipax', 'تیپاکس')],
-        ['value' => 'pickup', 'label' => $say('Pickup at the warehouse', 'تحویل حضوری در انبار'), 'description' => $say('Tehran, Vanak', 'تهران، ونک')],
-        ['value' => 'courier', 'label' => $say('Bike courier', 'پیک موتوری'), 'description' => $say('Tehran and Karaj only', 'فعلاً فقط تهران و کرج'), 'disabled' => true],
+        ['value' => 'pickup', 'label' => $say('Pickup at the warehouse', 'تحویل حضوری در انبار'), 'description' => $say('Istanbul, Kadıköy', 'استانبول، قاضی‌کوی')],
+        ['value' => 'courier', 'label' => $say('Bike courier', 'پیک موتوری'), 'description' => $say('Istanbul and Bursa only', 'فعلاً فقط استانبول و بورسا'), 'disabled' => true],
     ];
     $currentShipping = collect($shippingOptions)->firstWhere('value', $shipping) ?? $shippingOptions[0];
 
@@ -60,9 +60,9 @@
 
 <section class="pg-box" style="gap: 1.25rem">
     <div>
-        <h3 class="pg-title" style="font-size: var(--nx-text-xl)">{{ $say('Shipping method — the courier is off in Shiraz', 'روش ارسال — پیک در شیراز خاموش است') }}</h3>
+        <h3 class="pg-title" style="font-size: var(--nx-text-xl)">{{ $say('Shipping method — the courier is off in Rome', 'روش ارسال — پیک در رم خاموش است') }}</h3>
         <p style="margin: .25rem 0 0; color: var(--nx-text-muted)">
-            {{ $say('The horizontal row for a short list: the cart ships to Shiraz, so the bike courier arrives disabled with its reason instead of vanishing. The delivery estimate under the group follows the pick live.', 'ردیف افقی برای فهرست کوتاه: سبد به شیراز می‌رود، پس پیک موتوری ازکارافتاده با دلیلش می‌آید، نه اینکه غیب شود. برآورد تحویل زیر گروه، انتخاب را زنده دنبال می‌کند.') }}
+            {{ $say('The horizontal row for a short list: the cart ships to Rome, so the bike courier arrives disabled with its reason instead of vanishing. The delivery estimate under the group follows the pick live.', 'ردیف افقی برای فهرست کوتاه: سبد به رم می‌رود، پس پیک موتوری ازکارافتاده با دلیلش می‌آید، نه اینکه غیب شود. برآورد تحویل زیر گروه، انتخاب را زنده دنبال می‌کند.') }}
         </p>
     </div>
     <x-nx::radio-group legend="{{ $say('How should we ship order #981?', 'سفارش ۹۸۱ چگونه ارسال شود؟') }}" orientation="horizontal" :value="$shipping" wire:model.live="state.shipping" :options="$shippingOptions" />

@@ -49,7 +49,7 @@
     <div>
         <h3 class="pg-title" style="font-size: var(--nx-text-xl)">{{ $say('The release calendar', 'تقویم انتشار') }}</h3>
         <p style="margin: .25rem 0 0; color: var(--nx-text-muted)">
-            {{ $say('week-start pins Saturday for the Iranian work week and every chip stays a link to its release note. Switching months is client-side: the new month slides in from its side, mirrored in RTL.', 'week-start شنبه را برای هفتهٔ کاری ایران می‌گذارد و هر چیپ لینکِ یادداشت انتشار خودش می‌ماند. تعویض ماه سمت مرورگر است: ماه تازه از سمتش می‌آید و در راست‌به‌چپ آینه می‌شود.') }}
+            {{ $say('week-start pins Saturday for a Saturday-first work week and every chip stays a link to its release note. Switching months is client-side: the new month slides in from its side, mirrored in RTL.', 'week-start شنبه را برای هفتهٔ کاری شنبه‌شروع می‌گذارد و هر چیپ لینکِ یادداشت انتشار خودش می‌ماند. تعویض ماه سمت مرورگر است: ماه تازه از سمتش می‌آید و در راست‌به‌چپ آینه می‌شود.') }}
         </p>
     </div>
     <x-nx::calendar

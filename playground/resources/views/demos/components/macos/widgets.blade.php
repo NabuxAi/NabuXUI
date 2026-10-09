@@ -1,7 +1,7 @@
 {{--
     Sonoma desktop widgets on a gradient wallpaper: a small analog clock
     whose CSS hands rotate with real time from an Alpine Date and tick each
-    second (static under reduced motion), a medium Tehran weather widget
+    second (static under reduced motion), a medium Istanbul weather widget
     with an hourly strip, a small calendar with today highlighted, and a
     medium music player with a working play/pause toggle and a progress bar
     that animates while playing. Rounded 22, soft shadows, dark glass that
@@ -166,14 +166,14 @@
         <div class="mcwdg" data-size="small" role="timer" aria-label="{{ $say('Analog clock', 'ساعت آنالوگ') }}">
             <div class="mcwdg-dial" :style="hands" aria-hidden="true"><i data-h></i><i data-m></i><i data-s></i></div>
             <p class="mcwdg-clockline digits" style="margin: 0"><b x-text="hh + ':' + mm">۱۴:۰۵</b> <small x-text="ss">۰۵</small></p>
-            <small style="text-align: center">{{ $say('Tehran', 'تهران') }}</small>
+            <small style="text-align: center">{{ $say('Istanbul', 'استانبول') }}</small>
         </div>
 
         <div class="mcwdg" data-size="medium" aria-label="{{ $say('Weather', 'آب‌وهوا') }}">
             <div class="mcwdg-now">
                 <span aria-hidden="true" style="font-size: 30px">🌤</span>
                 <div>
-                    <b>{{ $say('Tehran', 'تهران') }}</b>
+                    <b>{{ $say('Istanbul', 'استانبول') }}</b>
                     <small>{{ $say('Sunny · feels like ۲۷°', 'آفتابی · دمای احساسی ۲۷°') }}</small>
                 </div>
                 <b class="digits" style="margin-inline-start: auto">۲۸°</b>
@@ -211,8 +211,8 @@
             <div class="mcwdg-player">
                 <span class="mcwdg-art" aria-hidden="true">🎵</span>
                 <div class="mcwdg-meta">
-                    <b>{{ $say('Tehran Nights', 'شب‌های تهران') }}</b>
-                    <small>Raha Yazdi — {{ $say('City of Lovers', 'شهر عاشق‌ها') }}</small>
+                    <b>{{ $say('Istanbul Nights', 'شب‌های استانبول') }}</b>
+                    <small>Lena Moreau — {{ $say('City of Lovers', 'شهر عاشق‌ها') }}</small>
                 </div>
                 <div class="mcwdg-ctl">
                     <button type="button" class="mcwdg-play" :aria-label="playing ? (fa ? 'توقف' : 'Pause') : (fa ? 'پخش' : 'Play')" x-on:click="toggle()">

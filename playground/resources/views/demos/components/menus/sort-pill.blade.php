@@ -13,7 +13,7 @@
     $orders = [
         ['id' => '1042', 'customer' => $say('Ava Karimi', 'آوا کریمی'), 'when' => now()->subMinutes(8), 'total' => 1280000, 'status' => 'success'],
         ['id' => '1041', 'customer' => $say('Soheil Nouri', 'سهیل نوری'), 'when' => now()->subHours(2), 'total' => 490000, 'status' => 'running'],
-        ['id' => '1040', 'customer' => $say('Mona Ahmadi', 'مونا احمدی'), 'when' => now()->subHours(6), 'total' => 2350000, 'status' => 'queued'],
+        ['id' => '1040', 'customer' => $say('Mona Fischer', 'مونا احمدی'), 'when' => now()->subHours(6), 'total' => 2350000, 'status' => 'queued'],
         ['id' => '1039', 'customer' => $say('Kian Rajaee', 'کیان رجایی'), 'when' => now()->subDays(2), 'total' => 760000, 'status' => 'failed'],
     ];
 

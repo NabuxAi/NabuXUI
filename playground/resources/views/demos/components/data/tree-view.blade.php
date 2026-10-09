@@ -48,8 +48,8 @@
     // The support team, as an org chart — folding only.
     $org = [
         ['id' => 'nabu', 'label' => $say('Nabu support', 'پشتیبانی نابو'), 'icon' => 'users', 'tone' => 'accent', 'children' => [
-            ['id' => 'am', 'label' => $say('Morning shift', 'شیفت صبح'), 'icon' => 'sun', 'meta' => $say('Tehran', 'تهران'), 'children' => [
-                ['id' => 'niloofar', 'label' => 'نیلوفر احمدی', 'icon' => 'user', 'meta' => 'فارسی · English', 'tone' => 'success'],
+            ['id' => 'am', 'label' => $say('Morning shift', 'شیفت صبح'), 'icon' => 'sun', 'meta' => $say('Istanbul', 'استانبول'), 'children' => [
+                ['id' => 'niloofar', 'label' => $say('Emma Carter', 'نیلوفر احمدی'), 'icon' => 'user', 'meta' => 'فارسی · English', 'tone' => 'success'],
                 ['id' => 'omar', 'label' => 'عمر حداد', 'icon' => 'user', 'meta' => 'العربية · English', 'tone' => 'success'],
             ]],
             ['id' => 'pm', 'label' => $say('Night shift', 'شیفت شب'), 'icon' => 'moon', 'meta' => $say('Tokyo', 'توکیو'), 'children' => [

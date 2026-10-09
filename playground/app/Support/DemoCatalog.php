@@ -107,7 +107,10 @@ class DemoCatalog
 
     /**
      * Pick a bilingual value (['fa' => …, 'en' => …] or ['فارسی', 'English'])
-     * for the active — or the given — locale, falling back to whatever is there.
+     * for the active — or the given — locale, with a deliberate fallback
+     * chain: the exact locale, then 'en' (demo content is bilingual fa/en, so
+     * ar/he/… land on the English text, not on whichever key comes first),
+     * then the array's first entry.
      */
     public static function pick(array|string $value, ?string $locale = null): string
     {
@@ -116,8 +119,10 @@ class DemoCatalog
         }
 
         $locale = substr($locale ?? app()->getLocale(), 0, 2);
-        if (isset($value[$locale]) && (is_string($value[$locale]) || is_numeric($value[$locale]))) {
-            return (string) $value[$locale];
+        foreach ([$locale, 'en'] as $try) {
+            if (isset($value[$try]) && (is_string($value[$try]) || is_numeric($value[$try]))) {
+                return (string) $value[$try];
+            }
         }
 
         return (string) (reset($value) ?: '');

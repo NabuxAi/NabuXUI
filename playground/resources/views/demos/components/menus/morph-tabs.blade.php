@@ -77,7 +77,7 @@
                 <x-nx::avatar-group :people="[
                     ['name' => $say('Ava Karimi', 'آوا کریمی')],
                     ['name' => $say('Soheil Nouri', 'سهیل نوری')],
-                    ['name' => $say('Mona Ahmadi', 'مونا احمدی')],
+                    ['name' => $say('Mona Fischer', 'مونا احمدی')],
                     ['name' => $say('Kian Rajaee', 'کیان رجایی')],
                     ['name' => $say('Sara Mohammadi', 'سارا محمدی')],
                 ]" max="5" />

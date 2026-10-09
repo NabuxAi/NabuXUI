@@ -18,7 +18,7 @@
             ['label' => $say('Store builder', 'فروشگاه‌ساز'), 'icon' => 'grid', 'href' => '/components',
                 'description' => $say('Persian-first templates, ready tonight', 'قالب‌های راست‌چین، آمادهٔ امشب')],
             ['label' => $say('Payment gateways', 'درگاه‌های پرداخت'), 'icon' => 'zap', 'href' => '/components',
-                'description' => $say('Iranian banks, settled weekly', 'بانک‌های ایرانی، تسویهٔ هفتگی')],
+                'description' => $say('Regional banks, settled weekly', 'بانک‌های منطقه، تسویهٔ هفتگی')],
             ['label' => $say('Sales analytics', 'تحلیل فروش'), 'icon' => 'chart', 'href' => '/components',
                 'description' => $say('Today’s orders, live', 'سفارش‌های امروز، زنده')],
             ['label' => $say('Human support', 'پشتیبانی انسانی'), 'icon' => 'message', 'href' => '/components',
@@ -92,7 +92,7 @@
             @foreach ([
                 ['icon' => 'grid', 'title' => $say('Persian-first templates', 'قالب‌های راست‌چین و فارسی-اول'), 'body' => $say('Right-to-left from the first pixel, not bolted on later.', 'از همان پیکسل اول راست‌به‌چپ، نه وصله‌ای بعداً.')],
                 ['icon' => 'chart', 'title' => $say('Live sales analytics', 'تحلیل فروش زنده'), 'body' => $say('Today’s orders and best sellers while they happen.', 'سفارش‌ها و پرفروش‌های امروز، همان لحظه.')],
-                ['icon' => 'shield', 'title' => $say('Secure by default', 'امن از روز اول'), 'body' => $say('SSL, Iranian gateways and '.NabuXUI::formatNumber(99.9, 1).'% uptime.', 'SSL، درگاه‌های ایرانی و '.NabuXUI::formatNumber(99.9, 1).'٪ آپ‌تایم.')],
+                ['icon' => 'shield', 'title' => $say('Secure by default', 'امن از روز اول'), 'body' => $say('SSL, regional gateways and '.NabuXUI::formatNumber(99.9, 1).'% uptime.', 'SSL، درگاه‌های منطقه و '.NabuXUI::formatNumber(99.9, 1).'٪ آپ‌تایم.')],
             ] as $feature)
                 <li class="pg-row" style="gap: 1rem; padding: .9rem 1rem; border: 1px solid var(--nx-border); border-radius: var(--nx-radius-lg)">
                     <span style="display: grid; place-items: center; inline-size: 2.25rem; block-size: 2.25rem; border: 1px solid var(--nx-border); border-radius: var(--nx-radius-sm); color: var(--nx-accent-text)" aria-hidden="true">{{ \NabuXUI\NabuXUI::icon($feature['icon']) }}</span>
@@ -123,7 +123,7 @@
     <article style="display: grid; gap: 1.25rem; max-inline-size: 44rem; padding-block-start: .5rem">
         <div style="display: grid; gap: .5rem">
             <div class="pg-row" style="justify-content: space-between; gap: .75rem">
-                <p style="margin: 0; font-size: var(--nx-text-sm); color: var(--nx-text-muted)">{{ $say('The Nabu Notebook · 3 min read · 1404', 'دفترچهٔ نابو · ۳ دقیقه خواندن · ۱۴۰۴') }}</p>
+                <p style="margin: 0; font-size: var(--nx-text-sm); color: var(--nx-text-muted)">{{ $say('The Nabu Notebook · 3 min read · 2025', 'دفترچهٔ نابو · ۳ دقیقه خواندن · ۱۴۰۴') }}</p>
                 <x-nx::copy-button :value="$shareUrl" size="sm" variant="secondary">{{ $say('Share', 'اشتراک') }}</x-nx::copy-button>
             </div>
             <h4 style="margin: 0; font: 700 var(--nx-text-2xl) / 1.3 var(--nx-font-display)">{{ $say('Why the reading header must learn to leave', 'چرا هدرِ خواندن باید رفتن را یاد بگیرد؟') }}</h4>

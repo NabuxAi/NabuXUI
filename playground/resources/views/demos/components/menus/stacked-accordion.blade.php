@@ -19,24 +19,24 @@
             </p>
         </div>
         <x-nx::stacked-accordion type="single" :value="$state['ship'] ?? ['express']" wire:model.live="state.ship" :items="[
-            ['id' => 'express', 'title' => $say('Same-hour courier', 'پیک فوری'), 'subtitle' => $say('Tehran, under 2 hours', 'تهران، زیر ۲ ساعت'), 'icon' => 'zap'],
+            ['id' => 'express', 'title' => $say('Same-hour courier', 'پیک فوری'), 'subtitle' => $say('Istanbul, under 2 hours', 'استانبول، زیر ۲ ساعت'), 'icon' => 'zap'],
             ['id' => 'post', 'title' => $say('Priority post', 'پست پیشتاز'), 'subtitle' => $say('Nationwide, 2–4 days', 'سراسر کشور، ۲ تا ۴ روز'), 'icon' => 'globe'],
             ['id' => 'pickup', 'title' => $say('Store pickup', 'دریافت از فروشگاه'), 'subtitle' => $say('Ready in an hour', 'تا یک ساعت آماده'), 'icon' => 'home'],
         ]">
             <x-slot:express>
                 <p style="margin: 0 0 .5rem">{{ $say('Riders nearby right now:', 'پیک‌های اطراف همین حالا:') }} <strong>{{ NabuXUI::formatNumber(14) }}</strong></p>
-                <p style="margin: 0 0 .75rem; color: var(--nx-text-muted)">{{ $say('Price is calculated per kilometer; the parcel is insured up to 5 million tomans.', 'قیمت بر اساس کیلومتر حساب می‌شود؛ مرسوله تا ۵ میلیون تومان بیمه است.') }}</p>
+                <p style="margin: 0 0 .75rem; color: var(--nx-text-muted)">{{ $say('Price is calculated per kilometer; the parcel is insured up to 5 million lira.', 'قیمت بر اساس کیلومتر حساب می‌شود؛ مرسوله تا ۵ میلیون لیر بیمه است.') }}</p>
                 <x-nx::button size="sm" variant="primary" icon="check" wire:click="save(@js($say('Courier booked', 'پیک رزرو شد')))">{{ $say('Book the courier', 'رزرو پیک') }}</x-nx::button>
             </x-slot:express>
             <x-slot:post>
-                <p style="margin: 0 0 .75rem">{{ $say('Free on orders above one million tomans — otherwise', 'روی سفارش‌های بالای یک میلیون تومان رایگان؛ وگرنه') }} <strong>{{ NabuXUI::formatNumber(38000).' '.$say('tomans', 'تومان') }}</strong></p>
+                <p style="margin: 0 0 .75rem">{{ $say('Free on orders above one million lira — otherwise', 'روی سفارش‌های بالای یک میلیون لیر رایگان؛ وگرنه') }} <strong>{{ NabuXUI::formatNumber(38000).' '.$say('lira', 'لیر') }}</strong></p>
                 <x-nx::button size="sm" variant="secondary" icon="chart" wire:click="ping(@js($say('Tracking will be texted to you', 'کد رهگیری پیامک می‌شود')) )">{{ $say('Track my parcel', 'رهگیری مرسوله') }}</x-nx::button>
             </x-slot:post>
             <x-slot:pickup>
-                <p style="margin: 0 0 .75rem">{{ $say('Two stores in Tehran hold your basket for an hour:', 'دو شعبه در تهران سبد شما را تا یک ساعت نگه می‌دارند:') }}</p>
+                <p style="margin: 0 0 .75rem">{{ $say('Two stores in Istanbul hold your basket for an hour:', 'دو شعبه در استانبول سبد شما را تا یک ساعت نگه می‌دارند:') }}</p>
                 <div class="pg-row">
-                    <x-nx::badge tone="accent">{{ $say('Vanak · open now', 'ونک · باز است') }}</x-nx::badge>
-                    <x-nx::badge>{{ $say('Tajrish · closes 21:00', 'تجریش · تا ۲۱:۰۰') }}</x-nx::badge>
+                    <x-nx::badge tone="accent">{{ $say('Kadıköy · open now', 'کادی‌کوی · باز است') }}</x-nx::badge>
+                    <x-nx::badge>{{ $say('Beşiktaş · closes 21:00', 'بشیکتاش · تا ۲۱:۰۰') }}</x-nx::badge>
                 </div>
             </x-slot:pickup>
         </x-nx::stacked-accordion>

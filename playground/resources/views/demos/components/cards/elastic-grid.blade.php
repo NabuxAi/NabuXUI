@@ -17,7 +17,7 @@
     ];
 
     $cities = [
-        ['cover' => $art['lapis'], 'title' => $say('Tehran', 'تهران'), 'caption' => $say('Teheran', 'دربست البرز'), 'href' => '#'],
+        ['cover' => $art['lapis'], 'title' => $say('Istanbul', 'استانبول'), 'caption' => $say('İstanbul', 'استانبول'), 'href' => '#'],
         ['cover' => $art['gold'], 'title' => $say('Marrakech', 'مراکش'), 'caption' => $say('مراكش', 'سرای سُقّاها')],
         ['cover' => $art['cyan'], 'title' => $say('Reykjavík', 'ریکیاویک')],
         ['cover' => $art['rose'], 'title' => $say('Ciudad de México', 'مکزیکوسیتی'), 'caption' => 'CDMX'],

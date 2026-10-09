@@ -12,13 +12,10 @@ use NabuXUI\NabuXUI;
  */
 class Panel
 {
-    /** The fa/en pair the topbar's language menu offers. */
+    /** The topbar's language menu — the central Locales registry, as menu rows. */
     public static function languages(): array
     {
-        return [
-            ['id' => 'fa', 'name' => 'فارسی', 'short' => 'فا'],
-            ['id' => 'en', 'name' => 'English', 'short' => 'EN'],
-        ];
+        return Locales::forMenu();
     }
 
     /** Sidebar groups → items. Ids match the pages' `active` value. */

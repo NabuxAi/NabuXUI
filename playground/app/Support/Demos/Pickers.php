@@ -20,8 +20,8 @@ return [
         'docs' => null,
         'props' => [
             ['name' => 'options', 'type' => 'array', 'default' => '[]', 'note' => [
-                'fa' => "['thr' => 'تهران', …] یا فهرست ['value', 'label', 'description', 'icon', 'keywords', 'disabled'].",
-                'en' => "['thr' => 'Tehran', …] or a list of ['value', 'label', 'description', 'icon', 'keywords', 'disabled'].",
+                'fa' => "['ist' => 'استانبول', …] یا فهرست ['value', 'label', 'description', 'icon', 'keywords', 'disabled'].",
+                'en' => "['ist' => 'Istanbul', …] or a list of ['value', 'label', 'description', 'icon', 'keywords', 'disabled'].",
             ]],
             ['name' => 'wire:model', 'type' => 'string', 'default' => '—', 'note' => [
                 'fa' => 'روی خود کامپوننت؛ مقدار انتخاب‌شده را بایند می‌کند (x-modelable).',

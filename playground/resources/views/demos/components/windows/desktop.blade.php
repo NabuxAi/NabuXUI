@@ -31,7 +31,7 @@
             pos: { files: { x: 28, y: 22 }, mail: { x: 170, y: 72 }, notes: { x: 80, y: 140 } },
             drag: null, snapZone: '',
             start: false, apps: false, sel: 0,
-            note: '{{ $say('Notes:\n- call Sara about the contract\n- ship the desktop demo', 'یادداشت‌ها:\n- تماس با سارا دربارهٔ قرارداد\n- تحویل دموی میزکار') }}',
+            note: '{{ $say('Notes:\n- call Emma about the contract\n- ship the desktop demo', 'یادداشت‌ها:\n- تماس با سارا دربارهٔ قرارداد\n- تحویل دموی میزکار') }}',
             temps: [28, 29, 27], wstep: 0, mstep: 0, mcount: 3,
             clock: '14:05',
             init() {
@@ -186,7 +186,7 @@
                     </button>
                     <button type="button" class="fldesk-frow">
                         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="color: #0F7B0F"><path d="M6 3.5h8L18.5 8v12.5H6z"/><path d="M14 3.5V8h4.5"/></svg>
-                        <span class="fldesk-fname">{{ $say('budget-1405.xlsx', 'بودجه-۱۴۰۵.xlsx') }}</span>
+                        <span class="fldesk-fname">{{ $say('budget-2026.xlsx', 'بودجه-۱۴۰۵.xlsx') }}</span>
                         <span class="fldesk-fmeta"><span>{{ $say('1.1 MB', '۱٫۱ م‌ب') }}</span><span class="fldesk-fdate">{{ $say('Yesterday', 'دیروز') }}</span></span>
                     </button>
                     <button type="button" class="fldesk-frow">
@@ -231,41 +231,41 @@
             <div class="fldesk-body">
                 <div class="fldesk-mlist">
                     <button type="button" class="fldesk-mitem" data-current x-on:click="sel = 0">
-                        <span class="fldesk-mrow"><span class="fldesk-mfrom">{{ $say('Sara Ahmadi', 'سارا احمدی') }}</span><span class="fldesk-mtime">۱۰:۲۴</span></span>
+                        <span class="fldesk-mrow"><span class="fldesk-mfrom">{{ $say('Emma Carter', 'سارا احمدی') }}</span><span class="fldesk-mtime">۱۰:۲۴</span></span>
                         <span class="fldesk-mrow"><span class="fldesk-msub">{{ $say('The partnership contract', 'قرارداد همکاری') }}</span><i class="fldesk-mdot" aria-hidden="true"></i></span>
                     </button>
                     <button type="button" class="fldesk-mitem" x-on:click="sel = 1">
-                        <span class="fldesk-mrow"><span class="fldesk-mfrom">{{ $say('Reza Karimi', 'رضا کریمی') }}</span><span class="fldesk-mtime">۰۹:۰۵</span></span>
+                        <span class="fldesk-mrow"><span class="fldesk-mfrom">{{ $say('Daniel Brooks', 'رضا کریمی') }}</span><span class="fldesk-mtime">۰۹:۰۵</span></span>
                         <span class="fldesk-mrow"><span class="fldesk-msub">{{ $say('Meeting minutes', 'صورتجلسهٔ جلسه') }}</span><i class="fldesk-mdot" aria-hidden="true"></i></span>
                     </button>
                     <button type="button" class="fldesk-mitem" x-on:click="sel = 2">
-                        <span class="fldesk-mrow"><span class="fldesk-mfrom">{{ $say('Mina Rezaei', 'مینا رضایی') }}</span><span class="fldesk-mtime">{{ $say('Yesterday', 'دیروز') }}</span></span>
+                        <span class="fldesk-mrow"><span class="fldesk-mfrom">{{ $say('Mia Novak', 'مینا رضایی') }}</span><span class="fldesk-mtime">{{ $say('Yesterday', 'دیروز') }}</span></span>
                         <span class="fldesk-mrow"><span class="fldesk-msub">{{ $say('Design conference invite', 'دعوت به همایش طراحی') }}</span></span>
                     </button>
                     <button type="button" class="fldesk-mitem" x-on:click="sel = 3">
-                        <span class="fldesk-mrow"><span class="fldesk-mfrom">{{ $say('Ali Tehrani', 'علی تهرانی') }}</span><span class="fldesk-mtime">{{ $say('Monday', 'دوشنبه') }}</span></span>
+                        <span class="fldesk-mrow"><span class="fldesk-mfrom">{{ $say('Lucas Meyer', 'علی محمدی') }}</span><span class="fldesk-mtime">{{ $say('Monday', 'دوشنبه') }}</span></span>
                         <span class="fldesk-mrow"><span class="fldesk-msub">{{ $say('Ticket 4821 follow-up', 'پیگیری تیکت ۴۸۲۱') }}</span></span>
                     </button>
                 </div>
                 <div class="fldesk-read">
                     <div x-show="sel === 0">
                         <h4>{{ $say('The partnership contract', 'قرارداد همکاری') }}</h4>
-                        <p class="fldesk-readmeta">{{ $say('Sara Ahmadi · 10:24', 'سارا احمدی · ۱۰:۲۴') }}</p>
+                        <p class="fldesk-readmeta">{{ $say('Emma Carter · 10:24', 'سارا احمدی · ۱۰:۲۴') }}</p>
                         <p>{{ $say('Hello, the final version of the contract is attached. If the numbers on page two look good, we can sign it this week.', 'سلام، نسخهٔ نهایی قرارداد پیوست است. اگر ارقام صفحهٔ دوم مورد تأیید باشد، همین هفته می‌توانیم امضا کنیم.') }}</p>
                     </div>
                     <div x-show="sel === 1" style="display: none">
                         <h4>{{ $say('Meeting minutes', 'صورتجلسهٔ جلسه') }}</h4>
-                        <p class="fldesk-readmeta">{{ $say('Reza Karimi · 09:05', 'رضا کریمی · ۰۹:۰۵') }}</p>
+                        <p class="fldesk-readmeta">{{ $say('Daniel Brooks · 09:05', 'رضا کریمی · ۰۹:۰۵') }}</p>
                         <p>{{ $say('We agreed on the window manager spec: z-order on click, edge snapping with a translucent preview, and a centred taskbar.', 'روی مشخصات مدیر پنجره توافق شد: بالا آمدن با کلیک، چسبیدن به لبه‌ها با پیش‌نمایش شفاف، و نوار وظیفهٔ وسط‌چین.') }}</p>
                     </div>
                     <div x-show="sel === 2" style="display: none">
                         <h4>{{ $say('Design conference invite', 'دعوت به همایش طراحی') }}</h4>
-                        <p class="fldesk-readmeta">{{ $say('Mina Rezaei · Yesterday', 'مینا رضایی · دیروز') }}</p>
+                        <p class="fldesk-readmeta">{{ $say('Mia Novak · Yesterday', 'مینا رضایی · دیروز') }}</p>
                         <p>{{ $say('The Fluent track is on Thursday morning. I saved you a seat — the Metro talk by the window team is the one to catch.', 'مسیر فلوینت پنجشنبه صبح است. جای شما را رزرو کردم — ارائهٔ متروی تیم پنجره‌ها از همه بهتر است.') }}</p>
                     </div>
                     <div x-show="sel === 3" style="display: none">
                         <h4>{{ $say('Ticket 4821 follow-up', 'پیگیری تیکت ۴۸۲۱') }}</h4>
-                        <p class="fldesk-readmeta">{{ $say('Ali Tehrani · Monday', 'علی تهرانی · دوشنبه') }}</p>
+                        <p class="fldesk-readmeta">{{ $say('Lucas Meyer · Monday', 'علی محمدی · دوشنبه') }}</p>
                         <p>{{ $say('The drag ghost on the mobile stage is fixed — touch-action was missing on the title bar. Closing the ticket tomorrow.', 'مشکل کشیدن پنجره روی صحنهٔ موبایل درست شد — تعامل لمسی روی نوار عنوان جا افتاده بود. تیکت را فردا می‌بندم.') }}</p>
                     </div>
                 </div>
@@ -331,7 +331,7 @@
                         <svg x-show="wstep === 1" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="display: none"><path d="M7 18h9.2a3.8 3.8 0 0 0 .6-7.6A5.6 5.6 0 0 0 6 9.3 4.4 4.4 0 0 0 7 18z"/></svg>
                     </span>
                     <span class="fldesk-tile-temp" x-text="fd(temps[wstep]) + '°'">۲۸°</span>
-                    <span class="fldesk-tile-name">{{ $say('Tehran · Sunny', 'تهران · آفتابی') }}</span>
+                    <span class="fldesk-tile-name">{{ $say('Istanbul · Sunny', 'استانبول · آفتابی') }}</span>
                 </button>
 
                 <button type="button" class="fldesk-tile" data-size="large" style="background: #B01E00" x-on:click="openWin('files')" aria-label="{{ $say('Open Photos', 'باز کردن عکس‌ها') }}">
@@ -353,7 +353,7 @@
 
                 <button type="button" class="fldesk-tile" data-size="wide" style="background: #008A00" x-on:click="start = false" aria-label="{{ $say('Calendar', 'تقویم') }}">
                     <span class="fldesk-tile-count" x-text="fd(16)">۱۶</span>
-                    <span class="fldesk-tile-sub">{{ $say('Mehr 1405 · Thursday', 'مهر ۱۴۰۵ · پنجشنبه') }}</span>
+                    <span class="fldesk-tile-sub">{{ $say('Oct 2026 · Thursday', 'مهر ۱۴۰۵ · پنجشنبه') }}</span>
                     <span class="fldesk-tile-name">{{ $say('Calendar', 'تقویم') }}</span>
                 </button>
 

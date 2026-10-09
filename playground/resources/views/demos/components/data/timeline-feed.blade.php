@@ -19,7 +19,7 @@
         <x-nx::timeline-feed :label="$say('Order activity', 'فعالیت سفارش')" :items="[
             ['id' => 'o1', 'actor' => 'مریم رضایی', 'text' => $say('confirmed the order', 'سفارش را تأیید کرد'), 'target' => $fa ? '#۱۲۴۸' : '#1248', 'time' => now()->subMinutes(3), 'tone' => 'success'],
             ['id' => 'o2', 'icon' => 'upload', 'text' => $say('Invoice PDF generated', 'فاکتور PDF ساخته شد'), 'time' => now()->subMinutes(12), 'tone' => 'info'],
-            ['id' => 'o3', 'actor' => 'نیلوفر احمدی', 'text' => $say('picked the shipment route', 'مسیر ارسال را برگزید'), 'target' => $say('Tehran → Tabriz', 'تهران ← تبریز'), 'time' => now()->subHours(1), 'tone' => 'neutral'],
+            ['id' => 'o3', 'actor' => $say('Emma Carter', 'نیلوفر احمدی'), 'text' => $say('picked the shipment route', 'مسیر ارسال را برگزید'), 'target' => $say('Istanbul → Ankara', 'استانبول ← آنکارا'), 'time' => now()->subHours(1), 'tone' => 'neutral'],
             ['id' => 'o4', 'actor' => 'انبار ۲', 'text' => $say('handed the parcel to the courier', 'بسته را به پیک سپرد'), 'time' => now()->subHours(3), 'tone' => 'info'],
             ['id' => 'o5', 'actor' => 'سامان', 'text' => $say('rejected the invoice', 'فاکتور را رد کرد'), 'target' => $fa ? '#۹۸۰۱' : '#9801', 'time' => now()->subDays(1), 'tone' => 'warning'],
             ['id' => 'o6', 'actor' => 'مریم رضایی', 'text' => $say('resolved the rejection', 'رد شدن را حل کرد'), 'time' => now()->subDays(1)->addMinutes(40), 'tone' => 'success'],

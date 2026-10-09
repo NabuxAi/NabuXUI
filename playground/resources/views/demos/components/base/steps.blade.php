@@ -54,7 +54,7 @@
     </div>
     <div class="pg-grid">
         <x-nx::steps orientation="vertical" :current="1" :steps="[
-            ['title' => $say('Packed', 'بسته‌بندی شد'), 'description' => $say('Tehran atelier — 09:12', 'کارگاه تهران — ۰۹:۱۲')],
+            ['title' => $say('Packed', 'بسته‌بندی شد'), 'description' => $say('Istanbul atelier — 09:12', 'کارگاه استانبول — ۰۹:۱۲')],
             ['title' => $say('On the road', 'در راه است'), 'description' => $say('Courier 4471 — picked up 11:40', 'پیک ۴۴۷۱ — تحویل ۱۱:۴۰')],
             ['title' => $say('Delivered', 'تحویل شد'), 'description' => $say('Expected today by 18:00', 'امروز تا ۱۸:۰۰')],
         ]" />

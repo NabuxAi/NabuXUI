@@ -368,7 +368,7 @@ return [
         ],
         'code' => <<<'BLADE'
         <div class="iowdg" data-size="medium">
-            <header><span>تهران</span><b>۱۸°</b></header>
+            <header><span>استانبول</span><b>۱۸°</b></header>
             <div class="iowdg-hours">…hourly strip…</div>
         </div>
 

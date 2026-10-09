@@ -471,8 +471,8 @@ return [
         ],
         'code' => <<<'BLADE'
         <x-nx::invoice number="INV-1404-082" status="unpaid" currency="تومان"
-            :from="['name' => 'استودیو نابو', 'lines' => ['تهران، ایران', 'hello@nabu.studio']]"
-            :to="['name' => 'شرکت آدم', 'lines' => ['accounts@acme.ir']]"
+            :from="['name' => 'استودیو نابو', 'lines' => ['استانبول، ترکیه', 'hello@nabu.studio']]"
+            :to="['name' => 'شرکت آدم', 'lines' => ['accounts@acme.com']]"
             :lines="[
                 ['title' => 'سیستم طراحی', 'quantity' => 1, 'unitPrice' => 480000000],
                 ['title' => 'پشتیبانی ماهانه', 'quantity' => 3, 'unitPrice' => 25000000],
@@ -578,14 +578,14 @@ return [
             ]],
         ],
         'code' => <<<'BLADE'
-        <x-nx::order-tracking number="۱۴۰۴-۰۸۲۱۵" status="running" carrier="پست ایران" eta="۲ روز دیگر"
+        <x-nx::order-tracking number="۱۴۰۴-۰۸۲۱۵" status="running" carrier="تندپست" eta="۲ روز دیگر"
             :steps="[
                 ['id' => 'placed', 'title' => 'ثبت سفارش', 'icon' => 'file', 'time' => now()->subDays(2)],
                 ['id' => 'transit', 'title' => 'در مسیر', 'icon' => 'zap'],
                 ['id' => 'done', 'title' => 'تحویل شد', 'icon' => 'home'],
             ]"
             current="transit"
-            :events="[['title' => 'بسته از مرکز توزیع خارج شد', 'place' => 'قم', 'time' => now()->subHours(2), 'tone' => 'success']]" />
+            :events="[['title' => 'بسته از مرکز توزیع خارج شد', 'place' => 'بورسا', 'time' => now()->subHours(2), 'tone' => 'success']]" />
         BLADE,
     ],
 

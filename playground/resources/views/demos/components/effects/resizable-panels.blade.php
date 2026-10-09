@@ -62,9 +62,9 @@
             <x-nx::resizable-pane :size="40" :min="25">
                 <ul role="list" style="display: grid; margin: 0; padding: 0; list-style: none">
                     @foreach ([
-                        [$say('Sara Ahmadi', 'سارا احمدی'), $say('Contract for the spring campaign', 'قرارداد کمپین بهار')],
+                        [$say('Sara Novak', 'سارا احمدی'), $say('Contract for the spring campaign', 'قرارداد کمپین بهار')],
                         [$say('Billing', 'صورت‌حساب'), $say('Your invoice for September', 'فاکتور شهریور شما')],
-                        [$say('Ali Rezaei', 'علی رضایی'), $say('Re: launch checklist', 'پاسخ: چک‌لیست انتشار')],
+                        [$say('Alex Keller', 'علی رضایی'), $say('Re: launch checklist', 'پاسخ: چک‌لیست انتشار')],
                     ] as [$from, $subject])
                         <li style="display: grid; gap: .125rem; padding: .75rem 1rem; border-block-end: 1px solid var(--nx-border)">
                             <strong style="font-size: var(--nx-text-sm)">{{ $from }}</strong>

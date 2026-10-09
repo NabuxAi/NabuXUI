@@ -127,7 +127,7 @@
                 <div class="m3nav-page" x-show="tab === 3" x-cloak>
                     <h4>{{ $say('Profile', 'پروفایل') }}</h4>
                     <small>{{ $say('Nabu Premium · renews on Azar 15', 'نابو پرمیوم · تمدید ۱۵ آذر') }}</small>
-                    <div class="m3nav-tile"><i style="background: linear-gradient(140deg,#d8b4fe,#7e22ce)" aria-hidden="true"></i><span><b>{{ $say('Sara Ahmadi', 'سارا احمدی') }}</b><small>{{ $say('4 hours of listening this week', '۴ ساعت شنیدن این هفته') }}</small></span></div>
+                    <div class="m3nav-tile"><i style="background: linear-gradient(140deg,#d8b4fe,#7e22ce)" aria-hidden="true"></i><span><b>{{ $say('Sara Novak', 'سارا احمدی') }}</b><small>{{ $say('4 hours of listening this week', '۴ ساعت شنیدن این هفته') }}</small></span></div>
                 </div>
 
                 <nav class="m3nav-bar" aria-label="{{ $say('App destinations', 'مقصدهای برنامه') }}">

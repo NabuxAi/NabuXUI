@@ -9,13 +9,13 @@
     $fa = app()->getLocale() === 'fa';
     $say = fn (string $en, string $faText) => $fa ? $faText : $en;
 
-    $country = (string) ($state['country'] ?? 'ir');
+    $country = (string) ($state['country'] ?? 'tr');
     $cities = [
-        'ir' => ['tehran' => $say('Tehran', 'تهران'), 'isfahan' => $say('Isfahan', 'اصفهان'), 'shiraz' => $say('Shiraz', 'شیراز')],
+        'tr' => ['istanbul' => $say('Istanbul', 'استانبول'), 'ankara' => $say('Ankara', 'آنکارا'), 'izmir' => $say('Izmir', 'ازمیر')],
         'de' => ['berlin' => 'Berlin', 'munich' => 'Munich', 'cologne' => 'Cologne'],
         'jp' => ['tokyo' => 'Tokyo', 'osaka' => 'Osaka', 'kyoto' => 'Kyoto'],
     ];
-    $countryNames = ['ir' => $say('Iran', 'ایران'), 'de' => $say('Germany', 'آلمان'), 'jp' => $say('Japan', 'ژاپن')];
+    $countryNames = ['tr' => $say('Türkiye', 'ترکیه'), 'de' => $say('Germany', 'آلمان'), 'jp' => $say('Japan', 'ژاپن')];
 
     $priority = (string) ($state['priority'] ?? '');
     $agents = [
@@ -33,7 +33,7 @@
     <div class="pg-grid">
         <x-nx::select label="{{ $say('Country', 'کشور') }}" placeholder="{{ $say('Choose a country', 'یک کشور انتخاب کنید') }}" :options="$countryNames" wire:model.live="state.country" />
         <x-nx::select label="{{ $say('City', 'شهر') }}" :placeholder="$say('Choose a city', 'یک شهر انتخاب کنید')" :options="$cities[$country] ?? []" wire:model="state.city" />
-        <x-nx::input label="{{ $say('Postal code', 'کد پستی') }}" inputmode="numeric" :hint="$say('Digits only — 10 in Iran.', 'فقط رقم — در ایران ۱۰ رقم.')" wire:model.blur="state.postal" />
+        <x-nx::input label="{{ $say('Postal code', 'کد پستی') }}" inputmode="numeric" :hint="$say('Digits only — 5 in Türkiye.', 'فقط رقم — در ترکیه ۵ رقم.')" wire:model.blur="state.postal" />
     </div>
     <x-nx::button variant="primary" icon="check" wire:click="save('{{ $say('Shipping saved', 'آدرس ارسال ذخیره شد') }}')">{{ $say('Continue to shipping', 'ادامه به ارسال') }}</x-nx::button>
 </section>

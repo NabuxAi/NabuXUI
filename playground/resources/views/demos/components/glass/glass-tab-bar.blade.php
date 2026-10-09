@@ -48,7 +48,7 @@
                     $say('Lisboa', 'لیسبون'),
                     $say('Marrakech', 'مراکش'),
                     $say('Reykjavík', 'ریکیاویک'),
-                    $say('Tehran', 'تهران'),
+                    $say('Istanbul', 'استانبول'),
                     $say('Seoul', 'سئول'),
                     $say('Istanbul', 'استانبول'),
                 ] as $city)

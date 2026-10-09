@@ -26,7 +26,7 @@
         ]">
             <x-slot:player>
                 <h4 class="nx-dock-panels-heading">{{ $say('Now playing', 'در حال پخش') }}</h4>
-                <p style="margin: 0 0 .5rem; font-weight: 700">{{ $say('Rain in Tehran — lo-fi for building design systems', 'باران تهران — لوفایای ساخت سیستم طراحی') }}</p>
+                <p style="margin: 0 0 .5rem; font-weight: 700">{{ $say('Rain in Istanbul — lo-fi for building design systems', 'باران استانبول — لوفایای ساخت سیستم طراحی') }}</p>
                 <div class="pg-row">
                     <x-nx::button size="sm" variant="secondary" icon="play" wire:click="ping(@js($say('Playing through the office speaker', 'پخش از بلندگوی دفتر')))">{{ $say('Play in office', 'پخش در دفتر') }}</x-nx::button>
                     <x-nx::badge tone="success" dot>{{ $say('listeners', 'شنونده').': '.NabuXUI::formatNumber(3) }}</x-nx::badge>
@@ -35,8 +35,8 @@
             <x-slot:inbox>
                 <h4 class="nx-dock-panels-heading">{{ $say('Inbox', 'صندوق') }}</h4>
                 <ul style="list-style: none; margin: 0 0 .625rem; padding: 0; display: grid; gap: .375rem; font-size: var(--nx-text-sm)">
-                    <li><strong>{{ $say('Ava Karimi', 'آوا کریمی') }}</strong> · {{ $say('the invoice block is ready for review', 'بلوک فاکتور آمادهٔ بازبینی است') }}</li>
-                    <li><strong>{{ $say('Kian Rajaee', 'کیان رجایی') }}</strong> · {{ $say('fonts shipped', 'فونت‌ها منتشر شد') }}</li>
+                    <li><strong>{{ $say('Emma Carter', 'آوا کریمی') }}</strong> · {{ $say('the invoice block is ready for review', 'بلوک فاکتور آمادهٔ بازبینی است') }}</li>
+                    <li><strong>{{ $say('Daniel Brooks', 'کیان رجایی') }}</strong> · {{ $say('fonts shipped', 'فونت‌ها منتشر شد') }}</li>
                 </ul>
                 <x-nx::button size="sm" variant="primary" icon="mail" wire:click="save(@js($say('Inbox opened', 'صندوق باز شد')))">{{ $say('Open inbox', 'بازکردن صندوق') }}</x-nx::button>
             </x-slot:inbox>
@@ -44,10 +44,10 @@
                 <h4 class="nx-dock-panels-heading">{{ $say('Team', 'تیم') }}</h4>
                 <div class="pg-row">
                     <x-nx::avatar-group :people="[
-                        ['name' => $say('Ava Karimi', 'آوا کریمی')],
-                        ['name' => $say('Soheil Nouri', 'سهیل نوری')],
-                        ['name' => $say('Mona Ahmadi', 'مونا احمدی')],
-                        ['name' => $say('Kian Rajaee', 'کیان رجایی')],
+                        ['name' => $say('Emma Carter', 'آوا کریمی')],
+                        ['name' => $say('Liam Harper', 'سهیل نوری')],
+                        ['name' => $say('Mia Novak', 'مونا احمدی')],
+                        ['name' => $say('Daniel Brooks', 'کیان رجایی')],
                     ]" max="4" />
                     <span style="color: var(--nx-text-muted); font-size: var(--nx-text-sm)">{{ $say('2 offline', '۲ نفر آفلاین') }}</span>
                 </div>

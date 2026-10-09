@@ -34,15 +34,15 @@
             <p>
                 {{ $say('Looks good. Can', 'خوب است. می‌شود') }}
                 <x-nx::hover-card :open-delay="350">
-                    <x-slot:trigger><a class="hc-link" href="#sara">{{ '@'.$say('sara', 'سارا') }}</a></x-slot:trigger>
+                    <x-slot:trigger><a class="hc-link" href="#sara">{{ '@'.$say('emma', 'سارا') }}</a></x-slot:trigger>
                     <span class="hc-profile">
                         <span class="hc-profile-head">
-                            <x-nx::avatar :name="$say('Sara Ahmadi', 'سارا احمدی')" status="online" />
-                            <span><strong>{{ $say('Sara Ahmadi', 'سارا احمدی') }}</strong><small>{{ $say('Design lead · Tehran', 'سرپرست طراحی · تهران') }}</small></span>
+                            <x-nx::avatar :name="$say('Emma Carter', 'سارا احمدی')" status="online" />
+                            <span><strong>{{ $say('Emma Carter', 'سارا احمدی') }}</strong><small>{{ $say('Design lead · Istanbul', 'سرپرست طراحی · استانبول') }}</small></span>
                         </span>
                         <span>{{ $say('Owns the motion system and the RTL review checklist.', 'مسئول سیستم حرکت و چک‌لیست بازبینی راست‌به‌چپ.') }}</span>
                         <span class="hc-stats"><span><b>{{ $n(128) }}</b> {{ $say('reviews', 'بازبینی') }}</span><span><b>{{ $n(36) }}</b> {{ $say('components', 'کامپوننت') }}</span></span>
-                        <x-nx::button size="sm" variant="secondary" icon="message" wire:click="ping(@js($say('Message sent to Sara', 'پیام برای سارا رفت')))">{{ $say('Message', 'پیام') }}</x-nx::button>
+                        <x-nx::button size="sm" variant="secondary" icon="message" wire:click="ping(@js($say('Message sent to Emma', 'پیام برای سارا رفت')))">{{ $say('Message', 'پیام') }}</x-nx::button>
                     </span>
                 </x-nx::hover-card>
                 {{ $say('check the spacing in', 'فاصله‌ها را در') }}

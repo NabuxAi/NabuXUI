@@ -165,11 +165,11 @@
                 </div>
 
                 <div class="iotab-body" x-ref="body">
-                    <h4 class="iotab-hello">{{ $say('Good evening, Arash', 'عصر بخیر، آرش') }}</h4>
+                    <h4 class="iotab-hello">{{ $say('Good evening, Liam', 'عصر بخیر، آرش') }}</h4>
                     <div class="iotab-hero">
                         <span class="iotab-hero-art" aria-hidden="true"></span>
                         <div>
-                            <b>{{ $say('Tehran Alleys', 'کوچه‌های تهران') }}</b>
+                            <b>{{ $say('Istanbul Alleys', 'کوچه‌های استانبول') }}</b>
                             <span>{{ $say('Bachar Choir — now playing', 'کر باچار — در حال پخش') }}</span>
                         </div>
                         <button type="button" x-on:click="playing = !playing" :aria-label="playing ? $say('Pause', 'توقف') : $say('Play', 'پخش')">
@@ -181,7 +181,7 @@
                     <h5 class="iotab-sec">{{ $say('Recently played', 'پخش‌شده‌های اخیر') }}</h5>
                     <div class="iotab-grid">
                         <div class="iotab-tile">{{ $say('Bandari Nights', 'شب‌های بندری') }}</div>
-                        <div class="iotab-tile">{{ $say('Tehran Rain', 'باران تهران') }}</div>
+                        <div class="iotab-tile">{{ $say('Istanbul Rain', 'باران استانبول') }}</div>
                         <div class="iotab-tile">{{ $say('Crossroads', 'چهارراه') }}</div>
                         <div class="iotab-tile">{{ $say('Alley No. 24', 'کوچهٔ ۲۴') }}</div>
                     </div>
@@ -190,7 +190,7 @@
                     <div>
                         <div class="iotab-song">
                             <span class="iotab-song-art" style="background: linear-gradient(135deg, #FF9500, #FF3B30)" aria-hidden="true"></span>
-                            <div><b>{{ $say('Rainy Night', 'شبِ باران') }}</b><span>{{ $say('Homa & Reza', 'هما و رضا') }}</span></div>
+                            <div><b>{{ $say('Rainy Night', 'شبِ باران') }}</b><span>{{ $say('Anna & Omar', 'هما و رضا') }}</span></div>
                             <time>۳:۴۵</time>
                         </div>
                         <div class="iotab-song">
@@ -200,7 +200,7 @@
                         </div>
                         <div class="iotab-song">
                             <span class="iotab-song-art" style="background: linear-gradient(135deg, #64D2FF, #5856D6)" aria-hidden="true"></span>
-                            <div><b>{{ $say('Morning of Pardis', 'صبح پردیس') }}</b><span>{{ $say('Sara Ahmadi', 'سارا احمدی') }}</span></div>
+                            <div><b>{{ $say('Morning of Pardis', 'صبح پردیس') }}</b><span>{{ $say('Emma Carter', 'سارا احمدی') }}</span></div>
                             <time>۲:۵۸</time>
                         </div>
                     </div>

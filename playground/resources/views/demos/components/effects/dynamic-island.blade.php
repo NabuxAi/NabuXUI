@@ -55,7 +55,7 @@
                         <span class="nx-island-avatar" aria-hidden="true">{{ $say('S', 'س') }}</span>
                         <div class="nx-island-stack">
                             <span class="nx-island-sub">{{ $say('Incoming call', 'تماس ورودی') }}</span>
-                            <span class="nx-island-title">{{ $say('Sara Ahmadi', 'سارا احمدی') }}</span>
+                            <span class="nx-island-title">{{ $say('Sara Novak', 'سارا احمدی') }}</span>
                         </div>
                         <span class="nx-island-wave" aria-hidden="true" style="margin-inline-start: auto">@for ($i = 0; $i < 5; $i++)<i style="--nx-i: {{ $i }}"></i>@endfor</span>
                     </div>
@@ -78,7 +78,7 @@
                         <span class="nx-island-avatar" aria-hidden="true" style="background: var(--nx-gradient-gold)">{{ $icon('home') }}</span>
                         <div class="nx-island-stack">
                             <span class="nx-island-title">{{ $say('Your order is 2 stops away', 'سفارش شما ۲ ایستگاه فاصله دارد') }}</span>
-                            <span class="nx-island-sub">{{ $say('Courier Reza · arriving 14:20', 'پیک: رضا · رسیدن ۱۴:۲۰') }}</span>
+                            <span class="nx-island-sub">{{ $say('Courier Marco · arriving 14:20', 'پیک: رضا · رسیدن ۱۴:۲۰') }}</span>
                         </div>
                     </div>
                     <div class="nx-island-actions">

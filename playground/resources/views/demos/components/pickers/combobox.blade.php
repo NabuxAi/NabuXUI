@@ -8,9 +8,9 @@
     $say = fn (string $en, string $faText) => $fa ? $faText : $en;
 
     $airports = [
-        ['value' => 'IKA', 'label' => $say('Tehran — Imam Khomeini', 'تهران — امام خمینی'), 'description' => 'IKA · '.$say('Iran', 'ایران'), 'keywords' => ['Tehran', 'تهران', 'IKA']],
-        ['value' => 'SYZ', 'label' => $say('Shiraz — Shahid Dastgheib', 'شیراز — شهید دستغیب'), 'description' => 'SYZ · '.$say('Iran', 'ایران'), 'keywords' => ['Shiraz', 'شیراز']],
-        ['value' => 'IFN', 'label' => $say('Isfahan — Shahid Beheshti', 'اصفهان — شهید بهشتی'), 'description' => 'IFN · '.$say('Iran', 'ایران'), 'keywords' => ['Isfahan', 'اصفهان']],
+        ['value' => 'FCO', 'label' => $say('Rome — Fiumicino', 'رم — فیومیسینو'), 'description' => 'FCO · '.$say('Italy', 'ایتالیا'), 'keywords' => ['Rome', 'رم', 'FCO']],
+        ['value' => 'MAD', 'label' => $say('Madrid — Barajas', 'مادرید — باراتاس'), 'description' => 'MAD · '.$say('Spain', 'اسپانیا'), 'keywords' => ['Madrid', 'مادرید']],
+        ['value' => 'AMS', 'label' => $say('Amsterdam — Schiphol', 'امستردام — اسخیپول'), 'description' => 'AMS · '.$say('Netherlands', 'هلند'), 'keywords' => ['Amsterdam', 'امستردام']],
         ['value' => 'IST', 'label' => $say('Istanbul Airport', 'فرودگاه استانبول'), 'description' => 'IST · '.$say('Türkiye', 'ترکیه'), 'keywords' => ['Istanbul', 'استانبول']],
         ['value' => 'DXB', 'label' => $say('Dubai International', 'فرودگاه بین‌المللی دبی'), 'description' => 'DXB · '.$say('UAE', 'امارات'), 'keywords' => ['Dubai', 'دبی']],
         ['value' => 'FRA', 'label' => $say('Frankfurt am Main', 'فرانکفورت'), 'description' => 'FRA · '.$say('Germany', 'آلمان'), 'keywords' => ['Frankfurt', 'فرانکفورت']],
@@ -21,10 +21,10 @@
     $picked = collect($airports)->firstWhere('value', $to);
 
     $people = [
-        ['value' => 'sara', 'label' => $say('Sara Ahmadi', 'سارا احمدی'), 'description' => $say('Design lead', 'سرپرست طراحی'), 'icon' => 'user'],
+        ['value' => 'sara', 'label' => $say('Emma Carter', 'سارا احمدی'), 'description' => $say('Design lead', 'سرپرست طراحی'), 'icon' => 'user'],
         ['value' => 'reza', 'label' => $say('Reza Karimi', 'رضا کریمی'), 'description' => $say('Backend', 'بک‌اند'), 'icon' => 'user'],
         ['value' => 'nika', 'label' => $say('Nika Rahimi', 'نیکا رحیمی'), 'description' => $say('Frontend', 'فرانت‌اند'), 'icon' => 'user'],
-        ['value' => 'omid', 'label' => $say('Omid Jafari', 'امید جعفری'), 'description' => $say('On leave until Mehr 20', 'در مرخصی تا ۲۰ مهر'), 'icon' => 'user', 'disabled' => true],
+        ['value' => 'omid', 'label' => $say('Omid Jafari', 'امید جعفری'), 'description' => $say('On leave until Oct 12', 'در مرخصی تا ۲۰ مهر'), 'icon' => 'user', 'disabled' => true],
         ['value' => 'leila', 'label' => $say('Leila Moradi', 'لیلا مرادی'), 'description' => $say('QA', 'تضمین کیفیت'), 'icon' => 'user'],
     ];
 @endphp
@@ -45,7 +45,7 @@
     <div class="cb-flight-row">
         <div class="cb-flight-from">
             <span>{{ $say('From', 'مبدأ') }}</span>
-            <strong>{{ $say('Tehran — IKA', 'تهران — IKA') }}</strong>
+            <strong>{{ $say('Istanbul — IST', 'استانبول — IST') }}</strong>
         </div>
         <div class="cb-flight-from">
             <label for="cb-to-input" style="color: var(--nx-text-muted); font-size: var(--nx-text-sm)">{{ $say('To', 'مقصد') }}</label>

@@ -11,7 +11,7 @@
     $people = [
         ['id' => 'ava', 'name' => $say('Ava Karimi', 'آوا کریمی'), 'email' => 'ava@nabu.example'],
         ['id' => 'soheil', 'name' => $say('Soheil Nouri', 'سهیل نوری'), 'email' => 'soheil@nabu.example'],
-        ['id' => 'mona', 'name' => $say('Mona Ahmadi', 'مونا احمدی'), 'email' => 'mona@nabu.example'],
+        ['id' => 'mona', 'name' => $say('Mia Novak', 'مونا احمدی'), 'email' => 'mona@nabu.example'],
         ['id' => 'kian', 'name' => $say('Kian Rajaee', 'کیان رجایی'), 'email' => 'kian@nabu.example'],
         ['id' => 'sara', 'name' => $say('Sara Mohammadi', 'سارا محمدی'), 'email' => 'sara@nabu.example'],
         ['id' => 'nima', 'name' => $say('Nima Farhadi', 'نیما فرهادی'), 'email' => 'nima@nabu.example'],

@@ -554,7 +554,7 @@
             <div class="mcdesk-body mcdesk-mail">
                 <div class="mcdesk-mlist">
                     <button type="button" class="mcdesk-msgrow" data-current>
-                        <b><i class="mcdesk-unread" aria-hidden="true"></i><span class="mcdesk-msgname">{{ $say('Sara Ahmadi', 'سارا احمدی') }}</span><time>{{ $fa ? '۱۴:۰۲' : '14:02' }}</time></b>
+                        <b><i class="mcdesk-unread" aria-hidden="true"></i><span class="mcdesk-msgname">{{ $say('Sara Novak', 'سارا احمدی') }}</span><time>{{ $fa ? '۱۴:۰۲' : '14:02' }}</time></b>
                         <span>{{ $say('Sidebar design review', 'بازبینی طراحی نوار کنار') }}</span>
                         <span>{{ $say('I went through the final files…', 'فایل‌های نهایی را دیدم…') }}</span>
                     </button>
@@ -571,7 +571,7 @@
                 </div>
                 <div class="mcdesk-mread">
                     <h4>{{ $say('Sidebar design review', 'بازبینی طراحی نوار کنار') }}</h4>
-                    <p class="mcdesk-mmeta">{{ $say('Sara Ahmadi · today 14:02 · to me', 'سارا احمدی · امروز ۱۴:۰۲ · به من') }}</p>
+                    <p class="mcdesk-mmeta">{{ $say('Sara Novak · today 14:02 · to me', 'سارا احمدی · امروز ۱۴:۰۲ · به من') }}</p>
                     <p>{{ $say('Hi! I went through the final sidebar files. The blue selection reads far better than the last round, and the row spacing finally feels right. Could you set the counter beside Recents in the lighter weight before the review? Thanks!', 'سلام! فایل‌های نهایی نوار کنار را دیدم. رنگ آبیِ انتخاب خیلی بهتر از دور قبل درآمده و فاصلهٔ ردیف‌ها هم دیگر درست است. فقط لطفاً شمارندهٔ کنار «آخرین‌ها» را با وزن نازک‌تر بچینید. مرسی!') }}</p>
                 </div>
             </div>

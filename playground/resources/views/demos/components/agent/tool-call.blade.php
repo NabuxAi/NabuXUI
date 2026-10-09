@@ -35,16 +35,16 @@
     }" x-init="run()">
     <p class="agd-run-head">
         <x-nx::thinking-orbs size="sm" x-bind:data-state="busy ? 'thinking' : 'idle'" />
-        {{ $say('Plan a weekend in Isfahan for two, under $600', 'یک آخر هفته در اصفهان برای دو نفر، زیر ۶۰۰ دلار') }}
+        {{ $say('Plan a weekend in Istanbul for two, under $600', 'یک آخر هفته در استانبول برای دو نفر، زیر ۶۰۰ دلار') }}
     </p>
     <x-nx::tool-call name="search_flights" status="queued" x-bind:data-status="st[0]" :labels="$labels" :duration="1380"
-        :args="['from' => 'THR', 'to' => 'IFN', 'date' => '2026-10-15', 'passengers' => 2]"
-        :output="['results' => 6, 'cheapest' => ['airline' => 'Iran Air', 'depart' => '07:40', 'price' => 84], 'currency' => 'USD']" />
+        :args="['from' => 'DXB', 'to' => 'IST', 'date' => '2026-10-15', 'passengers' => 2]"
+        :output="['results' => 6, 'cheapest' => ['airline' => 'Turkish Airlines', 'depart' => '07:40', 'price' => 84], 'currency' => 'USD']" />
     <x-nx::tool-call name="search_hotels" status="queued" x-bind:data-status="st[1]" :labels="$labels" :duration="1120"
-        :args="['city' => 'Isfahan', 'nights' => 2, 'max_price' => 120, 'near' => 'Naqsh-e Jahan']"
-        :output="[['name' => 'Abbasi Hotel', 'price' => 118, 'rating' => 4.7], ['name' => 'Ghasr Monshi', 'price' => 96, 'rating' => 4.8]]" />
+        :args="['city' => 'Istanbul', 'nights' => 2, 'max_price' => 120, 'near' => 'Sultanahmet']"
+        :output="[['name' => 'Pera Palace', 'price' => 118, 'rating' => 4.7], ['name' => 'Bosphorus Suites', 'price' => 96, 'rating' => 4.8]]" />
     <x-nx::tool-call name="get_weather" status="queued" x-bind:data-status="st[2]" :labels="$labels" :duration="410"
-        :args="['city' => 'Isfahan', 'days' => 3]" :output="'Sunny, 24°C / 11°C, wind 9 km/h'" />
+        :args="['city' => 'Istanbul', 'days' => 3]" :output="'Sunny, 24°C / 11°C, wind 9 km/h'" />
     <div class="pg-row">
         <x-nx::button size="sm" variant="ghost" icon="sparkles" x-on:click="run()">{{ $say('Run again', 'اجرای دوباره') }}</x-nx::button>
     </div>

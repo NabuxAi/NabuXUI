@@ -26,10 +26,7 @@
                     <x-nx::button size="sm" variant="ghost" icon="grid" href="/livewire" wire:navigate>{{ $say('Showcase', 'نمایشگاه') }}</x-nx::button>
                     <x-nx::button size="sm" variant="ghost" icon="sparkles" href="/blocks/text" wire:navigate>{{ $say('Blocks', 'بلوک‌ها') }}</x-nx::button>
                 </div>
-                <x-nx::language-menu :value="$locale" wire:model.live="locale" :label="$say('Language', 'زبان')" :languages="[
-                    ['id' => 'fa', 'name' => 'فارسی', 'short' => 'FA'],
-                    ['id' => 'en', 'name' => 'English', 'short' => 'EN'],
-                ]" />
+                <x-nx::language-menu :value="$locale" wire:model.live="locale" :label="$say('Language', 'زبان')" :languages="\App\Support\Locales::forMenu()" />
             </nav>
 
             <header style="display: grid; gap: .5rem">

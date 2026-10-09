@@ -47,7 +47,7 @@
         ['cover' => $art['violet'], 'title' => 'Seoul', 'caption' => '서울'],
         ['cover' => $art['green'], 'title' => 'Nairobi'],
         ['cover' => $art['ink'], 'title' => 'Berlin', 'caption' => 'Kreuzberg'],
-        ['cover' => $art['lapis'], 'title' => 'Tehran', 'caption' => 'تهران'],
+        ['cover' => $art['lapis'], 'title' => 'Istanbul', 'caption' => 'استانبول'],
         ['cover' => $art['gold'], 'title' => 'São Paulo'],
     ];
 @endphp

@@ -123,24 +123,24 @@
         <div class="iosheet-stage" x-ref="stage">
             <div class="iosheet-page" :class="{ back: open }">
                 <h4>{{ $say('My Albums', 'آلبوم‌های من') }}</h4>
-                <p class="sub">{{ $say('Tehran, autumn 1404 · 24 photos', 'تهران، پاییز ۱۴۰۴ · ۲۴ عکس') }}</p>
+                <p class="sub">{{ $say('Istanbul, autumn 2025 · 24 photos', 'استانبول، پاییز ۱۴۰۴ · ۲۴ عکس') }}</p>
                 <div class="iosheet-grid">
                     <figure>
                         <button type="button" class="ph" style="aspect-ratio: 1; border-radius: 10px; background: radial-gradient(42% 30% at 62% 34%, #fff7d6 0%, transparent 60%), linear-gradient(180deg, #FF9F0A, #FF3B30 52%, #5856D6)"
-                                x-on:click="show('medium')" aria-label="{{ $say('Open Tabiat Bridge sunset', 'باز کردن غروب پل طبیعت') }}"></button>
-                        <figcaption>{{ $say('Tabiat Bridge', 'پل طبیعت') }}</figcaption>
+                                x-on:click="show('medium')" aria-label="{{ $say('Open Bosphorus Bridge sunset', 'باز کردن غروب پل بسفر') }}"></button>
+                        <figcaption>{{ $say('Bosphorus Bridge', 'پل بسفر') }}</figcaption>
                     </figure>
                     <figure>
                         <span class="ph" style="display: block; background: linear-gradient(160deg, #30D158, #0A2A6B)" aria-hidden="true"></span>
-                        <figcaption>{{ $say('Mellat Park', 'پارک ملت') }}</figcaption>
+                        <figcaption>{{ $say('Emirgan Park', 'پارک امیرگان') }}</figcaption>
                     </figure>
                     <figure>
                         <span class="ph" style="display: block; background: linear-gradient(160deg, #64D2FF, #5856D6)" aria-hidden="true"></span>
-                        <figcaption>{{ $say('Milad Tower', 'برج میلاد') }}</figcaption>
+                        <figcaption>{{ $say('Galata Tower', 'برج گلاتا') }}</figcaption>
                     </figure>
                     <figure>
                         <span class="ph" style="display: block; background: linear-gradient(160deg, #FF3B75, #FF9F0A)" aria-hidden="true"></span>
-                        <figcaption>{{ $say('Valiasr Street', 'خیابان ولی‌عصر') }}</figcaption>
+                        <figcaption>{{ $say('Istiklal Street', 'خیابان استقلال') }}</figcaption>
                     </figure>
                     <figure>
                         <span class="ph" style="display: block; background: linear-gradient(160deg, #FF9500, #5856D6)" aria-hidden="true"></span>
@@ -148,7 +148,7 @@
                     </figure>
                     <figure>
                         <span class="ph" style="display: block; background: linear-gradient(160deg, #5AC8FA, #007AFF)" aria-hidden="true"></span>
-                        <figcaption>{{ $say('Ab-o-Atash Park', 'پارک آب و آتش') }}</figcaption>
+                        <figcaption>{{ $say('Yıldız Park', 'پارک یلدیز') }}</figcaption>
                     </figure>
                 </div>
             </div>
@@ -164,9 +164,9 @@
                             aria-label="{{ $say('Switch detent', 'تغییر توقف‌گاه') }}"></button>
                 </div>
                 <div class="body">
-                    <div class="iosheet-photo" role="img" aria-label="{{ $say('Sunset over Tabiat Bridge', 'غروب روی پل طبیعت') }}"></div>
-                    <h4>{{ $say('Sunset at Tabiat Bridge', 'غروب پل طبیعت') }}</h4>
-                    <p class="meta">{{ $say('Tehran · 20 Mehr 1404 · 18:12', 'تهران · ۲۰ مهر ۱۴۰۴ · ۱۸:۱۲') }}</p>
+                    <div class="iosheet-photo" role="img" aria-label="{{ $say('Sunset over Bosphorus Bridge', 'غروب روی پل بسفر') }}"></div>
+                    <h4>{{ $say('Sunset at Bosphorus Bridge', 'غروب پل بسفر') }}</h4>
+                    <p class="meta">{{ $say('Istanbul · 20 Oct 2025 · 18:12', 'استانبول · ۲۰ مهر ۱۴۰۴ · ۱۸:۱۲') }}</p>
                     <div class="iosheet-actions" aria-hidden="true">
                         <span>{{ $say('Share', 'اشتراک‌گذاری') }}</span>
                         <span>{{ $say('Edit', 'ویرایش') }}</span>

@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin;
 
 use App\Livewire\Concerns\AdminPanel;
+use App\Support\Locales;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 use NabuXUI\NabuXUI;
@@ -43,7 +44,7 @@ class Users extends Component
      */
     public function updated(string $name, mixed $value): void
     {
-        if ($name === 'locale' && is_string($value) && in_array($value, ['fa', 'en'], true)) {
+        if ($name === 'locale' && is_string($value) && in_array($value, Locales::codes(), true)) {
             session(['locale' => $value]);
             $this->redirect($this->path);
         }

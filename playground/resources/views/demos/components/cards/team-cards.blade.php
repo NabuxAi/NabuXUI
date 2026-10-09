@@ -15,7 +15,7 @@
         </p>
     </div>
     <x-nx::team-cards :label="$say('The Nabu team', 'تیم نابو')" :members="[
-        ['name' => $say('Niloofar Ahmadi', 'نیلوفر احمدی'), 'role' => $say('Design lead · تهران', 'رهبر طراحی · تهران'), 'color' => 'violet', 'href' => '#'],
+        ['name' => $say('Emma Carter', 'نیلوفر احمدی'), 'role' => $say('Design lead · Istanbul', 'رهبر طراحی · استانبول'), 'color' => 'violet', 'href' => '#'],
         ['name' => $say('Kenji Sato', 'کنجی ساتو'), 'role' => $say('Motion · 東京', 'حرکت · توکیو'), 'color' => 'cyan', 'href' => '#'],
         ['name' => $say('María López', 'ماریا لوپز'), 'role' => $say('Data engineering · Madrid', 'مهندسی داده · مادرید'), 'color' => 'gold', 'href' => '#'],
         ['name' => $say('Amara Okafor', 'آمارا اوکافور'), 'role' => $say('Support · Lagos', 'پشتیبانی · لاگوس'), 'color' => 'lapis', 'href' => '#'],

@@ -13,7 +13,7 @@
     $candidates = [
         ['name' => $say('Ava Karimi', 'آوا کریمی'), 'team' => 'design'],
         ['name' => $say('Soheil Nouri', 'سهیل نوری'), 'team' => 'backend'],
-        ['name' => $say('Mona Ahmadi', 'مونا احمدی'), 'team' => 'design'],
+        ['name' => $say('Mona Fischer', 'مونا احمدی'), 'team' => 'design'],
         ['name' => $say('Kian Rajaee', 'کیان رجایی'), 'team' => 'support'],
         ['name' => $say('Sara Mohammadi', 'سارا محمدی'), 'team' => 'backend'],
         ['name' => $say('Nima Farhadi', 'نیما فرهادی'), 'team' => 'research'],

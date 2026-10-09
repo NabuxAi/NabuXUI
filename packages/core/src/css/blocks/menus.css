@@ -3010,6 +3010,9 @@
     margin: 0;
     padding: var(--nx-space-1);
     list-style: none;
+    /* Many languages fit the registry; past the cap (or the viewport) the
+       panel scrolls instead of growing off-screen. */
+    max-block-size: min(var(--nx-language-max-block-size, 24rem), calc(100dvh - 1.5rem));
     overflow-y: auto;
     overscroll-behavior: contain;
   }

@@ -246,10 +246,10 @@
                             <div style="padding-inline: .55rem">
                                 <div class="ioctl-car" x-ref="car" x-on:scroll.passive="onCar()">
                                     <figure>
-                                        <figcaption><b>{{ $say('Tehran Alleys', 'کوچه‌های تهران') }}</b><br><span>{{ $say('Bachar Choir · 2025', 'کر باچار · ۲۰۲۵') }}</span></figcaption>
+                                        <figcaption><b>{{ $say('Istanbul Alleys', 'کوچه‌های استانبول') }}</b><br><span>{{ $say('Bachar Choir · 2025', 'کر باچار · ۲۰۲۵') }}</span></figcaption>
                                     </figure>
                                     <figure>
-                                        <figcaption><b>{{ $say('Rainy Night', 'شبِ باران') }}</b><br><span>{{ $say('Homa & Reza · 2024', 'هما و رضا · ۲۰۲۴') }}</span></figcaption>
+                                        <figcaption><b>{{ $say('Rainy Night', 'شبِ باران') }}</b><br><span>{{ $say('Anna & Omar · 2024', 'هما و رضا · ۲۰۲۴') }}</span></figcaption>
                                     </figure>
                                     <figure>
                                         <figcaption><b>{{ $say('Southern Sea', 'دریای جنوب') }}</b><br><span>{{ $say('Bandari Nights · 2023', 'شب‌های بندری · ۲۰۲۳') }}</span></figcaption>

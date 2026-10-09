@@ -40,7 +40,7 @@
             <div style="display: grid; gap: .375rem; font-size: var(--nx-text-xs); color: var(--nx-text-muted); line-height: 1.9">
                 <span>{{ $say('Order', 'سفارش') }} #1042 · {{ $say('paid in 3 instalments', 'پرداخت در ۳ قسط') }} · {{ NabuXUI::formatNumber(426666).' '.$say('tomans each', 'تومان در هر قسط') }}</span>
                 <span>{{ $say('Processing fee', 'کارمزد پردازش').': '.NabuXUI::formatNumber(9600).' '.$say('tomans', 'تومان') }} · {{ $say('insurance included', 'بیمه همراه است') }}</span>
-                <span>{{ $say('Ships from', 'ارسال از').' '.($fa ? 'انبار تهران' : 'the Tehran depot').' · '.$say('weight', 'وزن').' '.NabuXUI::formatNumber(1.2, 1).'kg' }}</span>
+                <span>{{ $say('Ships from', 'ارسال از').' '.($fa ? 'انبار استانبول' : 'the Istanbul depot').' · '.$say('weight', 'وزن').' '.NabuXUI::formatNumber(1.2, 1).'kg' }}</span>
                 <span>{{ $say('Returns accepted until', 'بازگشت تا').' '.($fa ? '۱۴ آبان' : 'Nov 5').' · '.$say('no questions asked', 'بدون پرسش') }}</span>
             </div>
             <div class="pg-row">

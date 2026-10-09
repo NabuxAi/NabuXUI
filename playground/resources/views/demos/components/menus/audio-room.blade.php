@@ -13,7 +13,7 @@
     $members = [
         ['name' => $say('Ava Karimi', 'آوا کریمی'), 'role' => $say('Host', 'میزبان'), 'speaking' => true],
         ['name' => $say('Soheil Nouri', 'سهیل نوری'), 'speaking' => true],
-        ['name' => $say('Mona Ahmadi', 'مونا احمدی'), 'muted' => true],
+        ['name' => $say('Mia Novak', 'مونا احمدی'), 'muted' => true],
         ['name' => $say('Kian Rajaee', 'کیان رجایی')],
         ['name' => $say('Sara Mohammadi', 'سارا محمدی'), 'muted' => true],
     ];

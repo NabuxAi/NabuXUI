@@ -28,7 +28,7 @@
                 <div class="pg-row" style="gap: .75rem">
                     <span aria-hidden="true" style="inline-size: 3rem; aspect-ratio: 1; border-radius: var(--nx-radius-lg); background: linear-gradient(135deg, var(--nx-lapis-500), var(--nx-violet-500))"></span>
                     <div style="display: grid">
-                        <strong>{{ $say('Rain in Tehran', 'باران تهران') }}</strong>
+                        <strong>{{ $say('Rain in Istanbul', 'باران استانبول') }}</strong>
                         <span style="font-size: var(--nx-text-sm); color: var(--nx-text-muted)">{{ $say('Lo-fi for building design systems', 'لوفای ساخت سیستم طراحی') }}</span>
                     </div>
                 </div>

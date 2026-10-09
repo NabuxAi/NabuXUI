@@ -64,7 +64,7 @@ export function installForms(Alpine: AlpineLike): void {
       const fraction = (Number(input.value) - min) / (max - min || 1);
       this.$root.style.setProperty('--nx-pct', `${fraction * 100}%`);
       this.$root.style.setProperty('--nx-frac', String(fraction));
-      this.shown = new Intl.NumberFormat(locale, format).format(Number(input.value));
+      this.shown = new Intl.NumberFormat(locale ?? undefined, format ?? undefined).format(Number(input.value));
     },
   }));
 

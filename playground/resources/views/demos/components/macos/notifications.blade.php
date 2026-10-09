@@ -11,7 +11,7 @@
     $say = fn (string $en, string $faText) => $fa ? $faText : $en;
     $pool = [
         ['key' => 'mail', 'app' => 'Mail', 'icon' => '✉️', 'grad' => 'linear-gradient(160deg, #6EC6FF, #0A63C9)', 'when' => ['fa' => '۱۰:۴۲', 'en' => '10:42'],
-         'title' => ['fa' => 'سارا احمدی', 'en' => 'Sara Ahmadi'],
+         'title' => ['fa' => 'سارا احمدی', 'en' => 'Sara Novak'],
          'body' => ['fa' => 'جلسهٔ فردا ساعت ۱۰ به اتاق نارنجی منتقل شد؛ دستور جلسه پیوست است.', 'en' => 'Tomorrow’s 10:00 moved to the Orange room; agenda attached.'],
          'full' => ['fa' => 'جلسهٔ فردا ساعت ۱۰ به اتاق نارنجی منتقل شد؛ دستور جلسه پیوست است. اگر وقت داری قبل از ظهر نسخهٔ نهایی اسلایدها را بفرست تا برای مشتری بفرستم.', 'en' => 'Tomorrow’s 10:00 moved to the Orange room; agenda attached. If you can, send the final slides before noon so I can forward them to the client.']],
         ['key' => 'cal', 'app' => 'Calendar', 'icon' => '📅', 'grad' => 'linear-gradient(160deg, #FFFFFF, #E8E8ED)', 'when' => ['fa' => '۹:۱۵', 'en' => '9:15'],

@@ -7,7 +7,7 @@
     $fa = app()->getLocale() === 'fa';
     $say = fn (string $en, string $faText) => $fa ? $faText : $en;
     $threads = [
-        ['id' => 't1', 'from' => $say('Sara Ahmadi', 'سارا احمدی'), 'subject' => $say('Contract for the Tabriz branch', 'قرارداد شعبهٔ تبریز')],
+        ['id' => 't1', 'from' => $say('Sara Bennett', 'سارا احمدی'), 'subject' => $say('Contract for the Lyon branch', 'قرارداد شعبهٔ تبریز')],
         ['id' => 't2', 'from' => $say('Billing', 'صورت‌حساب'), 'subject' => $say('Invoice #1043 is ready', 'فاکتور ۱۰۴۳ آماده است')],
         ['id' => 't3', 'from' => $say('Reza Karimi', 'رضا کریمی'), 'subject' => $say('Photos from the Nowruz shoot', 'عکس‌های عکاسی نوروز')],
         ['id' => 't4', 'from' => $say('GitHub', 'گیت‌هاب'), 'subject' => $say('3 new review requests', '۳ درخواست بازبینی تازه')],

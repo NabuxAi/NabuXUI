@@ -13,7 +13,7 @@ use NabuXUI\NabuXUI;
  * tabs: the overview's fact sheet, the activity stream over the timeline-feed
  * block, and the personal preferences (time zone, theme, language). The
  * preferences are Livewire-local; the language row reuses the topbar's
- * fa/en switch (SwitchesDemoLocale) and the theme row writes the core theme
+ * registry-driven switch (SwitchesDemoLocale) and the theme row writes the core theme
  * store, so both land exactly where the rest of the panel reads them.
  */
 #[Layout('layouts.admin')]
@@ -23,7 +23,7 @@ class Profile extends Component
 
     public string $tab = 'overview';
 
-    public string $timezone = 'Asia/Tehran';
+    public string $timezone = 'Europe/Berlin';
 
     public function mount(): void
     {
@@ -41,7 +41,7 @@ class Profile extends Component
         $fmt = fn (int $n) => NabuXUI::formatNumber($n, 0, app()->getLocale());
         $say = fn (string $key, array $replace = []) => __($key, $replace);
         // Zone ids are their own labels; the select wants a value => label map.
-        $zones = ['Asia/Tehran', 'Asia/Dubai', 'Europe/London', 'Europe/Berlin', 'America/New_York', 'UTC'];
+        $zones = ['Europe/Berlin', 'Europe/Istanbul', 'Europe/London', 'Asia/Dubai', 'America/New_York', 'UTC'];
 
         return view('livewire.admin.profile', [
             'user' => Panel::user(),

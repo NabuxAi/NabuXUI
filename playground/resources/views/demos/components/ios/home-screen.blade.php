@@ -645,7 +645,7 @@
                 <template x-if="app && app.kind === 'weather'">
                     <div class="iohome-app iohome-weather" style="--ioh-focus: #fff">
                         <div class="iohome-wxhead">
-                            <b>{{ $say('Tehran', 'تهران') }}</b>
+                            <b>{{ $say('Istanbul', 'استانبول') }}</b>
                             <span class="iohome-wxtemp">{{ $fn(18) }}°</span>
                             <span class="iohome-wxcond">{{ $say('Clear', 'صاف') }}</span>
                             <span class="iohome-wxhl">{{ $say('H:24° · L:12°', 'بیشینه ۲۴° · کمینه ۱۲°') }}</span>

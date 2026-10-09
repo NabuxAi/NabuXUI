@@ -21,7 +21,7 @@
                 ? ['ما وب‌سایت می‌سازیم', 'ما اپلیکیشن می‌سازیم', 'ما برند می‌سازیم', 'ما تجربه می‌سازیم']
                 : ['We build websites', 'We build mobile apps', 'We build brands', 'We build experiences']" />
         </h2>
-        <p style="margin: 0; color: var(--nx-text-muted)">{{ $say('A studio of twelve in Tehran and Berlin.', 'استودیویی دوازده‌نفره در تهران و برلین.') }}</p>
+        <p style="margin: 0; color: var(--nx-text-muted)">{{ $say('A studio of twelve in Istanbul and Berlin.', 'استودیویی دوازده‌نفره در استانبول و برلین.') }}</p>
         <div class="pg-row"><x-nx::button variant="primary" shape="pill" icon-end="arrow-right">{{ $say('See our work', 'نمونه‌کارها') }}</x-nx::button></div>
     </div>
 </section>

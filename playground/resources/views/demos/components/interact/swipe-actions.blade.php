@@ -7,7 +7,7 @@
     $fa = app()->getLocale() === 'fa';
     $say = fn (string $en, string $faText) => $fa ? $faText : $en;
     $mails = [
-        ['id' => 1, 'from' => $say('Sara Ahmadi', 'سارا احمدی'), 'subject' => $say('Contract for the Tabriz branch', 'قرارداد شعبهٔ تبریز'), 'time' => '09:41'],
+        ['id' => 1, 'from' => $say('Emma Carter', 'سارا احمدی'), 'subject' => $say('Contract for the Istanbul branch', 'قرارداد شعبهٔ استانبول'), 'time' => '09:41'],
         ['id' => 2, 'from' => $say('Billing', 'صورت‌حساب'), 'subject' => $say('Invoice #1043 is ready', 'فاکتور ۱۰۴۳ آماده است'), 'time' => '08:15'],
         ['id' => 3, 'from' => $say('Reza Karimi', 'رضا کریمی'), 'subject' => $say('Photos from the Nowruz shoot', 'عکس‌های عکاسی نوروز'), 'time' => $say('Yesterday', 'دیروز')],
     ];

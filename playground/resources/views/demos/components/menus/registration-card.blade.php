@@ -17,11 +17,11 @@
         </p>
     </div>
     <x-nx::registration-card model="state.reg" wire:submit="$set('state.registered', true)"
-        :success="! empty($state['registered'])" currency="IRR"
+        :success="! empty($state['registered'])" currency="TRY"
         :event="[
             'title' => $say('Design Systems in Practice', 'سیستم طراحی در عمل'),
-            'date' => $say('24 Aban, 9:30', '۲۴ آبان، ۹:۳۰'),
-            'location' => $say('Tehran + online', 'تهران + برخط'),
+            'date' => $say('15 Nov, 9:30', '۲۴ آبان، ۹:۳۰'),
+            'location' => $say('Istanbul + online', 'استانبول + برخط'),
             'badge' => $say('Limited seats', 'ظرفیت محدود'),
         ]"
         :tickets="[

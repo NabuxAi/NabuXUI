@@ -91,7 +91,7 @@
     ];
 
     $tracks = [
-        ['title' => $say('Desert Rain', 'باران کویر'), 'artist' => $say('Ava Rostami', 'آوا رستمی'), 'dur' => 214],
+        ['title' => $say('Desert Rain', 'باران کویر'), 'artist' => $say('Ava Bennett', 'آوا رستمی'), 'dur' => 214],
         ['title' => $say('Midnight Metro', 'متروی نیمه‌شب'), 'artist' => $say('The Nabu Tapes', 'نوارهای نابو'), 'dur' => 187],
         ['title' => $say('Paper Kites', 'بادبادک‌های کاغذی'), 'artist' => $say('Sara and the Reeds', 'سارا و نی‌ها'), 'dur' => 232],
     ];
@@ -602,10 +602,10 @@
                         <div class="m3home-page">
                             <div class="m3home-glance">
                                 <div class="m3home-glance-time">{{ $say('2:05 PM', '۱۴:۰۵') }}</div>
-                                <div class="m3home-glance-date">{{ $say('Tuesday, 17 Mehr', 'سه‌شنبه، ۱۷ مهر') }}</div>
+                                <div class="m3home-glance-date">{{ $say('Tuesday, 7 Oct', 'سه‌شنبه، ۱۷ مهر') }}</div>
                                 <div class="m3home-glance-row">
                                     {!! $ico('weather') !!}
-                                    <span>{{ $say('Tehran 28° Sunny', 'تهران ۲۸° آفتابی') }}</span>
+                                    <span>{{ $say('Istanbul 28° Sunny', 'استانبول ۲۸° آفتابی') }}</span>
                                 </div>
                             </div>
                             <div class="m3home-grid">
@@ -657,7 +657,7 @@
 
             <div class="m3home-shade" x-ref="shade" x-show="shade > 0.001" x-cloak role="region" :aria-hidden="(shade < 0.5).toString()" :style="{ translate: '0 ' + (shade - 1) * 105 + '%' }" aria-label="{{ $say('Notifications and quick settings', 'اعلان‌ها و تنظیمات سریع') }}">
                 <div class="m3home-shade-head">
-                    <span>{{ $say('Tue, 17 Mehr', 'سه‌شنبه ۱۷ مهر') }}</span>
+                    <span>{{ $say('Tue, 7 Oct', 'سه‌شنبه ۱۷ مهر') }}</span>
                     <span>{{ $say('Battery 82%', 'باتری ۸۲٪') }}</span>
                 </div>
                 <div class="m3home-qs">

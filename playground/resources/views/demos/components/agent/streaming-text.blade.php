@@ -8,13 +8,13 @@
     $say = fn (string $en, string $faText) => $fa ? $faText : $en;
 
     $sources = [
-        ['title' => $say('Tehran — climate overview', 'تهران — نمای کلی اقلیم'), 'url' => 'https://en.wikipedia.org/wiki/Tehran', 'snippet' => $say('Tehran has a cold semi-arid climate with hot, dry summers and cool winters; most rain falls between November and April.', 'تهران اقلیمی نیمه‌خشک و سرد دارد؛ تابستان‌های گرم و خشک و زمستان‌های خنک، و بیشتر بارش میان آبان تا اردیبهشت است.')],
-        ['title' => $say('Air quality index — monthly averages', 'شاخص کیفیت هوا — میانگین ماهانه'), 'url' => 'https://www.iqair.com/iran/tehran', 'snippet' => $say('Autumn and early winter show the highest particulate readings, as temperature inversions trap pollution over the city.', 'پاییز و آغاز زمستان بیشترین ذرات معلق را نشان می‌دهند، چون وارونگی دما آلودگی را روی شهر نگه می‌دارد.')],
-        ['title' => $say('Visiting Iran: best seasons', 'سفر به ایران: بهترین فصل‌ها'), 'domain' => 'lonelyplanet.com', 'snippet' => $say('Spring (March–May) is mild across most of the country and coincides with Nowruz celebrations.', 'بهار (فروردین تا خرداد) در بیشتر کشور معتدل است و با جشن نوروز هم‌زمان می‌شود.')],
+        ['title' => $say('Istanbul — climate overview', 'استانبول — نمای کلی اقلیم'), 'url' => 'https://en.wikipedia.org/wiki/Istanbul', 'snippet' => $say('Istanbul has a humid subtropical climate with hot, humid summers and cool, wet winters; most rain falls between November and April.', 'استانبول اقلیمی نیمه‌گرمسیری مرطوب دارد؛ تابستان‌های گرم و شرجی و زمستان‌های خنک و بارانی، و بیشتر بارش میان آبان تا اردیبهشت است.')],
+        ['title' => $say('Air quality index — monthly averages', 'شاخص کیفیت هوا — میانگین ماهانه'), 'url' => 'https://www.iqair.com/turkey/istanbul', 'snippet' => $say('Autumn and early winter show the highest particulate readings, as temperature inversions trap pollution over the city.', 'پاییز و آغاز زمستان بیشترین ذرات معلق را نشان می‌دهند، چون وارونگی دما آلودگی را روی شهر نگه می‌دارد.')],
+        ['title' => $say('Visiting Türkiye: best seasons', 'سفر به ترکیه: بهترین فصل‌ها'), 'domain' => 'lonelyplanet.com', 'snippet' => $say('Spring (March–May) is mild across most of the country and coincides with tulip season.', 'بهار (فروردین تا خرداد) در بیشتر کشور معتدل است و با فصل لاله هم‌زمان می‌شود.')],
     ];
     $answer = $say(
-        "The best time to visit Tehran is spring, from late March to May [1]. Days are mild, the Alborz still has snow, and the city is green after the winter rains [3].\n\nAutumn is pleasant too, but late in the season air quality drops as inversions trap smog over the city [2], so plan outdoor days early in October.",
-        "بهترین زمان سفر به تهران بهار است، از اواخر اسفند تا اردیبهشت [1]. روزها معتدل‌اند، البرز هنوز برف دارد و شهر پس از باران‌های زمستان سبز است [3].\n\nپاییز هم دلپذیر است، اما در اواخر فصل کیفیت هوا افت می‌کند چون وارونگی دما دود را روی شهر نگه می‌دارد [2]؛ پس روزهای بیرون از خانه را برای اوایل مهر بگذارید."
+        "The best time to visit Istanbul is spring, from late March to May [1]. Days are mild, the tulips are in full bloom, and the city is green after the winter rains [3].\n\nAutumn is pleasant too, but late in the season air quality drops as inversions trap smog over the city [2], so plan outdoor days early in October.",
+        "بهترین زمان سفر به استانبول بهار است، از اواخر اسفند تا اردیبهشت [1]. روزها معتدل‌اند، لاله‌ها به اوج شکوفایی رسیده‌اند و شهر پس از باران‌های زمستان سبز است [3].\n\nپاییز هم دلپذیر است، اما در اواخر فصل کیفیت هوا افت می‌کند چون وارونگی دما دود را روی شهر نگه می‌دارد [2]؛ پس روزهای بیرون از خانه را برای اوایل مهر بگذارید."
     );
     $mixed = 'برای فرم‌های بلند در Livewire و Inertia، اعتبارسنجی را سمت سرور نگه دارید و فقط پیام خطا را زنده نشان دهید [1]. کتابخانهٔ NabuXUI هر دو را با یک CSS پوشش می‌دهد.';
 @endphp
@@ -25,7 +25,7 @@
 </style>
 
 <article class="agd-answer" x-data>
-    <p class="agd-q">{{ $say('When is the best time of year to visit Tehran?', 'بهترین زمان سال برای سفر به تهران کی است؟') }}</p>
+    <p class="agd-q">{{ $say('When is the best time of year to visit Istanbul?', 'بهترین زمان سال برای سفر به استانبول کی است؟') }}</p>
     <x-nx::streaming-text :text="$answer" :sources="$sources" simulate :interval="70"
         :cite-label="$say('Source :n', 'منبع :n')" :open-label="$say('Open source', 'باز کردن منبع')" />
     <div class="pg-row" style="justify-content: space-between">

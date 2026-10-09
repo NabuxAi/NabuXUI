@@ -36,7 +36,7 @@
     </div>
     <x-nx::accordion single>
         <x-nx::accordion-item :title="$say('When will my order arrive?', 'سفارشم کی می‌رسد؟')" open>
-            {{ $say('Orders are processed within 24 business hours; delivery takes 2–4 business days by post and is same-day by courier in Tehran. The tracking code arrives by SMS as soon as the parcel is handed over.', 'سفارش‌ها تا ۲۴ ساعت کاری پردازش می‌شوند؛ ارسال با پست ۲ تا ۴ روز کاری است و در تهران با پیک، همان‌روز. کد رهگیری همین‌که بسته تحویل پست شود، پیامک می‌شود.') }}
+            {{ $say('Orders are processed within 24 business hours; delivery takes 2–4 business days by post and is same-day by courier in Istanbul. The tracking code arrives by SMS as soon as the parcel is handed over.', 'سفارش‌ها تا ۲۴ ساعت کاری پردازش می‌شوند؛ ارسال با پست ۲ تا ۴ روز کاری است و در استانبول با پیک، همان‌روز. کد رهگیری همین‌که بسته تحویل پست شود، پیامک می‌شود.') }}
         </x-nx::accordion-item>
         <x-nx::accordion-item :title="$say('Can I return an item?', 'کالا را می‌توانم برگردانم؟')">
             {{ $say('Up to 7 days after delivery, as long as the seal and the packaging are intact. Opened hygiene and food items cannot be returned.', 'تا ۷ روز پس از تحویل، به‌شرط سالم بودن پلمب و بسته‌بندی. کالاهای بهداشتی و خوراکیِ باز‌شده قابل برگشت نیستند.') }}

@@ -48,10 +48,7 @@
                 <x-nx::button size="sm" variant="ghost" icon="arrow-left" href="/components" wire:navigate>
                     {{ $say('All demos', 'همهٔ دموها') }}
                 </x-nx::button>
-                <x-nx::language-menu :value="$locale" wire:model.live="locale" :label="$say('Language', 'زبان')" :languages="[
-                    ['id' => 'fa', 'name' => 'فارسی', 'short' => 'FA'],
-                    ['id' => 'en', 'name' => 'English', 'short' => 'EN'],
-                ]" />
+                <x-nx::language-menu :value="$locale" wire:model.live="locale" :label="$say('Language', 'زبان')" :languages="\App\Support\Locales::forMenu()" />
             </nav>
 
             <header style="display: grid; gap: .75rem">

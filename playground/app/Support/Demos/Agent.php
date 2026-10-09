@@ -106,7 +106,7 @@ return [
             ]],
         ],
         'code' => <<<'BLADE'
-        <x-nx::tool-call name="search_web" :args="['query' => 'Tehran weather', 'limit' => 5]"
+        <x-nx::tool-call name="search_web" :args="['query' => 'Istanbul weather', 'limit' => 5]"
             :status="$status" :output="$results" :duration="840" />
         BLADE,
     ],

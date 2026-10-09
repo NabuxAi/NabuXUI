@@ -9,7 +9,7 @@
     $fa = app()->getLocale() === 'fa';
     $say = fn (string $en, string $faText) => $fa ? $faText : $en;
 
-    // A week of support conversations, one bar a day (the Iranian week starts Saturday).
+    // A week of support conversations, one bar a day (the week starts Saturday).
     $week = $fa ? ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'] : ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
     $chats = [132, 98, 121, 144, 167, 89, 74];
 

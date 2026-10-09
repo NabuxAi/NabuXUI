@@ -188,7 +188,7 @@ return [
         ],
         'code' => <<<'BLADE'
         <x-nx::select label="کشور" placeholder="انتخاب کنید"
-            :options="['ir' => 'ایران', 'de' => 'آلمان', 'jp' => 'ژاپن']"
+            :options="['tr' => 'ترکیه', 'de' => 'آلمان', 'jp' => 'ژاپن']"
             wire:model.live="state.country" />
 
         <x-nx::select label="شهر" :options="$cities" wire:model="state.city" />
@@ -301,7 +301,7 @@ return [
 
         <x-nx::radio-group legend="روش ارسال" orientation="horizontal" :value="$shipping" wire:model.live="state.shipping" :options="[
             ['value' => 'post', 'label' => 'پست پیشتاز'],
-            ['value' => 'courier', 'label' => 'پیک موتوری', 'description' => 'فقط تهران و کرج', 'disabled' => true],
+            ['value' => 'courier', 'label' => 'پیک موتوری', 'description' => 'فقط استانبول و بورسا', 'disabled' => true],
         ]" />
         BLADE,
     ],

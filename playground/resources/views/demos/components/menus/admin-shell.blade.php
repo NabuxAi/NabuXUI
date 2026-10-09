@@ -37,22 +37,22 @@
     ];
 
     $orders = [
-        ['id' => '1042', 'customer' => $say('Ava Karimi', 'آوا کریمی'), 'total' => 1280000, 'status' => 'success'],
-        ['id' => '1041', 'customer' => $say('Soheil Nouri', 'سهیل نوری'), 'total' => 490000, 'status' => 'running'],
-        ['id' => '1040', 'customer' => $say('Mona Ahmadi', 'مونا احمدی'), 'total' => 2350000, 'status' => 'queued'],
-        ['id' => '1039', 'customer' => $say('Kian Rajaee', 'کیان رجایی'), 'total' => 760000, 'status' => 'failed'],
+        ['id' => '1042', 'customer' => $say('Emma Carter', 'آوا کریمی'), 'total' => 1280000, 'status' => 'success'],
+        ['id' => '1041', 'customer' => $say('Liam Harper', 'سهیل نوری'), 'total' => 490000, 'status' => 'running'],
+        ['id' => '1040', 'customer' => $say('Mia Novak', 'مونا احمدی'), 'total' => 2350000, 'status' => 'queued'],
+        ['id' => '1039', 'customer' => $say('Daniel Brooks', 'کیان رجایی'), 'total' => 760000, 'status' => 'failed'],
     ];
 
     $customers = [
-        ['name' => $say('Ava Karimi', 'آوا کریمی'), 'city' => $say('Tehran', 'تهران'), 'orders' => 42],
-        ['name' => $say('Soheil Nouri', 'سهیل نوری'), 'city' => $say('Shiraz', 'شیراز'), 'orders' => 17],
-        ['name' => $say('Mona Ahmadi', 'مونا احمدی'), 'city' => $say('Tabriz', 'تبریز'), 'orders' => 8],
+        ['name' => $say('Emma Carter', 'آوا کریمی'), 'city' => $say('Istanbul', 'استانبول'), 'orders' => 42],
+        ['name' => $say('Liam Harper', 'سهیل نوری'), 'city' => $say('Dubai', 'دبی'), 'orders' => 17],
+        ['name' => $say('Mia Novak', 'مونا احمدی'), 'city' => $say('Rome', 'رم'), 'orders' => 8],
     ];
 
     $activity = [
-        ['id' => 'as1', 'actor' => ['name' => $say('Ava Karimi', 'آوا کریمی')], 'text' => $say('paid order', 'سفارش را پرداخت کرد'), 'target' => '#1042', 'time' => now()->subMinutes(6), 'unread' => true],
-        ['id' => 'as2', 'actor' => ['name' => $say('Kian Rajaee', 'کیان رجایی')], 'text' => $say('opened a ticket', 'تیکت باز کرد'), 'time' => now()->subHours(2), 'unread' => true],
-        ['id' => 'as3', 'actor' => ['name' => $say('Mona Ahmadi', 'مونا احمدی')], 'text' => $say('reviewed', 'نظر داد به'), 'target' => $say('wool coat', 'کتان پشمی'), 'time' => now()->subDay()],
+        ['id' => 'as1', 'actor' => ['name' => $say('Emma Carter', 'آوا کریمی')], 'text' => $say('paid order', 'سفارش را پرداخت کرد'), 'target' => '#1042', 'time' => now()->subMinutes(6), 'unread' => true],
+        ['id' => 'as2', 'actor' => ['name' => $say('Daniel Brooks', 'کیان رجایی')], 'text' => $say('opened a ticket', 'تیکت باز کرد'), 'time' => now()->subHours(2), 'unread' => true],
+        ['id' => 'as3', 'actor' => ['name' => $say('Mia Novak', 'مونا احمدی')], 'text' => $say('reviewed', 'نظر داد به'), 'target' => $say('wool coat', 'کتان پشمی'), 'time' => now()->subDay()],
     ];
 @endphp
 
@@ -64,7 +64,7 @@
         </p>
     </div>
     <x-nx::admin-shell brand="{{ $say('Nabu Shop', 'فروشگاه نابو') }}" :active="$page" wire:model="state.page" :groups="$nav"
-        :title="$title" :subtitle="$subtitle" :user="['name' => $say('Negar Rostami', 'نگار رستمی'), 'role' => $say('Sales lead', 'مدیر فروش')]"
+        :title="$title" :subtitle="$subtitle" :user="['name' => $say('Clara Meyer', 'نگار رستمی'), 'role' => $say('Sales lead', 'مدیر فروش')]"
         :search-placeholder="$say('Search or run a command…', 'جست‌وجو یا اجرای فرمان…')" search-hint="⌘K"
         height="34rem" min-height="30rem">
         <x-slot:actions>
@@ -73,10 +73,10 @@
         </x-slot:actions>
         <x-slot:userMenu>
             <div class="nx-admin-user-head">
-                <p class="nx-admin-user-name">{{ $say('Negar Rostami', 'نگار رستمی') }}</p>
+                <p class="nx-admin-user-name">{{ $say('Clara Meyer', 'نگار رستمی') }}</p>
                 <p class="nx-admin-user-role">{{ $say('Sales lead', 'مدیر فروش') }}</p>
             </div>
-            <div role="menu" aria-label="{{ $say('Negar Rostami', 'نگار رستمی') }}">
+            <div role="menu" aria-label="{{ $say('Clara Meyer', 'نگار رستمی') }}">
                 <button type="button" class="nx-admin-user-item" role="menuitem" wire:click="ping(@js($say('Profile opened', 'پروفایل باز شد')))">
                     {{ \NabuXUI\NabuXUI::icon('user') }}<span>{{ $say('Your profile', 'پروفایل شما') }}</span>
                 </button>

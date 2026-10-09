@@ -27,7 +27,7 @@
         ['id' => 5, 'name' => '東京ローンチ', 'owner' => 'Kenji Watanabe', 'status' => 'running', 'region' => 'Tokyo', 'budget' => 67300, 'progress' => 0.77, 'updated' => '2026-09-26'],
         ['id' => 6, 'name' => '长城 API', 'owner' => 'Li Wei', 'status' => 'success', 'region' => 'Shenzhen', 'budget' => 54100, 'progress' => 1, 'updated' => '2026-09-12'],
         ['id' => 7, 'name' => 'مشروع الواحة', 'owner' => 'Layla Haddad', 'status' => 'canceled', 'region' => 'Dubai', 'budget' => 8800, 'progress' => 0.15, 'updated' => '2026-08-30'],
-        ['id' => 8, 'name' => 'پروژهٔ سیمرغ', 'owner' => 'Niloufar Ahmadi', 'status' => 'running', 'region' => 'Tehran', 'budget' => 19600, 'progress' => 0.54, 'updated' => '2026-09-23'],
+        ['id' => 8, 'name' => 'پروژهٔ سیمرغ', 'owner' => 'Mia Novak', 'status' => 'running', 'region' => 'Istanbul', 'budget' => 19600, 'progress' => 0.54, 'updated' => '2026-09-23'],
         ['id' => 9, 'name' => 'परियोजना गंगा', 'owner' => 'Priya Sharma', 'status' => 'queued', 'region' => 'Bengaluru', 'budget' => 26450, 'progress' => 0.03, 'updated' => '2026-09-26'],
         ['id' => 10, 'name' => 'Projeto Aurora', 'owner' => 'João Silva', 'status' => 'success', 'region' => 'São Paulo', 'budget' => 41000, 'progress' => 1, 'updated' => '2026-09-02'],
         ['id' => 11, 'name' => '프로젝트 한강', 'owner' => 'Min-jun Park', 'status' => 'running', 'region' => 'Seoul', 'budget' => 37250, 'progress' => 0.33, 'updated' => '2026-09-22'],

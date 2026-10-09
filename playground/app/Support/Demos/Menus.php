@@ -350,7 +350,7 @@ return [
         'code' => <<<'BLADE'
         <x-nx::stacked-accordion type="multiple" :value="$state['shipping'] ?? ['express']"
             wire:model.live="state.shipping" :items="[
-                ['id' => 'express', 'title' => 'پیک فوری', 'subtitle' => 'تهران، زیر ۲ ساعت', 'icon' => 'zap',
+                ['id' => 'express', 'title' => 'پیک فوری', 'subtitle' => 'استانبول، زیر ۲ ساعت', 'icon' => 'zap',
                  'content' => 'ارسال همان روز با پیک؛ هزینه ۴۹٬۰۰۰ تومان.'],
                 ['id' => 'post', 'title' => 'پست پیشتاز', 'subtitle' => 'سراسر کشور، ۲ تا ۴ روز', 'icon' => 'globe',
                  'content' => 'مطمئن و ارزان — رایگان روی سفارش‌های بالای یک میلیون.'],

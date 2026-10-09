@@ -72,7 +72,7 @@
         <div class="pg-phone">
             <div class="pg-phone-scroll">
                 <div class="pg-feed">
-                    @foreach (['Kyoto · 京都', 'Lisboa', 'Marrakech · مراكش', 'Reykjavík', 'Tehran · تهران', 'Seoul · 서울', 'Oaxaca', 'Istanbul'] as $city)
+                    @foreach (['Kyoto · 京都', 'Lisboa', 'Marrakech · مراكش', 'Reykjavík', 'Istanbul · استانبول', 'Seoul · 서울', 'Oaxaca', 'Istanbul'] as $city)
                         <div class="pg-post">{{ $city }}</div>
                     @endforeach
                 </div>
