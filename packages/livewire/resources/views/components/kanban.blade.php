@@ -110,7 +110,7 @@
                                     aria-label="{{ str_replace(':name', $card['title'], $labels['menuFor']) }}">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" aria-hidden="true"><path d="M12 5.25h.01M12 12h.01M12 18.75h.01"/></svg>
                                 </button>
-                                <div class="nx-kanban-menu" id="{{ $menuId }}" role="menu" wire:ignore.self
+                                <div class="nx-kanban-menu" id="{{ $menuId }}" role="menu" popover wire:ignore.self
                                     x-on:toggle="menuToggle(@js($cardId), $event)" x-on:keydown="menuKey($event)">
                                     @foreach ($card['actions'] as $action)
                                         <button type="button" class="nx-kanban-menu-choice" role="menuitem" @if ($action['danger']) data-danger @endif

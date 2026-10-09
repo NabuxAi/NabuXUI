@@ -148,7 +148,7 @@
                                 x-bind:aria-selected="active === @js($id) ? 'true' : 'false'"
                                 aria-label="{{ $conversation['name'] }}{{ $unreadShown ? ' ('.NabuXUI::formatNumber($conversation['unread'], 0, $locale).' '.$say('unread').')' : '' }}"
                                 x-bind:aria-label="unreadOf(@js($id)) > 0
-                                    ? @js($conversation['name']).' ('.countOf(@js($id)).' '.@js($say('unread')).')'
+                                    ? @js($conversation['name']) + ' (' + countOf(@js($id)) + ' ' + @js($say('unread')) + ')'
                                     : @js($conversation['name'])"
                                 x-on:click="select(@js($id))">
                                 <x-nx::avatar :name="$conversation['name']" :src="$conversation['avatar']" :status="$conversation['status']" />
@@ -190,7 +190,7 @@
                             @if ($conversation['role'])<span class="nx-chat-head-role">{{ $conversation['role'] }}</span>@endif
                         </div>
                     </header>
-                    <div class="nx-chat-thread" role="log" aria-live="polite" aria-label="{{ $say('messages') }}" data-nx-reveal="group" x-data x-nx-reveal.group>
+                    <div class="nx-chat-thread" role="log" aria-live="polite" aria-label="{{ $say('messages') }}">
                         @foreach ($conversation['messages'] as $message)
                             @php
                                 $day = $dayLabel($message['time']);
