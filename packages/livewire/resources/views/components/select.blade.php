@@ -14,7 +14,7 @@
         'aria-invalid' => $error ? 'true' : null,
         'required' => $required ?: null,
     ]) }}>
-        @if ($placeholder)<option value="" disabled @selected(! $attributes->has('value'))>{{ $placeholder }}</option>@endif
+        @if ($placeholder)<option value="" @selected(! $attributes->has('value'))>{{ $placeholder }}</option>@endif
         @foreach ($list as $option)
             <option value="{{ $option['value'] }}" @disabled($option['disabled'] ?? false)>{{ $option['label'] }}</option>
         @endforeach
