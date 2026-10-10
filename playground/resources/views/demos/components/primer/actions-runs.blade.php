@@ -20,11 +20,12 @@
     };
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap');
     .pra-root {
         --pra-canvas: #ffffff; --pra-subtle: #f6f8fa; --pra-fg: #1f2328; --pra-muted: #59636e;
         --pra-border: #d1d9e0; --pra-accent: #0969da;
         --pra-success: #1a7f37; --pra-danger: #cf222e; --pra-attention: #9a6700; --pra-neutral: #59636e;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+        font-family: 'Figtree', 'Inter', 'Vazirmatn', sans-serif;
         color: var(--pra-fg);
     }
     html[data-theme="dark"] .pra-root {

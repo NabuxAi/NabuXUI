@@ -18,22 +18,23 @@
         return '<svg aria-hidden="true" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="display:block">' . ($p[$name] ?? '') . '</svg>';
     };
     $rows = [
-        ['state' => 'open', 'title' => $say('Stat cards overflow at 375px on the analytics page', 'کارت‌های آمار در صفحهٔ تحلیل‌ها روی ۳۷۵ پیکسل سرریز می‌کنند'), 'meta' => $say('#412 opened 3 days ago by Sara', '#۴۱۲ سه روز پیش توسط سارا باز شد'), 'labels' => [['bug', 'باگ', '#d73a4a'], ['priority: high', 'اولویت: بالا', '#d93f0b']], 'who' => ['س', 'م'], 'talk' => 4],
-        ['state' => 'open', 'title' => $say('Dark theme: divider lines disappear on invoices', 'تم تیره: خطوط جداکننده در فاکتورها دیده نمی‌شوند'), 'meta' => $say('#407 opened 6 days ago by Milad', '#۴۰۷ شش روز پیش توسط میلاد باز شد'), 'labels' => [['design', 'طراحی', '#0e8a16'], ['dark-theme', 'تم تیره', '#5319e7']], 'who' => ['م'], 'talk' => 9],
-        ['state' => 'open', 'title' => $say('Add Persian date picker to the reports filter', 'افزودن تاریخ‌گیر شمسی به فیلتر گزارش‌ها'), 'meta' => $say('#391 opened last week by Parisa', '#۳۹۱ هفتهٔ پیش توسط پریسا باز شد'), 'labels' => [['enhancement', 'بهبود', '#a2eeef'], ['good first issue', 'شروع خوب', '#7057ff']], 'who' => ['پ', 'ن', 'ک'], 'talk' => 2],
-        ['state' => 'closed', 'title' => $say('Email digest sends twice on Sundays', 'خلاصهٔ ایمیل یکشنبه‌ها دوبار ارسال می‌شود'), 'meta' => $say('#388 closed 2 days ago by Milad', '#۳۸۸ دو روز پیش توسط میلاد بسته شد'), 'labels' => [['bug', 'باگ', '#d73a4a']], 'who' => ['م'], 'talk' => 12],
-        ['state' => 'closed', 'title' => $say('Rewrite the CSV export streaming', 'بازنویسی استریم خروجی CSV'), 'meta' => $say('#362 closed last week by Nima', '#۳۶۲ هفتهٔ پیش توسط نیما بسته شد'), 'labels' => [['tech-debt', 'بدهی فنی', '#bfd4f2']], 'who' => ['ن'], 'talk' => 5],
-        ['state' => 'closed', 'title' => $say('Keyboard focus lost after closing the modal', 'پس از بستن مودال فوکوس کیبورد گم می‌شود'), 'meta' => $say('#349 closed 3 weeks ago by Sara', '#۳۴۹ سه هفته پیش توسط سارا بسته شد'), 'labels' => [['accessibility', 'دسترس‌پذیری', '#008672']], 'who' => ['س', 'آ'], 'talk' => 7],
+        ['state' => 'open', 'title' => $say('Stat cards overflow at 375px on the analytics page', 'کارت‌های آمار در صفحهٔ تحلیل‌ها روی ۳۷۵ پیکسل سرریز می‌کنند'), 'meta' => $say('#412 opened 3 days ago by Sara', '#۴۱۲ سه روز پیش توسط سارا باز شد'), 'labels' => [['bug', 'باگ', '#d73a4a'], ['priority: high', 'اولویت: بالا', '#d93f0b']], 'who' => [$say('S', 'س'), $say('M', 'م')], 'talk' => 4],
+        ['state' => 'open', 'title' => $say('Dark theme: divider lines disappear on invoices', 'تم تیره: خطوط جداکننده در فاکتورها دیده نمی‌شوند'), 'meta' => $say('#407 opened 6 days ago by Milad', '#۴۰۷ شش روز پیش توسط میلاد باز شد'), 'labels' => [['design', 'طراحی', '#0e8a16'], ['dark-theme', 'تم تیره', '#5319e7']], 'who' => [$say('M', 'م')], 'talk' => 9],
+        ['state' => 'open', 'title' => $say('Add Persian date picker to the reports filter', 'افزودن تاریخ‌گیر شمسی به فیلتر گزارش‌ها'), 'meta' => $say('#391 opened last week by Parisa', '#۳۹۱ هفتهٔ پیش توسط پریسا باز شد'), 'labels' => [['enhancement', 'بهبود', '#a2eeef'], ['good first issue', 'شروع خوب', '#7057ff']], 'who' => [$say('P', 'پ'), $say('N', 'ن'), $say('K', 'ک')], 'talk' => 2],
+        ['state' => 'closed', 'title' => $say('Email digest sends twice on Sundays', 'خلاصهٔ ایمیل یکشنبه‌ها دوبار ارسال می‌شود'), 'meta' => $say('#388 closed 2 days ago by Milad', '#۳۸۸ دو روز پیش توسط میلاد بسته شد'), 'labels' => [['bug', 'باگ', '#d73a4a']], 'who' => [$say('M', 'م')], 'talk' => 12],
+        ['state' => 'closed', 'title' => $say('Rewrite the CSV export streaming', 'بازنویسی استریم خروجی CSV'), 'meta' => $say('#362 closed last week by Nima', '#۳۶۲ هفتهٔ پیش توسط نیما بسته شد'), 'labels' => [['tech-debt', 'بدهی فنی', '#bfd4f2']], 'who' => [$say('N', 'ن')], 'talk' => 5],
+        ['state' => 'closed', 'title' => $say('Keyboard focus lost after closing the modal', 'پس از بستن مودال فوکوس کیبورد گم می‌شود'), 'meta' => $say('#349 closed 3 weeks ago by Sara', '#۳۴۹ سه هفته پیش توسط سارا بسته شد'), 'labels' => [['accessibility', 'دسترس‌پذیری', '#008672']], 'who' => [$say('S', 'س'), $say('A', 'آ')], 'talk' => 7],
     ];
     $openCount = count(array_filter($rows, fn ($r) => $r['state'] === 'open'));
     $closedCount = count($rows) - $openCount;
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap');
     .pri-root {
         --pri-canvas: #ffffff; --pri-subtle: #f6f8fa; --pri-fg: #1f2328; --pri-muted: #59636e;
         --pri-border: #d1d9e0; --pri-accent: #0969da; --pri-success: #1a7f37; --pri-done: #8250df;
         --pri-neutral: #59636e;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+        font-family: 'Figtree', 'Inter', 'Vazirmatn', sans-serif;
         color: var(--pri-fg);
     }
     html[data-theme="dark"] .pri-root {

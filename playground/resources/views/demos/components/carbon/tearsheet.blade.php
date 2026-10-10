@@ -11,13 +11,14 @@
     $num = fn (string $s): string => $fa ? strtr($s, ['0' => '۰', '1' => '۱', '2' => '۲', '3' => '۳', '4' => '۴', '5' => '۵', '6' => '۶', '7' => '۷', '8' => '۸', '9' => '۹']) : $s;
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
     .cbts-root {
         --cbts-accent: #0f62fe; --cbts-accent-hover: #0353e9;
         --cbts-text: #161616; --cbts-text-secondary: #525252;
         --cbts-border: #e0e0e0; --cbts-border-strong: #8d8d8d;
         --cbts-layer: #f4f4f4; --cbts-layer-2: #e8e8e8; --cbts-page: #ffffff;
         --cbts-danger: #da1e28;
-        --cbts-font: 'IBM Plex Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        --cbts-font: 'IBM Plex Sans', 'Inter', 'Vazirmatn', sans-serif;
         font-family: var(--cbts-font);
         display: grid; gap: 2rem; justify-items: center;
     }
@@ -168,9 +169,9 @@
                     <h3>{{ $say('Storage', 'فضای ذخیره') }}</h3>
                     <p>{{ $say('Three volumes are attached to the app service. Peak write throughput this week: 240 MB/s.', 'سه دیسک به سرویس برنامه متصل است. بیشینهٔ توان نوشتن این هفته: ۲۴۰ مگابایت بر ثانیه.') }}</p>
                     <div class="cbts-app-cards">
-                        <div class="cbts-app-card"><b>۲۰۰GB</b><small>{{ $say('media volume', 'دیسک رسانه') }}</small></div>
-                        <div class="cbts-app-card"><b>۸۰GB</b><small>{{ $say('database volume', 'دیسک پایگاه‌داده') }}</small></div>
-                        <div class="cbts-app-card"><b>۲۰GB</b><small>{{ $say('backup volume', 'دیسک پشتیبان') }}</small></div>
+                        <div class="cbts-app-card"><b>{{ $num('200') }}GB</b><small>{{ $say('media volume', 'دیسک رسانه') }}</small></div>
+                        <div class="cbts-app-card"><b>{{ $num('80') }}GB</b><small>{{ $say('database volume', 'دیسک پایگاه‌داده') }}</small></div>
+                        <div class="cbts-app-card"><b>{{ $num('20') }}GB</b><small>{{ $say('backup volume', 'دیسک پشتیبان') }}</small></div>
                     </div>
                 </div>
             </div>
@@ -216,7 +217,7 @@
                                     <input type="radio" value="fra" x-model="region" style="accent-color: var(--cbts-accent)"> {{ $say('Frankfurt — same as the app', 'فرانکفورت — هم‌ناحیهٔ برنامه') }}
                                 </label>
                                 <label style="display: flex; align-items: center; gap: .5rem; font-size: .875rem; color: var(--cbts-text)">
-                                    <input type="radio" value="dub" x-model="region" style="accent-color: var(--cbts-accent)"> {{ $say('Dublin — cheaper, +۷ms', 'دوبلین — ارزان‌تر، ۷+ms') }}
+                                    <input type="radio" value="dub" x-model="region" style="accent-color: var(--cbts-accent)"> {{ $say('Dublin — cheaper, +' . $num('7') . 'ms', 'دوبلین — ارزان‌تر، ۷+ms') }}
                                 </label>
                                 <label style="display: flex; align-items: center; gap: .5rem; font-size: .875rem; color: var(--cbts-text)">
                                     <input type="radio" value="sin" x-model="region" style="accent-color: var(--cbts-accent)"> {{ $say('Singapore — for the APAC mirror', 'سنگاپور — برای آینهٔ آسیا') }}
@@ -227,15 +228,15 @@
                         <div class="cbts-form" x-show="step === 3" x-cloak>
                             <dl class="cbts-review">
                                 <div><dt>{{ $say('Volume name', 'نام دیسک') }}</dt><dd x-text="name"></dd></div>
-                                <div><dt>{{ $say('Size', 'اندازه') }}</dt><dd><span x-text="Number(size || 0).toLocaleString('fa-IR')"></span> GB</dd></div>
+                                <div><dt>{{ $say('Size', 'اندازه') }}</dt><dd><span x-text="Number(size || 0).toLocaleString('{{ $fa ? 'fa-IR' : 'en-US' }}')"></span> GB</dd></div>
                                 <div><dt>{{ $say('Region', 'ناحیه') }}</dt><dd x-text="zone()"></dd></div>
-                                <div><dt>{{ $say('Monthly cost', 'بهای ماهانه') }}</dt><dd><span x-text="Math.round((size || 0) * 420).toLocaleString('fa-IR')"></span> {{ $say('toman', 'تومان') }}</dd></div>
+                                <div><dt>{{ $say('Monthly cost', 'بهای ماهانه') }}</dt><dd><span x-text="Math.round((size || 0) * 420).toLocaleString('{{ $fa ? 'fa-IR' : 'en-US' }}')"></span> {{ $say('€', 'تومان') }}</dd></div>
                             </dl>
                         </div>
                     </div>
 
                     <footer class="cbts-footer">
-                        <button type="button" class="cbts-btn" data-primary x-on:click="next()" x-text="step === 3 ? '{{ $say('Finish', 'پایان') }}' : '{{ $say('Next', 'بعدی') }}'">بعدی</button>
+                        <button type="button" class="cbts-btn" data-primary x-on:click="next()" x-text="step === 3 ? '{{ $say('Finish', 'پایان') }}' : '{{ $say('Next', 'بعدی') }}'">{{ $say('Next', 'بعدی') }}</button>
                         <button type="button" class="cbts-btn" data-secondary x-show="step > 1" x-cloak x-on:click="go(step - 1)">{{ $say('Previous', 'پیشین') }}</button>
                         <button type="button" class="cbts-btn" data-ghost x-on:click="close()">{{ $say('Cancel', 'انصراف') }}</button>
                     </footer>

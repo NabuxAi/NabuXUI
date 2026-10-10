@@ -11,12 +11,13 @@
     $jsf = fn (string $s): string => str_replace('"', '&quot;', json_encode($s, JSON_UNESCAPED_UNICODE));
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap');
     .sld-root {
         --sld-blue: #0176D3; --sld-blue-soft: color-mix(in srgb, #0176D3 8%, #FFFFFF);
         --sld-navy: #0B5CAB; --sld-green: #04844B; --sll-red: #BA0517; --sld-red: #BA0517;
         --sld-text: #181818; --sld-weak: #444444; --sld-muted: #706E6B;
         --sld-border: #DDDBDA; --sld-bg: #F3F3F3; --sld-card: #FFFFFF;
-        font-family: 'Salesforce Sans', -apple-system, 'Segoe UI', Roboto, sans-serif;
+        font-family: 'Source Sans 3', 'Inter', 'Vazirmatn', ui-sans-serif, system-ui, sans-serif;
         color: var(--sld-text);
         display: grid; gap: 1.5rem;
     }
@@ -136,10 +137,10 @@
                 <span style="opacity: .8">{{ $say('My open opportunities', 'فرصت‌های باز من') }}</span>
             </div>
             <div class="sld-body">
-                <div class="sld-rec"><div><b>{{ $say('Nabu annual license', 'لایسنس سالانهٔ نابو') }}</b><small>{{ $say('Negotiation · ۲.۴B IRR', 'مذاکره · ۲٫۴ میلیارد ریال') }}</small></div><span class="sld-badge-card">{{ $say('Hot', 'داغ') }}</span></div>
-                <div class="sld-rec"><div><b>{{ $say('Zagros factory rollout', 'استقرار کارخانه زاگرس') }}</b><small>{{ $say('Proposal · ۹۸۰M IRR', 'پیشنهاد · ۹۸۰ میلیون ریال') }}</small></div><span class="sld-badge-card">{{ $say('On track', 'طبق برنامه') }}</span></div>
-                <div class="sld-rec"><div><b>{{ $say('Danial retail renewal', 'تمدید خرده‌فروشی دانیال') }}</b><small>{{ $say('Qualification · ۴۵۰M IRR', 'ارزیابی · ۴۵۰ میلیون ریال') }}</small></div><span class="sld-badge-card">{{ $say('At risk', 'در معرض خطر') }}</span></div>
-                <div class="sld-rec"><div><b>{{ $say('Hara logistics pilot', 'پایلوت لجستیک هارا') }}</b><small>{{ $say('Discovery · ۱۲۰M IRR', 'کشف · ۱۲۰ میلیون ریال') }}</small></div><span class="sld-badge-card">{{ $say('New', 'تازه') }}</span></div>
+                <div class="sld-rec"><div><b>{{ $say('Nabu annual license', 'لایسنس سالانهٔ نابو') }}</b><small>{{ $say('Negotiation · €240M', 'مذاکره · ۲٫۴ میلیارد ریال') }}</small></div><span class="sld-badge-card">{{ $say('Hot', 'داغ') }}</span></div>
+                <div class="sld-rec"><div><b>{{ $say('Berlin plant rollout', 'استقرار کارخانه استانبول') }}</b><small>{{ $say('Proposal · €98M', 'پیشنهاد · ۹۸ میلیون یورو') }}</small></div><span class="sld-badge-card">{{ $say('On track', 'طبق برنامه') }}</span></div>
+                <div class="sld-rec"><div><b>{{ $say('Rotterdam retail renewal', 'تمدید خرده‌فروشی دانیال') }}</b><small>{{ $say('Qualification · €45M', 'ارزیابی · ۴۵۰ میلیون ریال') }}</small></div><span class="sld-badge-card">{{ $say('At risk', 'در معرض خطر') }}</span></div>
+                <div class="sld-rec"><div><b>{{ $say('Istanbul logistics pilot', 'پایلوت لجستیک هارا') }}</b><small>{{ $say('Discovery · €12M', 'کشف · ۱۲۰ میلیون ریال') }}</small></div><span class="sld-badge-card">{{ $say('New', 'تازه') }}</span></div>
             </div>
 
             <div class="sld-panelzone">
@@ -165,9 +166,9 @@
                     <div class="sld-panel-head"><x-nx::icon name="bell" /> {{ $say('9 unread', '۹ ناخوانده') }}
                         <button type="button" x-on:click="open = null" aria-label="{{ $say('Close', 'بستن') }}">✕</button></div>
                     <div class="sld-panel-body">
-                        <p class="sld-note" style="margin: 0"><b>{{ $say('Approval requested', 'درخواست تأیید') }}</b><span>{{ $say('۲.۴B discount needs a manager sign-off.', 'تخفیف ۲٫۴ میلیاردی امضای مدیر می‌خواهد.') }}</span></p>
-                        <p class="sld-note" style="margin: 0"><b>{{ $say('Acme replied', 'آکمی پاسخ داد') }}</b><span>{{ $say('New comment on the quote — ۲ min ago.', 'کامنت تازه روی پیش‌فاکتور — ۲ دقیقه پیش.') }}</span></p>
-                        <p class="sld-note" style="margin: 0"><b>{{ $say('Meeting moved', 'جلسه جابه‌جا شد') }}</b><span>{{ $say('Demo now Thursday ۱۰:۳۰.', 'دمو حالا پنجشنبه ۱۰:۳۰ است.') }}</span></p>
+                        <p class="sld-note" style="margin: 0"><b>{{ $say('Approval requested', 'درخواست تأیید') }}</b><span>{{ $say('The €24M discount needs a manager sign-off.', 'تخفیف ۲٫۴ میلیاردی امضای مدیر می‌خواهد.') }}</span></p>
+                        <p class="sld-note" style="margin: 0"><b>{{ $say('Acme replied', 'آکمی پاسخ داد') }}</b><span>{{ $say('New comment on the quote — 2 min ago.', 'کامنت تازه روی پیش‌فاکتور — ۲ دقیقه پیش.') }}</span></p>
+                        <p class="sld-note" style="margin: 0"><b>{{ $say('Meeting moved', 'جلسه جابه‌جا شد') }}</b><span>{{ $say('Demo now Thursday 10:30.', 'دمو حالا پنجشنبه ۱۰:۳۰ است.') }}</span></p>
                     </div>
                 </div>
 
@@ -191,7 +192,7 @@
                     <div class="sld-panel-head"><x-nx::icon name="folder" /> {{ $say('Recent files', 'فایل‌های اخیر') }}
                         <button type="button" x-on:click="open = null" aria-label="{{ $say('Close', 'بستن') }}">✕</button></div>
                     <div class="sld-panel-body">
-                        <p class="sld-note" style="margin: 0"><b>{{ $say('Quote-1404.pdf', 'پیش‌فاکتور-۱۴۰۴.pdf') }}</b><span>{{ $say('248 KB · shared with Acme', '۲۴۸ کیلوبایت · هم‌رسانده با آکمی') }}</span></p>
+                        <p class="sld-note" style="margin: 0"><b>{{ $say('Quote-2026.pdf', 'پیش‌فاکتور-۱۴۰۴.pdf') }}</b><span>{{ $say('248 KB · shared with Acme', '۲۴۸ کیلوبایت · هم‌رسانده با آکمی') }}</span></p>
                         <p class="sld-note" style="margin: 0"><b>{{ $say('Pricing sheet Q4.xlsx', 'جدول قیمت پاییز.xlsx') }}</b><span>{{ $say('92 KB · edited by Reza', '۹۲ کیلوبایت · ویرایش رضا') }}</span></p>
                     </div>
                 </div>
@@ -240,12 +241,12 @@
         </div>
         <div class="sld-spec" style="inline-size: 100%">
             <div class="sld-spec-cell">
-                <span class="sld-spec-card" aria-hidden="true"><x-nx::icon name="bell" /><span class="sld-count">۹</span></span>
-                <small>badge = ۹</small>
+                <span class="sld-spec-card" aria-hidden="true"><x-nx::icon name="bell" /><span class="sld-count">{{ $fa ? '۹' : '9' }}</span></span>
+                <small>badge = {{ $fa ? '۹' : '9' }}</small>
             </div>
             <div class="sld-spec-cell">
-                <span class="sld-spec-card" aria-hidden="true"><x-nx::icon name="message" /><span class="sld-count">۹+</span></span>
-                <small>badge = ۹+</small>
+                <span class="sld-spec-card" aria-hidden="true"><x-nx::icon name="message" /><span class="sld-count">{{ $fa ? '۹+' : '9+' }}</span></span>
+                <small>badge = {{ $fa ? '۹+' : '9+' }}</small>
             </div>
             <div class="sld-spec-cell">
                 <span class="sld-spec-card" data-open="true" style="background: color-mix(in srgb, #FFFFFF 12%, var(--sld-navy))" aria-hidden="true"><x-nx::icon name="users" /></span>

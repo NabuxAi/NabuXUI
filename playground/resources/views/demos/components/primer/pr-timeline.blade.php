@@ -20,11 +20,12 @@
     };
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap');
     .prt-root {
         --prt-canvas: #ffffff; --prt-subtle: #f6f8fa; --prt-fg: #1f2328; --prt-muted: #59636e;
         --prt-border: #d1d9e0; --prt-accent: #0969da;
         --prt-success: #1a7f37; --prt-done: #8250df; --prt-danger: #cf222e; --prt-attention: #9a6700;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+        font-family: 'Figtree', 'Inter', 'Vazirmatn', sans-serif;
         color: var(--prt-fg);
     }
     html[data-theme="dark"] .prt-root {
@@ -117,7 +118,7 @@
             <p class="prt-mergeinto">
                 <b>{{ $say('Sara', 'سارا') }}</b>
                 {{ $say('wants to merge 3 commits into', 'می‌خواهد ۳ کامیت را در') }}
-                <b>main</b> {{ $say('from', 'از') }} <b>feature/pdf</b> {{ $say('merge کند', '') }}
+                <b>main</b> {{ $say('from', 'از') }} <b>feature/pdf</b>{{ $say('', ' ادغام کند') }}
             </p>
 
             <div class="prt-item">

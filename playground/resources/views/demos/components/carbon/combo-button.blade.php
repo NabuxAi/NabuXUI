@@ -10,6 +10,7 @@
     $num = fn (string $s): string => $fa ? strtr($s, ['0' => '۰', '1' => '۱', '2' => '۲', '3' => '۳', '4' => '۴', '5' => '۵', '6' => '۶', '7' => '۷', '8' => '۸', '9' => '۹']) : $s;
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
     .cbcb-root {
         --cbcb-primary: #0f62fe; --cbcb-primary-hover: #0353e9; --cbcb-primary-active: #0043ce;
         --cbcb-secondary: #393939; --cbcb-secondary-hover: #4c4c4c;
@@ -17,7 +18,7 @@
         --cbcb-text: #161616; --cbcb-text-secondary: #525252;
         --cbcb-border: #e0e0e0; --cbcb-border-strong: #8d8d8d;
         --cbcb-layer: #f4f4f4; --cbcb-layer-hover: #e8e8e8;
-        --cbcb-font: 'IBM Plex Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        --cbcb-font: 'IBM Plex Sans', 'Inter', 'Vazirmatn', sans-serif;
         font-family: var(--cbcb-font);
         display: grid; gap: 2rem; justify-items: center;
     }
@@ -107,7 +108,7 @@
         <div class="cbcb" data-kind="primary" x-bind:data-open="open.toString()"
             x-on:keydown.escape.window="open = false"
             x-on:click.outside="open = false">
-            <button type="button" class="cbcb-main" x-on:click="run('{{ $say('Build ۸۴۲ deployed to production', 'بیلد ۸۴۲ روی تولید استقرار یافت') }}')">
+            <button type="button" class="cbcb-main" x-on:click="run('{{ $say('Build ' . $num('842') . ' deployed to production', 'بیلد ۸۴۲ روی تولید استقرار یافت') }}')">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="M5 12l7 7 7-7"/></svg>
                 {{ $say('Deploy', 'استقرار') }}
             </button>
@@ -115,10 +116,10 @@
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
             </button>
             <ul class="cbcb-menu" role="menu" aria-label="{{ $say('Alternate deploy actions', 'اقدام‌های جایگزین استقرار') }}">
-                <li role="none"><button type="button" role="menuitem" x-on:click="run('{{ $say('Preview build ۸۴۲ staged', 'بیلد ۸۴۲ در محیط آزمایشی نشست') }}')">{{ $say('Deploy to staging', 'استقرار آزمایشی') }}</button></li>
+                <li role="none"><button type="button" role="menuitem" x-on:click="run('{{ $say('Preview build ' . $num('842') . ' staged', 'بیلد ۸۴۲ در محیط آزمایشی نشست') }}')">{{ $say('Deploy to staging', 'استقرار آزمایشی') }}</button></li>
                 <li role="none"><button type="button" role="menuitem" x-on:click="run('{{ $say('Migrations ran in 1.8s', 'مهاجرت‌ها در ۱٫۸ ثانیه اجرا شد') }}')">{{ $say('Run migrations', 'اجرای مهاجرت‌ها') }}</button></li>
                 <li role="none"><button type="button" role="menuitem" x-on:click="run('{{ $say('Application cache cleared', 'کش برنامه پاک شد') }}')">{{ $say('Clear cache', 'پاک‌سازی کش') }}</button></li>
-                <li role="none"><button type="button" role="menuitem" x-on:click="run('{{ $say('۲۱۴ tests passed', '۲۱۴ تست سبز شد') }}')">{{ $say('Run test suite', 'اجرای تست‌ها') }}</button></li>
+                <li role="none"><button type="button" role="menuitem" x-on:click="run('{{ $say($num('214') . ' tests passed', '۲۱۴ تست سبز شد') }}')">{{ $say('Run test suite', 'اجرای تست‌ها') }}</button></li>
             </ul>
         </div>
 
@@ -141,15 +142,15 @@
             </p>
             <div class="cbcb" data-kind="secondary" x-bind:data-open="open.toString()" x-data="{ open: false }"
                 x-on:keydown.escape.window="open = false" x-on:click.outside="open = false">
-                <button type="button" class="cbcb-main" x-on:click="$dispatch('cbcb:secondary-run', '{{ $say('Backup started — snapshot ۱۹', 'پشتیبان‌گیری آغاز شد — اسنپ‌شات ۱۹') }}')">
+                <button type="button" class="cbcb-main" x-on:click="$dispatch('cbcb:secondary-run', '{{ $say('Backup started — snapshot ' . $num('19'), 'پشتیبان‌گیری آغاز شد — اسنپ‌شات ۱۹') }}')">
                     {{ $say('Back up now', 'پشتیبان‌گیری فوری') }}
                 </button>
                 <button type="button" class="cbcb-arrow" x-on:click="open = !open" x-bind:aria-expanded="open.toString()" aria-haspopup="menu" aria-label="{{ $say('More backup actions', 'اقدام‌های بیشتر پشتیبان‌گیری') }}">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
                 </button>
                 <ul class="cbcb-menu" role="menu">
-                    <li role="none"><button type="button" role="menuitem" x-on:click="$dispatch('cbcb:secondary-run', '{{ $say('Restore point selected — ۰۹:۱۴', 'نقطهٔ بازیابی انتخاب شد — ۰۹:۱۴') }}')">{{ $say('Restore from snapshot', 'بازیابی از اسنپ‌شات') }}</button></li>
-                    <li role="none"><button type="button" role="menuitem" x-on:click="$dispatch('cbcb:secondary-run', '{{ $say('Snapshot ۱۸ downloaded (2.4GB)', 'اسنپ‌شات ۱۸ دانلود شد (۲٫۴GB)') }}')">{{ $say('Download latest', 'دانلود آخرین نسخه') }}</button></li>
+                    <li role="none"><button type="button" role="menuitem" x-on:click="$dispatch('cbcb:secondary-run', '{{ $say('Restore point selected — ' . $num('09:14'), 'نقطهٔ بازیابی انتخاب شد — ۰۹:۱۴') }}')">{{ $say('Restore from snapshot', 'بازیابی از اسنپ‌شات') }}</button></li>
+                    <li role="none"><button type="button" role="menuitem" x-on:click="$dispatch('cbcb:secondary-run', '{{ $say('Snapshot ' . $num('18') . ' downloaded (2.4GB)', 'اسنپ‌شات ۱۸ دانلود شد (۲٫۴GB)') }}')">{{ $say('Download latest', 'دانلود آخرین نسخه') }}</button></li>
                 </ul>
             </div>
             <div class="cbcb-log" style="inline-size: 100%" role="status" x-data="{ msg: null }" x-on:cbcb:secondary-run.window="msg = $event.detail">

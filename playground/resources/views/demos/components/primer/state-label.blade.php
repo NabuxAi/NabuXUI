@@ -21,11 +21,12 @@
     };
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap');
     .prs-root {
         --prs-canvas: #ffffff; --prs-subtle: #f6f8fa; --prs-fg: #1f2328; --prs-muted: #59636e;
         --prs-border: #d1d9e0; --prs-accent: #0969da;
         --prs-success: #1a7f37; --prs-done: #8250df; --prs-danger: #cf222e; --prs-neutral: #6e7781;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+        font-family: 'Figtree', 'Inter', 'Vazirmatn', sans-serif;
         color: var(--prs-fg);
     }
     html[data-theme="dark"] .prs-root {

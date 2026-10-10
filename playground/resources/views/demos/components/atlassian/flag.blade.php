@@ -9,12 +9,13 @@
     $say = fn (string $en, string $faText) => $fa ? $faText : $en;
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     .atfl-root {
         --atfl-blue: #0052CC; --atfl-ink: #172B4D; --atfl-ink-strong: #091E42; --atfl-muted: #626F86;
         --atfl-subtle: #44546F; --atfl-border: #DFE1E6; --atfl-hover: #F1F2F4; --atfl-surface: #FFFFFF; --atfl-page: #F7F8F9;
         --atfl-info-solid: #0052CC; --atfl-ok-solid: #1F845A; --atfl-warn-solid: #B38600; --atfl-err-solid: #B40000;
         --atfl-err-ink: #AE2A19;
-        font-family: Inter, system-ui, sans-serif; color: var(--atfl-ink);
+        font-family: 'Inter', 'Vazirmatn', sans-serif; color: var(--atfl-ink);
     }
     html[data-theme="dark"] .atfl-root {
         --atfl-blue: #388BFF; --atfl-ink: #C7D1DB; --atfl-ink-strong: #E4EAF0; --atfl-muted: #8590A2;
@@ -37,9 +38,9 @@
                   background: var(--atfl-page); padding: 1.25rem; display: grid; gap: .9rem; align-content: start; }
     .atfl-issue { border: 1px solid var(--atfl-border); border-radius: 6px; background: var(--atfl-surface);
                   padding: 1rem 1.1rem; display: grid; gap: .75rem; }
-    .atfl-issue h4 { margin: 0; font: 500 1.05rem/1.3 "Charlie Display", Inter, system-ui; color: var(--atfl-ink-strong); }
-    .atfl-issue h4 small { font: 600 .72rem Inter, system-ui; color: var(--atfl-blue); margin-inline-end: .4rem; }
-    .atfl-line { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; font: 400 .8rem/1.5 Inter, system-ui; color: var(--atfl-subtle); }
+    .atfl-issue h4 { margin: 0; font: 500 1.05rem/1.3 "Charlie Display", Inter, Vazirmatn, system-ui; color: var(--atfl-ink-strong); }
+    .atfl-issue h4 small { font: 600 .72rem Inter, Vazirmatn, system-ui; color: var(--atfl-blue); margin-inline-end: .4rem; }
+    .atfl-line { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; font: 400 .8rem/1.5 Inter, Vazirmatn, system-ui; color: var(--atfl-subtle); }
     .atfl-toggle { position: relative; inline-size: 34px; block-size: 18px; border-radius: 999px; background: var(--atfl-hover);
                    border: 1px solid var(--atfl-border); cursor: pointer; padding: 0; transition: background .2s ease, border-color .2s ease; }
     .atfl-toggle::after { content: ''; position: absolute; inset-block-start: 1px; inset-inline-start: 1px; inline-size: 14px; aspect-ratio: 1;
@@ -50,7 +51,7 @@
     [dir='rtl'] .atfl-toggle[aria-checked='true']::after { translate: -14px 0; }
     .atfl-btns { display: flex; flex-wrap: wrap; gap: .5rem; }
     .atfl-btn { block-size: 2rem; padding-inline: .8rem; border: none; border-radius: 3px; cursor: pointer;
-                font: 500 .8rem/1 Inter, system-ui; color: var(--atfl-ink-strong); background: var(--atfl-hover); transition: background .15s ease; }
+                font: 500 .8rem/1 Inter, Vazirmatn, system-ui; color: var(--atfl-ink-strong); background: var(--atfl-hover); transition: background .15s ease; }
     .atfl-btn:hover { background: color-mix(in srgb, var(--atfl-hover) 70%, var(--atfl-muted)); }
     .atfl-btn[data-primary] { background: var(--atfl-blue); color: #fff; }
     .atfl-btn[data-primary]:hover { background: color-mix(in srgb, var(--atfl-blue) 88%, black); }
@@ -68,9 +69,9 @@
     .atfl[data-tone='warning'] .atfl-ic { background: var(--atfl-warn-solid); }
     .atfl[data-tone='error'] .atfl-ic { background: var(--atfl-err-solid); }
     .atfl-body { flex: 1 1 auto; min-inline-size: 0; }
-    .atfl-body h5 { margin: 0; font: 600 .82rem/1.4 Inter, system-ui; color: var(--atfl-ink-strong); }
-    .atfl-body p { margin: .15rem 0 .35rem; font: 400 .76rem/1.55 Inter, system-ui; color: var(--atfl-subtle); }
-    .atfl-body button { border: none; background: none; padding: 0; cursor: pointer; font: 600 .76rem Inter, system-ui; color: var(--atfl-blue); }
+    .atfl-body h5 { margin: 0; font: 600 .82rem/1.4 Inter, Vazirmatn, system-ui; color: var(--atfl-ink-strong); }
+    .atfl-body p { margin: .15rem 0 .35rem; font: 400 .76rem/1.55 Inter, Vazirmatn, system-ui; color: var(--atfl-subtle); }
+    .atfl-body button { border: none; background: none; padding: 0; cursor: pointer; font: 600 .76rem Inter, Vazirmatn, system-ui; color: var(--atfl-blue); }
     .atfl-body button:hover { text-decoration: underline; }
     .atfl[data-tone='error'] .atfl-body button { color: var(--atfl-err-ink); }
     .atfl-x { flex: none; display: grid; place-items: center; inline-size: 1.4rem; aspect-ratio: 1;
@@ -86,7 +87,7 @@
     .atfl-family { display: grid; gap: .8rem 1.25rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr)); inline-size: 100%; max-inline-size: 40rem; }
     .atfl-family .atfl { inline-size: 100%; justify-self: stretch; }
     .atfl-cell { display: grid; gap: .3rem; }
-    .atfl-cell > small { font: 500 .7rem/1.4 Inter, system-ui; color: var(--atfl-muted); letter-spacing: .3px; }
+    .atfl-cell > small { font: 500 .7rem/1.4 Inter, Vazirmatn, system-ui; color: var(--atfl-muted); letter-spacing: .3px; }
     @media (prefers-reduced-motion: reduce) {
         .atfl-root * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
     }
@@ -141,7 +142,7 @@
                     <button type="button" class="atfl-btn" x-on:click="fail()">{{ $say('Release (offline)', 'انتشار (آفلاین)') }}</button>
                 </div>
             </div>
-            <p style="margin: 0; font: 400 .75rem/1.6 Inter, system-ui; color: var(--nx-text-muted)">
+            <p style="margin: 0; font: 400 .75rem/1.6 Inter, Vazirmatn, system-ui; color: var(--nx-text-muted)">
                 {{ $say('The flag lands in the stage corner — inside the app frame, never over the whole page. Escape dismisses.', 'فلگ در گوشهٔ قاب می‌نشیند — داخل قاب اپ، نه روی کل صفحه. با Escape بسته می‌شود.') }}
             </p>
 

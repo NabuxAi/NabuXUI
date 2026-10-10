@@ -11,13 +11,14 @@
     $num = fn (string $s): string => $fa ? strtr($s, ['0' => '۰', '1' => '۱', '2' => '۲', '3' => '۳', '4' => '۴', '5' => '۵', '6' => '۶', '7' => '۷', '8' => '۸', '9' => '۹']) : $s;
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
     .cbov-root {
         --cbov-accent: #0f62fe; --cbov-accent-hover: #0353e9;
         --cbov-text: #161616; --cbov-text-secondary: #525252;
         --cbov-danger: #da1e28;
         --cbov-border: #e0e0e0; --cbov-border-strong: #8d8d8d;
         --cbov-layer: #f4f4f4; --cbov-layer-hover: #e8e8e8; --cbov-layer-active: #d1d1d1;
-        --cbov-font: 'IBM Plex Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        --cbov-font: 'IBM Plex Sans', 'Inter', 'Vazirmatn', sans-serif;
         font-family: var(--cbov-font);
         display: grid; gap: 2rem; justify-items: center;
     }
@@ -92,9 +93,9 @@
         openId: null,
         undo: null,
         files: [
-            { id: 1, name: 'nabu-roadmap-۱۴۰۵.md', meta: '{{ $say('Edited today, ۱۴:۲۰', 'ویرایش امروز، ۱۴:۲۰') }}', size: '۱۸KB' },
-            { id: 2, name: 'q3-metrics.csv', meta: '{{ $say('Edited yesterday, ۰۹:۴۸', 'ویرایش دیروز، ۰۹:۴۸') }}', size: '۲۴۰KB' },
-            { id: 3, name: 'onboarding-fa.pdf', meta: '{{ $say('Uploaded by Sara, ۲ مهر', 'بارگذاری سارا، ۲ مهر') }}', size: '۱٫۲MB' },
+            { id: 1, name: 'nabu-roadmap-{{ $fa ? '۱۴۰۵' : '2026' }}.md', meta: '{{ $say('Edited today, ' . $num('14:20'), 'ویرایش امروز، ۱۴:۲۰') }}', size: '{{ $say('18KB', '۱۸KB') }}' },
+            { id: 2, name: 'q3-metrics.csv', meta: '{{ $say('Edited yesterday, ' . $num('09:48'), 'ویرایش دیروز، ۰۹:۴۸') }}', size: '{{ $say('240KB', '۲۴۰KB') }}' },
+            { id: 3, name: 'onboarding-guide.pdf', meta: '{{ $say('Uploaded by Sara, Oct 2', 'بارگذاری سارا، ۲ مهر') }}', size: '{{ $say('1.2MB', '۱٫۲MB') }}' },
         ],
         dyingId: null,
         pick(file, msg) { this.openId = null; this.toast(msg) },
@@ -171,7 +172,7 @@
         </div>
         <div class="cbov-card" x-data="{ open: false }" x-on:keydown.escape.window="open = false" x-on:click.outside="open = false">
             <b>{{ $say('Weekly report', 'گزارش هفتگی') }}</b>
-            <p>{{ $say('Auto-sends every Sunday at ۸:۰۰ to the ops channel.', 'هر یکشنبه ساعت ۸:۰۰ خودکار به کانال عملیات می‌رود.') }}</p>
+            <p>{{ $say('Auto-sends every Sunday at ' . $num('8:00') . ' to the ops channel.', 'هر یکشنبه ساعت ۸:۰۰ خودکار به کانال عملیات می‌رود.') }}</p>
             <div class="cbov" data-up="true" x-bind:data-open="open.toString()">
                 <button type="button" class="cbov-btn" x-on:click="open = !open" x-bind:aria-expanded="open.toString()" aria-haspopup="menu" aria-label="{{ $say('Report actions', 'اقدام‌های گزارش') }}">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5.5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="18.5" r="1.7"/></svg>
@@ -197,7 +198,7 @@
         <div class="cbov-spec">
         <div class="cbov-spec-row" x-on:keydown.escape.window="openId = null" x-on:click.outside="openId = null"
             x-data="{ openId: null }">
-            @foreach ([['sm', '۱٫۵rem', '1.25rem'], ['md', '۲rem', '1.5rem'], ['lg', '۲٫۵rem', '2rem']] as [$size, $btn, $icon])
+            @foreach ([['sm', '1.5rem', '1.25rem'], ['md', '2rem', '1.5rem'], ['lg', '2.5rem', '2rem']] as [$size, $btn, $icon])
                 <div class="cbov-spec-cell">
                     <div class="cbov" x-bind:data-open="(openId === '{{ $size }}').toString()">
                         <button type="button" class="cbov-btn" style="inline-size: {{ $btn }}"

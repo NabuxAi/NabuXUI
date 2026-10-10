@@ -8,11 +8,11 @@
     $fa = app()->getLocale() === 'fa';
     $say = fn (string $en, string $faText) => $fa ? $faText : $en;
     $orders = [
-        ['id' => 1001, 'no' => $say('#1001', '#۱۰۰۱'), 'cust' => $say('Sara Ahmadi', 'سارا احمدی'), 'date' => $say('Jan 12', '۱۲ دی'), 'sum' => $say('$245.00', '۲٬۴۵۰٬۰۰۰ تومان'), 'st' => 'paid'],
+        ['id' => 1001, 'no' => $say('#1001', '#۱۰۰۱'), 'cust' => $say('Sara Lindqvist', 'سارا احمدی'), 'date' => $say('Jan 12', '۱۲ دی'), 'sum' => $say('$245.00', '۲٬۴۵۰٬۰۰۰ تومان'), 'st' => 'paid'],
         ['id' => 1002, 'no' => $say('#1002', '#۱۰۰۲'), 'cust' => $say('Reza Kaviani', 'رضا کاویانی'), 'date' => $say('Jan 12', '۱۲ دی'), 'sum' => $say('$89.00', '۸۹۰٬۰۰۰ تومان'), 'st' => 'pending'],
         ['id' => 1003, 'no' => $say('#1003', '#۱۰۰۳'), 'cust' => $say('Mahsa Karimi', 'مهسا کریمی'), 'date' => $say('Jan 11', '۱۱ دی'), 'sum' => $say('$125.00', '۱٬۲۵۰٬۰۰۰ تومان'), 'st' => 'paid'],
         ['id' => 1004, 'no' => $say('#1004', '#۱۰۰۴'), 'cust' => $say('Arash Samadi', 'آرش صمدی'), 'date' => $say('Jan 10', '۱۰ دی'), 'sum' => $say('$368.00', '۳٬۶۸۰٬۰۰۰ تومان'), 'st' => 'refunded'],
-        ['id' => 1005, 'no' => $say('#1005', '#۱۰۰۵'), 'cust' => $say('Negar Tehrani', 'نگار تهرانی'), 'date' => $say('Jan 9', '۹ دی'), 'sum' => $say('$64.00', '۶۴۰٬۰۰۰ تومان'), 'st' => 'paid'],
+        ['id' => 1005, 'no' => $say('#1005', '#۱۰۰۵'), 'cust' => $say('Nora Keller', 'نگار کریمی'), 'date' => $say('Jan 9', '۹ دی'), 'sum' => $say('$64.00', '۶۴۰٬۰۰۰ تومان'), 'st' => 'paid'],
         ['id' => 1006, 'no' => $say('#1006', '#۱۰۰۶'), 'cust' => $say('Bahram Nik', 'بهرام نیک'), 'date' => $say('Jan 9', '۹ دی'), 'sum' => $say('$110.00', '۱٬۱۰۰٬۰۰۰ تومان'), 'st' => 'pending'],
     ];
     $stLabel = ['paid' => $say('Paid', 'پرداخت‌شده'), 'pending' => $say('Pending', 'در انتظار'), 'refunded' => $say('Refunded', 'مرجوع')];
@@ -20,6 +20,7 @@
     $stLabelJson = e(json_encode($stLabel));
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     [x-cloak] { display: none !important; }
     .plit-root {
         --plit-surface: #FFFFFF; --plit-raised: #F6F6F6; --plit-text: #303030; --plit-subdued: #616161;
@@ -28,7 +29,7 @@
         --plit-tint: color-mix(in srgb, var(--plit-green) 9%, var(--plit-surface));
         --plit-critical: #D72C0D; --plit-warn: #8A6116; --plit-info: #2C6ECB; --plit-focus: #005BD3;
         --plit-bulk: #1F3A33; --plit-on-bulk: #F1F7F4;
-        font-family: Inter, -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+        font-family: 'Inter', 'Vazirmatn', sans-serif;
         display: grid; gap: 1.5rem; justify-items: center;
     }
     html[data-theme="dark"] .plit-root {
@@ -144,11 +145,11 @@
         <div class="plit-frame">
             <div class="plit-head">
                 <b>{{ $say('Recent orders', 'سفارش‌های اخیر') }}</b>
-                <small x-text="fd(all.length) + ' {{ $say('orders', 'سفارش') }}'">۶ سفارش</small>
+                <small x-text="fd(all.length) + ' {{ $say('orders', 'سفارش') }}'">{{ $say('6 orders', '۶ سفارش') }}</small>
             </div>
 
             <div class="plit-bulk" x-show="sel.length" x-cloak role="toolbar" aria-label="{{ $say('Bulk actions', 'عملیات گروهی') }}">
-                <b x-text="fd(sel.length) + ' {{ $say('selected', 'انتخاب شد') }}'">۱ انتخاب شد</b>
+                <b x-text="fd(sel.length) + ' {{ $say('selected', 'انتخاب شد') }}'">{{ $say('1 selected', '۱ انتخاب شد') }}</b>
                 <span class="plit-bulk-u"></span>
                 <button type="button" x-on:click="fulfill()">{{ $say('Fulfill', 'بسته‌بندی') }}</button>
                 <button type="button" x-on:click="archive()">{{ $say('Archive', 'آرشیو') }}</button>
@@ -187,7 +188,7 @@
 
             <div class="plit-foot">
                 <button type="button" class="plit-pg" x-on:click="go(-1)" x-bind:disabled="page <= 1" aria-label="{{ $say('Previous page', 'صفحهٔ قبل') }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
-                <small x-text="'{{ $say('Page', 'صفحهٔ') }} ' + fd(page) + ' {{ $say('of', 'از') }} ' + fd(pageCount)">صفحهٔ ۱ از ۲</small>
+                <small x-text="'{{ $say('Page', 'صفحهٔ') }} ' + fd(page) + ' {{ $say('of', 'از') }} ' + fd(pageCount)">{{ $say('Page 1 of 2', 'صفحهٔ ۱ از ۲') }}</small>
                 <button type="button" class="plit-pg" x-on:click="go(1)" x-bind:disabled="page >= pageCount" aria-label="{{ $say('Next page', 'صفحهٔ بعد') }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
             </div>
         </div>
@@ -205,14 +206,14 @@
     <div class="plit-root plit-variants">
         <div class="plit-vcell">
             <div class="plit-vrow">
-                <span class="plit-thumb" aria-hidden="true">ش</span>
+                <span class="plit-thumb" aria-hidden="true">{{ $say('S', 'ش') }}</span>
                 <span><b>{{ $say('Soy candle, minimal', 'شمع سویا مینیمال') }}</b><small>SKU: CD-220</small></span>
             </div>
             <small>media</small>
         </div>
         <div class="plit-vcell">
             <div class="plit-vrow" data-picked>
-                <span class="plit-thumb" style="background: linear-gradient(140deg, #60a5fa, #2c6ecb)" aria-hidden="true">م</span>
+                <span class="plit-thumb" style="background: linear-gradient(140deg, #60a5fa, #2c6ecb)" aria-hidden="true">{{ $say('M', 'م') }}</span>
                 <span><b>{{ $say('Ceramic mug, 350 ml', 'ماگ سرامیکی ۳۵۰ میلی') }}</b><small>SKU: MG-350</small></span>
             </div>
             <small>picked</small>

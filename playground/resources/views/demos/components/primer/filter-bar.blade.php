@@ -19,11 +19,12 @@
     };
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap');
     .prf-root {
         --prf-canvas: #ffffff; --prf-subtle: #f6f8fa; --prf-fg: #1f2328; --prf-muted: #59636e;
         --prf-border: #d1d9e0; --prf-accent: #0969da;
         --prf-success: #1a7f37; --prf-done: #8250df; --prf-danger: #cf222e;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+        font-family: 'Figtree', 'Inter', 'Vazirmatn', sans-serif;
         color: var(--prf-fg);
     }
     html[data-theme="dark"] .prf-root {
@@ -93,13 +94,13 @@
 <div class="prf-root" x-data="{
         rtl: document.documentElement.dir === 'rtl',
         menu: null,
-        q: 'is:open is:pr label:باگ',
-        labels: ['باگ', 'طراحی', 'بهبود'],
+        q: '{{ $say('is:open is:pr label:bug', 'is:open is:pr label:باگ') }}',
+        labels: ['{{ $say('bug', 'باگ') }}', '{{ $say('design', 'طراحی') }}', '{{ $say('enhancement', 'بهبود') }}'],
         rows: [
-            { num: 415, state: 'open', title: { en: 'PDF export stalls on 50-page reports', fa: 'خروجی PDF در گزارش‌های ۵۰ صفحه‌ای گیر می‌کند' }, label: { en: 'باگ', fa: 'باگ' }, comments: 6, fresh: 1 },
-            { num: 409, state: 'open', title: { en: 'Refresh the report empty-state art', fa: 'تازه‌سازی تصویر حالت خالی گزارش‌ها' }, label: { en: 'طراحی', fa: 'طراحی' }, comments: 3, fresh: 2 },
-            { num: 402, state: 'merged', title: { en: 'Queue the heavy renders off-request', fa: 'رندرهای سنگین را خارج از درخواست صف کن' }, label: { en: 'بهبود', fa: 'بهبود' }, comments: 11, fresh: 3 },
-            { num: 396, state: 'closed', title: { en: 'Drop the legacy CSV mapper', fa: 'حذف نگاشت‌گر قدیمی CSV' }, label: { en: 'بهبود', fa: 'بهبود' }, comments: 8, fresh: 4 },
+            { num: 415, state: 'open', title: { en: 'PDF export stalls on 50-page reports', fa: 'خروجی PDF در گزارش‌های ۵۰ صفحه‌ای گیر می‌کند' }, label: { en: 'bug', fa: 'باگ' }, comments: 6, fresh: 1 },
+            { num: 409, state: 'open', title: { en: 'Refresh the report empty-state art', fa: 'تازه‌سازی تصویر حالت خالی گزارش‌ها' }, label: { en: 'design', fa: 'طراحی' }, comments: 3, fresh: 2 },
+            { num: 402, state: 'merged', title: { en: 'Queue the heavy renders off-request', fa: 'رندرهای سنگین را خارج از درخواست صف کن' }, label: { en: 'enhancement', fa: 'بهبود' }, comments: 11, fresh: 3 },
+            { num: 396, state: 'closed', title: { en: 'Drop the legacy CSV mapper', fa: 'حذف نگاشت‌گر قدیمی CSV' }, label: { en: 'enhancement', fa: 'بهبود' }, comments: 8, fresh: 4 },
         ],
         setToken(key, val) {
             const re = new RegExp('(^|\\s)' + key + ':[^\\s]+');

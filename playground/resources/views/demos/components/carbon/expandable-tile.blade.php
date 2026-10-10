@@ -10,12 +10,13 @@
     $num = fn (string $s): string => $fa ? strtr($s, ['0' => '۰', '1' => '۱', '2' => '۲', '3' => '۳', '4' => '۴', '5' => '۵', '6' => '۶', '7' => '۷', '8' => '۸', '9' => '۹']) : $s;
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
     .cbex-root {
         --cbex-accent: #0f62fe; --cbex-accent-hover: #0353e9;
         --cbex-text: #161616; --cbex-text-secondary: #525252;
         --cbex-border: #e0e0e0; --cbex-border-strong: #8d8d8d;
         --cbex-layer: #f4f4f4; --cbex-layer-hover: #e8e8e8;
-        --cbex-font: 'IBM Plex Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        --cbex-font: 'IBM Plex Sans', 'Inter', 'Vazirmatn', sans-serif;
         font-family: var(--cbex-font);
         display: grid; gap: 2rem; justify-items: center;
     }
@@ -90,7 +91,7 @@
         </div>
 
         <div class="cbex-bar">
-            <button type="button" class="cbex-toggle" x-on:click="setAll(!allOpen)" x-text="allOpen ? '{{ $say('Close all', 'بستن همه') }}' : '{{ $say('Open all', 'باز کردن همه') }}'">باز کردن همه</button>
+            <button type="button" class="cbex-toggle" x-on:click="setAll(!allOpen)" x-text="allOpen ? '{{ $say('Close all', 'بستن همه') }}' : '{{ $say('Open all', 'باز کردن همه') }}'">{{ $say('Open all', 'باز کردن همه') }}</button>
         </div>
 
         <div class="cbex-grid">
@@ -102,7 +103,7 @@
                 <div class="cbex-body">
                     <dl>
                         <div><dt>{{ $say('Access zones', 'ناحیه‌های دسترس') }}</dt><dd>{{ $num('3') }}</dd></div>
-                        <div><dt>{{ $say('Latency to Tehran', 'تأخیر تا تهران') }}</dt><dd data-good>{{ $num('24') }}ms</dd></div>
+                        <div><dt>{{ $say('Latency to Berlin', 'تأخیر تا استانبول') }}</dt><dd data-good>{{ $num('24') }}ms</dd></div>
                         <div><dt>{{ $say('Price per core', 'بها هر هسته') }}</dt><dd>{{ $num('38') }}K</dd></div>
                         <div><dt>{{ $say('Free capacity', 'ظرفیت آزاد') }}</dt><dd>{{ $num('64') }} vCPU</dd></div>
                     </dl>
@@ -116,7 +117,7 @@
                 <div class="cbex-body">
                     <dl>
                         <div><dt>{{ $say('Access zones', 'ناحیه‌های دسترس') }}</dt><dd>{{ $num('2') }}</dd></div>
-                        <div><dt>{{ $say('Latency to Tehran', 'تأخیر تا تهران') }}</dt><dd>{{ $num('31') }}ms</dd></div>
+                        <div><dt>{{ $say('Latency to Berlin', 'تأخیر تا استانبول') }}</dt><dd>{{ $num('31') }}ms</dd></div>
                         <div><dt>{{ $say('Price per core', 'بها هر هسته') }}</dt><dd>{{ $num('41') }}K</dd></div>
                         <div><dt>{{ $say('Free capacity', 'ظرفیت آزاد') }}</dt><dd>{{ $num('18') }} vCPU</dd></div>
                     </dl>
@@ -130,7 +131,7 @@
                 <div class="cbex-body">
                     <dl>
                         <div><dt>{{ $say('Access zones', 'ناحیه‌های دسترس') }}</dt><dd>{{ $num('3') }}</dd></div>
-                        <div><dt>{{ $say('Latency to Tehran', 'تأخیر تا تهران') }}</dt><dd>{{ $num('118') }}ms</dd></div>
+                        <div><dt>{{ $say('Latency to Berlin', 'تأخیر تا استانبول') }}</dt><dd>{{ $num('118') }}ms</dd></div>
                         <div><dt>{{ $say('Price per core', 'بها هر هسته') }}</dt><dd>{{ $num('35') }}K</dd></div>
                         <div><dt>{{ $say('Free capacity', 'ظرفیت آزاد') }}</dt><dd>{{ $num('96') }} vCPU</dd></div>
                     </dl>

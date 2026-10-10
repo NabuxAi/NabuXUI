@@ -15,10 +15,11 @@
     ];
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap');
     .prl-root {
         --prl-canvas: #ffffff; --prl-subtle: #f6f8fa; --prl-fg: #1f2328; --prl-muted: #59636e;
         --prl-border: #d1d9e0; --prl-accent: #0969da; --prl-danger: #cf222e;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+        font-family: 'Figtree', 'Inter', 'Vazirmatn', sans-serif;
         color: var(--prl-fg);
     }
     html[data-theme="dark"] .prl-root {
@@ -144,6 +145,6 @@
         <span class="prl-chip" style="--hue: #008672">help wanted</span>
         <span class="prl-chip" style="--hue: #ffffff">wontfix</span>
         <span class="prl-chip" style="--hue: #d93f0b">priority: critical</span>
-        <span class="prl-more">{{ $say('+۶ more', '+۶ بیشتر') }}</span>
+        <span class="prl-more">{{ $say('+6 more', '+۶ بیشتر') }}</span>
     </div>
 </section>

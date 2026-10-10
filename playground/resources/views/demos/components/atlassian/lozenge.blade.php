@@ -24,6 +24,7 @@
     ];
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     .atlz-root {
         --atlz-blue: #0052CC; --atlz-ink: #172B4D; --atlz-muted: #626F86; --atlz-subtle: #44546F;
         --atlz-border: #DFE1E6; --atlz-hover: #F1F2F4; --atlz-surface: #FFFFFF;
@@ -31,7 +32,7 @@
         --atlz-yellow: #A54800; --atlz-yellow-tint: #FFF7D6;
         --atlz-red: #AE2A19; --atlz-red-solid: #B40000; --atlz-red-tint: #FFEDEB;
         --atlz-purple: #5E4DB2; --atlz-purple-solid: #6E5DC6; --atlz-purple-tint: #EAE6FF;
-        font-family: Inter, system-ui, sans-serif; color: var(--atlz-ink);
+        font-family: 'Inter', 'Vazirmatn', sans-serif; color: var(--atlz-ink);
     }
     html[data-theme="dark"] .atlz-root {
         --atlz-blue: #388BFF; --atlz-ink: #C7D1DB; --atlz-muted: #8590A2; --atlz-subtle: #A9B8C4;
@@ -53,7 +54,7 @@
     }
     .atlz-root :focus-visible { outline: 2px solid var(--atlz-blue); outline-offset: 2px; }
 
-    .atlz-chip { display: inline-block; padding: 2px 8px; border-radius: 3px; font: 700 .7rem/1.6 Inter, system-ui;
+    .atlz-chip { display: inline-block; padding: 2px 8px; border-radius: 3px; font: 700 .7rem/1.6 Inter, Vazirmatn, system-ui;
                  letter-spacing: .2px; max-inline-size: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .atlz-chip[data-tone='backlog']    { background: var(--atlz-hover); color: var(--atlz-subtle); }
     .atlz-chip[data-tone='inprogress'] { background: var(--atlz-blue-tint, #E9F2FF); }
@@ -86,8 +87,8 @@
                 transition: background .15s ease; min-inline-size: 0; }
     .atlz-row + .atlz-row { border-block-start: 1px solid var(--atlz-border); }
     .atlz-row:hover { background: var(--atlz-hover); }
-    .atlz-key { flex: none; font: 600 .75rem Inter, system-ui; color: var(--atlz-blue); }
-    .atlz-name { flex: 1 1 auto; min-inline-size: 0; font: 400 .85rem/1.4 Inter, system-ui; color: var(--atlz-ink);
+    .atlz-key { flex: none; font: 600 .75rem Inter, Vazirmatn, system-ui; color: var(--atlz-blue); }
+    .atlz-name { flex: 1 1 auto; min-inline-size: 0; font: 400 .85rem/1.4 Inter, Vazirmatn, system-ui; color: var(--atlz-ink);
                  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .atlz-chipbtn { flex: none; border: none; background: none; padding: 2px; cursor: pointer; border-radius: 3px; }
     .atlz-pop { inline-size: 14px; opacity: 0; transition: opacity .15s ease; flex: none; }
@@ -97,7 +98,7 @@
 
     .atlz-family { display: grid; gap: .9rem 2rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); inline-size: 100%; max-inline-size: 40rem; justify-items: center; }
     .atlz-cell { display: grid; gap: .4rem; justify-items: center; text-align: center; min-inline-size: 0; }
-    .atlz-cell > small { font: 500 .7rem/1.4 Inter, system-ui; color: var(--atlz-muted); letter-spacing: .3px; }
+    .atlz-cell > small { font: 500 .7rem/1.4 Inter, Vazirmatn, system-ui; color: var(--atlz-muted); letter-spacing: .3px; }
     @media (prefers-reduced-motion: reduce) {
         .atlz-root * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
     }
@@ -136,7 +137,7 @@
                 </button>
             @endforeach
         </div>
-        <p style="margin: 0; font: 400 .75rem/1.5 Inter, system-ui; color: var(--nx-text-muted)">
+        <p style="margin: 0; font: 400 .75rem/1.5 Inter, Vazirmatn, system-ui; color: var(--nx-text-muted)">
             {{ $say('Hovering shows the little drag hint; the flip animation plays on every change.', 'با رفتن نشانگر، راهنمای کوچک جابه‌جایی دیده می‌شود؛ انیمیشن فلیپ با هر تغییر پخش می‌شود.') }}
         </p>
     </section>

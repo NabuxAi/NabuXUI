@@ -18,12 +18,14 @@
     ];
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap');
     .slr-root {
         --slr-blue: #0176D3; --slr-blue-soft: color-mix(in srgb, #0176D3 8%, #FFFFFF);
         --slr-green: #04844B; --slr-purple: #6739B7; --slr-orange: #FE9339;
         --slr-text: #181818; --slr-weak: #444444; --slr-muted: #706E6B;
         --slr-border: #DDDBDA; --slr-bg: #F3F3F3; --slr-card: #FFFFFF;
-        font-family: 'Salesforce Sans', -apple-system, 'Segoe UI', Roboto, sans-serif;
+        font-family: 'Source Sans 3', 'Inter', 'Vazirmatn', ui-sans-serif, system-ui, sans-serif;
+        font-variant-numeric: tabular-nums;
         color: var(--slr-text);
         display: grid; gap: 1.5rem;
     }
@@ -105,9 +107,12 @@
         menu: false,
         expanded: false,
         starMsg: '',
+        get t() { return document.documentElement.lang === 'fa' ? 'fa' : 'en' },
         toggleFollow() {
             this.follow = !this.follow;
-            this.starMsg = this.follow ? '«لایسنس سالانهٔ نابو» دنبال شد' : 'دنبال‌کردن لغو شد';
+            this.starMsg = this.t === 'fa'
+                ? (this.follow ? '«لایسنس سالانهٔ نابو» دنبال شد' : 'دنبال‌کردن لغو شد')
+                : (this.follow ? 'Following “Nabu annual license”' : 'Unfollowed — you will no longer get updates');
             clearTimeout(this._t); this._t = setTimeout(() => this.starMsg = '', 2400);
         },
     }"
@@ -123,7 +128,7 @@
 
         <div class="slr-card" style="--slr-tint: var(--slr-green)">
             <div class="slr-head">
-                <span class="slr-tile" aria-hidden="true">ف</span>
+                <span class="slr-tile" aria-hidden="true">{{ $fa ? 'ف' : 'O' }}</span>
                 <div class="slr-who">
                     <small>{{ $say('Opportunities / Industrial customers', 'فرصت‌ها / مشتریان صنعتی') }}</small>
                     <h2>
@@ -160,7 +165,7 @@
                 <dl class="slr-fields" style="margin-block-end: 0">
                     <div class="slr-field">
                         <dt>{{ $say('Amount', 'مبلغ') }}</dt>
-                        <dd>{{ $say('2,400,000,000 IRR', '۲٬۴۰۰٬۰۰۰٬۰۰۰ ریال') }}</dd>
+                        <dd>{{ $say('€240,000,000', '۲٬۴۰۰٬۰۰۰٬۰۰۰ ریال') }}</dd>
                     </div>
                     <div class="slr-field">
                         <dt>{{ $say('Stage', 'مرحله') }}</dt>
@@ -168,13 +173,13 @@
                     </div>
                     <div class="slr-field">
                         <dt>{{ $say('Close date', 'تاریخ بستن') }}</dt>
-                        <dd>{{ $say('Feb 28, 1405', '۲۸ اسفند ۱۴۰۴') }}</dd>
+                        <dd>{{ $say('Feb 28, 2026', '۲۸ اسفند ۱۴۰۴') }}</dd>
                     </div>
                 </dl>
                 <dl class="slr-fields" style="margin-block-start: .8rem" :class="expanded ? '' : 'slr-hide'">
                     <div class="slr-field">
                         <dt>{{ $say('Owner', 'مالک') }}</dt>
-                        <dd>{{ $say('Sara Ahmadi', 'سارا احمدی') }}</dd>
+                        <dd>{{ $say('Lena Hoffmann', 'سارا احمدی') }}</dd>
                     </div>
                     <div class="slr-field">
                         <dt>{{ $say('Probability', 'احتمال موفقیت') }}</dt>

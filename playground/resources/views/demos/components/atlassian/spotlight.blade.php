@@ -14,11 +14,12 @@
     ];
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     .atsp-root {
         --atsp-blue: #0052CC; --atsp-ink: #172B4D; --atsp-ink-strong: #091E42;
         --atsp-muted: #626F86; --atsp-subtle: #44546F; --atsp-border: #DFE1E6; --atsp-hover: #F1F2F4;
         --atsp-surface: #FFFFFF; --atsp-page: #F7F8F9; --atsp-scrim: rgba(9, 30, 66, .77);
-        font-family: Inter, system-ui, sans-serif; color: var(--atsp-ink);
+        font-family: 'Inter', 'Vazirmatn', sans-serif; color: var(--atsp-ink);
     }
     html[data-theme="dark"] .atsp-root {
         --atsp-blue: #388BFF; --atsp-ink: #C7D1DB; --atsp-ink-strong: #E4EAF0; --atsp-muted: #8590A2;
@@ -36,26 +37,26 @@
 
     .atsp-start { display: grid; justify-items: center; gap: .4rem; margin-block-end: .25rem; }
     .atsp-start button { block-size: 2rem; padding-inline: .9rem; border: none; border-radius: 3px; cursor: pointer;
-                         background: var(--atsp-blue); color: #fff; font: 500 .8rem/1 Inter, system-ui; }
+                         background: var(--atsp-blue); color: #fff; font: 500 .8rem/1 Inter, Vazirmatn, system-ui; }
     .atsp-start button:hover { background: color-mix(in srgb, var(--atsp-blue) 88%, black); }
-    .atsp-start p { margin: 0; font: 400 .74rem/1.5 Inter, system-ui; color: var(--nx-text-muted); }
+    .atsp-start p { margin: 0; font: 400 .74rem/1.5 Inter, Vazirmatn, system-ui; color: var(--nx-text-muted); }
 
     .atsp-stage { position: relative; isolation: isolate; overflow: clip; inline-size: min(100%, 36rem); margin-inline: auto;
                   border: 1px solid var(--atsp-border); border-radius: 6px; background: var(--atsp-page);
                   padding: .9rem; display: grid; gap: .75rem; }
     .atsp-bar { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
-    .atsp-bar h4 { margin: 0; font: 500 .95rem/1.3 "Charlie Display", Inter, system-ui; color: var(--atsp-ink-strong); margin-inline-end: auto; }
+    .atsp-bar h4 { margin: 0; font: 500 .95rem/1.3 "Charlie Display", Inter, Vazirmatn, system-ui; color: var(--atsp-ink-strong); margin-inline-end: auto; }
     .atsp-create { block-size: 1.9rem; padding-inline: .8rem; border: none; border-radius: 3px; cursor: pointer;
-                   background: var(--atsp-blue); color: #fff; font: 500 .78rem/1 Inter, system-ui; }
+                   background: var(--atsp-blue); color: #fff; font: 500 .78rem/1 Inter, Vazirmatn, system-ui; }
     .atsp-watch { position: relative; display: grid; place-items: center; inline-size: 1.9rem; aspect-ratio: 1;
                   border: none; border-radius: 50%; background: var(--atsp-hover); color: var(--atsp-subtle);
-                  font: 600 .68rem Inter, system-ui; cursor: pointer; }
+                  font: 600 .68rem Inter, Vazirmatn, system-ui; cursor: pointer; }
     .atsp-board { display: grid; gap: .6rem; grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .atsp-col { border: 1px solid var(--atsp-border); border-radius: 4px; background: var(--atsp-surface); padding: .5rem; display: grid; gap: .45rem; align-content: start; }
-    .atsp-col > small { font: 700 .66rem/1.4 Inter, system-ui; letter-spacing: .4px; color: var(--atsp-muted); display: flex; gap: .3rem; align-items: center; }
+    .atsp-col > small { font: 700 .66rem/1.4 Inter, Vazirmatn, system-ui; letter-spacing: .4px; color: var(--atsp-muted); display: flex; gap: .3rem; align-items: center; }
     .atsp-col > small i { inline-size: .45rem; aspect-ratio: 1; border-radius: 50%; background: var(--atsp-blue); }
-    .atsp-card { border: 1px solid var(--atsp-border); border-radius: 3px; padding: .45rem .5rem; font: 400 .72rem/1.4 Inter, system-ui; color: var(--atsp-ink); background: var(--atsp-surface); }
-    .atsp-card b { display: block; font: 600 .62rem Inter, system-ui; color: var(--atsp-blue); margin-block-end: .15rem; }
+    .atsp-card { border: 1px solid var(--atsp-border); border-radius: 3px; padding: .45rem .5rem; font: 400 .72rem/1.4 Inter, Vazirmatn, system-ui; color: var(--atsp-ink); background: var(--atsp-surface); }
+    .atsp-card b { display: block; font: 600 .62rem Inter, Vazirmatn, system-ui; color: var(--atsp-blue); margin-block-end: .15rem; }
 
     .atsp-veil { position: absolute; z-index: 2; inset-block-start: 0; inset-inline-start: 0; border-radius: 6px;
                  pointer-events: none; opacity: 0; transition: all .35s cubic-bezier(.2, 0, 0, 1); }
@@ -75,17 +76,17 @@
     .atsp-shot { inline-size: 100%; block-size: 3.4rem; border-radius: 3px; background: color-mix(in srgb, var(--atsp-blue) 10%, transparent);
                  display: grid; place-items: center; margin-block-end: .6rem; }
     .atsp-shot svg { inline-size: 100%; block-size: 100%; fill: none; stroke: var(--atsp-blue); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-    .atsp-pop h5 { margin: 0 0 .2rem; font: 600 .86rem/1.4 Inter, system-ui; color: var(--atsp-ink-strong); }
-    .atsp-pop > p { margin: 0 0 .7rem; font: 400 .76rem/1.6 Inter, system-ui; color: var(--atsp-subtle); }
+    .atsp-pop h5 { margin: 0 0 .2rem; font: 600 .86rem/1.4 Inter, Vazirmatn, system-ui; color: var(--atsp-ink-strong); }
+    .atsp-pop > p { margin: 0 0 .7rem; font: 400 .76rem/1.6 Inter, Vazirmatn, system-ui; color: var(--atsp-subtle); }
     .atsp-foot { display: flex; align-items: center; gap: .5rem; }
     .atsp-dots { display: flex; gap: .3rem; }
     .atsp-dots i { inline-size: .4rem; aspect-ratio: 1; border-radius: 999px; background: var(--atsp-border); transition: background .2s ease, inline-size .2s ease; }
     .atsp-dots i[data-current] { background: var(--atsp-blue); inline-size: .9rem; }
     .atsp-skip { margin-inline-start: auto; border: none; background: none; cursor: pointer; padding: .3rem .4rem; border-radius: 3px;
-                 font: 500 .76rem Inter, system-ui; color: var(--atsp-muted); }
+                 font: 500 .76rem Inter, Vazirmatn, system-ui; color: var(--atsp-muted); }
     .atsp-skip:hover { background: var(--atsp-hover); color: var(--atsp-ink); }
     .atsp-next { border: none; border-radius: 3px; block-size: 1.85rem; padding-inline: .8rem; cursor: pointer;
-                 background: var(--atsp-blue); color: #fff; font: 500 .76rem/1 Inter, system-ui; }
+                 background: var(--atsp-blue); color: #fff; font: 500 .76rem/1 Inter, Vazirmatn, system-ui; }
     .atsp-next:hover { background: color-mix(in srgb, var(--atsp-blue) 88%, black); }
     @media (max-width: 420px) {
         .atsp-board { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -151,7 +152,7 @@
             <div class="atsp-bar">
                 <h4>{{ $say('Sprint 24 board', 'تختهٔ اسپرینت ۲۴') }}</h4>
                 <button type="button" class="atsp-create" x-ref="t0">{{ $say('Create', 'ایجاد') }}</button>
-                <button type="button" class="atsp-watch" x-ref="t2" aria-label="{{ $say('Watch board', 'دنبال کردن تخته') }}">۲</button>
+                <button type="button" class="atsp-watch" x-ref="t2" aria-label="{{ $say('Watch board', 'دنبال کردن تخته') }}">{{ $fa ? '۲' : '2' }}</button>
             </div>
             <div class="atsp-board">
                 <div class="atsp-col">
@@ -212,7 +213,7 @@
                         <button type="button" class="atsp-create" style="margin-inline: auto; display: block">{{ $say('Target', 'هدف') }}</button>
                         <div class="atsp-veil on" style="inset-inline-start: 25%; inset-block-start: 18%; inline-size: 50%; block-size: 28%" aria-hidden="true"></div>
                     </div>
-                    <figcaption style="font: 500 .72rem/1.4 Inter, system-ui; color: var(--nx-text-muted)">placement · {{ $fa ? $faSide : $side }}</figcaption>
+                    <figcaption style="font: 500 .72rem/1.4 Inter, Vazirmatn, system-ui; color: var(--nx-text-muted)">placement · {{ $fa ? $faSide : $side }}</figcaption>
                 </figure>
             @endforeach
         </div>

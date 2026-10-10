@@ -10,6 +10,7 @@
     $newFlash = e(json_encode($say('The new-order form opened', 'فرم سفارش تازه باز شد')));
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     [x-cloak] { display: none !important; }
     .plph-root {
         --plph-surface: #FFFFFF; --plph-raised: #F6F6F6; --plph-text: #303030; --plph-subdued: #616161;
@@ -17,7 +18,7 @@
         --plph-green: #008060; --plph-on-green: #FFFFFF; --plph-green-hover: #004C3F;
         --plph-tint: color-mix(in srgb, var(--plph-green) 9%, var(--plph-surface));
         --plph-focus: #005BD3;
-        font-family: Inter, -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+        font-family: 'Inter', 'Vazirmatn', sans-serif;
         display: grid; gap: 1.5rem; justify-items: center;
     }
     html[data-theme="dark"] .plph-root {
@@ -109,7 +110,7 @@
                 <span aria-current="page">{{ $say('Orders', 'سفارش‌ها') }}</span>
             </nav>
             <div class="plph-row">
-                <h1 class="plph-title">{{ $say('Orders', 'سفارش‌ها') }} <span class="plph-count" x-text="fd(count)">۳۲</span></h1>
+                <h1 class="plph-title">{{ $say('Orders', 'سفارش‌ها') }} <span class="plph-count" x-text="fd(count)">{{ $say('32', '۳۲') }}</span></h1>
                 <div class="plph-actions">
                     <button type="button" class="plph-btn" data-secondary>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
@@ -163,7 +164,7 @@
         <div class="plph-vcell">
             <div class="plph-frame" style="padding-block: .8rem">
                 <div class="plph-row">
-                    <span class="plph-ava" aria-hidden="true">ن</span>
+                    <span class="plph-ava" aria-hidden="true">{{ $say('N', 'ن') }}</span>
                     <div style="min-inline-size: 0">
                         <h1 class="plph-title" style="font-size: 1.05rem">{{ $say('Nabu Home & Living', 'نابو خانه و زندگی') }}</h1>
                         <p class="plph-sub" style="margin: 0">{{ $say('myshop.nabu.example', 'فروشگاه نمونهٔ نابو') }}</p>
@@ -180,7 +181,7 @@
                 <div class="plph-row">
                     <h1 class="plph-title" style="font-size: 1.15rem">{{ $say('Customers', 'مشتریان') }}</h1>
                     <span class="plph-actions" style="align-items: center">
-                        <span class="plph-pos" x-text="fd(pos) + ' {{ $say('of', 'از') }} ' + fd(128)">۳۲ از ۱۲۸</span>
+                        <span class="plph-pos" x-text="fd(pos) + ' {{ $say('of', 'از') }} ' + fd(128)">{{ $say('32 of 128', '۳۲ از ۱۲۸') }}</span>
                         <button type="button" class="plph-pg" x-on:click="pos = Math.max(1, pos - 1)" x-bind:disabled="pos <= 1" aria-label="{{ $say('Previous', 'قبلی') }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button>
                         <button type="button" class="plph-pg" x-on:click="pos = Math.min(128, pos + 1)" x-bind:disabled="pos >= 128" aria-label="{{ $say('Next', 'بعدی') }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button>
                     </span>

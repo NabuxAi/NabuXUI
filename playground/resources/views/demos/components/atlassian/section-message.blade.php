@@ -36,6 +36,7 @@
     ];
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     .atsm-root {
         --atsm-blue: #0052CC; --atsm-ink: #172B4D; --atsm-ink-strong: #091E42; --atsm-muted: #626F86;
         --atsm-subtle: #44546F; --atsm-border: #DFE1E6; --atsm-hover: #F1F2F4; --atsm-surface: #FFFFFF;
@@ -44,7 +45,7 @@
         --atsm-error-bg: #FFEDEB; --atsm-error-ink: #AE2A19; --atsm-error-solid: #B40000;
         --atsm-ok-bg: #DCFFF1; --atsm-ok-ink: #1F845A; --atsm-ok-solid: #1F845A;
         --atsm-disc-bg: #EAE6FF; --atsm-disc-ink: #5E4DB2; --atsm-disc-solid: #6E5DC6;
-        font-family: Inter, system-ui, sans-serif; color: var(--atsm-ink);
+        font-family: 'Inter', 'Vazirmatn', sans-serif; color: var(--atsm-ink);
     }
     html[data-theme="dark"] .atsm-root {
         --atsm-blue: #388BFF; --atsm-ink: #C7D1DB; --atsm-ink-strong: #E4EAF0; --atsm-muted: #8590A2;
@@ -70,10 +71,10 @@
 
     .atsm-panel { inline-size: min(100%, 34rem); margin-inline: auto; border: 1px solid var(--atsm-border);
                   border-radius: 6px; background: var(--atsm-surface); padding: 1.25rem; display: grid; gap: 1rem; }
-    .atsm-panel > h4 { margin: 0; font: 500 1.15rem/1.3 "Charlie Display", Inter, system-ui; color: var(--atsm-ink-strong); }
+    .atsm-panel > h4 { margin: 0; font: 500 1.15rem/1.3 "Charlie Display", Inter, Vazirmatn, system-ui; color: var(--atsm-ink-strong); }
     .atsm-switch { display: flex; flex-wrap: wrap; gap: .4rem; }
     .atsm-seg { border: 1px solid var(--atsm-border); background: none; border-radius: 3px; block-size: 1.75rem;
-                padding-inline: .65rem; font: 500 .76rem/1 Inter, system-ui; color: var(--atsm-subtle); cursor: pointer;
+                padding-inline: .65rem; font: 500 .76rem/1 Inter, Vazirmatn, system-ui; color: var(--atsm-subtle); cursor: pointer;
                 transition: background .15s ease, color .15s ease, border-color .15s ease; }
     .atsm-seg:hover { background: var(--atsm-hover); }
     .atsm-seg[aria-pressed='true'] { background: var(--atsm-blue); border-color: var(--atsm-blue); color: #fff; }
@@ -89,19 +90,19 @@
     .atsm-ic { flex: none; display: grid; place-items: center; inline-size: 1.5rem; aspect-ratio: 1; color: var(--atsm-msg-ink); }
     .atsm-ic svg { inline-size: 1.35rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
     .atsm-body { flex: 1 1 auto; min-inline-size: 0; }
-    .atsm-body h5 { margin: 0 0 .2rem; font: 600 .85rem/1.4 Inter, system-ui; color: var(--atsm-ink-strong); }
-    .atsm-body p { margin: 0 0 .5rem; font: 400 .8rem/1.6 Inter, system-ui; color: var(--atsm-ink); }
-    .atsm-body a { color: var(--atsm-blue); font: 500 .8rem Inter, system-ui; text-decoration: none; }
+    .atsm-body h5 { margin: 0 0 .2rem; font: 600 .85rem/1.4 Inter, Vazirmatn, system-ui; color: var(--atsm-ink-strong); }
+    .atsm-body p { margin: 0 0 .5rem; font: 400 .8rem/1.6 Inter, Vazirmatn, system-ui; color: var(--atsm-ink); }
+    .atsm-body a { color: var(--atsm-blue); font: 500 .8rem Inter, Vazirmatn, system-ui; text-decoration: none; }
     .atsm-body a:hover { text-decoration: underline; }
     .atsm-x { flex: none; display: grid; place-items: center; inline-size: 1.5rem; aspect-ratio: 1;
               margin-block-start: -.25rem; margin-inline-end: -.25rem;
               border: none; background: none; border-radius: 3px; cursor: pointer; color: var(--atsm-muted); }
     .atsm-x:hover { background: color-mix(in srgb, var(--atsm-msg-ink) 14%, transparent); color: var(--atsm-msg-ink); }
     .atsm-restore { justify-self: start; border: none; background: none; padding: .25rem 0; cursor: pointer;
-                    color: var(--atsm-blue); font: 500 .78rem Inter, system-ui; }
+                    color: var(--atsm-blue); font: 500 .78rem Inter, Vazirmatn, system-ui; }
     .atsm-restore:hover { text-decoration: underline; }
 
-    .atsm-field label { display: block; margin-block-end: .3rem; font: 500 .78rem Inter, system-ui; color: var(--atsm-subtle); }
+    .atsm-field label { display: block; margin-block-end: .3rem; font: 500 .78rem Inter, Vazirmatn, system-ui; color: var(--atsm-subtle); }
     .atsm-field code { display: block; inline-size: 100%; box-sizing: border-box; padding: .55rem .7rem; border: 1px solid var(--atsm-border);
                        border-radius: 4px; background: var(--atsm-hover); font: 500 .8rem/1.5 "JetBrains Mono", ui-monospace, monospace;
                        color: var(--atsm-ink-strong); overflow-x: auto; white-space: nowrap; }
@@ -169,7 +170,7 @@
             <div class="atsm-row">
                 <button type="button" class="atsm-seg" style="border: none; background: var(--atsm-blue); color: #fff">{{ $say('Copy', 'رونوشت') }}</button>
                 <button type="button" class="atsm-seg">{{ $say('Revoke', 'باطل کردن') }}</button>
-                <span style="margin-inline-start: auto; font: 400 .72rem/1.4 Inter, system-ui; color: var(--atsm-muted)">{{ $say('Last used today, 14:02', 'آخرین استفاده امروز ۱۴:۰۲') }}</span>
+                <span style="margin-inline-start: auto; font: 400 .72rem/1.4 Inter, Vazirmatn, system-ui; color: var(--atsm-muted)">{{ $say('Last used today, 14:02', 'آخرین استفاده امروز ۱۴:۰۲') }}</span>
             </div>
         </div>
     </section>

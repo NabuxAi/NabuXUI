@@ -10,7 +10,7 @@
     $lbl = [
         'smsOn' => $say('Customers receive an SMS with the tracking link the moment an order ships — 124 orders today.', 'مشتریان به‌محض ارسال سفارش، پیامک لینک رهگیری می‌گیرند — امروز برای ۱۲۴ سفارش.'),
         'smsOff' => $say('Off — customers only get emails, and only when they ask for them.', 'خاموش — مشتریان فقط ایمیل می‌گیرند و آن هم وقتی خودشان خواسته باشند.'),
-        'shipOn' => $say('Orders over 500,000 tomans ship free; the badge shows on 68% of carts.', 'سفارش‌های بالای ۵۰۰ هزار تومان ارسال رایگان می‌گیرند؛ نشان روی ۶۸٪ سبدها دیده می‌شود.'),
+        'shipOn' => $say('Orders over €200 ship free; the badge shows on 68% of carts.', 'سفارش‌های بالای ۵۰۰ هزار تومان ارسال رایگان می‌گیرند؛ نشان روی ۶۸٪ سبدها دیده می‌شود.'),
         'shipOff' => $say('Shipping is always billed separately from the order total.', 'هزینهٔ ارسال همیشه جدا از مبلغ سفارش محاسبه می‌شود.'),
     ];
     $btn = ['goOn' => $say('Turn on', 'روشن کن'), 'goOff' => $say('Turn off', 'خاموش کن')];
@@ -18,6 +18,7 @@
     $btnJson = e(json_encode($btn));
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     [x-cloak] { display: none !important; }
     .plst-root {
         --plst-surface: #FFFFFF; --plst-raised: #F6F6F6; --plst-text: #303030; --plst-subdued: #616161;
@@ -25,7 +26,7 @@
         --plst-green: #008060; --plst-on-green: #FFFFFF; --plst-green-hover: #004C3F;
         --plst-tint: color-mix(in srgb, var(--plst-green) 9%, var(--plst-surface));
         --plst-focus: #005BD3;
-        font-family: Inter, -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+        font-family: 'Inter', 'Vazirmatn', sans-serif;
         display: grid; gap: 1.5rem; justify-items: center;
     }
     html[data-theme="dark"] .plst-root {
@@ -147,7 +148,7 @@
                 <b>{{ $say('Daily sales digest', 'خلاصهٔ روزانهٔ فروش') }}</b>
                 <p class="plst-desc" x-text="on ? '{{ $say('Every evening at 6, a summary of today lands in your inbox.', 'هر شب ساعت ۶، خلاصهٔ امروز در صندوق شما می‌نشیند.') }}' : '{{ $say('No summary is sent; reports stay in Analytics.', 'خلاصه‌ای فرستاده نمی‌شود؛ گزارش‌ها در تحلیل‌ها می‌مانند.') }}'"></p>
             </span>
-            <button type="button" class="plst-link" x-on:click="on = !on" x-text="on ? lbl.goOff : lbl.goOn">خاموش کن</button>
+            <button type="button" class="plst-link" x-on:click="on = !on" x-text="on ? lbl.goOff : lbl.goOn">{{ $say('Turn off', 'خاموش کن') }}</button>
         </div>
         <div class="plst-vcell">
             <span class="plst-mini" data-on aria-hidden="true"></span>

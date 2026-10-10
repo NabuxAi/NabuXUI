@@ -10,12 +10,13 @@
     $num = fn (string $s): string => $fa ? strtr($s, ['0' => '۰', '1' => '۱', '2' => '۲', '3' => '۳', '4' => '۴', '5' => '۵', '6' => '۶', '7' => '۷', '8' => '۸', '9' => '۹']) : $s;
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
     .cbsl-root {
         --cbsl-accent: #0f62fe; --cbsl-accent-hover: #0353e9;
         --cbsl-text: #161616; --cbsl-text-secondary: #525252;
         --cbsl-border: #e0e0e0; --cbsl-border-strong: #8d8d8d;
         --cbsl-layer: #f4f4f4; --cbsl-layer-2: #e8e8e8; --cbsl-selected: #e0e0e0;
-        --cbsl-font: 'IBM Plex Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        --cbsl-font: 'IBM Plex Sans', 'Inter', 'Vazirmatn', sans-serif;
         font-family: var(--cbsl-font);
         display: grid; gap: 2rem; justify-items: center;
     }
@@ -126,7 +127,7 @@
             </span>
             <button type="button" class="cbsl-go" x-on:click="deployed = true">{{ $say('Deploy', 'استقرار') }}</button>
             <small style="inline-size: 100%; font-size: .75rem; color: var(--cbsl-text-secondary)" x-show="deployed" x-cloak>
-                {{ $say('Build ۸۴۱ queued — rollback available for one hour.', 'بیلد ۸۴۱ در صف قرار گرفت — تا یک ساعت واگرد در دسترس است.') }}
+                {{ $say('Build ' . $num('841') . ' queued — rollback available for one hour.', 'بیلد ۸۴۱ در صف قرار گرفت — تا یک ساعت واگرد در دسترس است.') }}
             </small>
         </div>
     </section>
@@ -140,7 +141,7 @@
         </div>
         <div class="cbsl cbsl-flush" role="table" aria-label="{{ $say('Server details', 'جزئیات سرور') }}">
             @foreach ([
-                [$say('Hostname', 'نام‌میزبان'), 'nabu-app-۰۳'],
+                [$say('Hostname', 'نام‌میزبان'), 'nabu-app-' . $num('03')],
                 [$say('Operating system', 'سیستم‌عامل'), 'Ubuntu 24.04 LTS'],
                 [$say('Time zone', 'منطقهٔ زمانی'), $say('Europe/Berlin · CEST', 'اروپا/برلین · CEST')],
                 [$say('Created', 'ساخته‌شده در'), $num('2026/09/14')],
@@ -173,14 +174,14 @@
             </div>
             <div class="cbsl-spec-cell">
                 <div class="cbsl" role="table" aria-label="{{ $say('Plain variant', 'گونهٔ ساده') }}">
-                    <div class="cbsl-row cbsl-kv"><small role="cell">uptime</small><span role="cell">۹۹٫۹۸٪</span></div>
+                    <div class="cbsl-row cbsl-kv"><small role="cell">uptime</small><span role="cell">{{ $say('99.98%', '۹۹٫۹۸٪') }}</span></div>
                     <div class="cbsl-row cbsl-kv"><small role="cell">latency</small><span role="cell">{{ $num('24') }}ms</span></div>
                 </div>
                 <small>default</small>
             </div>
             <div class="cbsl-spec-cell">
                 <div class="cbsl" data-size="md" role="table" aria-label="{{ $say('Medium variant', 'گونهٔ md') }}">
-                    <div class="cbsl-row cbsl-kv"><small role="cell">CPU</small><span role="cell">{{ $num('38') }}٪</span></div>
+                    <div class="cbsl-row cbsl-kv"><small role="cell">CPU</small><span role="cell">{{ $num('38') }}{{ $say('%', '٪') }}</span></div>
                     <div class="cbsl-row cbsl-kv"><small role="cell">RAM</small><span role="cell">{{ $num('5.2') }}GB</span></div>
                 </div>
                 <small>md</small>

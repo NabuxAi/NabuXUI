@@ -9,13 +9,14 @@
     $say = fn (string $en, string $faText) => $fa ? $faText : $en;
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     [x-cloak] { display: none !important; }
     .plbn-root {
         --plbn-surface: #FFFFFF; --plbn-raised: #F6F6F6; --plbn-text: #303030; --plbn-subdued: #616161;
         --plbn-border: #E3E3E3; --plbn-strong: #8A8A8A;
         --plbn-green: #008060; --plbn-on-green: #FFFFFF; --plbn-green-hover: #004C3F;
         --plbn-info: #2C6ECB; --plbn-critical: #D72C0D; --plbn-warn: #8A6116; --plbn-focus: #005BD3;
-        font-family: Inter, -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+        font-family: 'Inter', 'Vazirmatn', sans-serif;
         display: grid; gap: 1.5rem; justify-items: center;
     }
     html[data-theme="dark"] .plbn-root {

@@ -10,12 +10,13 @@
     $num = fn (string $s): string => $fa ? strtr($s, ['0' => '۰', '1' => '۱', '2' => '۲', '3' => '۳', '4' => '۴', '5' => '۵', '6' => '۶', '7' => '۷', '8' => '۸', '9' => '۹']) : $s;
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
     .cbcl-root {
         --cbcl-accent: #0f62fe; --cbcl-accent-hover: #0353e9;
         --cbcl-text: #161616; --cbcl-text-secondary: #525252;
         --cbcl-border: #e0e0e0; --cbcl-border-strong: #8d8d8d;
         --cbcl-layer: #f4f4f4; --cbcl-layer-hover: #e8e8e8;
-        --cbcl-font: 'IBM Plex Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        --cbcl-font: 'IBM Plex Sans', 'Inter', 'Vazirmatn', sans-serif;
         font-family: var(--cbcl-font);
         display: grid; gap: 2rem; justify-items: center;
     }
@@ -101,7 +102,7 @@
                 { name: '{{ $say('Sara Mohammadi', 'سارا محمدی') }}', role: '{{ $say('Owner', 'مالک') }}', tone: 'green', state: '{{ $say('Owner', 'مالک') }}', on: true },
                 { name: '{{ $say('Amir Rostami', 'امیر رستمی') }}', role: '{{ $say('Developer', 'توسعه‌دهنده') }}', tone: 'blue', state: '{{ $say('Active', 'فعال') }}', on: true },
                 { name: '{{ $say('Niloofar Karimi', 'نیلوفر کریمی') }}', role: '{{ $say('Support', 'پشتیبانی') }}', tone: 'blue', state: '{{ $say('Active', 'فعال') }}', on: true },
-                { name: '{{ $say('Kian Ahmadi', 'کیان احمدی') }}', role: '{{ $say('Billing', 'صورتحساب') }}', tone: 'gray', state: '{{ $say('Invited', 'دعوت‌شده') }}', on: false },
+                { name: '{{ $say('Kian Berg', 'کیان احمدی') }}', role: '{{ $say('Billing', 'صورتحساب') }}', tone: 'gray', state: '{{ $say('Invited', 'دعوت‌شده') }}', on: false },
             ],
             get filtered() { const q = this.q.trim(); return q ? this.members.filter(m => m.name.includes(q) || m.role.includes(q)) : this.members },
         }">
@@ -140,7 +141,7 @@
                 {{ $say('No member matches — the frame stays up, only the rows leave.', 'هیچ عضوی نمی‌خورد — قاب سرِ جایش می‌ماند، فقط ردیف‌ها می‌روند.') }}
             </p>
             <div class="cbcl-foot" role="status">
-                <span x-text="filtered.length.toLocaleString('fa-IR') + ' {{ $say('of', 'از') }} ' + members.length.toLocaleString('fa-IR') + ' {{ $say('members', 'عضو') }}'">۴ از ۴ عضو</span>
+                <span x-text="filtered.length.toLocaleString('{{ $fa ? 'fa-IR' : 'en-US' }}') + ' {{ $say('of', 'از') }} ' + members.length.toLocaleString('{{ $fa ? 'fa-IR' : 'en-US' }}') + ' {{ $say('members', 'عضو') }}'">{{ $num('4') }} {{ $say('of', 'از') }} {{ $num('4') }} {{ $say('members', 'عضو') }}</span>
             </div>
         </div>
     </section>
@@ -148,7 +149,7 @@
     <section class="pg-box" style="justify-items: center"
         x-data="{
             prefs: { twoFa: true, apiKeys: false, email: true, sms: false },
-            count() { return Object.values(this.prefs).filter(Boolean).length.toLocaleString('fa-IR') },
+            count() { return Object.values(this.prefs).filter(Boolean).length.toLocaleString('{{ $fa ? 'fa-IR' : 'en-US' }}') },
         }">
         <div style="display: grid; gap: .35rem; justify-items: center; text-align: center">
             <h3 class="pg-title" style="font-size: var(--nx-text-lg)">{{ $say('Sections, switches, one frame', 'بخش‌بندی، سوییچ، یک قاب') }}</h3>
@@ -174,7 +175,7 @@
                 </label></li>
                 <li class="cbcl-section-title" role="presentation">{{ $say('Notifications', 'اعلان‌ها') }}</li>
                 <li><label class="cbcl-row">
-                    <span>{{ $say('Email digest', 'خلاصهٔ ایمیلی') }} <small>· {{ $say('Mondays ۸:۰۰', 'دوشنبه‌ها ۸:۰۰') }}</small></span>
+                    <span>{{ $say('Email digest', 'خلاصهٔ ایمیلی') }} <small>· {{ $say('Mondays ' . $num('8:00'), 'دوشنبه‌ها ۸:۰۰') }}</small></span>
                     <span class="cbcl-meta"><input type="checkbox" class="cbcl-switch" x-model="prefs.email"></span>
                 </label></li>
                 <li><label class="cbcl-row">

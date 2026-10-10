@@ -11,13 +11,14 @@
     $num = fn (string $s): string => $fa ? strtr($s, ['0' => '۰', '1' => '۱', '2' => '۲', '3' => '۳', '4' => '۴', '5' => '۵', '6' => '۶', '7' => '۷', '8' => '۸', '9' => '۹']) : $s;
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
     .cbai-root {
         --cbai-accent: #0f62fe; --cbai-accent-hover: #0353e9;
         --cbai-text: #161616; --cbai-text-secondary: #525252;
         --cbai-border: #e0e0e0; --cbai-border-strong: #8d8d8d;
         --cbai-layer: #f4f4f4; --cbai-layer-hover: #e8e8e8;
         --cbai-ai: linear-gradient(90deg, #8a3ffc, #d02670, #1192e8);
-        --cbai-font: 'IBM Plex Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        --cbai-font: 'IBM Plex Sans', 'Inter', 'Vazirmatn', sans-serif;
         font-family: var(--cbai-font);
         display: grid; gap: 2rem; justify-items: center;
     }
@@ -107,7 +108,7 @@
 
         <div class="cbai-draft">
             <div class="cbai-draft-head">
-                <b>{{ $say('Ticket #۲۸۴۱ — draft reply', 'تیکت ۲۸۴۱ — پیش‌نویس پاسخ') }}</b>
+                <b>{{ $say('Ticket #' . $num('2841') . ' — draft reply', 'تیکت ۲۸۴۱ — پیش‌نویس پاسخ') }}</b>
                 <div class="cbai-inline" x-data="{ pop: false }" x-on:keydown.escape.window="pop = false" x-on:click.outside="pop = false">
                     <button type="button" class="cbai-slug" data-size="sm" x-show="mode === 'ai'" x-cloak
                         x-on:click="pop = !pop" x-bind:aria-expanded="pop.toString()"
@@ -119,7 +120,7 @@
                         </div>
                         <dl>
                             <div><dt>{{ $say('Model', 'مدل') }}</dt><dd>nabu-reply-3</dd></div>
-                            <div><dt>{{ $say('Confidence', 'اطمینان') }}</dt><dd>{{ $num('92') }}٪</dd></div>
+                            <div><dt>{{ $say('Confidence', 'اطمینان') }}</dt><dd>{{ $num('92') }}{{ $say('%', '٪') }}</dd></div>
                             <div><dt>{{ $say('Input tokens', 'توکن ورودی') }}</dt><dd>{{ $num('1,940') }}</dd></div>
                             <div><dt>{{ $say('Reviewed by', 'بازبینی') }}</dt><dd>{{ $say('not yet', 'نشده') }}</dd></div>
                         </dl>

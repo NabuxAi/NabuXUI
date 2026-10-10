@@ -17,11 +17,11 @@
         ['k' => 'retail', 'l' => $say('In person', 'فروش حضوری')],
     ];
     $rows = [
-        ['cust' => $say('Sara Ahmadi', 'سارا احمدی'), 'sum' => $say('$245.00', '۲٬۴۵۰٬۰۰۰ تومان'), 'st' => 'paid', 'ch' => 'online'],
+        ['cust' => $say('Sara Lindqvist', 'سارا احمدی'), 'sum' => $say('$245.00', '۲٬۴۵۰٬۰۰۰ تومان'), 'st' => 'paid', 'ch' => 'online'],
         ['cust' => $say('Reza Kaviani', 'رضا کاویانی'), 'sum' => $say('$89.00', '۸۹۰٬۰۰۰ تومان'), 'st' => 'pending', 'ch' => 'online'],
         ['cust' => $say('Mahsa Karimi', 'مهسا کریمی'), 'sum' => $say('$125.00', '۱٬۲۵۰٬۰۰۰ تومان'), 'st' => 'paid', 'ch' => 'retail'],
         ['cust' => $say('Arash Samadi', 'آرش صمدی'), 'sum' => $say('$368.00', '۳٬۶۸۰٬۰۰۰ تومان'), 'st' => 'refunded', 'ch' => 'retail'],
-        ['cust' => $say('Negar Tehrani', 'نگار تهرانی'), 'sum' => $say('$64.00', '۶۴۰٬۰۰۰ تومان'), 'st' => 'paid', 'ch' => 'online'],
+        ['cust' => $say('Nora Keller', 'نگار کریمی'), 'sum' => $say('$64.00', '۶۴۰٬۰۰۰ تومان'), 'st' => 'paid', 'ch' => 'online'],
         ['cust' => $say('Bahram Nik', 'بهرام نیک'), 'sum' => $say('$110.00', '۱٬۱۰۰٬۰۰۰ تومان'), 'st' => 'pending', 'ch' => 'retail'],
     ];
     $stLabel = ['paid' => $say('Paid', 'پرداخت‌شده'), 'pending' => $say('Pending', 'در انتظار'), 'refunded' => $say('Refunded', 'مرجوع')];
@@ -37,6 +37,7 @@
     $viewsJson = e(json_encode($views));
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     [x-cloak] { display: none !important; }
     .plfl-root {
         --plfl-surface: #FFFFFF; --plfl-raised: #F6F6F6; --plfl-text: #303030; --plfl-subdued: #616161;
@@ -44,7 +45,7 @@
         --plfl-green: #008060; --plfl-on-green: #FFFFFF; --plfl-green-hover: #004C3F;
         --plfl-tint: color-mix(in srgb, var(--plfl-green) 9%, var(--plfl-surface));
         --plfl-critical: #D72C0D; --plfl-warn: #8A6116; --plfl-info: #2C6ECB; --plfl-focus: #005BD3;
-        font-family: Inter, -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+        font-family: 'Inter', 'Vazirmatn', sans-serif;
         display: grid; gap: 1.5rem; justify-items: center;
     }
     html[data-theme="dark"] .plfl-root {
@@ -200,7 +201,7 @@
                 </template>
                 <button type="button" class="plfl-clear" x-show="chips.length || q.trim()" x-cloak x-on:click="clearAll()">{{ $say('Clear all filters', 'پاک‌کردن همهٔ فیلترها') }}</button>
             </div>
-            <p class="plfl-count" aria-live="polite" x-text="fd(out.length) + ' {{ $say('results', 'نتیجه') }}'">۶ نتیجه</p>
+            <p class="plfl-count" aria-live="polite" x-text="fd(out.length) + ' {{ $say('results', 'نتیجه') }}'">{{ $say('6 results', '۶ نتیجه') }}</p>
             <div class="plfl-list">
                 <template x-for="(r, i) in out" :key="r.cust + i">
                     <div class="plfl-row">

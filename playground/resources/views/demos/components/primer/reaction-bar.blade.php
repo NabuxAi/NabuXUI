@@ -8,10 +8,11 @@
     $say = fn (string $en, string $faText) => $fa ? $faText : $en;
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap');
     .prr-root {
         --prr-canvas: #ffffff; --prr-subtle: #f6f8fa; --prr-fg: #1f2328; --prr-muted: #59636e;
         --prr-border: #d1d9e0; --prr-accent: #0969da; --prr-count: #eff2f5;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+        font-family: 'Figtree', 'Inter', 'Vazirmatn', sans-serif;
         color: var(--prr-fg);
     }
     html[data-theme="dark"] .prr-root {
@@ -90,7 +91,7 @@
 
         <div class="prr-comment">
             <header>
-                <span class="prr-avatar" aria-hidden="true">م</span>
+                <span class="prr-avatar" aria-hidden="true">{{ $say('M', 'م') }}</span>
                 <b>{{ $say('Milad', 'میلاد') }}</b>
                 <time>{{ $say('commented 2 hours ago', '۲ ساعت پیش کامنت گذاشت') }}</time>
                 <span class="prr-ref">{{ $say('release 2.4', 'نسخهٔ ۲٫۴') }}</span>
@@ -126,7 +127,7 @@
     </div>
     <div class="prr-root prr-strip">
         <div class="prr-spec">
-            <span class="prr-pill prr-sm" aria-pressed="false"><span aria-hidden="true">🚀</span><span class="prr-count">{{ $say('۲۳', '23') }}</span></span>
+            <span class="prr-pill prr-sm" aria-pressed="false"><span aria-hidden="true">🚀</span><span class="prr-count">{{ $say('23', '۲۳') }}</span></span>
             <small>compact</small>
         </div>
         <div class="prr-spec">

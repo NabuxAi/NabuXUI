@@ -10,12 +10,13 @@
     $say = fn (string $en, string $faText) => $fa ? $faText : $en;
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     [x-cloak] { display: none !important; }
     .plcp-root {
         --plcp-surface: #FFFFFF; --plcp-raised: #F6F6F6; --plcp-text: #303030; --plcp-subdued: #616161;
         --plcp-border: #E3E3E3; --plcp-strong: #8A8A8A;
         --plcp-green: #008060; --plcp-focus: #005BD3; --plcp-critical: #D72C0D;
-        font-family: Inter, -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+        font-family: 'Inter', 'Vazirmatn', sans-serif;
         display: grid; gap: 1.5rem; justify-items: center;
     }
     html[data-theme="dark"] .plcp-root {
@@ -131,7 +132,7 @@
                 <input type="text" class="plcp-hexin" x-model="hexInput" x-on:focus="hexFocus = true" x-on:blur="hexFocus = false; setHex()" x-on:input="setHex()" x-bind:data-bad="bad ? '' : null" spellcheck="false" aria-label="{{ $say('Hex color', 'رنگ هگز') }}">
                 <span class="plcp-preview" x-bind:style="'background: ' + css" aria-hidden="true"></span>
             </div>
-            <p class="plcp-reads" style="margin: 0" x-text="'{{ $say('Saturation', 'اشباع') }} ' + fd(Math.round(s)) + '٪ · {{ $say('Brightness', 'روشنایی') }} ' + fd(Math.round(v)) + '٪ · {{ $say('Opacity', 'شفافیت') }} ' + fd(Math.round(aPct)) + '٪'"></p>
+            <p class="plcp-reads" style="margin: 0" x-text="'{{ $say('Saturation', 'اشباع') }} ' + fd(Math.round(s)) + '{{ $say('%', '٪') }} · {{ $say('Brightness', 'روشنایی') }} ' + fd(Math.round(v)) + '{{ $say('%', '٪') }} · {{ $say('Opacity', 'شفافیت') }} ' + fd(Math.round(aPct)) + '{{ $say('%', '٪') }}'"></p>
         </div>
     </div>
 </section>

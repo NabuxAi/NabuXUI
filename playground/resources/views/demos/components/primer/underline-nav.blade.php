@@ -21,11 +21,12 @@
     };
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap');
     .prn-root {
         --prn-canvas: #ffffff; --prn-subtle: #f6f8fa; --prn-fg: #1f2328; --prn-muted: #59636e;
         --prn-border: #d1d9e0; --prn-accent: #0969da;
         --prn-success: #1a7f37; --prn-done: #8250df; --prn-danger: #cf222e; --prn-count: #eff2f5;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+        font-family: 'Figtree', 'Inter', 'Vazirmatn', sans-serif;
         color: var(--prn-fg);
     }
     html[data-theme="dark"] .prn-root {
@@ -128,9 +129,9 @@
                 </div>
 
                 <div class="prn-mini" x-show="tab === 'checks'" x-cloak>
-                    <div class="prn-mini-row" data-tone="success">{!! $oct('check') !!} <b>build و تست</b> <small>#{{ $num(812) }} · {{ $say('3 دقیقه', '3 min') }}</small></div>
+                    <div class="prn-mini-row" data-tone="success">{!! $oct('check') !!} <b>{{ $say('build & test', 'build و تست') }}</b> <small>#{{ $num(812) }} · {{ $say('3 min', '۳ دقیقه') }}</small></div>
                     <div class="prn-mini-row" data-tone="success">{!! $oct('check') !!} <b>lint</b> <small>#{{ $num(812) }} · {{ $fa ? '۴۱ ثانیه' : '41s' }}</small></div>
-                    <div class="prn-mini-row" data-tone="danger">{!! $oct('x') !!} <b>e2e / گزارش‌ها</b> <small>#{{ $num(812) }} · {{ $fa ? '۵ دقیقه' : '5 min' }} · {{ $say('flaky, retried', 'بی‌ثبات، دوباره اجرا شد') }}</small></div>
+                    <div class="prn-mini-row" data-tone="danger">{!! $oct('x') !!} <b>{{ $say('e2e / reports', 'e2e / گزارش‌ها') }}</b> <small>#{{ $num(812) }} · {{ $fa ? '۵ دقیقه' : '5 min' }} · {{ $say('flaky, retried', 'بی‌ثبات، دوباره اجرا شد') }}</small></div>
                 </div>
 
                 <div class="prn-mini" x-show="tab === 'files'" x-cloak>

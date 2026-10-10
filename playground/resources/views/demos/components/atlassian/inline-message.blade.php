@@ -9,11 +9,12 @@
     $say = fn (string $en, string $faText) => $fa ? $faText : $en;
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     .atim-root {
         --atim-blue: #0052CC; --atim-ink: #172B4D; --atim-ink-strong: #091E42; --atim-muted: #626F86;
         --atim-subtle: #44546F; --atim-border: #DFE1E6; --atim-hover: #F1F2F4; --atim-surface: #FFFFFF;
         --atim-info: #0055CC; --atim-ok: #1F845A; --atim-warn: #A54800; --atim-err: #CA3521; --atim-disc: #5E4DB2;
-        font-family: Inter, system-ui, sans-serif; color: var(--atim-ink);
+        font-family: 'Inter', 'Vazirmatn', sans-serif; color: var(--atim-ink);
     }
     html[data-theme="dark"] .atim-root {
         --atim-blue: #388BFF; --atim-ink: #C7D1DB; --atim-ink-strong: #E4EAF0; --atim-muted: #8590A2;
@@ -31,11 +32,11 @@
 
     .atim-panel { inline-size: min(100%, 30rem); margin-inline: auto; border: 1px solid var(--atim-border);
                   border-radius: 6px; background: var(--atim-surface); padding: 1.25rem; display: grid; gap: 1rem; }
-    .atim-panel > h4 { margin: 0; font: 500 1.15rem/1.3 "Charlie Display", Inter, system-ui; color: var(--atim-ink-strong); }
-    .atim-panel > h4 small { display: block; margin-block-start: .2rem; font: 400 .76rem/1.5 Inter, system-ui; color: var(--atim-muted); }
-    .atim-field label { display: block; margin-block-end: .3rem; font: 500 .78rem Inter, system-ui; color: var(--atim-subtle); }
+    .atim-panel > h4 { margin: 0; font: 500 1.15rem/1.3 "Charlie Display", Inter, Vazirmatn, system-ui; color: var(--atim-ink-strong); }
+    .atim-panel > h4 small { display: block; margin-block-start: .2rem; font: 400 .76rem/1.5 Inter, Vazirmatn, system-ui; color: var(--atim-muted); }
+    .atim-field label { display: block; margin-block-end: .3rem; font: 500 .78rem Inter, Vazirmatn, system-ui; color: var(--atim-subtle); }
     .atim-field input { inline-size: 100%; box-sizing: border-box; block-size: 2.25rem; padding-inline: .65rem; border: 1px solid var(--atim-border);
-                        border-radius: 4px; background: var(--atim-surface); color: var(--atim-ink-strong); font: 400 .85rem Inter, system-ui; transition: border-color .15s ease; }
+                        border-radius: 4px; background: var(--atim-surface); color: var(--atim-ink-strong); font: 400 .85rem Inter, Vazirmatn, system-ui; transition: border-color .15s ease; }
     .atim-field input:hover { background: var(--atim-hover); }
     .atim-field input[data-state='error'] { border-color: #CA3521; }
     .atim-field input[data-state='error']:focus-visible { outline-color: #CA3521; }
@@ -49,22 +50,22 @@
     .atim-msg[data-tone='warning'] svg { stroke: var(--atim-warn); }
     .atim-msg[data-tone='error'] svg { stroke: var(--atim-err); }
     .atim-msg[data-tone='discovery'] svg { stroke: var(--atim-disc); }
-    .atim-msg b { display: block; font: 600 .78rem/1.5 Inter, system-ui; color: var(--atim-ink-strong); }
-    .atim-msg small { display: block; font: 400 .74rem/1.5 Inter, system-ui; color: var(--atim-muted); }
+    .atim-msg b { display: block; font: 600 .78rem/1.5 Inter, Vazirmatn, system-ui; color: var(--atim-ink-strong); }
+    .atim-msg small { display: block; font: 400 .74rem/1.5 Inter, Vazirmatn, system-ui; color: var(--atim-muted); }
     .atim-row { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; }
     .atim-btn { block-size: 2rem; padding-inline: .8rem; border: none; border-radius: 3px; cursor: pointer;
-                font: 500 .8rem/1 Inter, system-ui; color: #fff; background: var(--atim-blue); transition: background .15s ease; }
+                font: 500 .8rem/1 Inter, Vazirmatn, system-ui; color: #fff; background: var(--atim-blue); transition: background .15s ease; }
     .atim-btn:hover { background: color-mix(in srgb, var(--atim-blue) 88%, black); }
     .atim-btn:disabled { cursor: not-allowed; background: color-mix(in srgb, var(--atim-subtle) 30%, transparent); }
     .atim-chips { display: flex; flex-wrap: wrap; gap: .35rem; }
     .atim-chip { display: inline-flex; align-items: center; gap: .4rem; padding: .25rem .55rem; border-radius: 3px;
-                 background: var(--atim-hover); font: 500 .74rem/1.4 Inter, system-ui; color: var(--atim-subtle); }
+                 background: var(--atim-hover); font: 500 .74rem/1.4 Inter, Vazirmatn, system-ui; color: var(--atim-subtle); }
     .atim-chip i { inline-size: .55rem; aspect-ratio: 1; border-radius: 50%; background: var(--atim-blue); }
 
     .atim-family { display: grid; gap: 1rem 2rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
                    inline-size: 100%; max-inline-size: 42rem; justify-items: start; }
     .atim-cell { display: grid; gap: .35rem; min-inline-size: 0; }
-    .atim-cell > small { font: 500 .7rem/1.4 Inter, system-ui; color: var(--atim-muted); letter-spacing: .3px; }
+    .atim-cell > small { font: 500 .7rem/1.4 Inter, Vazirmatn, system-ui; color: var(--atim-muted); letter-spacing: .3px; }
     @media (prefers-reduced-motion: reduce) {
         .atim-root * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
     }
@@ -138,7 +139,7 @@
             </div>
             <div class="atim-row">
                 <button type="button" class="atim-btn" x-on:click="send()" :disabled="state() !== 'ok'">{{ $say('Send invite', 'ارسال دعوت') }}</button>
-                <span style="font: 400 .74rem/1.4 Inter, system-ui; color: var(--atim-muted)">{{ $fa ? '۳ عضو فعلی: علی، سارا، مریم' : '3 current members: Ali, Sara, Maryam' }}</span>
+                <span style="font: 400 .74rem/1.4 Inter, Vazirmatn, system-ui; color: var(--atim-muted)">{{ $fa ? '۳ عضو فعلی: علی، سارا، مریم' : '3 current members: Ali, Sara, Maryam' }}</span>
             </div>
             <div class="atim-chips" aria-label="{{ $say('Try these addresses', 'این نشانی‌ها را امتحان کنید') }}">
                 <span class="atim-chip"><i aria-hidden="true"></i>hosein@nabu.example</span>

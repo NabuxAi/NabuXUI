@@ -9,11 +9,12 @@
     $say = fn (string $en, string $faText) => $fa ? $faText : $en;
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     .atsn-root {
         --atsn-blue: #0052CC; --atsn-ink: #172B4D; --atsn-ink-strong: #091E42; --atsn-muted: #626F86;
         --atsn-subtle: #44546F; --atsn-border: #DFE1E6; --atsn-hover: #F1F2F4; --atsn-surface: #FFFFFF; --atsn-page: #F7F8F9;
         --atsn-tint: #E9F2FF;
-        font-family: Inter, system-ui, sans-serif; color: var(--atsn-ink);
+        font-family: 'Inter', 'Vazirmatn', sans-serif; color: var(--atsn-ink);
     }
     html[data-theme="dark"] .atsn-root {
         --atsn-blue: #388BFF; --atsn-ink: #C7D1DB; --atsn-ink-strong: #E4EAF0; --atsn-muted: #8590A2;
@@ -36,14 +37,14 @@
                cursor: pointer; text-align: start; inline-size: 100%; }
     .atsn-ws:hover { background: var(--atsn-hover); }
     .atsn-ws i { flex: none; display: grid; place-items: center; inline-size: 1.75rem; aspect-ratio: 1; border-radius: 4px;
-                 background: linear-gradient(135deg, #0052CC, #0747A6); color: #fff; font: 700 .8rem Inter, system-ui; font-style: normal; }
-    .atsn-ws span { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 .8rem/1.3 Inter, system-ui; color: var(--atsn-ink-strong); }
-    .atsn-ws small { display: block; font: 400 .68rem/1.3 Inter, system-ui; color: var(--atsn-muted); }
+                 background: linear-gradient(135deg, #0052CC, #0747A6); color: #fff; font: 700 .8rem Inter, Vazirmatn, system-ui; font-style: normal; }
+    .atsn-ws span { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 .8rem/1.3 Inter, Vazirmatn, system-ui; color: var(--atsn-ink-strong); }
+    .atsn-ws small { display: block; font: 400 .68rem/1.3 Inter, Vazirmatn, system-ui; color: var(--atsn-muted); }
     .atsn-ws svg { flex: none; margin-inline-start: auto; stroke: var(--atsn-muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
-    .atsn-label { margin: .55rem .4rem .15rem; font: 700 .66rem/1.4 Inter, system-ui; letter-spacing: .5px; color: var(--atsn-muted); }
+    .atsn-label { margin: .55rem .4rem .15rem; font: 700 .66rem/1.4 Inter, Vazirmatn, system-ui; letter-spacing: .5px; color: var(--atsn-muted); }
     .atsn-item { display: flex; align-items: center; gap: .55rem; inline-size: 100%; padding: .4rem .45rem; border: none; border-radius: 4px;
-                 background: none; cursor: pointer; text-align: start; font: 500 .8rem/1.3 Inter, system-ui; color: var(--atsn-subtle);
+                 background: none; cursor: pointer; text-align: start; font: 500 .8rem/1.3 Inter, Vazirmatn, system-ui; color: var(--atsn-subtle);
                  transition: background .15s ease, color .15s ease; }
     .atsn-item:hover { background: var(--atsn-hover); color: var(--atsn-ink-strong); }
     .atsn-item[data-selected] { background: var(--atsn-tint); color: var(--atsn-blue); font-weight: 600; }
@@ -52,7 +53,7 @@
     .atsn-item > svg.chev { flex: none; inline-size: .85rem; stroke: var(--atsn-muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
                             transition: rotate .2s ease; }
     .atsn-item[aria-expanded='true'] svg.chev { rotate: 90deg; }
-    .atsn-count { margin-inline-start: auto; font: 600 .68rem Inter, system-ui; color: var(--atsn-muted); }
+    .atsn-count { margin-inline-start: auto; font: 600 .68rem Inter, Vazirmatn, system-ui; color: var(--atsn-muted); }
     .atsn-item[data-selected] .atsn-count { color: var(--atsn-blue); }
 
     .atsn-collapse { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s cubic-bezier(.2, 0, 0, 1); }
@@ -62,9 +63,9 @@
 
     .atsn-content { flex: 1 1 12rem; min-inline-size: 0; box-sizing: border-box; border: 1px solid var(--atsn-border); border-radius: 6px;
                     background: var(--atsn-page); padding: 1rem; display: grid; gap: .7rem; align-content: start; }
-    .atsn-content h4 { margin: 0; font: 500 1.05rem/1.3 "Charlie Display", Inter, system-ui; color: var(--atsn-ink-strong); }
+    .atsn-content h4 { margin: 0; font: 500 1.05rem/1.3 "Charlie Display", Inter, Vazirmatn, system-ui; color: var(--atsn-ink-strong); }
     .atsn-skel { block-size: 2.4rem; border: 1px solid var(--atsn-border); border-radius: 4px; background: var(--atsn-surface);
-                 display: flex; align-items: center; gap: .55rem; padding-inline: .6rem; font: 400 .76rem/1.4 Inter, system-ui; color: var(--atsn-subtle); }
+                 display: flex; align-items: center; gap: .55rem; padding-inline: .6rem; font: 400 .76rem/1.4 Inter, Vazirmatn, system-ui; color: var(--atsn-subtle); }
     .atsn-skel i { flex: none; inline-size: 1.1rem; aspect-ratio: 1; border-radius: 3px; background: var(--atsn-tint); }
     .atsn-skel b { margin-inline-start: auto; font-weight: 600; font-size: .68rem; color: var(--atsn-muted); }
     @media (max-width: 560px) {
@@ -80,7 +81,7 @@
     .atsn-rail i svg { inline-size: 1.05rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
     .atsn-flat { inline-size: 12rem; box-sizing: border-box; border: 1px solid var(--atsn-border); border-radius: 6px; background: var(--atsp-surface, var(--atsn-surface));
                  padding: .6rem; display: grid; gap: .15rem; align-content: start; }
-    .atsn-cap { font: 500 .72rem/1.4 Inter, system-ui; color: var(--nx-text-muted); display: grid; gap: .3rem; justify-items: center; text-align: center; }
+    .atsn-cap { font: 500 .72rem/1.4 Inter, Vazirmatn, system-ui; color: var(--nx-text-muted); display: grid; gap: .3rem; justify-items: center; text-align: center; }
     @media (prefers-reduced-motion: reduce) {
         .atsn-root * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
     }
@@ -117,7 +118,7 @@
         <div class="atsn-app">
             <nav class="atsn-nav" aria-label="{{ $say('Main navigation', 'ناوبری اصلی') }}">
                 <button type="button" class="atsn-ws">
-                    <i aria-hidden="true">ن</i>
+                    <i aria-hidden="true">{{ $fa ? 'ن' : 'N' }}</i>
                     <span><b style="font-weight: inherit">{{ $say('Nabu platform', 'نابو پلتفرم') }}</b><small>{{ $fa ? '۱۲ همکار' : '12 teammates' }}</small></span>
                     <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
                 </button>

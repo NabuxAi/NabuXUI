@@ -10,6 +10,7 @@
     $say = fn (string $en, string $faText) => $fa ? $faText : $en;
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     [x-cloak] { display: none !important; }
     .plsb-root {
         --plsb-surface: #FFFFFF; --plsb-raised: #F6F6F6; --plsb-text: #303030; --plsb-subdued: #616161;
@@ -17,7 +18,7 @@
         --plsb-green: #008060; --plsb-on-green: #FFFFFF; --plsb-green-hover: #004C3F;
         --plsb-bar: #1A1A1A; --plsb-on-bar: #F1F1F1; --plsb-bar-sub: #B5B5B5;
         --plsb-focus: #005BD3;
-        font-family: Inter, -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+        font-family: 'Inter', 'Vazirmatn', sans-serif;
         display: grid; gap: 1.5rem; justify-items: center;
     }
     html[data-theme="dark"] .plsb-root {

@@ -10,12 +10,13 @@
     $say = fn (string $en, string $faText) => $fa ? $faText : $en;
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap');
     .sly-root {
         --sly-blue: #0176D3; --sly-green: #04844B; --sly-orange: #FE9339; --sly-purple: #6739B7;
         --sly-teal: #0B827C; --sly-pink: #B32D69; --sly-yellow: #FFB75D; --sly-red: #BA0517;
         --sly-text: #181818; --sly-weak: #444444; --sly-muted: #706E6B;
         --sly-border: #DDDBDA; --sly-bg: #F3F3F3; --sly-card: #FFFFFF;
-        font-family: 'Salesforce Sans', -apple-system, 'Segoe UI', Roboto, sans-serif;
+        font-family: 'Source Sans 3', 'Inter', 'Vazirmatn', ui-sans-serif, system-ui, sans-serif;
         color: var(--sly-text);
         display: grid; gap: 1.5rem;
     }
@@ -113,9 +114,9 @@
                 <p class="sly-legend">{{ $say('Opportunity:', 'فرصت:') }} <b x-text="name(0)"></b></p>
                 <dl class="sly-fields">
                     <div><dt>{{ $say('Account', 'حساب') }}</dt><dd>{{ $say('Acme Industrial', 'صنایع آکمی') }}</dd></div>
-                    <div><dt>{{ $say('Amount', 'مبلغ') }}</dt><dd>{{ $say('2,400,000,000 IRR', '۲٬۴۰۰٬۰۰۰٬۰۰۰ ریال') }}</dd></div>
-                    <div><dt>{{ $say('Owner', 'مالک') }}</dt><dd>{{ $say('Sara Ahmadi', 'سارا احمدی') }}</dd></div>
-                    <div><dt>{{ $say('Close date', 'تاریخ بستن') }}</dt><dd>{{ $say('Feb 28, 1404', '۲۸ اسفند ۱۴۰۴') }}</dd></div>
+                    <div><dt>{{ $say('Amount', 'مبلغ') }}</dt><dd>{{ $say('€240,000,000', '۲٬۴۰۰٬۰۰۰٬۰۰۰ ریال') }}</dd></div>
+                    <div><dt>{{ $say('Owner', 'مالک') }}</dt><dd>{{ $say('Sara Lindqvist', 'سارا احمدی') }}</dd></div>
+                    <div><dt>{{ $say('Close date', 'تاریخ بستن') }}</dt><dd>{{ $say('Feb 28, 2026', '۲۸ اسفند ۱۴۰۴') }}</dd></div>
                 </dl>
             </div>
 
@@ -123,7 +124,7 @@
                 <p class="sly-legend">{{ $say('Related records', 'رکوردهای مرتبط') }}</p>
                 <ul class="sly-mini">
                     <li>{{ $say('Contact · Reza Kazemi', 'مخاطب · رضا کاظمی') }} <small>{{ $say('Technical reviewer', 'کارشناس فنی') }}</small></li>
-                    <li>{{ $say('Quote · 1404/Q-18', 'پیش‌فاکتور · ۱۴۰۴/Q-18') }} <small>{{ $say('Sent yesterday', 'ارسال‌شده دیروز') }}</small></li>
+                    <li>{{ $say('Quote · 2026/Q-18', 'پیش‌فاکتور · ۱۴۰۴/Q-18') }} <small>{{ $say('Sent yesterday', 'ارسال‌شده دیروز') }}</small></li>
                     <li>{{ $say('Task · Follow up on pricing', 'وظیفه · پیگیری قیمت') }} <small>{{ $say('Due Sunday', 'مهلت یکشنبه') }}</small></li>
                 </ul>
             </div>
@@ -131,17 +132,17 @@
             <div class="sly-panel" role="tabpanel" x-show="cur === 2" x-cloak>
                 <p class="sly-legend">{{ $say('News about', 'اخبار دربارهٔ') }} <b>{{ $say('Acme Industrial', 'صنایع آکمی') }}</b></p>
                 <ul class="sly-log">
-                    <li>{{ $say('Acme opened a second plant in Isfahan — expansion budget approved.', 'آکمی کارخانهٔ دوم را در اصفهان باز کرد — بودجهٔ توسعه تصویب شد.') }}<time>{{ $say('۲ روز پیش', '۲ روز پیش') }}</time></li>
-                    <li>{{ $say('Q3 earnings call: industrial automation up ۱۸٪.', 'تماس گزارش فصل: اتوماسیون صنعتی ۱۸٪ رشد داشت.') }}<time>{{ $say('۱ هفته پیش', '۱ هفته پیش') }}</time></li>
+                    <li>{{ $say('Acme opened a second plant in Istanbul — expansion budget approved.', 'آکمی کارخانهٔ دوم را در استانبول باز کرد — بودجهٔ توسعه تصویب شد.') }}<time>{{ $say('2 days ago', '۲ روز پیش') }}</time></li>
+                    <li>{{ $say('Q3 earnings call: industrial automation up 18%.', 'تماس گزارش فصل: اتوماسیون صنعتی ۱۸٪ رشد داشت.') }}<time>{{ $say('1 week ago', '۱ هفته پیش') }}</time></li>
                 </ul>
             </div>
 
             <div class="sly-panel" role="tabpanel" x-show="cur === 3" x-cloak>
                 <p class="sly-legend">{{ $say('Recent activity', 'فعالیت اخیر') }}</p>
                 <ul class="sly-log">
-                    <li>{{ $say('Sara sent the revised quote.', 'سارا پیش‌فاکتور بازبینی‌شده را فرستاد.') }}<time>{{ $say('۲ ساعت پیش', '۲ ساعت پیش') }}</time></li>
-                    <li>{{ $say('Stage moved to Negotiation/Review.', 'مرحله به «مذاکره و بازبینی» رفت.') }}<time>{{ $say('دیروز', 'دیروز') }}</time></li>
-                    <li>{{ $say('Reza attached the pricing sheet.', 'رضا جدول قیمت را پیوست کرد.') }}<time>{{ $say('۳ روز پیش', '۳ روز پیش') }}</time></li>
+                    <li>{{ $say('Sara sent the revised quote.', 'سارا پیش‌فاکتور بازبینی‌شده را فرستاد.') }}<time>{{ $say('2 hours ago', '۲ ساعت پیش') }}</time></li>
+                    <li>{{ $say('Stage moved to Negotiation/Review.', 'مرحله به «مذاکره و بازبینی» رفت.') }}<time>{{ $say('yesterday', 'دیروز') }}</time></li>
+                    <li>{{ $say('Reza attached the pricing sheet.', 'رضا جدول قیمت را پیوست کرد.') }}<time>{{ $say('3 days ago', '۳ روز پیش') }}</time></li>
                 </ul>
             </div>
         </div>

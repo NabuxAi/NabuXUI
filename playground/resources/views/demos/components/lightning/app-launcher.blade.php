@@ -24,12 +24,13 @@
     ];
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap');
     .sla-root {
         --sla-blue: #0176D3; --sla-blue-soft: color-mix(in srgb, #0176D3 8%, #FFFFFF);
         --sla-navy: #0B5CAB; --sla-green: #04844B; --sla-purple: #6739B7; --sla-orange: #FE9339;
         --sla-text: #181818; --sla-weak: #444444; --sla-muted: #706E6B;
         --sla-border: #DDDBDA; --sla-bg: #F3F3F3; --sla-card: #FFFFFF;
-        font-family: 'Salesforce Sans', -apple-system, 'Segoe UI', Roboto, sans-serif;
+        font-family: 'Source Sans 3', 'Inter', 'Vazirmatn', ui-sans-serif, system-ui, sans-serif;
         color: var(--sla-text);
         display: grid; gap: 1.5rem;
     }
@@ -146,7 +147,7 @@
                             </template>
                         </div>
                         <p class="sla-empty" x-show="matches.length === 0" x-cloak>
-                            {{ $say('No app matches — try «فروش» or «Sales».', 'اپی پیدا نشد — «فروش» یا «Sales» را امتحان کنید.') }}
+                            {{ $say('No app matches — try “Sales” or “Service”.', 'اپی پیدا نشد — «فروش» یا «Services» را امتحان کنید.') }}
                         </p>
                     </section>
                 </div>

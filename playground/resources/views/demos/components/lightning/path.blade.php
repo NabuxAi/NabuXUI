@@ -25,13 +25,15 @@
     $stepsJson = json_encode(array_map(static fn (array $s): array => ['fa' => $s[0], 'en' => $s[1], 'color' => $s[2]], $stages), JSON_UNESCAPED_UNICODE);
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap');
     .slp-root {
         --slp-blue: #0176D3; --slp-teal: #0B827C; --slp-purple: #6739B7; --slp-orange: #FE9339;
         --slp-pink: #B32D69; --slp-yellow: #FFB75D; --slp-red: #BA0517; --slp-green: #04844B;
         --slp-text: #181818; --slp-weak: #444444; --slp-muted: #706E6B;
         --slp-border: #DDDBDA; --slp-bg: #F3F3F3; --slp-card: #FFFFFF;
         --slp-step-bg: #E8E8E8; --slp-step-ink: #3E3E3C;
-        font-family: 'Salesforce Sans', -apple-system, 'Segoe UI', Roboto, sans-serif;
+        font-family: 'Source Sans 3', 'Inter', 'Vazirmatn', ui-sans-serif, system-ui, sans-serif;
+        font-variant-numeric: tabular-nums;
         color: var(--slp-text);
         display: grid; gap: 1.5rem;
     }

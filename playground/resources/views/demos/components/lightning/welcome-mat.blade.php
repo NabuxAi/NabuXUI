@@ -11,12 +11,13 @@
     $jsf = fn (string $s): string => str_replace('"', '&quot;', json_encode($s, JSON_UNESCAPED_UNICODE));
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap');
     .slw-root {
         --slw-blue: #0176D3; --slw-blue-soft: color-mix(in srgb, #0176D3 8%, #FFFFFF);
         --slw-green: #04844B; --slw-navy: #0B5CAB;
         --slw-text: #181818; --slw-weak: #444444; --slw-muted: #706E6B;
         --slw-border: #DDDBDA; --slw-bg: #F3F3F3; --slw-card: #FFFFFF;
-        font-family: 'Salesforce Sans', -apple-system, 'Segoe UI', Roboto, sans-serif;
+        font-family: 'Source Sans 3', 'Inter', 'Vazirmatn', ui-sans-serif, system-ui, sans-serif;
         color: var(--slw-text);
         display: grid; gap: 1.5rem;
     }

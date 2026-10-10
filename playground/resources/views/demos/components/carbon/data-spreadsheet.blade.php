@@ -13,7 +13,7 @@
     $rows = [1, 2, 3, 4, 5, 6];
     // Budget data: [rowLabel][colLetter] — sparse on purpose.
     $data = [
-        1 => ['', $fa ? 'فروردین' : 'Farvardin', $fa ? 'اردیبهشت' : 'Ordibehesht', $fa ? 'خرداد' : 'Khordad', ''],
+        1 => ['', $fa ? 'فروردین' : 'April', $fa ? 'اردیبهشت' : 'May', $fa ? 'خرداد' : 'June', ''],
         2 => [$fa ? 'درآمد' : 'Revenue', '84,000', '91,500', '88,200', ''],
         3 => [$fa ? 'زیرساخت' : 'Infrastructure', '22,400', '22,400', '23,900', ''],
         4 => [$fa ? 'پشتیبانی' : 'Support', '11,800', '12,600', '12,100', ''],
@@ -23,6 +23,7 @@
     $cell = fn (int $r, string $c): string => $data[$r][array_search($c, $cols, true)] ?? '';
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
     .cbsp-root {
         --cbsp-accent: #0f62fe; --cbsp-accent-hover: #0353e9;
         --cbsp-text: #161616; --cbsp-text-secondary: #525252;
@@ -30,7 +31,7 @@
         --cbsp-layer: #f4f4f4; --cbsp-layer-hover: #e8e8e8;
         --cbsp-header: #e0e0e0;
         --cbsp-mono: 'IBM Plex Mono', Menlo, Consolas, monospace;
-        --cbsp-font: 'IBM Plex Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        --cbsp-font: 'IBM Plex Sans', 'Inter', 'Vazirmatn', sans-serif;
         font-family: var(--cbsp-font);
         display: grid; gap: 2rem; justify-items: center;
     }
@@ -158,7 +159,7 @@
             </div>
         </div>
         <p class="cbsp-hint">
-            {{ $say('Row ۵ is the margin line — the data-total cells stay bold at every zoom, and the ruler column headers highlight with the active cell.', 'سطر ۵ خط سود است — سل‌های data-total در هر بزرگ‌نمایی توپر می‌مانند و سربرگ‌های خط‌کش با سلِ فعال هایلایت می‌شوند.') }}
+            {{ $say('Row 5 is the margin line — the data-total cells stay bold at every zoom, and the ruler column headers highlight with the active cell.', 'سطر ۵ خط سود است — سل‌های data-total در هر بزرگ‌نمایی توپر می‌مانند و سربرگ‌های خط‌کش با سلِ فعال هایلایت می‌شوند.') }}
         </p>
     </section>
 </div>
@@ -178,7 +179,7 @@
                     <div class="cbsp-grid">
                         <span class="cbsp-colhead"></span>
                         <span class="cbsp-colhead">A</span><span class="cbsp-colhead">B</span><span class="cbsp-colhead">C</span>
-                        @foreach ([1 => ['۹٬۲۰۰', '', '۴٬۱۰۰'], 2 => ['', '۷٬۸۰۰', '']] as $r => $cells)
+                        @foreach ([1 => [$num('9,200'), '', $num('4,100')], 2 => ['', $num('7,800'), '']] as $r => $cells)
                             <span class="cbsp-rowhead">{{ $num((string) $r) }}</span>
                             @foreach ($cells as $v)
                                 <span class="cbsp-cell" data-num{{ $v === '' ? ' data-empty' : '' }}>{{ $v }}</span>
@@ -193,8 +194,8 @@
                     <div class="cbsp-grid">
                         <span class="cbsp-colhead"></span>
                         <span class="cbsp-colhead">A</span><span class="cbsp-colhead">B</span><span class="cbsp-colhead">C</span>
-                        <span class="cbsp-rowhead">۱</span>
-                        <span class="cbsp-cell" data-num>۱۲٬۵۰۰</span><span class="cbsp-cell"></span><span class="cbsp-cell" data-num>۹۹۰</span>
+                        <span class="cbsp-rowhead">{{ $num('1') }}</span>
+                        <span class="cbsp-cell" data-num>{{ $num('12,500') }}</span><span class="cbsp-cell"></span><span class="cbsp-cell" data-num>{{ $num('990') }}</span>
                     </div>
                 </div>
                 <small>header-less ruler · single row</small>

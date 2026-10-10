@@ -14,11 +14,12 @@
     ];
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     .ates-root {
         --ates-blue: #0052CC; --ates-ink: #172B4D; --ates-ink-strong: #091E42; --ates-muted: #626F86;
         --ates-subtle: #44546F; --ates-border: #DFE1E6; --ates-hover: #F1F2F4; --ates-surface: #FFFFFF; --ates-page: #F7F8F9;
         --ates-art: #8590A2; --ates-art-soft: #DFE1E6;
-        font-family: Inter, system-ui, sans-serif; color: var(--ates-ink);
+        font-family: 'Inter', 'Vazirmatn', sans-serif; color: var(--ates-ink);
     }
     html[data-theme="dark"] .ates-root {
         --ates-blue: #388BFF; --ates-ink: #C7D1DB; --ates-ink-strong: #E4EAF0; --ates-muted: #8590A2;
@@ -36,19 +37,19 @@
 
     .ates-stage { inline-size: min(100%, 34rem); margin-inline: auto; border: 1px solid var(--ates-border); border-radius: 6px;
                   background: var(--ates-surface); padding: 1rem; }
-    .ates-crumb { font: 400 .74rem/1.4 Inter, system-ui; color: var(--ates-muted); padding: .25rem .5rem .75rem; }
+    .ates-crumb { font: 400 .74rem/1.4 Inter, Vazirmatn, system-ui; color: var(--ates-muted); padding: .25rem .5rem .75rem; }
     .ates-crumb b { color: var(--ates-subtle); font-weight: 600; }
     .ates-empty { display: grid; justify-items: center; gap: .55rem; padding: 1.5rem 1.25rem 2rem; text-align: center;
                   animation: ates-in .3s ease; }
     @keyframes ates-in { from { opacity: 0; translate: 0 6px; } to { opacity: 1; translate: 0 0; } }
     .ates-empty svg.art { inline-size: 9.5rem; block-size: auto; }
-    .ates-empty h4 { margin: .35rem 0 0; font: 500 1.25rem/1.3 "Charlie Display", Inter, system-ui; color: var(--ates-ink-strong); }
-    .ates-empty p { margin: 0; max-inline-size: 40ch; font: 400 .84rem/1.6 Inter, system-ui; color: var(--ates-muted); }
+    .ates-empty h4 { margin: .35rem 0 0; font: 500 1.25rem/1.3 "Charlie Display", Inter, Vazirmatn, system-ui; color: var(--ates-ink-strong); }
+    .ates-empty p { margin: 0; max-inline-size: 40ch; font: 400 .84rem/1.6 Inter, Vazirmatn, system-ui; color: var(--ates-muted); }
     .ates-cta { margin-block-start: .75rem; block-size: 2rem; padding-inline: .9rem; border: none; border-radius: 3px; cursor: pointer;
-                background: var(--ates-blue); color: #fff; font: 500 .8rem/1 Inter, system-ui; transition: background .15s ease; }
+                background: var(--ates-blue); color: #fff; font: 500 .8rem/1 Inter, Vazirmatn, system-ui; transition: background .15s ease; }
     .ates-cta:hover { background: color-mix(in srgb, var(--ates-blue) 88%, black); }
     .ates-quiet { margin-block-start: .35rem; border: none; background: none; padding: .2rem .3rem; border-radius: 3px; cursor: pointer;
-                  font: 500 .78rem Inter, system-ui; color: var(--ates-blue); }
+                  font: 500 .78rem Inter, Vazirmatn, system-ui; color: var(--ates-blue); }
     .ates-quiet:hover { text-decoration: underline; }
 
     .ates-list { display: grid; gap: .1rem; animation: ates-in .3s ease; }
@@ -57,21 +58,21 @@
     .ates-file:hover { background: var(--ates-hover); }
     .ates-file i { flex: none; display: grid; place-items: center; inline-size: 1.9rem; aspect-ratio: 1; border-radius: 4px; color: #fff; font-style: normal; }
     .ates-file i svg { inline-size: 1rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-    .ates-file b { display: block; font: 500 .8rem/1.4 Inter, system-ui; color: var(--ates-ink-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .ates-file small { display: block; font: 400 .7rem/1.4 Inter, system-ui; color: var(--ates-muted); }
+    .ates-file b { display: block; font: 500 .8rem/1.4 Inter, Vazirmatn, system-ui; color: var(--ates-ink-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ates-file small { display: block; font: 400 .7rem/1.4 Inter, Vazirmatn, system-ui; color: var(--ates-muted); }
     .ates-file > span { min-inline-size: 0; flex: 1 1 auto; }
     .ates-meta { display: flex; justify-content: space-between; align-items: center; padding: .55rem .5rem .25rem;
-                 font: 500 .74rem Inter, system-ui; color: var(--ates-muted); }
-    .ates-meta button { border: none; background: none; padding: .2rem .3rem; border-radius: 3px; cursor: pointer; color: var(--ates-blue); font: 500 .74rem Inter, system-ui; }
+                 font: 500 .74rem Inter, Vazirmatn, system-ui; color: var(--ates-muted); }
+    .ates-meta button { border: none; background: none; padding: .2rem .3rem; border-radius: 3px; cursor: pointer; color: var(--ates-blue); font: 500 .74rem Inter, Vazirmatn, system-ui; }
     .ates-meta button:hover { text-decoration: underline; }
 
     .ates-variants { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); inline-size: 100%; max-inline-size: 40rem; }
     .ates-mini { border: 1px solid var(--ates-border); border-radius: 6px; background: var(--ates-surface); padding: 1.25rem 1rem;
                  display: grid; justify-items: center; gap: .45rem; text-align: center; }
     .ates-mini svg { inline-size: 4.6rem; }
-    .ates-mini h5 { margin: 0; font: 500 .92rem/1.3 "Charlie Display", Inter, system-ui; color: var(--ates-ink-strong); }
-    .ates-mini p { margin: 0; font: 400 .76rem/1.55 Inter, system-ui; color: var(--ates-muted); }
-    .ates-mini small { font: 500 .7rem/1.4 Inter, system-ui; color: var(--ates-muted); }
+    .ates-mini h5 { margin: 0; font: 500 .92rem/1.3 "Charlie Display", Inter, Vazirmatn, system-ui; color: var(--ates-ink-strong); }
+    .ates-mini p { margin: 0; font: 400 .76rem/1.55 Inter, Vazirmatn, system-ui; color: var(--ates-muted); }
+    .ates-mini small { font: 500 .7rem/1.4 Inter, Vazirmatn, system-ui; color: var(--ates-muted); }
     @media (prefers-reduced-motion: reduce) {
         .ates-root * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
     }

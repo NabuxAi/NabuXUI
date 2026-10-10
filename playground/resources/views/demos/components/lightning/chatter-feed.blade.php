@@ -10,12 +10,13 @@
     $say = fn (string $en, string $faText) => $fa ? $faText : $en;
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap');
     .slf-root {
         --slf-blue: #0176D3; --slf-blue-soft: color-mix(in srgb, #0176D3 8%, #FFFFFF);
         --slf-green: #04844B; --slf-purple: #6739B7; --slf-orange: #FE9339;
         --slf-text: #181818; --slf-weak: #444444; --slf-muted: #706E6B;
         --slf-border: #DDDBDA; --slf-bg: #F3F3F3; --slf-card: #FFFFFF;
-        font-family: 'Salesforce Sans', -apple-system, 'Segoe UI', Roboto, sans-serif;
+        font-family: 'Source Sans 3', 'Inter', 'Vazirmatn', ui-sans-serif, system-ui, sans-serif;
         color: var(--slf-text);
         display: grid; gap: 1.5rem;
     }
@@ -96,7 +97,7 @@
         draft: '',
         posts: [
             {
-                who: { fa: 'سارا احمدی', en: 'Sara Ahmadi' }, ini: 'سا', inie: 'SA', tint: '#0176D3',
+                who: { fa: 'سارا احمدی', en: 'Lena Hoffmann' }, ini: 'سا', inie: 'LH', tint: '#0176D3',
                 time: { fa: '۲ ساعت پیش', en: '2 hours ago' }, meta: { fa: 'روی فرصت', en: 'on the opportunity' },
                 body: { fa: 'پیش‌فاکتور بازبینی‌شده را برای آکمی فرستادم — منتظر پاسخ تیم خرید هستیم. ✅', en: 'Sent the revised quote to Acme — waiting on their purchasing team now. ✅' },
                 likes: 3, liked: false,

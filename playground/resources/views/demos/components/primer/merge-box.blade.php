@@ -18,11 +18,12 @@
     };
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap');
     .prm-root {
         --prm-canvas: #ffffff; --prm-subtle: #f6f8fa; --prm-fg: #1f2328; --prm-muted: #59636e;
         --prm-border: #d1d9e0; --prm-accent: #0969da;
         --prm-success: #1a7f37; --prm-success-btn: #1f883d; --prm-done: #8250df; --prm-danger: #cf222e;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+        font-family: 'Figtree', 'Inter', 'Vazirmatn', sans-serif;
         color: var(--prm-fg);
     }
     html[data-theme="dark"] .prm-root {

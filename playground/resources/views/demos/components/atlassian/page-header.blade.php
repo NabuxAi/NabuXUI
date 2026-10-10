@@ -28,12 +28,13 @@
     ];
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     .atph-root {
         --atph-blue: #0052CC; --atph-blue-hover: #0747A6; --atph-blue-tint: #E9F2FF;
         --atph-ink: #172B4D; --atph-ink-strong: #091E42; --atph-subtle: #44546F;
         --atph-muted: #626F86; --atph-border: #DFE1E6; --atph-hover: #F1F2F4;
         --atph-surface: #FFFFFF; --atph-page: #F7F8F9;
-        font-family: Inter, system-ui, sans-serif; color: var(--atph-ink);
+        font-family: 'Inter', 'Vazirmatn', sans-serif; color: var(--atph-ink);
     }
     html[data-theme="dark"] .atph-root {
         --atph-blue: #388BFF; --atph-blue-hover: #579DFF; --atph-blue-tint: #17263B;
@@ -55,18 +56,18 @@
                   border-radius: 6px; background: var(--atph-page); padding: 1.25rem; display: grid; gap: .75rem; }
     .atph-sheet { border: 1px solid var(--atph-border); border-radius: 6px; background: var(--atph-surface);
                   padding: 1rem 1.25rem 0; display: grid; gap: .5rem; }
-    .atph-crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; font: 400 .78rem/1.4 Inter, system-ui; color: var(--atph-muted); }
+    .atph-crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; font: 400 .78rem/1.4 Inter, Vazirmatn, system-ui; color: var(--atph-muted); }
     .atph-crumbs a { color: var(--atph-blue); text-decoration: none; }
     .atph-crumbs a:hover { text-decoration: underline; }
     .atph-row { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
-    .atph-title { margin: 0; font: 500 1.4rem/1.25 "Charlie Display", Inter, system-ui; color: var(--atph-ink-strong); display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; min-inline-size: 0; }
-    .atph-mini { display: inline-block; padding: 2px 8px; border-radius: 3px; font: 700 .7rem/1.6 Inter, system-ui; background: var(--atph-blue-tint); color: var(--atph-blue); white-space: nowrap; }
+    .atph-title { margin: 0; font: 500 1.4rem/1.25 "Charlie Display", Inter, Vazirmatn, system-ui; color: var(--atph-ink-strong); display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; min-inline-size: 0; }
+    .atph-mini { display: inline-block; padding: 2px 8px; border-radius: 3px; font: 700 .7rem/1.6 Inter, Vazirmatn, system-ui; background: var(--atph-blue-tint); color: var(--atph-blue); white-space: nowrap; }
     .atph-people { display: flex; align-items: center; padding-inline-start: 8px; }
     .atph-face { display: grid; place-items: center; inline-size: 28px; aspect-ratio: 1; border-radius: 50%;
-                 border: 2px solid var(--atph-surface); font: 600 .68rem Inter, system-ui; color: #fff; }
+                 border: 2px solid var(--atph-surface); font: 600 .68rem Inter, Vazirmatn, system-ui; color: #fff; }
     .atph-face + .atph-face, .atph-more { margin-inline-start: -9px; }
     .atph-more { display: grid; place-items: center; inline-size: 28px; aspect-ratio: 1; border-radius: 50%;
-                 border: 2px solid var(--atph-surface); background: var(--atph-hover); color: var(--atph-muted); font: 600 .68rem Inter, system-ui; }
+                 border: 2px solid var(--atph-surface); background: var(--atph-hover); color: var(--atph-muted); font: 600 .68rem Inter, Vazirmatn, system-ui; }
     .atph-actions { margin-inline-start: auto; display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
     .atph-iconbtn { display: grid; place-items: center; inline-size: 2rem; aspect-ratio: 1; border: none; border-radius: 3px;
                     background: none; color: var(--atph-muted); cursor: pointer; transition: background .15s ease, color .15s ease; }
@@ -75,25 +76,25 @@
     .atph-iconbtn[aria-pressed='true'] { color: var(--atph-blue); }
     .atph-iconbtn[aria-pressed='true'] svg { fill: color-mix(in srgb, currentColor 22%, transparent); }
     .atph-btn { block-size: 2rem; padding-inline: .75rem; border: none; border-radius: 3px; cursor: pointer;
-                font: 500 .82rem/1 Inter, system-ui; color: var(--atph-ink-strong); background: var(--atph-hover); transition: background .15s ease; }
+                font: 500 .82rem/1 Inter, Vazirmatn, system-ui; color: var(--atph-ink-strong); background: var(--atph-hover); transition: background .15s ease; }
     .atph-btn:hover { background: color-mix(in srgb, var(--atph-hover) 70%, var(--atph-muted)); }
     .atph-btn[data-primary] { background: var(--atph-blue); color: #fff; }
     .atph-btn[data-primary]:hover { background: var(--atph-blue-hover); }
-    .atph-meta { display: flex; flex-wrap: wrap; gap: 1rem; font: 400 .75rem/1.4 Inter, system-ui; color: var(--atph-muted); }
+    .atph-meta { display: flex; flex-wrap: wrap; gap: 1rem; font: 400 .75rem/1.4 Inter, Vazirmatn, system-ui; color: var(--atph-muted); }
     .atph-meta b { font-weight: 500; color: var(--atph-subtle); }
     .atph-tabs { display: flex; gap: .25rem; overflow-x: auto; scrollbar-width: none; border-block-end: 2px solid color-mix(in srgb, var(--atph-border) 55%, transparent); }
     .atph-tabs button { flex: none; padding: .55rem .75rem; border: none; border-block-end: 2px solid transparent; margin-block-end: -2px;
-                        background: none; cursor: pointer; font: 500 .82rem/1 Inter, system-ui; color: var(--atph-subtle); transition: color .15s ease, border-color .15s ease; }
+                        background: none; cursor: pointer; font: 500 .82rem/1 Inter, Vazirmatn, system-ui; color: var(--atph-subtle); transition: color .15s ease, border-color .15s ease; }
     .atph-tabs button:hover { color: var(--atph-blue); }
     .atph-tabs button[aria-current='page'] { color: var(--atph-blue); border-block-end-color: var(--atph-blue); }
-    .atph-pane { margin-block: .25rem 1rem; font: 400 .85rem/1.65 Inter, system-ui; color: var(--atph-subtle); }
+    .atph-pane { margin-block: .25rem 1rem; font: 400 .85rem/1.65 Inter, Vazirmatn, system-ui; color: var(--atph-subtle); }
     .atph-pane b { color: var(--atph-ink); font-weight: 600; }
     .atph-variants { display: grid; gap: 1rem; justify-items: center; }
     .atph-vgrid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); inline-size: 100%; max-inline-size: 44rem; }
     .atph-vcard { border: 1px solid var(--atph-border); border-radius: 6px; background: var(--atph-surface); padding: 1rem 1.25rem; display: grid; gap: .5rem; align-content: start; }
-    .atph-vcard > small { font: 500 .7rem/1 Inter, system-ui; letter-spacing: .4px; color: var(--atph-muted); }
-    .atph-hero-title { margin: 0; font: 500 1.6rem/1.2 "Charlie Display", Inter, system-ui; color: var(--atph-ink-strong); }
-    .atph-hero-desc { margin: 0; font: 400 .82rem/1.6 Inter, system-ui; color: var(--atph-muted); }
+    .atph-vcard > small { font: 500 .7rem/1 Inter, Vazirmatn, system-ui; letter-spacing: .4px; color: var(--atph-muted); }
+    .atph-hero-title { margin: 0; font: 500 1.6rem/1.2 "Charlie Display", Inter, Vazirmatn, system-ui; color: var(--atph-ink-strong); }
+    .atph-hero-desc { margin: 0; font: 400 .82rem/1.6 Inter, Vazirmatn, system-ui; color: var(--atph-muted); }
     @media (prefers-reduced-motion: reduce) {
         .atph-root * { transition-duration: .01ms !important; animation-duration: .01ms !important; }
     }
@@ -132,9 +133,9 @@
                     </h4>
                     <div class="atph-actions">
                         <div class="atph-people" aria-label="{{ $say('5 people on this project', '۵ نفر روی این پروژه') }}">
-                            <span class="atph-face" style="background:#0052CC" title="م. رضایی">م‌ر</span>
-                            <span class="atph-face" style="background:#1F845A" title="ع. کاظمی">ع‌ک</span>
-                            <span class="atph-face" style="background:#6E5DC6" title="س. مرادی">س‌م</span>
+                            <span class="atph-face" style="background:#0052CC" title="{{ $say('M. Rezaei', 'م. رضایی') }}">{{ $say('MR', 'م‌ر') }}</span>
+                            <span class="atph-face" style="background:#1F845A" title="{{ $say('A. Kazemi', 'ع. کاظمی') }}">{{ $say('AK', 'ع‌ک') }}</span>
+                            <span class="atph-face" style="background:#6E5DC6" title="{{ $say('S. Moradi', 'س. مرادی') }}">{{ $say('SM', 'س‌م') }}</span>
                             <span class="atph-more">+{{ $fa ? '۲' : '2' }}</span>
                         </div>
                         <button type="button" class="atph-iconbtn" :aria-pressed="star ? 'true' : 'false'" x-on:click="star = !star" :title="star ? watchOn : watchOff" :aria-label="star ? watchOn : watchOff">

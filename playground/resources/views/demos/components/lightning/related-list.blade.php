@@ -11,12 +11,13 @@
     $jsf = fn (string $s): string => str_replace('"', '&quot;', json_encode($s, JSON_UNESCAPED_UNICODE));
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap');
     .sll-root {
         --sll-blue: #0176D3; --sll-blue-soft: color-mix(in srgb, #0176D3 8%, #FFFFFF);
         --sll-green: #04844B; --sll-purple: #6739B7; --sll-orange: #FE9339; --sll-red: #BA0517;
         --sll-text: #181818; --sll-weak: #444444; --sll-muted: #706E6B;
         --sll-border: #DDDBDA; --sll-bg: #F3F3F3; --sll-card: #FFFFFF;
-        font-family: 'Salesforce Sans', -apple-system, 'Segoe UI', Roboto, sans-serif;
+        font-family: 'Source Sans 3', 'Inter', 'Vazirmatn', ui-sans-serif, system-ui, sans-serif;
         color: var(--sll-text);
         display: grid; gap: 1.5rem;
     }
@@ -90,12 +91,12 @@
     x-data="{
         menuFor: null,
         people: [
-            { name: 'سارا احمدی', en: 'Sara Ahmadi', role: 'مدیر خرید', roleEn: 'Head of purchasing', mail: 'sara@acme.example' },
+            { name: 'سارا احمدی', en: 'Lena Hoffmann', role: 'مدیر خرید', roleEn: 'Head of purchasing', mail: 'sara@acme.example' },
             { name: 'رضا کاظمی', en: 'Reza Kazemi', role: 'کارشناس فنی', roleEn: 'Technical reviewer', mail: 'reza@acme.example' },
             { name: 'مریم رحیمی', en: 'Maryam Rahimi', role: 'مدیر مالی', roleEn: 'Finance manager', mail: 'maryam@acme.example' },
         ],
         files: [
-            { name: 'پیش‌فاکتور-۱۴۰۴.pdf', en: 'Quote-1404.pdf', meta: '۲۴۸ کیلوبایت · دیروز', metaEn: '248 KB · yesterday' },
+            { name: 'پیش‌فاکتور-۱۴۰۴.pdf', en: 'Quote-2026.pdf', meta: '۲۴۸ کیلوبایت · دیروز', metaEn: '248 KB · yesterday' },
             { name: 'قرارداد-نابو.docx', en: 'Contract-Nabu.docx', meta: '۱٫۱ مگابایت · ۳ روز پیش', metaEn: '1.1 MB · 3 days ago' },
         ],
         newCount: 0,
@@ -203,7 +204,7 @@
                 <small>{{ $say('Notes', 'یادداشت‌ها') }}</small>
             </div>
             <div class="sll-spec-cell">
-                <span class="sll-count" style="font-weight: 700; color: var(--sll-text)">(۵)</span>
+                <span class="sll-count" style="font-weight: 700; color: var(--sll-text)">({{ $fa ? '۵' : '5' }})</span>
                 <small>count</small>
             </div>
             <div class="sll-spec-cell">

@@ -10,12 +10,13 @@
     $num = fn (string $s): string => $fa ? strtr($s, ['0' => '۰', '1' => '۱', '2' => '۲', '3' => '۳', '4' => '۴', '5' => '۵', '6' => '۶', '7' => '۷', '8' => '۸', '9' => '۹']) : $s;
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
     .cbtl-root {
         --cbtl-accent: #0f62fe; --cbtl-accent-hover: #0353e9;
         --cbtl-text: #161616; --cbtl-text-secondary: #525252;
         --cbtl-border: #e0e0e0; --cbtl-border-strong: #8d8d8d;
         --cbtl-layer: #f4f4f4; --cbtl-layer-hover: #e8e8e8;
-        --cbtl-font: 'IBM Plex Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        --cbtl-font: 'IBM Plex Sans', 'Inter', 'Vazirmatn', sans-serif;
         font-family: var(--cbtl-font);
         display: grid; gap: 2rem; justify-items: center;
     }
@@ -85,7 +86,7 @@
         },
         addons: { backup: false, cdn: false, monitor: true },
         addonPrices: { backup: 60, cdn: 45, monitor: 35 },
-        money(v) { return v.toLocaleString('fa-IR') },
+        money(v) { return v.toLocaleString('{{ $fa ? 'fa-IR' : 'en-US' }}') },
         get total() { return this.plans[this.plan].price + Object.entries(this.addons).reduce((s, [k, on]) => s + (on ? this.addonPrices[k] : 0), 0) },
     }">
     <section class="pg-box" style="justify-items: center">
@@ -104,21 +105,21 @@
                     <span class="cbtl-check" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l6 6L20 6"/></svg></span>
                     <b>{{ $say('Starter', 'پایه') }}</b>
                     <small>{{ $say('Community support · best effort', 'پشتیبانی اجتماعی · در حد تلاش') }}</small>
-                    <span class="cbtl-price" x-text="plans.start.price ? money(plans.start.price) : 0">۰</span>
+                    <span class="cbtl-price" x-text="plans.start.price ? money(plans.start.price) : 0">{{ $num('0') }}</span>
                 </label>
                 <label class="cbtl">
                     <input type="radio" name="cbtl-plan" value="growth" x-model="plan" checked>
                     <span class="cbtl-check" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l6 6L20 6"/></svg></span>
                     <b>{{ $say('Growth', 'رشد') }}</b>
                     <small>{{ $say('4-hour response · monthly report', 'پاسخ ۴ ساعته · گزارش ماهانه') }}</small>
-                    <span class="cbtl-price" x-text="money(plans.growth.price)">۲۴۰</span>
+                    <span class="cbtl-price" x-text="money(plans.growth.price)">{{ $num('240') }}</span>
                 </label>
                 <label class="cbtl">
                     <input type="radio" name="cbtl-plan" value="scale" x-model="plan">
                     <span class="cbtl-check" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l6 6L20 6"/></svg></span>
                     <b>{{ $say('Scale', 'مقیاس') }}</b>
                     <small>{{ $say('1-hour response · dedicated engineer', 'پاسخ ۱ ساعته · مهندس اختصاصی') }}</small>
-                    <span class="cbtl-price" x-text="money(plans.scale.price)">۵۹۰</span>
+                    <span class="cbtl-price" x-text="money(plans.scale.price)">{{ $num('590') }}</span>
                 </label>
             </div>
         </div>
@@ -131,28 +132,28 @@
                     <span class="cbtl-check" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l6 6L20 6"/></svg></span>
                     <b>{{ $say('Daily backup', 'پشتیبان‌گیری روزانه') }}</b>
                     <small>{{ $say('Keep 30 days of snapshots', 'نگه‌داشت ۳۰ روز اسنپ‌شات') }}</small>
-                    <span class="cbtl-price">+<span x-text="money(addonPrices.backup)">۶۰</span></span>
+                    <span class="cbtl-price">+<span x-text="money(addonPrices.backup)">{{ $num('60') }}</span></span>
                 </label>
                 <label class="cbtl">
                     <input type="checkbox" value="cdn" x-model="addons.cdn">
                     <span class="cbtl-check" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l6 6L20 6"/></svg></span>
                     <b>{{ $say('CDN', 'شبکهٔ توزیع محتوا') }}</b>
                     <small>{{ $say('12 edge locations', '۱۲ نقطهٔ لبه') }}</small>
-                    <span class="cbtl-price">+<span x-text="money(addonPrices.cdn)">۴۵</span></span>
+                    <span class="cbtl-price">+<span x-text="money(addonPrices.cdn)">{{ $num('45') }}</span></span>
                 </label>
                 <label class="cbtl">
                     <input type="checkbox" value="monitor" x-model="addons.monitor">
                     <span class="cbtl-check" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l6 6L20 6"/></svg></span>
                     <b>{{ $say('Uptime monitor', 'پایش در دسترس‌بودن') }}</b>
                     <small>{{ $say('Checks every 30 seconds', 'بررسی هر ۳۰ ثانیه') }}</small>
-                    <span class="cbtl-price">+<span x-text="money(addonPrices.monitor)">۳۵</span></span>
+                    <span class="cbtl-price">+<span x-text="money(addonPrices.monitor)">{{ $num('35') }}</span></span>
                 </label>
             </div>
             <div class="cbtl-total" role="status">
                 <span>{{ $say('Monthly total', 'جمع ماهانه') }}</span>
-                <b x-text="money(total) + ' {{ $say('toman', 'تومان') }}'">۳۴۰ تومان</b>
+                <b x-text="money(total) + ' {{ $say('$', 'تومان') }}'">{{ $num('340') }} {{ $say('$', 'تومان') }}</b>
                 <small style="margin-inline-start: auto; color: var(--cbtl-text-secondary)">
-                    {{ $say('VAT at ۱۰٪ is added at checkout.', 'ارزش افزودهٔ ۱۰٪ در پرداخت اضافه می‌شود.') }}
+                    {{ $say('VAT at 10% is added at checkout.', 'ارزش افزودهٔ ۱۰٪ در پرداخت اضافه می‌شود.') }}
                 </small>
             </div>
         </div>

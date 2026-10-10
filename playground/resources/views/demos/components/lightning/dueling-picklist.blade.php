@@ -22,12 +22,13 @@
     ];
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap');
     .slk-root {
         --slk-blue: #0176D3; --slk-blue-soft: color-mix(in srgb, #0176D3 8%, #FFFFFF);
         --slk-green: #04844B; --slk-purple: #6739B7;
         --slk-text: #181818; --slk-weak: #444444; --slk-muted: #706E6B;
         --slk-border: #DDDBDA; --slk-bg: #F3F3F3; --slk-card: #FFFFFF;
-        font-family: 'Salesforce Sans', -apple-system, 'Segoe UI', Roboto, sans-serif;
+        font-family: 'Source Sans 3', 'Inter', 'Vazirmatn', ui-sans-serif, system-ui, sans-serif;
         color: var(--slk-text);
         display: grid; gap: 1.5rem;
     }

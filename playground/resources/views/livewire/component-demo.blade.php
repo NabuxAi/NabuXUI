@@ -17,7 +17,13 @@
     $groupLabel = DemoCatalog::pick(DemoCatalog::groups()[$group]['label'] ?? [], $locale);
     $needsJs = (bool) ($demo['js'] ?? false);
     $docs = $demo['docs'] ?? null;
+    // Snippets may be a plain string, a fa/en pair — an English-mode page
+    // should read fully English, the copyable snippet included — or a
+    // per-framework map, which must stay intact for the renderer below.
     $code = $demo['code'] ?? null;
+    if (is_array($code) && (isset($code['fa']) || isset($code['en']))) {
+        $code = DemoCatalog::pick($code, $locale);
+    }
 
     $propRows = [];
     foreach (($demo['props'] ?? []) as $index => $prop) {
@@ -97,7 +103,55 @@
                 </section>
             @endif
 
-            @if ($code)
+            @php
+                // A snippet is either one string/[\fa, \en] pair (shown as-is) or a
+                // per-framework map: ['livewire' => …, 'inertia' => …, 'react' => …,
+                // 'vue' => …, 'svelte' => …], each value a string or a fa/en pair.
+                $frameworkKeys = ['livewire', 'inertia', 'react', 'vue', 'svelte'];
+                $isFrameworkMap = is_array($code)
+                    && ! isset($code['fa']) && ! isset($code['en'])
+                    && (bool) array_intersect($frameworkKeys, array_keys($code));
+                $frameworkSnippets = [];
+                if ($isFrameworkMap) {
+                    foreach ($frameworkKeys as $fw) {
+                        if (isset($code[$fw])) {
+                            $frameworkSnippets[$fw] = DemoCatalog::pick(
+                                is_array($code[$fw]) ? $code[$fw] : [$fw => $code[$fw]],
+                                $locale,
+                            );
+                        }
+                    }
+                }
+            @endphp
+            @if ($isFrameworkMap && count($frameworkSnippets) > 0)
+                <section class="pg-box" aria-labelledby="demo-snippet-title" style="gap: .75rem"
+                    x-data="{ fw: '{{ array_key_first($frameworkSnippets) }}' }">
+                    <div class="pg-row" style="justify-content: space-between">
+                        <h2 class="pg-title" id="demo-snippet-title" style="margin: 0">{{ $say('Snippet', 'تکه‌کد') }}</h2>
+                        <div class="pg-row" style="gap: .375rem" role="tablist" aria-label="{{ $say('Framework', 'فریم‌ورک') }}">
+                            @foreach ($frameworkSnippets as $fw => $snippet)
+                                <button type="button" role="tab"
+                                    :aria-selected="fw === @js($fw)"
+                                    x-on:click="fw = @js($fw)"
+                                    style="block-size: 2rem; padding-inline: .7rem; border-radius: 999px; font-size: var(--nx-text-xs); border: 1px solid var(--nx-border); cursor: pointer"
+                                    :style="fw === @js($fw)
+                                        ? 'background: var(--nx-accent-text, #5647e6); color: #fff; border-color: transparent'
+                                        : 'background: var(--nx-surface-2, transparent); color: var(--nx-text-muted)'">{{ ucfirst($fw) }}</button>
+                            @endforeach
+                        </div>
+                    </div>
+                    @foreach ($frameworkSnippets as $fw => $snippet)
+                        <div x-show="fw === @js($fw)" x-cloak
+                            style="display: grid; gap: .5rem"
+                            x-data="{ get snippet() { return {{ \Illuminate\Support\Js::from($snippet) }} } }">
+                            <div class="pg-row" style="justify-content: flex-end">
+                                <x-nx::copy-button :value="$snippet" variant="secondary" size="sm">{{ $say('Copy', 'کپی') }}</x-nx::copy-button>
+                            </div>
+                            <pre dir="ltr" style="margin: 0; padding: 1rem 1.25rem; overflow-x: auto; border: 1px solid var(--nx-border); border-radius: var(--nx-radius-lg); background: var(--nx-surface-2); font: 500 var(--nx-text-sm) / 1.7 var(--nx-font-mono)"><code>{{ $snippet }}</code></pre>
+                        </div>
+                    @endforeach
+                </section>
+            @elseif ($code)
                 <section class="pg-box" aria-labelledby="demo-snippet-title" style="gap: .75rem">
                     <div class="pg-row" style="justify-content: space-between">
                         <h2 class="pg-title" id="demo-snippet-title" style="margin: 0">{{ $say('Snippet', 'تکه‌کد') }}</h2>

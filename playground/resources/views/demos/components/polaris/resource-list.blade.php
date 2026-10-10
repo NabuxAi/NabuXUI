@@ -8,15 +8,16 @@
     $fa = app()->getLocale() === 'fa';
     $say = fn (string $en, string $faText) => $fa ? $faText : $en;
     $products = [
-        ['id' => 1, 'name' => $say('Soy candle, minimal', 'شمع سویا مینیمال'), 'sku' => 'CD-220', 'price' => $say('$24.00', '۲۴۰٬۰۰۰ تومان'), 'qty' => 42, 'st' => 'active', 'c' => 'linear-gradient(140deg, #34d399, #008060)', 'l' => 'ش'],
-        ['id' => 2, 'name' => $say('Hand-stitched leather notebook', 'دفترچهٔ چرمی دست‌دوز'), 'sku' => 'NT-114', 'price' => $say('$38.00', '۳۸۰٬۰۰۰ تومان'), 'qty' => 17, 'st' => 'active', 'c' => 'linear-gradient(140deg, #c084fc, #7e22ce)', 'l' => 'د'],
-        ['id' => 3, 'name' => $say('Ceramic mug, 350 ml', 'ماگ سرامیکی ۳۵۰ میلی‌لیتر'), 'sku' => 'MG-350', 'price' => $say('$19.50', '۱۹۵٬۰۰۰ تومان'), 'qty' => 0, 'st' => 'draft', 'c' => 'linear-gradient(140deg, #60a5fa, #2c6ecb)', 'l' => 'م'],
-        ['id' => 4, 'name' => $say('Single-origin coffee, 250 g', 'قهوهٔ تک‌خاستگاه ۲۵۰ گرمی'), 'sku' => 'CF-250', 'price' => $say('$46.00', '۴۶۰٬۰۰۰ تومان'), 'qty' => 8, 'st' => 'active', 'c' => 'linear-gradient(140deg, #fbbf24, #b45309)', 'l' => 'ق'],
+        ['id' => 1, 'name' => $say('Soy candle, minimal', 'شمع سویا مینیمال'), 'sku' => 'CD-220', 'price' => $say('$24.00', '۲۴۰٬۰۰۰ تومان'), 'qty' => 42, 'st' => 'active', 'c' => 'linear-gradient(140deg, #34d399, #008060)', 'l' => $say('S', 'ش')],
+        ['id' => 2, 'name' => $say('Hand-stitched leather notebook', 'دفترچهٔ چرمی دست‌دوز'), 'sku' => 'NT-114', 'price' => $say('$38.00', '۳۸۰٬۰۰۰ تومان'), 'qty' => 17, 'st' => 'active', 'c' => 'linear-gradient(140deg, #c084fc, #7e22ce)', 'l' => $say('N', 'د')],
+        ['id' => 3, 'name' => $say('Ceramic mug, 350 ml', 'ماگ سرامیکی ۳۵۰ میلی‌لیتر'), 'sku' => 'MG-350', 'price' => $say('$19.50', '۱۹۵٬۰۰۰ تومان'), 'qty' => 0, 'st' => 'draft', 'c' => 'linear-gradient(140deg, #60a5fa, #2c6ecb)', 'l' => $say('M', 'م')],
+        ['id' => 4, 'name' => $say('Single-origin coffee, 250 g', 'قهوهٔ تک‌خاستگاه ۲۵۰ گرمی'), 'sku' => 'CF-250', 'price' => $say('$46.00', '۴۶۰٬۰۰۰ تومان'), 'qty' => 8, 'st' => 'active', 'c' => 'linear-gradient(140deg, #fbbf24, #b45309)', 'l' => $say('C', 'ق')],
     ];
     $prodsJson = e(json_encode($products));
     $copySuffix = e(json_encode($say(' (copy)', ' (تکثیر)')));
 @endphp
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     [x-cloak] { display: none !important; }
     .plrl-root {
         --plrl-surface: #FFFFFF; --plrl-raised: #F6F6F6; --plrl-text: #303030; --plrl-subdued: #616161;
@@ -25,7 +26,7 @@
         --plrl-tint: color-mix(in srgb, var(--plrl-green) 9%, var(--plrl-surface));
         --plrl-critical: #D72C0D;
         --plrl-focus: #005BD3;
-        font-family: Inter, -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+        font-family: 'Inter', 'Vazirmatn', sans-serif;
         display: grid; gap: 1.5rem; justify-items: center;
     }
     html[data-theme="dark"] .plrl-root {
@@ -116,7 +117,7 @@
                 this.say(p.name + ' {{ $say('deleted', 'حذف شد') }}');
             },
             restock() {
-                this.prods.push({ id: this.nextId++, name: '{{ $say('Soy candle, minimal', 'شمع سویا مینیمال') }}', sku: 'CD-220', price: '{{ $say('$24.00', '۲۴۰٬۰۰۰ تومان') }}', qty: 42, st: 'active', c: 'linear-gradient(140deg, #34d399, #008060)', l: 'ش' });
+                this.prods.push({ id: this.nextId++, name: '{{ $say('Soy candle, minimal', 'شمع سویا مینیمال') }}', sku: 'CD-220', price: '{{ $say('$24.00', '۲۴۰٬۰۰۰ تومان') }}', qty: 42, st: 'active', c: 'linear-gradient(140deg, #34d399, #008060)', l: '{{ $say('S', 'ش') }}' });
                 this.say('{{ $say('Starter product is back on the shelf', 'محصول اولیه به قفسه برگشت') }}');
             },
             say(m) { this.flash = m; clearTimeout(this.t); this.t = setTimeout(() => this.flash = '', 2600) },
@@ -124,7 +125,7 @@
         <div class="plrl-frame">
             <div class="plrl-head">
                 <b>{{ $say('Products', 'محصولات') }}</b>
-                <small x-text="fd(prods.length) + ' {{ $say('of 12 shown', 'از ۱۲ نمایش‌داده‌شده') }}'">۴ از ۱۲</small>
+                <small x-text="fd(prods.length) + ' {{ $say('of 12 shown', 'از ۱۲ نمایش‌داده‌شده') }}'">{{ $say('4 of 12', '۴ از ۱۲') }}</small>
             </div>
             <template x-for="(p, i) in prods" :key="p.id">
                 <div class="plrl-item">
@@ -189,7 +190,7 @@
         <div class="plrl-vcell">
             <div class="plrl-frame">
                 <div class="plrl-item" data-compact>
-                    <span class="plrl-media" style="background: linear-gradient(140deg, #f472b6, #be123c)" aria-hidden="true">ت</span>
+                    <span class="plrl-media" style="background: linear-gradient(140deg, #f472b6, #be123c)" aria-hidden="true">{{ $say('T', 'ت') }}</span>
                     <span class="plrl-body">
                         <b>{{ $say('Oversized tee, ecru', 'تیشرت اورسایز اِکرو') }}</b>
                         <small>TS-OS · {{ $say('$18.00', '۱۸۰٬۰۰۰ تومان') }}</small>
