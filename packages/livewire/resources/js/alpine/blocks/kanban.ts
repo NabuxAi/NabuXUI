@@ -199,6 +199,11 @@ export function installKanbanBlocks(Alpine: AlpineLike): void {
         const list = root.querySelector<HTMLElement>(`.nx-kanban-column[data-column="${CSS.escape(to)}"] .nx-kanban-list`);
         if (!cardEl || !list) return;
 
+        // The source column must be captured BEFORE the card element moves —
+        // after the FLIP insert it sits in the target column, and `from` would
+        // equal `to`, so the server round-trip could lose the move.
+        const from = cardEl.closest<HTMLElement>('.nx-kanban-column')?.dataset.column;
+
         const before = snapshotRows(root.querySelectorAll<HTMLElement>('.nx-kanban-card[data-key]'));
         const cards = Array.from(list.querySelectorAll<HTMLElement>('.nx-kanban-card')).filter((el) => el !== cardEl);
         const at = Math.max(0, Math.min(index, cards.length));
@@ -207,11 +212,11 @@ export function installKanbanBlocks(Alpine: AlpineLike): void {
         this.paintCounts();
         const title = cardEl.querySelector('.nx-kanban-card-title')?.textContent ?? card;
         this.announce = withParams(config.labels.movedTo, { card: title, column: titles.get(to) ?? to });
-        this.$dispatch('nx-move', { card, from: cardEl.closest<HTMLElement>('.nx-kanban-column')?.dataset.column, to, index: at });
+        this.$dispatch('nx-move', { card, from, to, index: at });
 
         if (config.moveAction) {
           const wire = (this as unknown as { $wire?: Wire }).$wire;
-          if (wire) await wire.call(config.moveAction, card, cardEl.closest<HTMLElement>('.nx-kanban-column')?.dataset.column, to, at);
+          if (wire) await wire.call(config.moveAction, card, from, to, at);
         }
       },
 
