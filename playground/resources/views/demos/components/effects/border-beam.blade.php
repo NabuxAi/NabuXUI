@@ -28,7 +28,10 @@
             @endphp
             @if ($plan['beam'])
                 <x-nx::border-beam tone="gold" radius="var(--nx-radius-xl)" :duration="7" :size="90">
-                    <div style="display: grid; gap: .75rem; block-size: 100%; padding: 1.25rem; border: 1px solid var(--nx-gold-soft); border-radius: inherit; background: var(--nx-surface)">
+                    {{-- block-size:auto on purpose: the wrapper is a grid item sized by the row;
+    a percentage block-size here resolved against the row and let the gold card
+    overflow the beam ring (the line crossed the button). --}}
+                    <div style="display: grid; gap: .75rem; padding: 1.25rem; border: 1px solid var(--nx-gold-soft); border-radius: inherit; background: var(--nx-surface)">
                         <div class="pg-row" style="justify-content: space-between">
                             <strong style="font: 700 var(--nx-text-lg) / 1.2 var(--nx-font-display)">{{ $plan['name'] }}</strong>
                             <x-nx::badge tone="gold">{{ $say('Recommended', 'پیشنهادی') }}</x-nx::badge>
