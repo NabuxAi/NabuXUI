@@ -29,6 +29,7 @@
             --ctpr-green-soft: #10b98126; --ctpr-green: #3ddc97;
         }
     }
+    .ctpr-root, .ctpr-root *, .ctpr-root *::before, .ctpr-root *::after { box-sizing: border-box; }
     .ctpr-card { position: relative; display: grid; gap: 1.15rem; justify-items: center; text-align: center;
                  inline-size: min(100%, 24.5rem); padding: 2rem 1.6rem 1.6rem; border: 1px solid var(--ctpr-border);
                  border-radius: var(--nx-radius-xl); background: var(--ctpr-card);
@@ -70,7 +71,7 @@
     .ctpr-save svg { inline-size: 1rem; block-size: 1rem; }
     .ctpr-bill { margin: 0; color: var(--ctpr-muted); font-size: .75rem; min-block-size: 1.1em; }
     .ctpr-feats { display: grid; gap: .5rem; justify-items: start; inline-size: 100%;
-                  padding-block: .35rem; list-style: none; margin: 0; }
+                  padding: .35rem 0; list-style: none; margin: 0; }
     .ctpr-feats li { display: flex; align-items: center; gap: .55rem; color: var(--ctpr-text); font-size: var(--nx-text-sm); }
     .ctpr-feats svg { flex: none; inline-size: 1.05rem; block-size: 1.05rem; color: var(--ctpr-green); }
     .ctpr-go { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; inline-size: 100%;
