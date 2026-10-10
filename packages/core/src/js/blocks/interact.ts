@@ -584,6 +584,20 @@ export function createOdometer(el: HTMLElement, options: OdometerOptions): Odome
         { threshold: 0.4 },
       );
       observer.observe(el);
+      // Failsafe: an occluded tab, a throttled renderer or a partially clipped
+      // element can leave the counter stuck at zero forever. After a beat, if
+      // the element is actually on screen, snap straight to the value.
+      setTimeout(() => {
+        if (revealed || !el.isConnected) return;
+        const box = el.getBoundingClientRect();
+        if (box.bottom > 0 && box.top < (window.innerHeight || document.documentElement.clientHeight)) {
+          revealed = true;
+          observer?.disconnect();
+          observer = null;
+          if (pending !== null) set(pending);
+          pending = null;
+        }
+      }, 4000);
     }
   }
 
