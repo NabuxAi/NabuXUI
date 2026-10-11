@@ -53,7 +53,7 @@ class Panel
                     ['id' => 'files', 'label' => __('admin.files'), 'icon' => 'folder', 'href' => route('admin.files'), 'navigate' => true],
                     ['id' => 'todo', 'label' => __('admin.todo'), 'icon' => 'check-circle', 'href' => route('admin.todo'), 'navigate' => true],
                     ['id' => 'roles', 'label' => __('admin.roles'), 'icon' => 'shield', 'href' => route('admin.roles'), 'navigate' => true],
-                    ['id' => 'errors', 'label' => __('admin.errors'), 'icon' => 'alert-triangle', 'href' => route('admin.errors.404'), 'navigate' => true],
+                    ['id' => 'errors', 'label' => __('admin.errors'), 'icon' => 'alert-triangle', 'href' => route('admin.errors'), 'navigate' => true],
                 ],
             ],
             [

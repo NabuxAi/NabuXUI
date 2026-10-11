@@ -40,10 +40,13 @@ Route::get('/admin/orders', \App\Livewire\Admin\Orders::class)->name('admin.orde
 // The pages group: the full-page app demos — mail (nx-email), the file
 // manager, the to-do list and the roles' permission matrix — plus the panel's
 // standalone minimal error pages (no shell; one component, three flavours).
+// The flavours answer with their own HTTP status on purpose, so the sidebar
+// links to the 200-OK index instead of straight to the 404 flavour.
 Route::get('/admin/email', \App\Livewire\Admin\Email::class)->name('admin.email');
 Route::get('/admin/files', \App\Livewire\Admin\Files::class)->name('admin.files');
 Route::get('/admin/todo', \App\Livewire\Admin\Todo::class)->name('admin.todo');
 Route::get('/admin/roles', \App\Livewire\Admin\Roles::class)->name('admin.roles');
+Route::get('/admin/errors', \App\Livewire\Admin\Errors::class)->name('admin.errors');
 Route::get('/admin/errors/404', \App\Livewire\Admin\ErrorPage::class)->defaults('code', '404')->name('admin.errors.404');
 Route::get('/admin/errors/500', \App\Livewire\Admin\ErrorPage::class)->defaults('code', '500')->name('admin.errors.500');
 Route::get('/admin/errors/maintenance', \App\Livewire\Admin\ErrorPage::class)->defaults('code', 'maintenance')->name('admin.errors.maintenance');

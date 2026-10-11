@@ -476,6 +476,10 @@ return [
     'roles_group_reports' => 'Reports',
 
     // Error pages
+    'errors_index_title' => 'Error pages',
+    'errors_index_subtitle' => 'The panel\'s standalone error pages — one component, three flavours.',
+    'errors_index_note' => 'Every flavour answers with its own HTTP status (404, 500, 503) — a demo that ships as 200 would lie to crawlers and monitors — so these cards open with buttons rather than links.',
+    'errors_open' => 'Open the demo',
     'errors_404_title' => 'Page not found',
     'errors_404_description' => 'The address you followed does not exist here; it may have moved or been removed.',
     'errors_500_title' => 'Server error',
