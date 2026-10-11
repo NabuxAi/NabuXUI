@@ -31,6 +31,28 @@ NabuXUI یک سیستم طراحی با **یک هستهٔ مشترک** است: �
 دلیل «استفاده در Vue و Svelte» یعنی همان مارک‌آپی که Blade رندر می‌کند را با
 state فریم‌ورک خودتان بسازید — نه یک پوستهٔ دوباره‌طراحی‌شده.
 
+## نشانی‌ها در پلی‌گراوند
+
+پلی‌گراوند Laravel هر طعم را زیر نشانی خودش سرو می‌کند — خروجی build هر اپ
+جایش در `apps/<app>/dist` می‌ماند و `bin/sync-flavors.sh` آن را به
+`playground/public` آینه می‌کند:
+
+| نشانی | طعم |
+|---|---|
+| `/` | Livewire — لندینگ، کاتالوگ دموها و پنل Livewire (`/livewire`، `/components`، `/admin`…) |
+| `/react` | اپ showcase ری‌اکت (`apps/showcase`) |
+| `/react/admin` | پنل admin ری‌اکت (`apps/admin`) |
+| `/vue` | پنل Vue (`apps/admin-vue`) |
+| `/svelte` | پنل Svelte (`apps/admin-svelte`) |
+| `/inertia` | دموی Inertia (React + `inertia-laravel`؛ زیرمسیرهای `/inertia/gallery` و `/inertia/visits`) |
+| `/filament` | پنل Filament |
+
+روتر client هر پنل hash-based است (`#/dash`، `#/users`…)، پس ریفرش عمیق زیر هر
+پیشوند فقط همان `index.html` را از روت‌های catch-all می‌گیرد و assetها مستقیم از
+`public` سرو می‌شوند. سوییچر مشترک طعم‌ها — پارشال
+`playground/resources/views/partials/frameworks.blade.php` — همین شش پیوند را در
+نوار بالای welcome و لِی‌اوت `layouts.app` می‌گذارد.
+
 ## نصب
 
 ### Livewire (Blade + Alpine)

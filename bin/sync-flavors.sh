@@ -13,9 +13,11 @@
 # only mirrors it, so re-run it after rebuilding any app. rsync --delete
 # keeps the public copies exact. The react sync excludes "admin" so it can
 # never wipe the nested /react/admin copy, whichever order runs in. The
-# inertia copy skips index.html — that file is the standalone dev shell;
-# the real entry there is the Blade root view (inertia-root.blade.php),
-# which resolves the hashed entry from public/inertia/.vite/manifest.json.
+# inertia copy skips index.html (the standalone dev shell) and gains a
+# directory index.php instead: /inertia is answered by the Inertia
+# controllers through the inertia-root Blade view, and under
+# `php artisan serve` a bare directory request only reaches the app when
+# an index.php sits inside it (see apps/inertia/public-index.php).
 #
 # Nothing here builds anything. If a dist is missing, build it first:
 #   pnpm install --filter <app>... --no-frozen-lockfile
@@ -47,5 +49,9 @@ sync_flavor "$repo/apps/admin/dist"        "$public/react/admin"
 sync_flavor "$repo/apps/admin-vue/dist"    "$public/vue"
 sync_flavor "$repo/apps/admin-svelte/dist" "$public/svelte"
 sync_flavor "$repo/apps/inertia/dist"      "$public/inertia"      --exclude=index.html
+
+# /inertia must boot the app (its controllers answer), so the directory
+# needs a PHP index — not the dist's standalone dev shell.
+cp "$repo/apps/inertia/public-index.php" "$public/inertia/index.php"
 
 echo "sync-flavors: all five flavors copied."
