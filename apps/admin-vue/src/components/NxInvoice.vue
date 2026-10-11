@@ -83,7 +83,7 @@ const props = withDefaults(
     lines: InvoiceLine[];
     /** Steps between the subtotal and the total (tax, discount — a negative amount). */
     extraTotals?: InvoiceStep[];
-    /** The unit shown beside every figure: "$", "تومان"… */
+    /** The unit shown beside every figure: "$", "نابوکوین"… */
     currency?: string;
     /** Fraction digits (0 for tomans, 2 for dollars). */
     decimals?: number;

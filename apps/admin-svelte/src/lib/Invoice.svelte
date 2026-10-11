@@ -69,7 +69,7 @@
     to: InvoiceParty;
     lines: InvoiceLine[];
     extraTotals?: InvoiceStep[];
-    /** The unit shown beside every figure: "$", "تومان"… */
+    /** The unit shown beside every figure: "$", "نابوکوین"… */
     currency?: string;
     decimals?: number;
     note?: string;

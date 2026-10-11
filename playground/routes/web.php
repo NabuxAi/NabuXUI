@@ -60,19 +60,22 @@ Route::get('/forgot-password', \App\Livewire\Auth\Gate::class)->defaults('mode',
  * is hand out the app's index.html — including on a deep refresh, because
  * every client router here is hash-based and only the shell path matters.
  * /react/admin is registered before the /react catch-all so it wins the
- * match. The Inertia flavor is a real server-rendered citizen instead: its
+ * match, and the {any} pattern deliberately fails on any "assets/…"
+ * segment so a missing asset stays a real 404 instead of an HTML shell
+ * with the wrong MIME (the nested /react/admin catch-all would otherwise
+ * fall through to the parent /react route). The Inertia flavor is a real server-rendered citizen instead: its
  * controllers answer /inertia* and the inertia-root Blade view loads the
  * built client bundle from public/inertia (see docs/FRAMEWORKS.md,
  * «نشانی‌ها در پلی‌گراوند»).
  */
 Route::get('/react/admin/{any?}', fn () => response()->file(public_path('react/admin/index.html')))
-    ->where('any', '.*')->name('react.admin');
+    ->where('any', '^(?!.*assets/).*$')->name('react.admin');
 Route::get('/react/{any?}', fn () => response()->file(public_path('react/index.html')))
-    ->where('any', '.*')->name('react.showcase');
+    ->where('any', '^(?!.*assets/).*$')->name('react.showcase');
 Route::get('/vue/{any?}', fn () => response()->file(public_path('vue/index.html')))
-    ->where('any', '.*')->name('vue.admin');
+    ->where('any', '^(?!.*assets/).*$')->name('vue.admin');
 Route::get('/svelte/{any?}', fn () => response()->file(public_path('svelte/index.html')))
-    ->where('any', '.*')->name('svelte.admin');
+    ->where('any', '^(?!.*assets/).*$')->name('svelte.admin');
 
 Route::get('/inertia', \App\Http\Controllers\Inertia\DashboardController::class)->name('inertia.dashboard');
 Route::get('/inertia/gallery', \App\Http\Controllers\Inertia\GalleryController::class)->name('inertia.gallery');

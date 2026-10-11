@@ -80,13 +80,37 @@ COPY --from=flavors /app/apps/admin/dist ./public/react/admin
 COPY --from=flavors /app/apps/admin-vue/dist ./public/vue
 COPY --from=flavors /app/apps/admin-svelte/dist ./public/svelte
 COPY --from=flavors /app/apps/inertia/dist ./public/inertia
-# The inertia dist's index.html is the standalone dev shell — drop it and put
-# the directory index in its place instead: /inertia is answered by the
-# Inertia controllers (the inertia-root Blade view resolves the hashed assets
-# from public/inertia/.vite/manifest.json), and `php artisan serve` only
-# reaches the app for a bare directory request when an index.php sits inside.
-RUN rm -f public/inertia/index.html \
-    && cp /app/apps/inertia/public-index.php public/inertia/index.php
+
+# Same adapter pass bin/sync-flavors.sh applies locally (keep the two in
+# sync): the apps build with vite base './', so the shells reference
+# "./assets/…" — correct for sub-path URLs, but the advertised root URLs
+# carry no trailing slash and a browser would resolve "./assets/x.js" on
+# /react against "/" and on /react/admin against /react/assets. Rewriting
+# the references to root-absolute "/<prefix>/…" fixes every URL shape.
+# The dev-lab copy (_lab) stays out of the served tree, and /inertia gets
+# a PHP directory index instead of the dist's standalone dev shell: its
+# controllers answer /inertia, and `php artisan serve` only reaches the app
+# for a bare directory request when an index.php sits inside (the
+# inertia-root Blade view resolves the hashed assets from
+# public/inertia/.vite/manifest.json).
+RUN sed -i -E 's#(src|href)="\./#\1="/react/#g' public/react/index.html \
+    && sed -i -E 's#(src|href)="\./#\1="/react/admin/#g' public/react/admin/index.html \
+    && sed -i -E 's#(src|href)="\./#\1="/vue/#g' public/vue/index.html \
+    && sed -i -E 's#(src|href)="\./#\1="/svelte/#g' public/svelte/index.html \
+    && rm -rf public/react/_lab \
+    && rm -f public/inertia/index.html \
+    && printf '%s\n' \
+        '<?php' \
+        '' \
+        '/**' \
+        ' * The directory index for the copied Inertia build (public/inertia) — see' \
+        ' * bin/sync-flavors.sh for the rationale: /inertia is answered by the Inertia' \
+        ' * controllers through the inertia-root Blade view; this index only exists so a' \
+        ' * bare directory request reaches the front controller under `php artisan serve`.' \
+        ' */' \
+        '' \
+        "require __DIR__.'/../index.php';" \
+        > public/inertia/index.php
 
 # Git doesn't track the storage/framework subdirectories (only .gitignore
 # placeholders), so create them before artisan boots during composer install.

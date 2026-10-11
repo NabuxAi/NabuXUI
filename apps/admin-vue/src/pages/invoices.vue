@@ -42,7 +42,7 @@ interface SeededInvoice {
 
 const from = computed<InvoiceParty>(() => ({
   name: s.value.app.storeName,
-  lines: [inv.value.tehran, 'billing@nabu.shop', inv.value.taxId],
+  lines: [inv.value.istanbul, 'billing@nabu.shop', inv.value.taxId],
 }));
 
 const invoices = computed<SeededInvoice[]>(() => [
@@ -52,7 +52,7 @@ const invoices = computed<SeededInvoice[]>(() => [
     status: 'paid',
     issue: '2026-09-01',
     due: '2026-09-15',
-    to: { name: s.value.people.maryam, lines: [inv.value.tehran, 'maryam@example.com'] },
+    to: { name: s.value.people.maryam, lines: [inv.value.istanbul, 'maryam@example.com'] },
     lines: [
       { id: 'bag', title: inv.value.itemBag, description: inv.value.itemBagDesc, quantity: 2, unitPrice: 8_400_000 },
       { id: 'scarf', title: inv.value.itemScarf, description: inv.value.itemScarfDesc, quantity: 3, unitPrice: 3_150_000 },
@@ -66,7 +66,7 @@ const invoices = computed<SeededInvoice[]>(() => [
     status: 'unpaid',
     issue: '2026-09-18',
     due: '2026-10-02',
-    to: { name: inv.value.clientAcme, lines: [inv.value.tehran, 'accounts@acme.ir'] },
+    to: { name: inv.value.clientAcme, lines: [inv.value.istanbul, 'accounts@acme.com'] },
     lines: [
       { id: 'watch', title: inv.value.itemWatch, description: inv.value.itemWatchDesc, quantity: 4, unitPrice: 12_900_000 },
       { id: 'support', title: inv.value.itemSupport, description: inv.value.itemSupportDesc, quantity: 1, unitPrice: 25_000_000 },
@@ -79,7 +79,7 @@ const invoices = computed<SeededInvoice[]>(() => [
     status: 'overdue',
     issue: '2026-08-05',
     due: '2026-08-20',
-    to: { name: inv.value.clientRangin, lines: [inv.value.isfahan, 'hello@rangin.art'] },
+    to: { name: inv.value.clientRangin, lines: [inv.value.vienna, 'hello@rangin.art'] },
     lines: [
       { id: 'print', title: inv.value.itemPrint, description: inv.value.itemPrintDesc, quantity: 3, unitPrice: 6_800_000 },
       { id: 'ship', title: inv.value.itemShip, quantity: 1, unitPrice: 1_200_000 },
