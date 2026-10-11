@@ -2,6 +2,15 @@
 # composer.json path-repository points at "..", so the whole repo must be baked
 # into the image for vendor/nabuxai/nabuxui to resolve.
 FROM node:22-alpine AS assets
+# Declared for Coolify's build-time env scan; values unused at build time.
+ARG COOLIFY_FQDN
+ARG APP_PORT
+ARG VITE_PORT
+ARG APP_NAME
+ARG APP_ENV
+ARG APP_DEBUG
+ARG APP_KEY
+ARG APP_URL
 WORKDIR /app/playground
 COPY playground/package.json playground/package-lock.json ./
 RUN npm ci --no-audit --no-fund
@@ -9,12 +18,21 @@ COPY playground/ .
 RUN npm run build
 
 FROM php:8.4-cli
+# Declared for Coolify's build-time env scan; values unused at build time.
+ARG COOLIFY_FQDN
+ARG APP_PORT
+ARG VITE_PORT
+ARG APP_NAME
+ARG APP_ENV
+ARG APP_DEBUG
+ARG APP_KEY
+ARG APP_URL
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends git unzip libicu-dev \
-    && docker-php-ext-install intl \
+    && apt-get install -y --no-install-recommends git unzip libicu-dev libzip-dev \
+    && docker-php-ext-install intl zip \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app/playground
