@@ -3,9 +3,16 @@
 node_modules
 **/node_modules
 **/vendor
+# Shipped runtime assets (vendored alpine.js): must stay in the build
+# context even though **/vendor above strips composer vendor dirs.
+!playground/public/vendor
 playground/.env
 playground/public/hot
 playground/public/build
+playground/public/react
+playground/public/vue
+playground/public/svelte
+playground/public/inertia
 playground/storage/framework/cache/data/*
 playground/storage/framework/sessions/*
 playground/storage/framework/views/*

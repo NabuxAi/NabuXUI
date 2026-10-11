@@ -47,8 +47,14 @@
          readyState is not "loading", so this file must stay a classic sync
          script in <head> (as here) or load after dist/nabuxui.js — never as a
          deferred/dynamic script ordered before the package bundle, or Alpine
-         would start before the providers register. --}}
-    <script src="{{ asset('vendor/alpine.js').'?v='.filemtime(public_path('vendor/alpine.js')) }}"></script>
+         would start before the providers register. The ?v= suffix
+         busts stale browser caches whenever the file changes (0 when
+         the vendored file is absent, e.g. a stripped build context). --}}
+    @php
+        $alpinePath = public_path('vendor/alpine.js');
+        $alpineVersion = file_exists($alpinePath) ? filemtime($alpinePath) : 0;
+    @endphp
+    <script src="{{ asset('vendor/alpine.js') }}?v={{ $alpineVersion }}"></script>
     @nabuxuiScripts
     <style>
         body { margin: 0; }
