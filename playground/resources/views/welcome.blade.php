@@ -79,8 +79,10 @@
     <div class="welcome">
         <x-nx::backdrop variant="aurora" />
 
-        <header class="welcome-top">
+        <header class="welcome-top" style="flex-wrap: wrap">
             <p class="welcome-brand"><strong>Nabu<span style="color: var(--nx-gold-text)">X</span>UI</strong></p>
+            {{-- The shared flavor switcher: /, /react, /vue, /svelte, /inertia, /filament. --}}
+            @include('partials.frameworks')
             <div style="display: flex; align-items: center; gap: .5rem">
                 <x-nx::button size="sm" variant="ghost" icon="globe" href="/?lang={{ $fa ? 'en' : 'fa' }}">{{ $fa ? 'English' : 'فارسی' }}</x-nx::button>
                 <x-nx::theme-toggle />

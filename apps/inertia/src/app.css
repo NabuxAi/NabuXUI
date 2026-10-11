@@ -1,0 +1,185 @@
+/* Layout for the Inertia app only; every component style comes from NabuXUI. */
+
+body {
+  margin: 0;
+}
+
+/* ---- Page scaffold -------------------------------------------------------------------------- */
+
+.inr-page {
+  inline-size: min(72rem, 100% - 2rem);
+  margin: 6rem auto 3rem; /* the header is fixed; sisters use the same clearance */
+  display: grid;
+  gap: var(--nx-space-6);
+}
+
+.inr-head {
+  display: grid;
+  gap: var(--nx-space-2);
+}
+
+.inr-head h1 {
+  margin: 0;
+  font: 700 var(--nx-text-3xl) / 1.2 var(--nx-font-display);
+  letter-spacing: var(--nx-tracking-tight);
+}
+
+.inr-grid {
+  display: grid;
+  gap: var(--nx-space-5);
+}
+
+.inr-card {
+  display: grid;
+  gap: var(--nx-space-4);
+  align-content: start;
+  padding: var(--nx-space-6);
+  border: 1px solid var(--nx-border);
+  border-radius: var(--nx-radius-2xl);
+  background: var(--nx-surface);
+}
+
+.inr-hero {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: end;
+  gap: var(--nx-space-4);
+}
+
+.inr-hero h2 {
+  margin: 0 0 var(--nx-space-2);
+  font: 700 var(--nx-text-2xl) / 1.25 var(--nx-font-display);
+}
+
+.inr-hero p {
+  margin: 0;
+  max-inline-size: 46rem;
+  color: var(--nx-text-muted);
+  font-size: var(--nx-text-lg);
+}
+
+.inr-title {
+  margin: 0;
+  font: 700 var(--nx-text-xl) / 1.3 var(--nx-font-display);
+}
+
+.inr-text {
+  margin: 0;
+  max-inline-size: 46rem;
+  color: var(--nx-text-muted);
+}
+
+.inr-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--nx-space-2);
+  align-items: center;
+}
+
+.inr-duo {
+  display: grid;
+  gap: var(--nx-space-5);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+.inr-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--nx-space-3);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.inr-products {
+  display: grid;
+  gap: var(--nx-space-5);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  justify-items: center;
+}
+
+.inr-note {
+  margin: 0;
+  color: var(--nx-text-subtle);
+  font-size: var(--nx-text-sm);
+  text-align: center;
+}
+
+.inr-pulse {
+  margin: 0;
+  padding: var(--nx-space-3) var(--nx-space-4);
+  border-radius: var(--nx-radius-lg);
+  background: var(--nx-surface-muted, color-mix(in oklab, var(--nx-surface) 88%, var(--nx-border)));
+  font-family: var(--nx-font-mono, ui-monospace, monospace);
+  font-size: var(--nx-text-sm);
+}
+
+.inr-pulse[data-empty] {
+  color: var(--nx-text-muted);
+  font-family: inherit;
+}
+
+.inr-link {
+  color: var(--nx-accent, currentColor);
+  font-weight: 600;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+/* ---- Brand mark ----------------------------------------------------------------------------- */
+
+.inr-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.inr-brand-mark {
+  display: grid;
+  place-items: center;
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  border-radius: 0.6rem;
+  background: linear-gradient(135deg, var(--nx-accent, #6366f1), color-mix(in oklab, var(--nx-accent, #6366f1) 60%, #0ea5e9));
+  color: white;
+  font: 800 0.9rem / 1 var(--nx-font-display);
+}
+
+.inr-brand-text {
+  font: 700 var(--nx-text-base) / 1 var(--nx-font-display);
+  letter-spacing: var(--nx-tracking-tight);
+}
+
+/* The header's “leave the app” link sits with the theme and language controls. */
+.inr-leave {
+  color: inherit;
+  font-size: var(--nx-text-sm);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+/* ---- Footer ---------------------------------------------------------------------------------- */
+
+.inr-foot {
+  inline-size: min(72rem, 100% - 2rem);
+  margin: 0 auto 3rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--nx-space-3);
+  justify-content: space-between;
+  color: var(--nx-text-subtle);
+  font-size: var(--nx-text-sm);
+  border-top: 1px solid var(--nx-border);
+  padding-block-start: var(--nx-space-4);
+}
+
+/* ---- Wide screens: two columns where the content pairs up ----------------------------------- */
+
+@media (min-width: 60rem) {
+  .inr-duo {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  }
+
+  .inr-hero {
+    grid-template-columns: minmax(0, 3fr) auto;
+  }
+}

@@ -97,14 +97,14 @@ export function ProfilePage() {
               <Input name="role" defaultValue={s.app.user.role} readOnly />
             </Field>
             <Field label={p.phone}>
-              <Input name="phone" type="tel" dir="ltr" defaultValue="+98 912 000 0000" autoComplete="tel" />
+              <Input name="phone" type="tel" dir="ltr" defaultValue="+90 555 000 0000" autoComplete="tel" />
             </Field>
             <Field label={p.timezone} className="adm-form-span">
               <Select
                 name="timezone"
-                defaultValue="Asia/Tehran"
+                defaultValue="Europe/Istanbul"
                 options={[
-                  { value: 'Asia/Tehran', label: s.common.tzTehran },
+                  { value: 'Europe/Istanbul', label: s.common.tzIstanbul },
                   { value: 'Europe/Berlin', label: s.common.tzBerlin },
                   { value: 'UTC', label: 'UTC' },
                 ]}

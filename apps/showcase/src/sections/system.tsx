@@ -424,7 +424,7 @@ export function NavigationSection() {
           <Accordion
             defaultOpen={[0]}
             items={[
-              { title: tr('داده‌های من کجا ذخیره می‌شود؟', 'Where is my data stored?'), content: tr('روی سرورهای خودتان یا دیتاسنتر Nabux در ایران؛ انتخاب با شماست.', 'On your own servers or in the Nabux data centre, your choice.') },
+              { title: tr('داده‌های من کجا ذخیره می‌شود؟', 'Where is my data stored?'), content: tr('روی سرورهای خودتان یا دیتاسنتر Nabux؛ انتخاب با شماست.', 'On your own servers or in the Nabux data centre, your choice.') },
               { title: tr('کدام مدل‌ها پشتیبانی می‌شوند؟', 'Which models are supported?'), content: tr('هر مدلی که NabuGate به آن وصل است، از جمله مدل‌های متن‌باز.', 'Any model NabuGate connects to, open-weight ones included.') },
               { title: tr('می‌توانم ایجنت را روی سایتم بگذارم؟', 'Can I put the agent on my site?'), content: tr('بله، با یک خط کد یا افزونهٔ وردپرس.', 'Yes, with one line of code or the WordPress plugin.') },
             ]}

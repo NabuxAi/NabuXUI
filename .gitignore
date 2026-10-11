@@ -19,6 +19,10 @@ docker-compose.override.yml
 playground/vendor/
 playground/node_modules/
 playground/public/build/
+playground/public/react/
+playground/public/vue/
+playground/public/svelte/
+playground/public/inertia/
 playground/public/hot
 playground/storage/*.key
 playground/storage/logs/*

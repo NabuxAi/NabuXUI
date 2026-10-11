@@ -18,9 +18,9 @@ import { Demo, Section } from '../Section';
 import { useTr } from '../lang';
 
 const CITIES: Array<{ value: string; fa: string; en: string; code: string }> = [
-  { value: 'IKA', fa: 'تهران — امام خمینی', en: 'Tehran — Imam Khomeini', code: 'IKA' },
-  { value: 'SYZ', fa: 'شیراز — شهید دستغیب', en: 'Shiraz — Shahid Dastgheib', code: 'SYZ' },
-  { value: 'IFN', fa: 'اصفهان — شهید بهشتی', en: 'Isfahan — Shahid Beheshti', code: 'IFN' },
+  { value: 'AMS', fa: 'آمستردام — شیپول', en: 'Amsterdam — Schiphol', code: 'AMS' },
+  { value: 'LIS', fa: 'لیسبورن — هومبرتو دلگادو', en: 'Lisbon — Humberto Delgado', code: 'LIS' },
+  { value: 'VIE', fa: 'فرودگاه بین‌المللی وین', en: 'Vienna International', code: 'VIE' },
   { value: 'IST', fa: 'فرودگاه استانبول', en: 'Istanbul Airport', code: 'IST' },
   { value: 'DXB', fa: 'فرودگاه بین‌المللی دبی', en: 'Dubai International', code: 'DXB' },
   { value: 'FRA', fa: 'فرانکفورت', en: 'Frankfurt am Main', code: 'FRA' },
@@ -169,7 +169,7 @@ export function PickersBlocks() {
             <HoverCard trigger={<a href="#sara" style={{ color: 'var(--nx-accent-text)', fontWeight: 600 }}>@{tr('سارا', 'sara')}</a>}>
               <span style={{ display: 'grid', gap: '0.5rem' }}>
                 <strong>{tr('سارا احمدی', 'Sara Ahmadi')}</strong>
-                <span style={{ color: 'var(--nx-text-muted)', fontSize: 'var(--nx-text-sm)' }}>{tr('سرپرست طراحی · تهران', 'Design lead · Tehran')}</span>
+                <span style={{ color: 'var(--nx-text-muted)', fontSize: 'var(--nx-text-sm)' }}>{tr('سرپرست طراحی · لیسبورن', 'Design lead · Lisbon')}</span>
                 <Button size="sm" icon="message" onClick={() => toast({ title: tr('پیام رفت', 'Message sent'), tone: 'success' })}>
                   {tr('پیام', 'Message')}
                 </Button>

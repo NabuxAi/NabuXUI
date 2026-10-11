@@ -112,12 +112,12 @@
           </div>
           <div class="nx-field">
             <label class="nx-label" for="profile-phone">{p.phone}</label>
-            <input id="profile-phone" name="phone" class="nx-input" type="tel" dir="ltr" value="+98 912 000 0000" autocomplete="tel" />
+            <input id="profile-phone" name="phone" class="nx-input" type="tel" dir="ltr" value="+1 555 018 0000" autocomplete="tel" />
           </div>
           <div class="nx-field adm-form-span">
             <label class="nx-label" for="profile-tz">{p.timezone}</label>
             <select id="profile-tz" name="timezone" class="nx-select">
-              <option value="Asia/Tehran">{s.common.tzTehran}</option>
+              <option value="America/New_York">{s.common.tzNewYork}</option>
               <option value="Europe/Berlin">{s.common.tzBerlin}</option>
               <option value="UTC">UTC</option>
             </select>

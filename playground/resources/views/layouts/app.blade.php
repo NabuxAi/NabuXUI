@@ -24,6 +24,11 @@
 </head>
 <body>
     <x-nx::route-progress />
+    {{-- The shared flavor switcher (/, /react, /vue, /svelte, /inertia, /filament)
+         sits on the catalog layout's every page, above the page grid. --}}
+    <header class="nx-flavors-bar" style="display: flex; justify-content: center; padding: .75rem 1rem 0">
+        @include('partials.frameworks')
+    </header>
     {{ $slot }}
     <x-nx::toaster />
 </body>

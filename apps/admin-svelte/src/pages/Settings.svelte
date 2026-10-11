@@ -91,7 +91,7 @@
           <div class="nx-field adm-form-span">
             <label class="nx-label" for="settings-tz">{set.timezoneField}</label>
             <select id="settings-tz" name="timezone" class="nx-select">
-              <option value="Asia/Tehran">{s.common.tzTehran}</option>
+              <option value="America/New_York">{s.common.tzNewYork}</option>
               <option value="Europe/Berlin">{s.common.tzBerlin}</option>
               <option value="UTC">UTC</option>
             </select>

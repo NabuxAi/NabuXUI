@@ -5,7 +5,7 @@
  * totals roll again. The print button prints the document alone —
  * @media print in admin.css folds the shell away and the block ships its own
  * paper stylesheet. Dates format through the reader's locale (fa-IR gives the
- * Persian calendar), amounts stay deterministic tomans.
+ * Persian calendar), amounts stay deterministic Nabucoins.
  */
 import { useMemo, useState } from 'react';
 import { Button, ChipFilter, Invoice, type InvoiceLine, type InvoiceParty, type InvoiceStep, type InvoiceStatus } from '@nabuxai/ui-react';
@@ -39,7 +39,7 @@ export function InvoicesPage() {
 
   const from: InvoiceParty = {
     name: s.app.storeName,
-    lines: [inv.tehran, 'billing@nabu.shop', inv.taxId],
+    lines: [inv.istanbul, 'billing@nabu.shop', inv.taxId],
   };
 
   const invoices: SeededInvoice[] = [
@@ -49,7 +49,7 @@ export function InvoicesPage() {
       status: 'paid',
       issue: '2026-09-01',
       due: '2026-09-15',
-      to: { name: s.people.maryam, lines: [inv.tehran, 'maryam@example.com'] },
+      to: { name: s.people.maryam, lines: [inv.istanbul, 'maryam@example.com'] },
       lines: [
         { id: 'bag', title: inv.itemBag, description: inv.itemBagDesc, quantity: 2, unitPrice: 8_400_000 },
         { id: 'scarf', title: inv.itemScarf, description: inv.itemScarfDesc, quantity: 3, unitPrice: 3_150_000 },
@@ -63,7 +63,7 @@ export function InvoicesPage() {
       status: 'unpaid',
       issue: '2026-09-18',
       due: '2026-10-02',
-      to: { name: inv.clientAcme, lines: [inv.tehran, 'accounts@acme.ir'] },
+      to: { name: inv.clientAcme, lines: [inv.istanbul, 'accounts@acme.com'] },
       lines: [
         { id: 'watch', title: inv.itemWatch, description: inv.itemWatchDesc, quantity: 4, unitPrice: 12_900_000 },
         { id: 'support', title: inv.itemSupport, description: inv.itemSupportDesc, quantity: 1, unitPrice: 25_000_000 },
@@ -76,7 +76,7 @@ export function InvoicesPage() {
       status: 'overdue',
       issue: '2026-08-05',
       due: '2026-08-20',
-      to: { name: inv.clientRangin, lines: [inv.isfahan, 'hello@rangin.art'] },
+      to: { name: inv.clientRangin, lines: [inv.vienna, 'hello@rangin.art'] },
       lines: [
         { id: 'print', title: inv.itemPrint, description: inv.itemPrintDesc, quantity: 3, unitPrice: 6_800_000 },
         { id: 'ship', title: inv.itemShip, quantity: 1, unitPrice: 1_200_000 },

@@ -89,7 +89,7 @@ export function ButtonsSection() {
         <Demo title={tr('وضعیت در یک دکمه', 'State in one button')}>
           <div className="sc-row">
             <Button variant="primary" size="lg" status={status} onClick={pay} icon="lock">
-              {tr('پرداخت ۴۹۰ هزار تومان', 'Pay $49')}
+              {tr('پرداخت ۴۹۰ هزار نابوکوین', 'Pay 490k Nabucoin')}
             </Button>
           </div>
           <p className="sc-demo-title">{tr('هر بار یک‌بار موفق و یک‌بار ناموفق.', 'Alternates between success and failure.')}</p>

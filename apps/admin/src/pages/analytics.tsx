@@ -22,7 +22,7 @@ function daily(days: number, base: number, drift: number, swing: number): number
   );
 }
 
-/* Headline series — revenue in tomans, orders and visitors as counts. */
+/* Headline series — revenue in Nabucoins, orders and visitors as counts. */
 const REVENUE = { week: daily(7, 24e6, 1.2e6, 5e6), month: daily(30, 25e6, 0.25e6, 6e6), quarter: daily(90, 22e6, 0.11e6, 6e6) };
 const ORDERS = { week: daily(7, 42, 2.2, 11), month: daily(30, 38, 0.5, 13), quarter: daily(90, 32, 0.28, 14) };
 const VISITS = { week: daily(7, 880, 45, 320), month: daily(30, 830, 12, 380), quarter: daily(90, 760, 5.5, 420) };

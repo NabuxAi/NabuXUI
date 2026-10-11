@@ -7,7 +7,7 @@
  * crossed-out compare-at prices — and "New product" is a dialog that really
  * appends a card. The donut beside the grid splits the *filtered* shelf's
  * sales by category, so it follows every filter. Deterministic: no
- * Math.random, no fetch; prices are tomans in the reader's digits.
+ * Math.random, no fetch; prices are Nabucoins in the reader's digits.
  */
 import { useState } from 'react';
 import {
@@ -49,7 +49,7 @@ type Product = {
   sku: string;
   category: Category;
   status: Status;
-  /** Tomans. */
+  /** Nabucoins. */
   price: number;
   compareAt?: number;
   rating?: number;
@@ -232,7 +232,7 @@ export function ProductsPage() {
               }
               price={row.price}
               compareAt={row.compareAt}
-              currency={tr('تومان', 'Toman')}
+              currency={tr('نابوکوین', 'Nabucoin')}
               rating={row.rating}
               ratingCount={row.ratingCount}
               stock={row.stock}
@@ -284,7 +284,7 @@ export function ProductsPage() {
               options={(['bags', 'scarves', 'watches', 'home'] as const).map((id) => ({ value: id, label: catLabel[id] }))}
             />
           </Field>
-          <Field label={p.price} required hint={tr('تومان', 'Toman')}>
+          <Field label={p.price} required hint={tr('نابوکوین', 'Nabucoin')}>
             <Input inputMode="numeric" dir="ltr" value={draft.price} onChange={(event) => setDraft({ ...draft, price: event.target.value })} autoComplete="off" />
           </Field>
         </div>

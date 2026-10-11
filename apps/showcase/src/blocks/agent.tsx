@@ -76,8 +76,8 @@ function TraceDemo() {
 function StreamDemo() {
   const tr = useTr();
   const full = tr(
-    'بهترین زمان سفر به تهران بهار است، از اواخر اسفند تا اردیبهشت [1]. روزها معتدل‌اند و البرز هنوز برف دارد [2]. در Livewire و Inertia همین متن بدون شکستن حروف پخش می‌شود.',
-    'The best time to visit Tehran is spring, from late March to May [1]. Days are mild and the Alborz still has snow [2]. The same text streams in Livewire and Inertia without breaking a letter.',
+    'بهترین زمان سفر به کیوتو بهار است، از اواخر مارس تا می [1]. روزها معتدل‌اند و کوه‌های شمال شهر هنوز برف دارند [2]. در Livewire و Inertia همین متن بدون شکستن حروف پخش می‌شود.',
+    'The best time to visit Kyoto is spring, from late March to May [1]. Days are mild and the mountains north of the city still have snow [2]. The same text streams in Livewire and Inertia without breaking a letter.',
   );
   const [text, setText] = useState('');
   const [streaming, setStreaming] = useState(true);
@@ -100,8 +100,8 @@ function StreamDemo() {
         text={text}
         streaming={streaming}
         sources={[
-          { title: tr('تهران — اقلیم', 'Tehran — climate'), url: 'https://en.wikipedia.org/wiki/Tehran', snippet: tr('اقلیم نیمه‌خشک با تابستان‌های گرم و زمستان‌های خنک.', 'A cold semi-arid climate with hot summers and cool winters.') },
-          { title: tr('رشته‌کوه البرز', 'Alborz range'), url: 'https://en.wikipedia.org/wiki/Alborz', snippet: tr('قله‌های شمال تهران تا اواخر بهار برف دارند.', 'The peaks north of Tehran keep snow until late spring.') },
+          { title: tr('کیوتو — اقلیم', 'Kyoto — climate'), url: 'https://en.wikipedia.org/wiki/Kyoto', snippet: tr('اقلیم معتدل با تابستان‌های گرم و زمستان‌های خنک.', 'A temperate climate with hot summers and cool winters.') },
+          { title: tr('کوه‌های شمال کیوتو', 'The mountains north of Kyoto'), url: 'https://en.wikipedia.org/wiki/Kyoto', snippet: tr('قله‌های شمال شهر تا اواخر بهار برف دارند.', 'The peaks north of the city keep snow until late spring.') },
         ]}
         citeLabel={(n) => tr(`منبع ${n}`, `Source ${n}`)}
         openLabel={tr('باز کردن منبع', 'Open source')}
@@ -130,8 +130,8 @@ function ToolDemo() {
   const labels = { input: tr('ورودی', 'Input'), output: tr('خروجی', 'Output'), queued: tr('در صف', 'Queued'), running: tr('در حال اجرا', 'Running'), success: tr('انجام شد', 'Done'), error: tr('ناموفق', 'Failed') };
   return (
     <div style={{ display: 'grid', gap: '0.5rem' }}>
-      <ToolCall name="search_flights" status={status[0]} duration={1380} labels={labels} args={{ from: 'THR', to: 'IFN', passengers: 2 }} output={{ results: 6, cheapest: { airline: 'Iran Air', price: 84 } }} />
-      <ToolCall name="get_weather" status={status[1]} duration={410} labels={labels} args={{ city: 'Isfahan', days: 3 }} output="Sunny, 24°C / 11°C" />
+      <ToolCall name="search_flights" status={status[0]} duration={1380} labels={labels} args={{ from: 'AMS', to: 'LIS', passengers: 2 }} output={{ results: 6, cheapest: { airline: 'TAP Air Portugal', price: 84 } }} />
+      <ToolCall name="get_weather" status={status[1]} duration={410} labels={labels} args={{ city: 'Lisbon', days: 3 }} output="Sunny, 24°C / 11°C" />
       <ToolCall name="run_migrations" status="error" duration={2310} labels={labels} args={{ database: 'orders' }} output="SQLSTATE[42S21]: Duplicate column name 'archived_at'" />
       <div>
         <Button size="sm" variant="ghost" icon="sparkles" onClick={run}>
@@ -283,7 +283,7 @@ export function AgentBlocks() {
         <Demo title={tr('نمایشگر JSON', 'JSON viewer')} wide>
           <JsonViewer
             defaultDepth={2}
-            data={{ id: 'ord_8F2K19', status: 'shipped', paid: true, total: 1840000, customer: { name: 'سارا رضایی', city: 'Isfahan' }, items: [{ sku: 'TEA-SAF-250', qty: 2 }, { sku: 'NAB-PIS-500', qty: 1 }], refund: null }}
+            data={{ id: 'ord_8F2K19', status: 'shipped', paid: true, total: 1840000, customer: { name: 'سارا رضایی', city: 'Vienna' }, items: [{ sku: 'TEA-SAF-250', qty: 2 }, { sku: 'NAB-PIS-500', qty: 1 }], refund: null }}
           />
         </Demo>
         <Demo title={tr('ترمینال', 'Terminal')} wide>

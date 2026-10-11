@@ -17,6 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
         // The demo pages' language menu keeps the chosen fa/en locale in the session.
         $middleware->web(append: \App\Http\Middleware\SetLocaleFromSession::class);
+        // The Inertia flavor (/inertia): shares the locale and serves the
+        // inertia-root view on the first visit of every Inertia page.
+        $middleware->web(append: \App\Http\Middleware\HandleInertiaRequests::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

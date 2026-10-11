@@ -83,9 +83,9 @@ export function SettingsPage() {
             <Field label={set.timezoneField} className="adm-form-span">
               <Select
                 name="timezone"
-                defaultValue="Asia/Tehran"
+                defaultValue="Europe/Istanbul"
                 options={[
-                  { value: 'Asia/Tehran', label: s.common.tzTehran },
+                  { value: 'Europe/Istanbul', label: s.common.tzIstanbul },
                   { value: 'Europe/Berlin', label: s.common.tzBerlin },
                   { value: 'UTC', label: 'UTC' },
                 ]}

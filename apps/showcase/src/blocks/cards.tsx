@@ -315,7 +315,7 @@ export function CardsBlocks() {
               { cover: art.violet, title: 'Seoul', caption: '서울' },
               { cover: art.green, title: 'Nairobi' },
               { cover: art.ink, title: 'Berlin', caption: 'Kreuzberg' },
-              { cover: art.aurora, title: 'Tehran', caption: 'تهران' },
+              { cover: art.aurora, title: 'Vienna', caption: 'Wien' },
               { cover: art.gold, title: 'São Paulo' },
               { cover: art.cyan, title: 'Mumbai', caption: 'मुंबई' },
               { cover: art.lapis, title: 'Paris', caption: 'Belleville' },

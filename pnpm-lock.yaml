@@ -80,6 +80,37 @@ importers:
         specifier: ^3.0.0
         version: 3.3.11(typescript@5.9.3)
 
+  apps/inertia:
+    dependencies:
+      '@inertiajs/react':
+        specifier: ^3.9.1
+        version: 3.9.1(react-dom@19.3.0)(react@19.3.0)
+      '@nabuxai/ui-react':
+        specifier: workspace:*
+        version: link:../../packages/react
+      react:
+        specifier: ^19.1.0
+        version: 19.3.0
+      react-dom:
+        specifier: ^19.1.0
+        version: 19.3.0(react@19.3.0)
+    devDependencies:
+      '@types/react':
+        specifier: ^19.1.0
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: ^19.1.0
+        version: 19.3.0(@types/react@19.3.0)
+      '@vitejs/plugin-react':
+        specifier: ^5.0.0
+        version: 5.2.0(vite@7.3.6)
+      typescript:
+        specifier: ^5.9.0
+        version: 5.9.3
+      vite:
+        specifier: ^7.1.0
+        version: 7.3.6
+
   apps/showcase:
     dependencies:
       '@nabuxai/ui-react':
@@ -820,6 +851,34 @@ packages:
     dev: true
     optional: true
 
+  /@inertiajs/core@3.9.1:
+    resolution: {integrity: sha512-ScLQZ1/KXlvmqCEJMEZABSK5updJZIli1kaG/coWXpWMmpSLsazSJkR7esITYp7X5vTgrOGNIrcRmdMp/GQ0NA==}
+    peerDependencies:
+      axios: ^1.15.2
+    peerDependenciesMeta:
+      axios:
+        optional: true
+    dependencies:
+      '@jridgewell/trace-mapping': 0.3.31
+      es-toolkit: 1.52.0
+      laravel-precognition: 2.1.0
+    dev: false
+
+  /@inertiajs/react@3.9.1(react-dom@19.3.0)(react@19.3.0):
+    resolution: {integrity: sha512-fRWElF5XIm1j01ecQCEehx0KPLEYVA6fCdWvig7XUhwhmSQG6EIyNum3eG8ZEfYuY7mWhNyqae/MSRIv+bAsjw==}
+    peerDependencies:
+      react: ^19.0.0
+      react-dom: ^19.0.0
+    dependencies:
+      '@inertiajs/core': 3.9.1
+      es-toolkit: 1.52.0
+      laravel-precognition: 2.1.0
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.0)
+    transitivePeerDependencies:
+      - axios
+    dev: false
+
   /@jridgewell/gen-mapping@0.3.13:
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
     dependencies:
@@ -1555,6 +1614,10 @@ packages:
     resolution: {integrity: sha512-jEQoCwk8hyb2AZziIOLhDqpm5+2ww5uIE6lkO/6jcOCusfk6LhMHpXXfBLXTZ7Ydyt0j4VoUQv6uGNYbdW+kBA==}
     dev: true
 
+  /es-toolkit@1.52.0:
+    resolution: {integrity: sha512-XTNEJQh1tY1ZJVcf6ayP/2n4ZPyaHlW2FWs7xvw5ddPuhUVjLD3olQVQS7kf58JbAB48iL0uL/jerTrjtV3lDA==}
+    dev: false
+
   /esbuild@0.25.12:
     resolution: {integrity: sha512-bbPBYYrtZbkt6Os6FiTLCTFxvq4tt3JKall1vRwshA3fdVztsLAatFaZobhkBC8/BrPetoa0oksYoKXoG4ryJg==}
     engines: {node: '>=18'}
@@ -1720,6 +1783,17 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
     dev: true
+
+  /laravel-precognition@2.1.0:
+    resolution: {integrity: sha512-W9ZobjRAReiIawSWxXUPR6q+Bvq5seO6tn+scdURl/JKOFKveXvR4Sno2KxGqQt2cI81nh8Vt2cFlaOMqXqLNw==}
+    peerDependencies:
+      axios: ^1.4.0
+    peerDependenciesMeta:
+      axios:
+        optional: true
+    dependencies:
+      es-toolkit: 1.52.0
+    dev: false
 
   /locate-character@3.0.0:
     resolution: {integrity: sha512-SW13ws7BjaeJ6p7Q6CO2nchbYEc3X3J6WrmTTDto7yMPqVSZTUyY5Tjbid+Ab8gLnATtygYtiDIJGQRRn2ZOiA==}

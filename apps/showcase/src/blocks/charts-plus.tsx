@@ -135,7 +135,7 @@ export function ChartsPlusBlocks() {
             labels={months.slice(0, 8)}
             bars={[{ name: tr('درآمد', 'Revenue'), values: [412, 456, 498, 471, 532, 588, 610, 664] }]}
             lines={[{ name: tr('نرخ تبدیل', 'Conversion'), values: [0.021, 0.024, 0.026, 0.023, 0.029, 0.031, 0.03, 0.034] }]}
-            barAxis={tr('میلیون تومان', 'M toman')}
+            barAxis={tr('میلیون نابوکوین', 'M Nabucoin')}
             lineAxis={tr('نرخ', 'Rate')}
             lineFormat={{ style: 'percent', maximumFractionDigits: 1 }}
             markers
@@ -149,7 +149,7 @@ export function ChartsPlusBlocks() {
         <Demo wide>
           <ForecastChart
             title={tr('فروش ماهانه', 'Monthly sales')}
-            subtitle={tr('میلیون تومان · نوار اطمینان ۸۰٪', 'Million tomans · 80% band')}
+            subtitle={tr('میلیون نابوکوین · نوار اطمینان ۸۰٪', 'Million Nabucoins · 80% band')}
             labels={months}
             actual={[318, 342, 336, 371, 398, 384]}
             forecast={[412, 431, 455, 472, 498, 521]}

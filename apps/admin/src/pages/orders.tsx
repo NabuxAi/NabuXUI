@@ -52,7 +52,7 @@ type Order = {
   items: number;
   /** ms timestamp. */
   date: number;
-  /** Tomans. */
+  /** Nabucoins. */
   total: number;
   paid: boolean;
   status: Status;
@@ -61,16 +61,16 @@ type Order = {
 };
 
 const SEED: Order[] = [
-  { id: 'o1', number: '#1248', customerFa: 'مریم رضایی', customerEn: 'Maryam Rezaei', items: 3, date: AGO.minutes18.at, total: 4_170_000, paid: true, status: 'new', addressFa: 'تهران، خیابان ولیعصر، پلاک ۱۲', addressEn: 'Tehran, Valiasr St. 12' },
-  { id: 'o2', number: '#1247', customerFa: 'مینا کریمی', customerEn: 'Mina Karimi', items: 2, date: AGO.hours2.at, total: 1_660_000, paid: true, status: 'packing', addressFa: 'تهران، سعادت‌آباد، کوچهٔ سرو', addressEn: 'Tehran, Saadat Abad, Sarv Alley' },
-  { id: 'o3', number: '#1246', customerFa: 'علی نیک‌پور', customerEn: 'Ali Nikpour', items: 1, date: AGO.hours5.at, total: 380_000, paid: false, status: 'packing', addressFa: 'کرج، مهرشهر، بلوار ارم', addressEn: 'Karaj, Mehrshahr, Eram Blvd' },
-  { id: 'o4', number: '#1245', customerFa: 'سارا احمدی', customerEn: 'Sara Ahmadi', items: 4, date: AGO.days2.at, total: 5_040_000, paid: true, status: 'shipped', addressFa: 'اصفهان، خیابان چهارباغ بالا', addressEn: 'Isfahan, Chaharbagh Ave.' },
-  { id: 'o5', number: '#1244', customerFa: 'نگار موسوی', customerEn: 'Negar Mousavi', items: 2, date: AGO.days2.at, total: 2_130_000, paid: true, status: 'shipped', addressFa: 'شیراز، بلوار زند', addressEn: 'Shiraz, Zand Blvd' },
-  { id: 'o6', number: '#1243', customerFa: 'بهرام رستمی', customerEn: 'Bahram Rostami', items: 3, date: AGO.days2.at - 2 * DAY, total: 3_290_000, paid: true, status: 'delivered', addressFa: 'تبریز، خیابان امام', addressEn: 'Tabriz, Emam St.' },
-  { id: 'o7', number: '#1242', customerFa: 'رضا قاسمی', customerEn: 'Reza Ghasemi', items: 1, date: AGO.days2.at - 2 * DAY, total: 180_000, paid: true, status: 'delivered', addressFa: 'تهران، میدان ونک', addressEn: 'Tehran, Vanak Sq.' },
-  { id: 'o8', number: '#1241', customerFa: 'الهام صادقی', customerEn: 'Elham Sadeghi', items: 5, date: AGO.days2.at, total: 2_460_000, paid: false, status: 'cancelled', addressFa: 'مشهد، بلوار وکیل‌آباد', addressEn: 'Mashhad, Vakil Abad Blvd' },
-  { id: 'o9', number: '#1240', customerFa: 'کاوه تهامی', customerEn: 'Kaveh Tahami', items: 2, date: AGO.days2.at - 2 * DAY, total: 1_250_000, paid: true, status: 'refunded', addressFa: 'رشت، خیابان مطهری', addressEn: 'Rasht, Motahhari St.' },
-  { id: 'o10', number: '#1239', customerFa: 'مریم رضایی', customerEn: 'Maryam Rezaei', items: 4, date: AGO.days2.at - 2 * DAY, total: 6_280_000, paid: true, status: 'delivered', addressFa: 'تهران، خیابان ولیعصر، پلاک ۱۲', addressEn: 'Tehran, Valiasr St. 12' },
+  { id: 'o1', number: '#1248', customerFa: 'مریم رضایی', customerEn: 'Maryam Rezaei', items: 3, date: AGO.minutes18.at, total: 4_170_000, paid: true, status: 'new', addressFa: 'استانبول، خیابان استقلال، پلاک ۱۲', addressEn: 'Istanbul, Istiklal St. 12' },
+  { id: 'o2', number: '#1247', customerFa: 'مینا کریمی', customerEn: 'Mina Karimi', items: 2, date: AGO.hours2.at, total: 1_660_000, paid: true, status: 'packing', addressFa: 'استانبول، بئوغلو، کوچهٔ سرو', addressEn: 'Istanbul, Beyoglu, Sarv Alley' },
+  { id: 'o3', number: '#1246', customerFa: 'علی نیک‌پور', customerEn: 'Ali Nikpour', items: 1, date: AGO.hours5.at, total: 380_000, paid: false, status: 'packing', addressFa: 'تورنتو، خیابان کویین غربی', addressEn: 'Toronto, Queen St. W' },
+  { id: 'o4', number: '#1245', customerFa: 'سارا احمدی', customerEn: 'Sara Ahmadi', items: 4, date: AGO.days2.at, total: 5_040_000, paid: true, status: 'shipped', addressFa: 'وین، خیابان ماریاهیلفر', addressEn: 'Vienna, Mariahilfer Str.' },
+  { id: 'o5', number: '#1244', customerFa: 'نگار موسوی', customerEn: 'Negar Mousavi', items: 2, date: AGO.days2.at, total: 2_130_000, paid: true, status: 'shipped', addressFa: 'دبی، بلوار شیخ زاید', addressEn: 'Dubai, Sheikh Zayed Blvd' },
+  { id: 'o6', number: '#1243', customerFa: 'بهرام رستمی', customerEn: 'Bahram Rostami', items: 3, date: AGO.days2.at - 2 * DAY, total: 3_290_000, paid: true, status: 'delivered', addressFa: 'برلین، اونتر دن لیندن', addressEn: 'Berlin, Unter den Linden' },
+  { id: 'o7', number: '#1242', customerFa: 'رضا قاسمی', customerEn: 'Reza Ghasemi', items: 1, date: AGO.days2.at - 2 * DAY, total: 180_000, paid: true, status: 'delivered', addressFa: 'دبی، میدان محمد بن راشد', addressEn: 'Dubai, Mohammed Bin Rashid Sq.' },
+  { id: 'o8', number: '#1241', customerFa: 'الهام صادقی', customerEn: 'Elham Sadeghi', items: 5, date: AGO.days2.at, total: 2_460_000, paid: false, status: 'cancelled', addressFa: 'دوح، کورنیش', addressEn: 'Doha, Corniche' },
+  { id: 'o9', number: '#1240', customerFa: 'کاوه تهامی', customerEn: 'Kaveh Tahami', items: 2, date: AGO.days2.at - 2 * DAY, total: 1_250_000, paid: true, status: 'refunded', addressFa: 'پراگ، میدان واتسلاو', addressEn: 'Prague, Wenceslas Sq.' },
+  { id: 'o10', number: '#1239', customerFa: 'مریم رضایی', customerEn: 'Maryam Rezaei', items: 4, date: AGO.days2.at - 2 * DAY, total: 6_280_000, paid: true, status: 'delivered', addressFa: 'استانبول، خیابان استقلال، پلاک ۱۲', addressEn: 'Istanbul, Istiklal St. 12' },
 ];
 
 /** Where each status sits on the placed → paid → packed → shipped → delivered route. */
@@ -123,7 +123,7 @@ export function OrdersPage() {
       customerOf(row),
       `${number.format(row.items)} ${o.itemsUnit}`,
       dateWord.format(row.date),
-      `${number.format(row.total)} ${tr('تومان', 'Toman')}`,
+      `${number.format(row.total)} ${tr('نابوکوین', 'Nabucoin')}`,
       row.paid ? o.paid : o.unpaid,
       statusLabel[row.status],
     ]);
@@ -144,7 +144,7 @@ export function OrdersPage() {
     if (!customer || !total) return;
     const nextNumber = `#${1248 + rows.length - 9}`;
     setRows((prev) => [
-      { id: `o-${Date.now().toString(36)}`, number: nextNumber, customerFa: customer, customerEn: customer, items, date: NOW, total, paid: true, status: 'new', addressFa: 'تهران، خیابان ولیعصر، پلاک ۱۲', addressEn: 'Tehran, Valiasr St. 12' },
+      { id: `o-${Date.now().toString(36)}`, number: nextNumber, customerFa: customer, customerEn: customer, items, date: NOW, total, paid: true, status: 'new', addressFa: 'استانبول، خیابان استقلال، پلاک ۱۲', addressEn: 'Istanbul, Istiklal St. 12' },
       ...prev,
     ]);
     setCreating(false);
@@ -192,7 +192,7 @@ export function OrdersPage() {
       align: 'end',
       sortable: true,
       sortValue: (row) => row.total,
-      format: (_value, row) => `${number.format(row.total)} ${tr('تومان', 'Toman')}`,
+      format: (_value, row) => `${number.format(row.total)} ${tr('نابوکوین', 'Nabucoin')}`,
     },
     {
       key: 'paid',
@@ -247,7 +247,7 @@ export function OrdersPage() {
       { id: 'e-paid', title: o.stepPaid, description: row.paid ? tr('پرداخت کارت‌به‌کارت تأیید شد', 'The card payment was confirmed') : tr('در انتظار پرداخت', 'Awaiting payment'), place: tr('بانک نابو', 'Nabu Bank'), time: Math.min(times[1], NOW), tone: row.paid ? 'success' : 'warning' },
     ];
     if (2 <= at && times[2] <= NOW) events.push({ id: 'e-packed', title: o.stepPacked, description: tr('بسته‌بندی هدیه هم انجام شد', 'Gift wrapping was done too'), place: tr('انبار مرکزی', 'Central warehouse'), time: times[2], tone: 'info' });
-    if (3 <= at && times[3] <= NOW) events.push({ id: 'e-shipped', title: o.stepShipped, description: tr('به شرکت حمل سپرده شد', 'Handed to the carrier'), place: tr('تهران، مرکز توزیع', 'Tehran distribution hub'), time: times[3], tone: 'neutral' });
+    if (3 <= at && times[3] <= NOW) events.push({ id: 'e-shipped', title: o.stepShipped, description: tr('به شرکت حمل سپرده شد', 'Handed to the carrier'), place: tr('استانبول، مرکز توزیع', 'Istanbul distribution hub'), time: times[3], tone: 'neutral' });
     if (4 <= at && times[4] <= NOW) events.push({ id: 'e-delivered', title: o.stepDelivered, description: tr('به دست مشتری رسید', 'It reached the customer'), place: lang === 'fa' ? row.addressFa : row.addressEn, time: times[4], tone: 'success' });
     if (row.status === 'cancelled') events.push({ id: 'e-cancelled', title: o.statusCancelled, description: tr('مشتری از پرداخت منصرف شد', 'The customer walked away from the payment'), time: row.date + DAY, tone: 'danger' });
     if (row.status === 'refunded') events.push({ id: 'e-refunded', title: o.statusRefunded, description: tr('مبلغ به کارت مشتری برگشت', 'The amount went back to the customer’s card'), time: row.date + 4 * DAY, tone: 'warning' });
@@ -369,7 +369,7 @@ export function OrdersPage() {
           <Field label={o.colItems} required>
             <Input inputMode="numeric" dir="ltr" value={draft.items} onChange={(event) => setDraft({ ...draft, items: event.target.value })} autoComplete="off" />
           </Field>
-          <Field label={o.colTotal} required hint={tr('تومان', 'Toman')}>
+          <Field label={o.colTotal} required hint={tr('نابوکوین', 'Nabucoin')}>
             <Input inputMode="numeric" dir="ltr" value={draft.total} onChange={(event) => setDraft({ ...draft, total: event.target.value })} autoComplete="off" />
           </Field>
         </div>

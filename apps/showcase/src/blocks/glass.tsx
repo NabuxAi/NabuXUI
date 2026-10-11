@@ -167,7 +167,7 @@ export function GlassBlocks() {
           <div className="sc-glass-phone">
             <div ref={phone} className="sc-glass-phone-scroll">
               <div className="sc-glass-feed">
-                {['Kyoto · 京都', 'Lisboa', 'Marrakech · مراكش', 'Reykjavík', 'Tehran · تهران', 'Seoul · 서울', 'Oaxaca', 'Istanbul'].map((city, i) => (
+                {['Kyoto · 京都', 'Lisboa', 'Marrakech · مراكش', 'Reykjavík', 'Vienna · Wien', 'Seoul · 서울', 'Oaxaca', 'Istanbul'].map((city, i) => (
                   <div key={city} className="sc-glass-post" style={{ '--i': i } as React.CSSProperties}>
                     <span>{city}</span>
                   </div>

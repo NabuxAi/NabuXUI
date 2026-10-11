@@ -53,3 +53,28 @@ Route::get('/login', \App\Livewire\Auth\Gate::class)->defaults('mode', 'login')-
 Route::get('/register', \App\Livewire\Auth\Gate::class)->defaults('mode', 'register')->name('register');
 Route::get('/forgot-password', \App\Livewire\Auth\Gate::class)->defaults('mode', 'forgot')->name('password.request');
 
+/*
+ * One address per framework flavor. The SPA entry points are static builds
+ * under public/{react,vue,svelte} (mirrored there by bin/sync-flavors.sh);
+ * their assets load straight from the public tree, so all these routes do
+ * is hand out the app's index.html — including on a deep refresh, because
+ * every client router here is hash-based and only the shell path matters.
+ * /react/admin is registered before the /react catch-all so it wins the
+ * match. The Inertia flavor is a real server-rendered citizen instead: its
+ * controllers answer /inertia* and the inertia-root Blade view loads the
+ * built client bundle from public/inertia (see docs/FRAMEWORKS.md,
+ * «نشانی‌ها در پلی‌گراوند»).
+ */
+Route::get('/react/admin/{any?}', fn () => response()->file(public_path('react/admin/index.html')))
+    ->where('any', '.*')->name('react.admin');
+Route::get('/react/{any?}', fn () => response()->file(public_path('react/index.html')))
+    ->where('any', '.*')->name('react.showcase');
+Route::get('/vue/{any?}', fn () => response()->file(public_path('vue/index.html')))
+    ->where('any', '.*')->name('vue.admin');
+Route::get('/svelte/{any?}', fn () => response()->file(public_path('svelte/index.html')))
+    ->where('any', '.*')->name('svelte.admin');
+
+Route::get('/inertia', \App\Http\Controllers\Inertia\DashboardController::class)->name('inertia.dashboard');
+Route::get('/inertia/gallery', \App\Http\Controllers\Inertia\GalleryController::class)->name('inertia.gallery');
+Route::get('/inertia/visits', \App\Http\Controllers\Inertia\VisitsController::class)->name('inertia.visits');
+

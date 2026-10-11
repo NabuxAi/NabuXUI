@@ -31,8 +31,8 @@ const GRADED = landscape('#ffcf8f', '#fff2c4', '#5b5ea6', '#2f9e6e', '#1f6f50');
 
 const PHOTOS = [
   { src: landscape('#ffb37a', '#ffe2a8', '#5b4b8a', '#2b3a67', '#1d2a52'), en: 'Sunset over the gulf', fa: 'غروب روی خلیج' },
-  { src: landscape('#cfe8ff', '#fff6c9', '#6b7fa8', '#3f7d4e', '#2d5e39'), en: 'Snow line on Damavand', fa: 'خط برف دماوند' },
-  { src: landscape('#1e2a4a', '#f4d35e', '#2ec4b6', '#0b7a75', '#13213f'), en: 'Isfahan after dark', fa: 'اصفهان پس از تاریکی' },
+  { src: landscape('#cfe8ff', '#fff6c9', '#6b7fa8', '#3f7d4e', '#2d5e39'), en: 'Snow line on the Alps', fa: 'خط برف آلپ' },
+  { src: landscape('#1e2a4a', '#f4d35e', '#2ec4b6', '#0b7a75', '#13213f'), en: 'Vienna after dark', fa: 'وین پس از تاریکی' },
   { src: landscape('#f6e7c8', '#edae49', '#d1495b', '#c9a66b', '#8f2d56'), en: 'Spice bazaar', fa: 'بازار ادویه' },
   { src: landscape('#0f1b2d', '#ffffff', '#d9a066', '#b5793f', '#8a5a2b'), en: 'Desert at 2 a.m.', fa: 'کویر، ساعت ۲ بامداد' },
   { src: landscape('#e8f1e4', '#fff8d6', '#7aa95c', '#3e7d3a', '#2f5e2c'), en: 'Tea terraces', fa: 'پلکان‌های چای' },
@@ -137,7 +137,7 @@ export function InteractBlocks() {
         <Demo title={tr('اسنک‌بار بازگردانی', 'Undo snackbar')}>
           <ul style={{ display: 'grid', gap: '0.5rem', margin: 0, padding: 0, listStyle: 'none' }}>
             {[
-              { id: 'a', text: tr('قرارداد شعبهٔ تبریز', 'Contract for the Tabriz branch') },
+              { id: 'a', text: tr('قرارداد شعبهٔ وین', 'Contract for the Vienna branch') },
               { id: 'b', text: tr('فاکتور ۱۰۴۳', 'Invoice #1043') },
             ]
               .filter((row) => mail.includes(row.id))
@@ -201,7 +201,7 @@ export function InteractBlocks() {
           >
             <div style={{ padding: '0.85rem 1rem' }}>
               <strong>{tr('سارا احمدی', 'Sara Ahmadi')}</strong>
-              <div style={{ color: 'var(--nx-text-muted)', fontSize: 'var(--nx-text-sm)' }}>{tr('قرارداد شعبهٔ تبریز', 'Contract for the Tabriz branch')}</div>
+              <div style={{ color: 'var(--nx-text-muted)', fontSize: 'var(--nx-text-sm)' }}>{tr('قرارداد شعبهٔ وین', 'Contract for the Vienna branch')}</div>
             </div>
           </SwipeActions>
         </Demo>

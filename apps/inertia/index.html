@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>NabuXUI · Inertia</title>
+    <!-- Theme before first paint (the same snippet @nabuxai/ui-core exports as themeScript).
+         In production this comes from the root Blade view's @nabuxuiHead. -->
+    <script>(function(){var r=document.documentElement;r.classList.add('nx-js');try{var m=window.matchMedia('(prefers-color-scheme: dark)');var a=function(){var p=null;try{p=localStorage.getItem('nabu.theme')}catch(e){}var d=p==='dark'||(p!=='light'&&m.matches);r.setAttribute('data-theme',d?'dark':'light');r.classList.toggle('dark',d);r.style.colorScheme=d?'dark':'light'};a();m.addEventListener&&m.addEventListener('change',a)}catch(e){}})();</script>
+    <!-- Saved language before first paint (the key lang.tsx readLang() reads; fa unless 'en'). -->
+    <script>(function(){var r=document.documentElement;try{var fa=localStorage.getItem('nabuxui.inertia.lang')!=='en';r.lang=fa?'fa':'en';r.dir=fa?'rtl':'ltr'}catch(e){}})();</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Inter:wght@400..700&family=JetBrains+Mono:wght@400;500&family=Vazirmatn:wght@300..800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Inter:wght@400..700&family=JetBrains+Mono:wght@400;500&family=Vazirmatn:wght@300..800&display=swap" rel="stylesheet"></noscript>
+  </head>
+  <body>
+    <!-- Dev-server stand-in for what Laravel renders: the @inertia directive prints the page
+         JSON and the root div. The initial page below mirrors DashboardController's props so
+         `pnpm dev` works without the backend. -->
+    <script data-page="app" type="application/json">{
+      "component": "Dashboard",
+      "props": {
+        "locale": "fa",
+        "stats": [
+          { "id": "visits", "value": 128409, "delta": 12.4 },
+          { "id": "uptime", "value": 99.98, "delta": 0.02 },
+          { "id": "deploys", "value": 47, "delta": 6 },
+          { "id": "incidents", "value": 1, "delta": -2 }
+        ],
+        "traffic": {
+          "days": ["2026-09-28", "2026-09-29", "2026-09-30", "2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04", "2026-10-05", "2026-10-06", "2026-10-07", "2026-10-08", "2026-10-09", "2026-10-10", "2026-10-11"],
+          "visits": [8400, 9100, 8800, 10250, 11900, 7600, 6900, 9800, 10400, 11200, 12300, 13150, 12050, 13609]
+        },
+        "latency": 148,
+        "events": [
+          { "id": "e1", "actor": "Amara Okafor", "kind": "deploy", "target": "edge-fra", "minutesAgo": 18 },
+          { "id": "e2", "actor": "Jonas Becker", "kind": "incident", "target": "api-gateway", "minutesAgo": 64 },
+          { "id": "e3", "actor": "Mei Tanaka", "kind": "release", "target": "v3.9.1", "minutesAgo": 190 },
+          { "id": "e4", "actor": "Lucía Fernández", "kind": "backup", "target": "db-eu", "minutesAgo": 420 }
+        ]
+      },
+      "url": "/inertia",
+      "version": null
+    }</script>
+    <div id="app"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
