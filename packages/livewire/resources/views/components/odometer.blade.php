@@ -21,8 +21,9 @@
     if ($decimals > 0) {
         $format += ['minimumFractionDigits' => (int) $decimals, 'maximumFractionDigits' => (int) $decimals];
     }
-    $start = $reveal ? $from : $value;
-    $parts = NabuXUI::numberParts($start, (int) $decimals, $locale);
+    // The columns always ship the final value, so dead or slow JS still shows the
+    // real number; nxOdometer rebuilds them at `from` on init before rolling.
+    $parts = NabuXUI::numberParts($value, (int) $decimals, $locale);
 @endphp
 <span {{ $attributes->class('nx-odometer')->merge(['data-value' => $value]) }}
     x-data="nxOdometer(@js(['from' => $from, 'locale' => $locale, 'format' => (object) $format, 'reveal' => (bool) $reveal]))">

@@ -21,8 +21,9 @@
         ['گام بعدی', 'Next step', 'متن', 'text'],
     ];
 @endphp
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" wire:ignore>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap');
     .slk-root {
         --slk-blue: #0176D3; --slk-blue-soft: color-mix(in srgb, #0176D3 8%, #FFFFFF);
         --slk-green: #04844B; --slk-purple: #6739B7;

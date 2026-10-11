@@ -27,8 +27,9 @@
         ],
     ];
 @endphp
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" wire:ignore>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></noscript>
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     .atph-root {
         --atph-blue: #0052CC; --atph-blue-hover: #0747A6; --atph-blue-tint: #E9F2FF;
         --atph-ink: #172B4D; --atph-ink-strong: #091E42; --atph-subtle: #44546F;

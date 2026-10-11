@@ -141,7 +141,7 @@ export function installActionsBlocks(Alpine: AlpineLike): void {
     cancel: (() => {}) as Cleanup,
     recount: () => {},
 
-    init(this: Self<{ count: number; stops: Cleanup[]; recount: () => void; inputs: () => HTMLInputElement[] }>) {
+    init(this: Self<{ count: number; stops: Cleanup[]; cancel: Cleanup; recount: () => void; inputs: () => HTMLInputElement[] }>) {
       this.stops = Array.from(this.$root.querySelectorAll<HTMLElement>('.nx-interests-row')).map((row) => dragScroll(row));
       this.recount = () => {
         this.count = this.inputs().filter((input) => input.checked).length;

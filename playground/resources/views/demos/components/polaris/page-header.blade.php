@@ -9,8 +9,9 @@
     $say = fn (string $en, string $faText) => $fa ? $faText : $en;
     $newFlash = e(json_encode($say('The new-order form opened', 'فرم سفارش تازه باز شد')));
 @endphp
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" wire:ignore>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     [x-cloak] { display: none !important; }
     .plph-root {
         --plph-surface: #FFFFFF; --plph-raised: #F6F6F6; --plph-text: #303030; --plph-subdued: #616161;

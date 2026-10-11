@@ -30,16 +30,25 @@
     <meta name="color-scheme" content="light dark">
     <title>{{ $say('NabuXUI · Playground', 'NabuXUI · پلی‌گراوند') }}</title>
     @nabuxuiHead
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Inter:wght@400..700&family=JetBrains+Mono:wght@400;500&family=Vazirmatn:wght@300..800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Inter:wght@400..700&family=JetBrains+Mono:wght@400;500&family=Vazirmatn:wght@300..800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Inter:wght@400..700&family=JetBrains+Mono:wght@400;500&family=Vazirmatn:wght@300..800&display=swap" rel="stylesheet"></noscript>
+    {{-- Kept after the async pair: the css2 request is already in flight by the time this
+         preconnect could help it, but the hint stays for any later googleapis fetch. --}}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
     @nabuxuiStyles
     {{-- The welcome page is plain Blade (no Livewire), so it needs its own
          Alpine: the vendored copy below (public/vendor/alpine.js) is the CDN
-         build with its auto-start patched to wait for the load event — module
+         build with its auto-start patched to fire on DOMContentLoaded — module
          scripts always execute before it, so every x-data provider the package
-         registers is in place before Alpine walks the tree. --}}
-    <script src="{{ asset('vendor/alpine.js') }}"></script>
+         registers is in place before Alpine walks the tree. The ?v= suffix
+         busts stale browser caches whenever the file changes.
+         Wiring constraint (footgun): the patch starts immediately when
+         readyState is not "loading", so this file must stay a classic sync
+         script in <head> (as here) or load after dist/nabuxui.js — never as a
+         deferred/dynamic script ordered before the package bundle, or Alpine
+         would start before the providers register. --}}
+    <script src="{{ asset('vendor/alpine.js').'?v='.filemtime(public_path('vendor/alpine.js')) }}"></script>
     @nabuxuiScripts
     <style>
         body { margin: 0; }

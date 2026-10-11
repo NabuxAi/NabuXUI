@@ -16,8 +16,9 @@
     $prodsJson = e(json_encode($products));
     $copySuffix = e(json_encode($say(' (copy)', ' (تکثیر)')));
 @endphp
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" wire:ignore>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     [x-cloak] { display: none !important; }
     .plrl-root {
         --plrl-surface: #FFFFFF; --plrl-raised: #F6F6F6; --plrl-text: #303030; --plrl-subdued: #616161;

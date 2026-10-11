@@ -17,8 +17,9 @@
         ['lead', 'س', 'L', '#FE9339', $say('Lead', 'سرنخ')],
     ];
 @endphp
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" wire:ignore>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap');
     .slr-root {
         --slr-blue: #0176D3; --slr-blue-soft: color-mix(in srgb, #0176D3 8%, #FFFFFF);
         --slr-green: #04844B; --slr-purple: #6739B7; --slr-orange: #FE9339;

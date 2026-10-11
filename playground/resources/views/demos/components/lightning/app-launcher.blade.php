@@ -23,8 +23,9 @@
         ],
     ];
 @endphp
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" wire:ignore>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap');
     .sla-root {
         --sla-blue: #0176D3; --sla-blue-soft: color-mix(in srgb, #0176D3 8%, #FFFFFF);
         --sla-navy: #0B5CAB; --sla-green: #04844B; --sla-purple: #6739B7; --sla-orange: #FE9339;

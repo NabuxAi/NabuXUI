@@ -36,8 +36,9 @@
     $chOptsJson = e(json_encode($chOpts));
     $viewsJson = e(json_encode($views));
 @endphp
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" wire:ignore>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     [x-cloak] { display: none !important; }
     .plfl-root {
         --plfl-surface: #FFFFFF; --plfl-raised: #F6F6F6; --plfl-text: #303030; --plfl-subdued: #616161;

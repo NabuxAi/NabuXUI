@@ -19,8 +19,9 @@
     $ordersJson = e(json_encode($orders));
     $stLabelJson = e(json_encode($stLabel));
 @endphp
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" wire:ignore>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     [x-cloak] { display: none !important; }
     .plit-root {
         --plit-surface: #FFFFFF; --plit-raised: #F6F6F6; --plit-text: #303030; --plit-subdued: #616161;

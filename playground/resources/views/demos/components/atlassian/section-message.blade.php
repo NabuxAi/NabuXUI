@@ -35,8 +35,9 @@
         ],
     ];
 @endphp
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" wire:ignore>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></noscript>
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     .atsm-root {
         --atsm-blue: #0052CC; --atsm-ink: #172B4D; --atsm-ink-strong: #091E42; --atsm-muted: #626F86;
         --atsm-subtle: #44546F; --atsm-border: #DFE1E6; --atsm-hover: #F1F2F4; --atsm-surface: #FFFFFF;

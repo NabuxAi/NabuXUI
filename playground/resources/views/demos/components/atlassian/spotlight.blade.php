@@ -13,8 +13,9 @@
         ['t' => $say('Watch', 'دنبال کردن'), 'b' => $say('Watching this board pages every change to you — turn it off whenever it gets loud.', 'دنبال کردن این تخته هر تغییری را به شما می‌رساند — هر وقت شلوغ شد خاموشش کنید.')],
     ];
 @endphp
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" wire:ignore>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></noscript>
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     .atsp-root {
         --atsp-blue: #0052CC; --atsp-ink: #172B4D; --atsp-ink-strong: #091E42;
         --atsp-muted: #626F86; --atsp-subtle: #44546F; --atsp-border: #DFE1E6; --atsp-hover: #F1F2F4;

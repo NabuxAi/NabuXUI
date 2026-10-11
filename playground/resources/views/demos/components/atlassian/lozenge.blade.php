@@ -23,8 +23,9 @@
         ['key' => 'NABU-258', 'en' => 'Webhook secret rotation', 'fa' => 'چرخش رمز وب‌هوک', 'start' => 'done'],
     ];
 @endphp
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" wire:ignore>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></noscript>
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     .atlz-root {
         --atlz-blue: #0052CC; --atlz-ink: #172B4D; --atlz-muted: #626F86; --atlz-subtle: #44546F;
         --atlz-border: #DFE1E6; --atlz-hover: #F1F2F4; --atlz-surface: #FFFFFF;

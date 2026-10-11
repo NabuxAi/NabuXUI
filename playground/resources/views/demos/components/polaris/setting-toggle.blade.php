@@ -17,8 +17,9 @@
     $lblJson = e(json_encode($lbl));
     $btnJson = e(json_encode($btn));
 @endphp
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" wire:ignore>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     [x-cloak] { display: none !important; }
     .plst-root {
         --plst-surface: #FFFFFF; --plst-raised: #F6F6F6; --plst-text: #303030; --plst-subdued: #616161;

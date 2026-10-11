@@ -7,8 +7,9 @@
     $fa = app()->getLocale() === 'fa';
     $say = fn (string $en, string $faText) => $fa ? $faText : $en;
 @endphp
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" wire:ignore>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap');
     .prr-root {
         --prr-canvas: #ffffff; --prr-subtle: #f6f8fa; --prr-fg: #1f2328; --prr-muted: #59636e;
         --prr-border: #d1d9e0; --prr-accent: #0969da; --prr-count: #eff2f5;

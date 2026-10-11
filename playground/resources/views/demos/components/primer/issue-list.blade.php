@@ -28,8 +28,9 @@
     $openCount = count(array_filter($rows, fn ($r) => $r['state'] === 'open'));
     $closedCount = count($rows) - $openCount;
 @endphp
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" wire:ignore>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap');
     .pri-root {
         --pri-canvas: #ffffff; --pri-subtle: #f6f8fa; --pri-fg: #1f2328; --pri-muted: #59636e;
         --pri-border: #d1d9e0; --pri-accent: #0969da; --pri-success: #1a7f37; --pri-done: #8250df;

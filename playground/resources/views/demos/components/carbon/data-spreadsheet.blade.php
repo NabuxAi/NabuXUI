@@ -22,8 +22,9 @@
     ];
     $cell = fn (int $r, string $c): string => $data[$r][array_search($c, $cols, true)] ?? '';
 @endphp
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'" wire:ignore>
+<noscript><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
     .cbsp-root {
         --cbsp-accent: #0f62fe; --cbsp-accent-hover: #0353e9;
         --cbsp-text: #161616; --cbsp-text-secondary: #525252;

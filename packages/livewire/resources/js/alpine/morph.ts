@@ -17,7 +17,7 @@ export function afterMorph(root: HTMLElement, run: () => void): () => void {
     if (!frame) frame = requestAnimationFrame(tick);
   };
 
-  const livewire = (window as window & { Livewire?: { hook?: (name: string, callback: () => void) => void } }).Livewire;
+  const livewire = (window as typeof window & { Livewire?: { hook?: (name: string, callback: () => void) => void } }).Livewire;
   if (typeof livewire?.hook === 'function') {
     livewire.hook('morph.updated', schedule);
   }

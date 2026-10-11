@@ -10,8 +10,9 @@
     $say = fn (string $en, string $faText) => $fa ? $faText : $en;
     $jsf = fn (string $s): string => str_replace('"', '&quot;', json_encode($s, JSON_UNESCAPED_UNICODE));
 @endphp
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" wire:ignore>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap');
     .sll-root {
         --sll-blue: #0176D3; --sll-blue-soft: color-mix(in srgb, #0176D3 8%, #FFFFFF);
         --sll-green: #04844B; --sll-purple: #6739B7; --sll-orange: #FE9339; --sll-red: #BA0517;

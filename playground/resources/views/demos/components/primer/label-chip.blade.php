@@ -14,8 +14,9 @@
         ['name' => ['en' => 'good first issue', 'fa' => 'شروع خوب'], 'hue' => '#7057ff', 'desc' => ['en' => 'A friendly first task', 'fa' => 'تسک دوستانه برای شروع'], 'count' => 3],
     ];
 @endphp
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" wire:ignore>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap');
     .prl-root {
         --prl-canvas: #ffffff; --prl-subtle: #f6f8fa; --prl-fg: #1f2328; --prl-muted: #59636e;
         --prl-border: #d1d9e0; --prl-accent: #0969da; --prl-danger: #cf222e;

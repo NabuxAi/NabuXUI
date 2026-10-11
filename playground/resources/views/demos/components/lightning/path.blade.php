@@ -24,8 +24,9 @@
 
     $stepsJson = json_encode(array_map(static fn (array $s): array => ['fa' => $s[0], 'en' => $s[1], 'color' => $s[2]], $stages), JSON_UNESCAPED_UNICODE);
 @endphp
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" wire:ignore>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap');
     .slp-root {
         --slp-blue: #0176D3; --slp-teal: #0B827C; --slp-purple: #6739B7; --slp-orange: #FE9339;
         --slp-pink: #B32D69; --slp-yellow: #FFB75D; --slp-red: #BA0517; --slp-green: #04844B;

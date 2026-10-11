@@ -13,8 +13,9 @@
         ['en' => 'sprint-24-metrics.csv', 'fa' => 'سنجه‌های اسپرینت-۲۴.csv', 'size' => ['44 KB', '۴۴ کیلوبایت'], 'when' => ['2 days ago', '۲ روز پیش'], 'tile' => '#1F845A', 'd' => 'M7 3h7l5 5v13H7z M14 3v5h5'],
     ];
 @endphp
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" wire:ignore>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></noscript>
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     .ates-root {
         --ates-blue: #0052CC; --ates-ink: #172B4D; --ates-ink-strong: #091E42; --ates-muted: #626F86;
         --ates-subtle: #44546F; --ates-border: #DFE1E6; --ates-hover: #F1F2F4; --ates-surface: #FFFFFF; --ates-page: #F7F8F9;

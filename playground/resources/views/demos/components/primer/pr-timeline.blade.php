@@ -19,8 +19,9 @@
         return '<svg aria-hidden="true" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="display:block">' . ($p[$name] ?? '') . '</svg>';
     };
 @endphp
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" wire:ignore>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap');
     .prt-root {
         --prt-canvas: #ffffff; --prt-subtle: #f6f8fa; --prt-fg: #1f2328; --prt-muted: #59636e;
         --prt-border: #d1d9e0; --prt-accent: #0969da;

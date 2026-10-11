@@ -9,8 +9,9 @@
     $fa = app()->getLocale() === 'fa';
     $say = fn (string $en, string $faText) => $fa ? $faText : $en;
 @endphp
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'" wire:ignore>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap');
     .sly-root {
         --sly-blue: #0176D3; --sly-green: #04844B; --sly-orange: #FE9339; --sly-purple: #6739B7;
         --sly-teal: #0B827C; --sly-pink: #B32D69; --sly-yellow: #FFB75D; --sly-red: #BA0517;

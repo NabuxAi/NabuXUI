@@ -8,8 +8,9 @@
     $fa = app()->getLocale() === 'fa';
     $say = fn (string $en, string $faText) => $fa ? $faText : $en;
 @endphp
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'" wire:ignore>
+<noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"></noscript>
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     .atim-root {
         --atim-blue: #0052CC; --atim-ink: #172B4D; --atim-ink-strong: #091E42; --atim-muted: #626F86;
         --atim-subtle: #44546F; --atim-border: #DFE1E6; --atim-hover: #F1F2F4; --atim-surface: #FFFFFF;
