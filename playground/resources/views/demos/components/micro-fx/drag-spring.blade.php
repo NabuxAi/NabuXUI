@@ -1,0 +1,364 @@
+{{--
+    drag-spring's real scenario: the Vela Studio portfolio onboarding —
+    drag the "Vector art" token out of the skills tray and drop it into
+    the "Core skills" slot. One semi-implicit spring integrator does all
+    the motion: while dragging it chases the pointer with stiff
+    constants (k 600 · c 40), on release it either snaps home or flies
+    into the slot with an underdamped wobble (k 170 · c 12, ζ≈0.46 —
+    two–three visible overshoots). The slot highlights inside a 72px
+    capture radius, grips the token and confirms with a check. Pointer
+    capture keeps touch dragging alive; Enter/Space assigns with no
+    mouse. The loop parks off screen, reduced motion teleports, and
+    destroy aborts every listener, frame and observer.
+--}}
+@php
+    $fa = app()->getLocale() === 'fa';
+    $say = fn (string $en, string $faText) => $fa ? $faText : $en;
+@endphp
+
+<style>
+    .mfds-root {
+        --mfds-fg: #1c1917; --mfds-muted: #78716c; --mfds-border: #e7e5e4;
+        --mfds-bg: #ffffff; --mfds-soft: #f5f5f4; --mfds-accent: #4f46e5;
+        --mfds-ok: #059669;
+        display: grid; gap: 1rem;
+        font-family: 'Inter', 'Vazirmatn', ui-sans-serif, system-ui, sans-serif;
+        color: var(--mfds-fg);
+    }
+    html[data-theme="dark"] .mfds-root {
+        --mfds-fg: #fafaf9; --mfds-muted: #a8a29e; --mfds-border: #292524;
+        --mfds-bg: #1c1917; --mfds-soft: #292524; --mfds-accent: #a5b4fc;
+        --mfds-ok: #34d399;
+    }
+    @media (prefers-color-scheme: dark) {
+        html:not([data-theme="light"]) .mfds-root {
+            --mfds-fg: #fafaf9; --mfds-muted: #a8a29e; --mfds-border: #292524;
+            --mfds-bg: #1c1917; --mfds-soft: #292524; --mfds-accent: #a5b4fc;
+            --mfds-ok: #34d399;
+        }
+    }
+    .mfds-stage {
+        position: relative; display: flex; flex-wrap: wrap;
+        align-items: center; justify-content: center;
+        gap: 1.5rem 2.5rem; padding: 1.8rem 1.2rem;
+        border: 1px solid var(--mfds-border); border-radius: 1.1rem;
+        background: color-mix(in oklab, var(--mfds-soft) 55%, var(--mfds-bg));
+        overflow: clip; touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .mfds-pad {
+        display: grid; place-items: center; align-content: center; gap: .55rem;
+        min-block-size: 8.5rem; min-inline-size: min(100%, 10rem);
+        padding: .9rem; border-radius: 1rem;
+        border: 1.5px dashed color-mix(in oklab, var(--mfds-border) 85%, var(--mfds-fg));
+    }
+    .mfds-pad-label {
+        font-size: .68rem; font-weight: 700; letter-spacing: .09em;
+        text-transform: uppercase; color: var(--mfds-muted);
+    }
+    .mfds-slot { transition: border-color .18s ease, background-color .18s ease, box-shadow .18s ease; }
+    .mfds-slot[data-near="true"] {
+        border-color: var(--mfds-accent);
+        box-shadow: 0 0 0 4px color-mix(in oklab, var(--mfds-accent) 18%, transparent);
+    }
+    .mfds-slot[data-held="true"] {
+        border-style: solid; border-color: var(--mfds-accent);
+        background: color-mix(in oklab, var(--mfds-accent) 10%, var(--mfds-bg));
+    }
+    .mfds-slot[data-settled="true"] { animation: mfds-grip .4s cubic-bezier(.34, 1.56, .64, 1); }
+    @keyframes mfds-grip { 40% { scale: 1.04; } }
+    .mfds-check {
+        inline-size: 1.7rem; block-size: 1.7rem; stroke: var(--mfds-ok);
+        stroke-width: 2.4; fill: none; stroke-linecap: round; stroke-linejoin: round;
+        animation: mfds-pop .35s cubic-bezier(.34, 1.56, .64, 1);
+    }
+    @keyframes mfds-pop { from { scale: .2; opacity: 0; } }
+    .mfds-token {
+        position: relative; z-index: 2;
+        display: inline-flex; align-items: center; gap: .5rem;
+        padding: .62rem 1.15rem; border-radius: 999px;
+        border: 1px solid var(--mfds-border); background: var(--mfds-bg);
+        color: var(--mfds-fg); font-family: inherit; font-size: .88rem; font-weight: 600;
+        cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
+        will-change: transform;
+        box-shadow: 0 10px 24px -18px rgb(0 0 0 / .5);
+        transition: border-color .15s ease, scale .15s ease;
+    }
+    .mfds-token:hover { border-color: var(--mfds-accent); }
+    .mfds-token:focus-visible { outline: 2px solid var(--mfds-accent); outline-offset: 2px; }
+    .mfds-token[data-dragging="true"] { cursor: grabbing; scale: 1.05; transition: none; }
+    .mfds-token[data-locked="true"] { scale: .97; border-color: var(--mfds-accent); }
+    .mfds-token svg { inline-size: .95rem; block-size: .95rem; stroke: currentColor; stroke-width: 2;
+                      fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .mfds-chip {
+        padding: .45rem .85rem; border-radius: 999px; font-size: .78rem; font-weight: 500;
+        border: 1px solid var(--mfds-border); color: var(--mfds-muted);
+        background: color-mix(in oklab, var(--mfds-soft) 60%, var(--mfds-bg));
+    }
+    .mfds-chip-row { display: flex; flex-wrap: wrap; gap: .4rem; justify-content: center; }
+    .mfds-foot {
+        display: flex; flex-wrap: wrap; align-items: center;
+        justify-content: space-between; gap: .75rem 1.25rem;
+    }
+    .mfds-reset {
+        display: inline-flex; align-items: center; gap: .45rem;
+        padding: .55rem 1.1rem; border-radius: 999px; cursor: pointer;
+        border: 1px solid var(--mfds-border); background: var(--mfds-bg);
+        color: var(--mfds-fg); font-family: inherit; font-size: .82rem; font-weight: 600;
+        transition: border-color .15s ease, color .15s ease;
+    }
+    .mfds-reset:hover { border-color: var(--mfds-accent); color: var(--mfds-accent); }
+    .mfds-reset:focus-visible { outline: 2px solid var(--mfds-accent); outline-offset: 2px; }
+    .mfds-reset svg { inline-size: .9rem; block-size: .9rem; stroke: currentColor; stroke-width: 2;
+                      fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .mfds-status { margin: 0; font-size: .8rem; color: var(--mfds-muted); min-block-size: 1.2em; }
+    .mfds-hint { margin: 0; font-family: ui-monospace, monospace;
+                 font-size: .72rem; color: var(--mfds-muted); }
+    @media (prefers-reduced-motion: reduce) {
+        .mfds-slot, .mfds-token, .mfds-reset { transition: none; }
+        .mfds-token[data-dragging="true"] { scale: 1; }
+        .mfds-slot[data-settled="true"], .mfds-check { animation: none; }
+    }
+</style>
+
+<section class="pg-box" style="gap: 1.25rem">
+    <div>
+        <h3 class="pg-title" style="font-size: var(--nx-text-xl)">{{ $say('Physics you can feel in your wrist', 'فیزیکی که در مچ دست حس می‌شود') }}</h3>
+        <p style="margin: .25rem 0 0; color: var(--nx-text-muted)">
+            {{ $say('One semi-implicit Euler spring drives the whole interaction: while you drag, it chases the pointer with stiff constants, so the token trails the finger like a sticky bead; on release it switches to an underdamped spring (k 170, c 12, ζ≈0.46) and wobbles into place. The slot grips inside a 72px capture radius and confirms with a check — pointer capture keeps touch alive, Enter/Space assigns with no mouse, and the loop parks the moment it leaves the viewport.', 'یک فنر اویلر نیمه‌ضمنی کل تعامل را می‌راند: حین کشیدن با ثابت‌های سفت دنبال نشانگر می‌آید، پس توکن مثل مهرهٔ چسبناک با فاصلهٔ کوتاهی دنبال انگشت است؛ با رها شدن به فنر زیرمیرایی (k=170 و c=12 و ζ≈۰٫۴۶) سوییچ می‌کند و با لرزش می‌نشیند. خانهٔ رهاسازی در شعاع ۷۲ پیکسل می‌گیرد و با تیک تأیید می‌زند — pointer capture لمس را زنده نگه می‌دارد، Enter/Space بدون ماوس انتصاب می‌کند و حلقه به‌محض خروج از دید پارک می‌شود.') }}
+        </p>
+    </div>
+
+    <div class="mfds-root"
+        x-data="{
+            ac: null, io: null, ro: null, mq: null, raf: 0, last: 0, visible: true,
+            dragging: false, held: false, settled: false, near: false,
+            x: 0, y: 0, vx: 0, vy: 0, tx: 0, ty: 0, sx: 0, sy: 0,
+            fa: @js($fa),
+            init() {
+                this.ac = new AbortController();
+                this.mq = matchMedia('(prefers-reduced-motion: reduce)');
+                const tk = this.$refs.token;
+                const on = (n, f) => tk.addEventListener(n, f, { signal: this.ac.signal });
+                on('pointerdown', (e) => this.grab(e));
+                on('pointermove', (e) => this.drag(e));
+                on('pointerup', (e) => this.drop(e));
+                on('pointercancel', (e) => this.drop(e));
+                on('keydown', (e) => {
+                    if (e.key !== 'Enter' && e.key !== ' ') return;
+                    e.preventDefault();
+                    this.toggle();
+                });
+                this.io = new IntersectionObserver((entries) => {
+                    this.visible = entries[0].isIntersecting;
+                    if (this.visible) { if (this.raf === 0 && !this.atTarget()) this.run(); }
+                    else this.park();
+                });
+                this.io.observe(this.$refs.stage);
+                this.ro = new ResizeObserver(() => this.recall());
+                this.ro.observe(this.$refs.stage);
+            },
+            paint() {
+                this.$refs.token.style.transform = 'translate(' + this.x.toFixed(2) + 'px, ' + this.y.toFixed(2) + 'px)';
+            },
+            slotTarget() {
+                const r = this.$refs.token.getBoundingClientRect();
+                const s = this.$refs.slot.getBoundingClientRect();
+                return {
+                    x: (s.left + s.width / 2) - (r.left + r.width / 2) + this.x,
+                    y: (s.top + s.height / 2) - (r.top + r.height / 2) + this.y,
+                };
+            },
+            trackNear() {
+                const r = this.$refs.token.getBoundingClientRect();
+                const s = this.$refs.slot.getBoundingClientRect();
+                this.near = Math.hypot(
+                    (r.left + r.width / 2) - (s.left + s.width / 2),
+                    (r.top + r.height / 2) - (s.top + s.height / 2)) < 72;
+            },
+            atTarget() {
+                return Math.abs(this.x - this.tx) < 0.5 && Math.abs(this.y - this.ty) < 0.5;
+            },
+            grab(e) {
+                if (this.held) return;
+                if (e.pointerType === 'mouse' && e.button !== 0) return;
+                this.dragging = true;
+                this.settled = false;
+                this.sx = e.clientX;
+                this.sy = e.clientY;
+                try { this.$refs.token.setPointerCapture(e.pointerId); } catch (err) {}
+                this.$refs.token.focus({ preventScroll: true });
+                this.run();
+            },
+            drag(e) {
+                if (!this.dragging) return;
+                this.tx = e.clientX - this.sx;
+                this.ty = e.clientY - this.sy;
+                if (this.mq.matches) {
+                    this.x = this.tx; this.y = this.ty;
+                    this.vx = this.vy = 0;
+                    this.paint();
+                }
+                this.trackNear();
+            },
+            drop(e) {
+                if (!this.dragging) return;
+                this.dragging = false;
+                try { this.$refs.token.releasePointerCapture(e.pointerId); } catch (err) {}
+                if (this.near && !this.mq.matches) this.trackNear();
+                if (this.near) {
+                    this.held = true;
+                    const t = this.slotTarget();
+                    this.tx = t.x; this.ty = t.y;
+                } else {
+                    this.held = false;
+                    this.tx = 0; this.ty = 0;
+                }
+                if (this.mq.matches) { this.finish(); return; }
+                this.run();
+            },
+            toggle() {
+                if (this.held) this.unassign();
+                else this.assign();
+            },
+            assign() {
+                if (this.held) return;
+                this.held = true;
+                this.settled = false;
+                const t = this.slotTarget();
+                this.tx = t.x; this.ty = t.y;
+                if (this.mq.matches) { this.finish(); return; }
+                this.run();
+            },
+            unassign() {
+                this.held = false;
+                this.settled = false;
+                this.near = false;
+                this.tx = 0; this.ty = 0;
+                if (this.mq.matches) { this.finish(); return; }
+                this.run();
+            },
+            run() {
+                if (this.raf || this.mq.matches || !this.visible) return;
+                this.last = 0;
+                this.raf = requestAnimationFrame((n) => this.step(n));
+            },
+            step(now) {
+                const dt = Math.min(0.032, (now - this.last) / 1000) || 0.016;
+                this.last = now;
+                const k = this.dragging ? 600 : 170;
+                const c = this.dragging ? 40 : 12;
+                this.vx += (-k * (this.x - this.tx) - c * this.vx) * dt;
+                this.vy += (-k * (this.y - this.ty) - c * this.vy) * dt;
+                this.x += this.vx * dt;
+                this.y += this.vy * dt;
+                this.paint();
+                this.trackNear();
+                const rest = Math.hypot(this.x - this.tx, this.y - this.ty) < 0.6;
+                const slow = Math.hypot(this.vx, this.vy) < 8;
+                if (!this.dragging && rest && slow) {
+                    this.x = this.tx; this.y = this.ty;
+                    this.vx = this.vy = 0;
+                    this.paint();
+                    this.raf = 0;
+                    if (this.held && !this.settled) this.confirm();
+                    return;
+                }
+                this.raf = requestAnimationFrame((n) => this.step(n));
+            },
+            finish() {
+                this.x = this.tx; this.y = this.ty;
+                this.vx = this.vy = 0;
+                this.paint();
+                this.raf = 0;
+                if (this.held && !this.settled) this.confirm();
+            },
+            confirm() {
+                this.settled = true;
+            },
+            park() {
+                cancelAnimationFrame(this.raf);
+                this.raf = 0;
+                if (!this.dragging) {
+                    this.x = this.tx; this.y = this.ty;
+                    this.vx = this.vy = 0;
+                    this.paint();
+                    if (this.held && !this.settled) this.confirm();
+                }
+            },
+            recall() {
+                if (this.dragging || this.raf) return;
+                if (this.held) {
+                    const t = this.slotTarget();
+                    this.x = this.tx = t.x;
+                    this.y = this.ty = t.y;
+                } else {
+                    this.x = this.tx = 0;
+                    this.y = this.ty = 0;
+                }
+                this.vx = this.vy = 0;
+                this.paint();
+            },
+            label() {
+                if (this.dragging) {
+                    return this.near
+                        ? (this.fa ? 'خانه فعال شد — رها کنید تا بگیرد' : 'Slot armed — release to grip')
+                        : (this.fa ? 'در حال کشیدن… فنر سفت دنبال انگشت است' : 'Dragging… the stiff spring trails the finger');
+                }
+                if (this.held) {
+                    return this.settled
+                        ? (this.fa ? '«هنر وکتور» به مهارت‌های اصلی ولا استودیو منتسب شد' : '“Vector art” is assigned to Vela Studio’s core skills')
+                        : (this.fa ? 'فنر در حال نشستن است…' : 'The spring is settling…');
+                }
+                return this.fa
+                    ? 'توکن را بکشید و در خانهٔ مهارت‌های اصلی رها کنید — یا با Tab و Enter منتسب کنید'
+                    : 'Drag the token and drop it on the core-skills slot — or Tab to it and press Enter';
+            },
+            destroy() {
+                if (this.ac) this.ac.abort();
+                cancelAnimationFrame(this.raf);
+                if (this.io) this.io.disconnect();
+                if (this.ro) this.ro.disconnect();
+            },
+        }">
+        <div class="mfds-stage" x-ref="stage">
+            <div class="mfds-pad mfds-home">
+                <span class="mfds-pad-label">{{ $say('Skills tray', 'سینی مهارت‌ها') }}</span>
+                <button type="button" class="mfds-token" x-ref="token"
+                    x-bind:data-dragging="dragging ? 'true' : 'false'"
+                    x-bind:data-locked="held ? 'true' : 'false'"
+                    x-bind:aria-pressed="held ? 'true' : 'false'"
+                    x-bind:aria-label="@js($say('Vector art — drag to the core skills slot, or press Enter to assign', 'هنر وکتور — به خانهٔ مهارت‌های اصلی بکشید یا برای انتساب Enter بزنید'))">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/></svg>
+                    {{ $say('Vector art', 'هنر وکتور') }}
+                </button>
+                <span class="mfds-chip-row">
+                    <span class="mfds-chip">{{ $say('Illustration', 'تصویرسازی') }}</span>
+                    <span class="mfds-chip">{{ $say('3D motion', 'موشن سه‌بعدی') }}</span>
+                </span>
+            </div>
+
+            <div class="mfds-pad mfds-slot" x-ref="slot"
+                x-bind:data-near="near && !held ? 'true' : 'false'"
+                x-bind:data-held="held ? 'true' : 'false'"
+                x-bind:data-settled="settled ? 'true' : 'false'"
+                x-bind:aria-label="@js($say('Core skills drop target', 'خانهٔ رهاسازی مهارت‌های اصلی'))">
+                <span class="mfds-pad-label">{{ $say('Core skills', 'مهارت‌های اصلی') }}</span>
+                <svg class="mfds-check" x-show="settled" x-cloak viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>
+                <span class="mfds-chip" x-show="!settled">{{ $say('drop here', 'اینجا رها کنید') }}</span>
+            </div>
+        </div>
+
+        <div class="mfds-foot">
+            <p class="mfds-status" role="status" x-text="label()"></p>
+            <button type="button" class="mfds-reset" x-show="held" x-cloak x-on:click="unassign()"
+                x-bind:aria-label="@js($say('Put the token back in the tray', 'توکن را به سینی برگردان'))">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+                {{ $say('Back to tray', 'بازگشت به سینی') }}
+            </button>
+            <p class="mfds-hint">
+                {{ $say('spring k 170 · c 12 · ζ 0.46 · grip 72px · pointer capture · parked off screen · teleport under reduced motion', 'فنر k=170 · c=12 · ζ=۰٫۴۶ · گیرش ۷۲px · pointer capture · پارک خارج از دید · تلپورت در حرکت کاهش‌یافته') }}
+            </p>
+        </div>
+    </div>
+</section>

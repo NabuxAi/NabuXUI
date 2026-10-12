@@ -940,4 +940,774 @@ return [
         SVELTE,
         ],
     ],
+
+    'contour-lines' => [
+        'title' => ['fa' => 'خطوط توپوگرافی', 'en' => 'Contour lines'],
+        'icon' => 'layers',
+        'oneLiner' => [
+            'fa' => 'هشت نوار تراز SVG که هرکدام ترکیب دو سینوس با طول‌موج و سرعت خودشان‌اند و مثل نقشهٔ کوهستان جابه‌جا و فاز می‌گیرند؛ هاور یا فوکوس روی نقطهٔ قله، نوارش را به رنگ ارتفاع می‌برد و کارت گوشه قله را می‌خواند.',
+            'en' => 'Eight SVG contour bands, each a mix of two sines with its own wavelength and speed, drift and phase like a mountain survey; hover or focus a summit dot and its band retunes to the elevation colour while the corner card reads the peak out.',
+        ],
+        'js' => true,
+        'docs' => 'https://scrolltide.co',
+        'props' => [
+            ['name' => 'bands', 'type' => 'count', 'default' => "'8'", 'note' => [
+                'fa' => 'تعداد نوارهای تراز؛ فاصلهٔ عمودی، دامنه و ضخامت خط هر نوار خودکار از شاخصش درمی‌آید.',
+                'en' => 'The contour count; each band’s spacing, amplitude and stroke width derive from its index.',
+            ]],
+            ['name' => 'mix', 'type' => 'sines', 'default' => "'2 per band'", 'note' => [
+                'fa' => 'هر نوار دو سینوس با طول‌موج و سرعت فاز جدا دارد تا نقشه هرگز تکرار نشود.',
+                'en' => 'Every band mixes two sines with separate wavelengths and phase speeds so the map never repeats.',
+            ]],
+            ['name' => 'hover', 'type' => 'elevation', 'default' => "'amber → red'", 'note' => [
+                'fa' => 'هاور/فوکوس نقطهٔ قله نوارش را با رنگ ارتفاع روشن می‌کند و نام و ارتفاع را در کارت می‌خواند.',
+                'en' => 'Hovering or focusing a summit dot lights its band with the elevation colour and reads name and metres in the card.',
+            ]],
+            ['name' => 'pause', 'type' => 'state', 'default' => "'off-screen'", 'note' => [
+                'fa' => 'حلقهٔ بازکشیدن با IntersectionObserver بیرون از دید پارک می‌شود؛ حرکت کاهش‌یافته یک نقشهٔ ساکن می‌گیرد.',
+                'en' => 'An IntersectionObserver parks the redraw off screen; reduced motion gets one still map.',
+            ]],
+        ],
+        'code' => [
+            'livewire' => [
+                'fa' => <<<'BLADE'
+        <section class="ambc">
+            <svg class="ambc-map" viewBox="0 0 1200 480" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                <g class="ambc-g"></g>
+            </svg>
+            <h2>کوه را مثل نقشه بخوان</h2>
+            <p>۴۲ مسیر راهنما در آلپ، آند و آلاسکا.</p>
+        </section>
+
+        <style>
+        .ambc { position: relative; overflow: clip; border-radius: 1.25rem; min-block-size: 22rem;
+        display: grid; place-content: center; text-align: center; background: #f8fafc; color: #0f172a; }
+        .ambc-map { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; }
+        .ambc-g path { fill: none; stroke: #0f766e; stroke-linecap: round; }
+        .ambc-g path.hot { stroke: var(--ambc-hot, #d97706); }
+        .ambc-dot { fill: #0f172a; cursor: pointer; }
+        .ambc-dot:hover { fill: var(--ambc-hot, #d97706); }
+        </style>
+
+        <script>
+        // هشت نوار تراز، هر یک ترکیب دو سینوس؛ نقطه‌های قله رنگ ارتفاع می‌دهند.
+        (() => {
+        const sec = document.querySelector('.ambc'), g = sec.querySelector('.ambc-g');
+        const NS = 'http://www.w3.org/2000/svg';
+        const bands = Array.from({ length: 8 }, (_, i) => ({
+        y: 405 - i * 32, amp: 26 - i * 2.2,
+        k1: 2 * Math.PI / (300 - i * 12), k2: 2 * Math.PI / (96 + i * 7),
+        s1: .0011 + i * 7e-5, s2: .0019 - i * 6e-5, o2: i * 1.7 }));
+        const yAt = (b, x, t) => b.y + b.amp * Math.sin(b.k1 * x + t * b.s1)
+        + b.amp * .35 * Math.sin(b.k2 * x + t * b.s2 + b.o2);
+        const paths = bands.map((b, i) => {
+        const p = document.createElementNS(NS, 'path');
+        p.setAttribute('stroke-width', 1 + i * .35); g.appendChild(p); return p; });
+        const peaks = [{ band: 5, x: 320, c: '#d97706' }, { band: 6, x: 660, c: '#ea580c' }, { band: 7, x: 950, c: '#dc2626' }];
+        const dots = peaks.map((pk) => {
+        const d = document.createElementNS(NS, 'circle');
+        d.setAttribute('r', '6'); d.setAttribute('class', 'ambc-dot');
+        d.addEventListener('pointerenter', () => { sec.style.setProperty('--ambc-hot', pk.c);
+        paths[pk.band].classList.add('hot'); });
+        d.addEventListener('pointerleave', () => { sec.style.removeProperty('--ambc-hot');
+        paths[pk.band].classList.remove('hot'); });
+        g.appendChild(d); return { pk, d }; });
+        let t = 0, raf = 0, last = performance.now();
+        const draw = () => {
+        paths.forEach((p, i) => { const b = bands[i]; let dd = '';
+        for (let x = -60; x <= 1260; x += 24) dd += (x < 0 ? 'M' : 'L') + x + ' ' + yAt(b, x, t).toFixed(1);
+        p.setAttribute('d', dd); });
+        dots.forEach((o) => { o.d.setAttribute('cx', o.pk.x);
+        o.d.setAttribute('cy', yAt(bands[o.pk.band], o.pk.x, t).toFixed(1)); });
+        };
+        const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+        const loop = (now) => { t += Math.min(now - last, 48); last = now;
+        draw(); raf = requestAnimationFrame(loop); };
+        const io = new IntersectionObserver(([e]) => { cancelAnimationFrame(raf); last = performance.now();
+        if (e.isIntersecting && !reduced.matches) raf = requestAnimationFrame(loop); }, { threshold: .15 });
+        draw(); io.observe(sec);
+        })();
+        </script>
+        BLADE,
+                'en' => <<<'BLADE'
+        <section class="ambc">
+        <svg class="ambc-map" viewBox="0 0 1200 480" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <g class="ambc-g"></g>
+        </svg>
+        <h2>Read the mountain like a map</h2>
+        <p>42 guided routes across the Alps, the Andes and Alaska.</p>
+        </section>
+
+        <style>
+        .ambc { position: relative; overflow: clip; border-radius: 1.25rem; min-block-size: 22rem;
+        display: grid; place-content: center; text-align: center; background: #f8fafc; color: #0f172a; }
+        .ambc-map { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; }
+        .ambc-g path { fill: none; stroke: #0f766e; stroke-linecap: round; }
+        .ambc-g path.hot { stroke: var(--ambc-hot, #d97706); }
+        .ambc-dot { fill: #0f172a; cursor: pointer; }
+        .ambc-dot:hover { fill: var(--ambc-hot, #d97706); }
+        </style>
+
+        <script>
+        // Eight contour bands, two sines each; summit dots hand out elevation colour.
+        (() => {
+        const sec = document.querySelector('.ambc'), g = sec.querySelector('.ambc-g');
+        const NS = 'http://www.w3.org/2000/svg';
+        const bands = Array.from({ length: 8 }, (_, i) => ({
+        y: 405 - i * 32, amp: 26 - i * 2.2,
+        k1: 2 * Math.PI / (300 - i * 12), k2: 2 * Math.PI / (96 + i * 7),
+        s1: .0011 + i * 7e-5, s2: .0019 - i * 6e-5, o2: i * 1.7 }));
+        const yAt = (b, x, t) => b.y + b.amp * Math.sin(b.k1 * x + t * b.s1)
+        + b.amp * .35 * Math.sin(b.k2 * x + t * b.s2 + b.o2);
+        const paths = bands.map((b, i) => {
+        const p = document.createElementNS(NS, 'path');
+        p.setAttribute('stroke-width', 1 + i * .35); g.appendChild(p); return p; });
+        const peaks = [{ band: 5, x: 320, c: '#d97706' }, { band: 6, x: 660, c: '#ea580c' }, { band: 7, x: 950, c: '#dc2626' }];
+        const dots = peaks.map((pk) => {
+        const d = document.createElementNS(NS, 'circle');
+        d.setAttribute('r', '6'); d.setAttribute('class', 'ambc-dot');
+        d.addEventListener('pointerenter', () => { sec.style.setProperty('--ambc-hot', pk.c);
+        paths[pk.band].classList.add('hot'); });
+        d.addEventListener('pointerleave', () => { sec.style.removeProperty('--ambc-hot');
+        paths[pk.band].classList.remove('hot'); });
+        g.appendChild(d); return { pk, d }; });
+        let t = 0, raf = 0, last = performance.now();
+        const draw = () => {
+        paths.forEach((p, i) => { const b = bands[i]; let dd = '';
+        for (let x = -60; x <= 1260; x += 24) dd += (x < 0 ? 'M' : 'L') + x + ' ' + yAt(b, x, t).toFixed(1);
+        p.setAttribute('d', dd); });
+        dots.forEach((o) => { o.d.setAttribute('cx', o.pk.x);
+        o.d.setAttribute('cy', yAt(bands[o.pk.band], o.pk.x, t).toFixed(1)); });
+        };
+        const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+        const loop = (now) => { t += Math.min(now - last, 48); last = now;
+        draw(); raf = requestAnimationFrame(loop); };
+        const io = new IntersectionObserver(([e]) => { cancelAnimationFrame(raf); last = performance.now();
+        if (e.isIntersecting && !reduced.matches) raf = requestAnimationFrame(loop); }, { threshold: .15 });
+        draw(); io.observe(sec);
+        })();
+        </script>
+        BLADE,
+            ],
+            'inertia' => <<<'TSX'
+        // app/Pages/Contour.jsx — Inertia (React) page; renders the React
+        // snippet below unchanged, with Inertia's Link wired into the provider.
+        import { Link } from '@inertiajs/react';
+        import { NabuXUIProvider } from '@nabuxai/ui-react';
+        import ContourHero from '@/components/ContourHero';
+
+        export default function Contour() {
+          return (
+            <NabuXUIProvider locale="en" linkComponent={Link}>
+              <main className="nx-page">
+                <ContourHero />
+              </main>
+            </NabuXUIProvider>
+          );
+        }
+        TSX,
+            'react' => <<<'REACT'
+        // ContourHero.jsx — topographic contour lines drifting under the section
+        import { useEffect, useRef } from 'react';
+        import '@nabuxai/ui-core/css';
+
+        const NS = 'http://www.w3.org/2000/svg';
+        const BANDS = Array.from({ length: 8 }, (_, i) => ({
+          y: 405 - i * 32, amp: 26 - i * 2.2,
+          k1: (2 * Math.PI) / (300 - i * 12), k2: (2 * Math.PI) / (96 + i * 7),
+          s1: 0.0011 + i * 7e-5, s2: 0.0019 - i * 6e-5, o2: i * 1.7,
+        }));
+        const PEAKS = [
+          { band: 5, x: 320, c: '#d97706' }, { band: 6, x: 660, c: '#ea580c' }, { band: 7, x: 950, c: '#dc2626' },
+        ];
+        const yAt = (b, x, t) =>
+          b.y + b.amp * Math.sin(b.k1 * x + t * b.s1) + b.amp * 0.35 * Math.sin(b.k2 * x + t * b.s2 + b.o2);
+
+        export default function ContourHero() {
+          const gRef = useRef(null);
+
+          // Two sines per band redraw at ~30fps; hover lights a band with elevation colour.
+          useEffect(() => {
+            const g = gRef.current;
+            const paths = BANDS.map((_, i) => {
+              const p = document.createElementNS(NS, 'path');
+              p.setAttribute('stroke-width', (1 + i * 0.35).toFixed(2));
+              g.appendChild(p); return p;
+            });
+            const dots = PEAKS.map((pk) => {
+              const d = document.createElementNS(NS, 'circle');
+              d.setAttribute('r', '6'); d.setAttribute('class', 'ambc-dot');
+              d.addEventListener('pointerenter', () => {
+                g.style.setProperty('--ambc-hot', pk.c); paths[pk.band].classList.add('hot');
+              });
+              d.addEventListener('pointerleave', () => {
+                g.style.removeProperty('--ambc-hot'); paths[pk.band].classList.remove('hot');
+              });
+              g.appendChild(d); return { pk, d };
+            });
+            let t = 0, raf = 0, last = performance.now();
+            const draw = () => {
+              paths.forEach((p, i) => {
+                const b = BANDS[i]; let dd = '';
+                for (let x = -60; x <= 1260; x += 24) dd += (x < 0 ? 'M' : 'L') + x + ' ' + yAt(b, x, t).toFixed(1);
+                p.setAttribute('d', dd);
+              });
+              dots.forEach(({ pk, d }) => {
+                d.setAttribute('cx', pk.x);
+                d.setAttribute('cy', yAt(BANDS[pk.band], pk.x, t).toFixed(1));
+              });
+            };
+            const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+            const loop = (now) => { t += Math.min(now - last, 48); last = now; draw(); raf = requestAnimationFrame(loop); };
+            const io = new IntersectionObserver(([e]) => {
+              cancelAnimationFrame(raf); last = performance.now();
+              if (e.isIntersecting && !reduced.matches) raf = requestAnimationFrame(loop);
+            }, { threshold: 0.15 });
+            draw(); io.observe(g);
+            return () => { cancelAnimationFrame(raf); io.disconnect(); g.replaceChildren(); };
+          }, []);
+
+          return (
+            <>
+              <style>{`
+                .ambc { position: relative; overflow: clip; border-radius: 1.25rem; min-block-size: 22rem;
+                        display: grid; place-content: center; text-align: center; background: #f8fafc; color: #0f172a; }
+                .ambc-map { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; }
+                .ambc-g path { fill: none; stroke: #0f766e; stroke-linecap: round; }
+                .ambc-g path.hot { stroke: var(--ambc-hot, #d97706); }
+                .ambc-dot { fill: #0f172a; cursor: pointer; }
+                .ambc-dot:hover { fill: var(--ambc-hot, #d97706); }
+              `}</style>
+              <section className="ambc">
+                <svg className="ambc-map" viewBox="0 0 1200 480" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                  <g className="ambc-g" ref={gRef} />
+                </svg>
+                <h2>Read the mountain like a map</h2>
+                <p>42 guided routes across the Alps, the Andes and Alaska.</p>
+              </section>
+            </>
+          );
+        }
+        REACT,
+            'vue' => <<<'VUE'
+        <!-- ContourHero.vue — topographic contour lines drifting under the section -->
+        <script setup lang="ts">
+        import { onBeforeUnmount, onMounted, ref } from 'vue';
+        import '@nabuxai/ui-core/css';
+
+        const NS = 'http://www.w3.org/2000/svg';
+        const BANDS = Array.from({ length: 8 }, (_, i) => ({
+          y: 405 - i * 32, amp: 26 - i * 2.2,
+          k1: (2 * Math.PI) / (300 - i * 12), k2: (2 * Math.PI) / (96 + i * 7),
+          s1: 0.0011 + i * 7e-5, s2: 0.0019 - i * 6e-5, o2: i * 1.7,
+        }));
+        const PEAKS = [
+          { band: 5, x: 320, c: '#d97706' }, { band: 6, x: 660, c: '#ea580c' }, { band: 7, x: 950, c: '#dc2626' },
+        ];
+        const yAt = (b: any, x: number, t: number) =>
+          b.y + b.amp * Math.sin(b.k1 * x + t * b.s1) + b.amp * 0.35 * Math.sin(b.k2 * x + t * b.s2 + b.o2);
+        const g = ref<SVGGElement | null>(null);
+        let cleanup: (() => void) | null = null;
+
+        // Two sines per band redraw at ~30fps; hover lights a band with elevation colour.
+        onMounted(() => {
+          const el = g.value!;
+          const paths = BANDS.map((_: any, i: number) => {
+            const p = document.createElementNS(NS, 'path');
+            p.setAttribute('stroke-width', (1 + i * 0.35).toFixed(2));
+            el.appendChild(p); return p;
+          });
+          const dots = PEAKS.map((pk) => {
+            const d = document.createElementNS(NS, 'circle');
+            d.setAttribute('r', '6'); d.setAttribute('class', 'ambc-dot');
+            d.addEventListener('pointerenter', () => {
+              el.style.setProperty('--ambc-hot', pk.c); paths[pk.band].classList.add('hot');
+            });
+            d.addEventListener('pointerleave', () => {
+              el.style.removeProperty('--ambc-hot'); paths[pk.band].classList.remove('hot');
+            });
+            el.appendChild(d); return { pk, d };
+          });
+          let t = 0, raf = 0, last = performance.now();
+          const draw = () => {
+            paths.forEach((p, i) => {
+              const b = BANDS[i]; let dd = '';
+              for (let x = -60; x <= 1260; x += 24) dd += (x < 0 ? 'M' : 'L') + x + ' ' + yAt(b, x, t).toFixed(1);
+              p.setAttribute('d', dd);
+            });
+            dots.forEach(({ pk, d }: any) => {
+              d.setAttribute('cx', pk.x);
+              d.setAttribute('cy', yAt(BANDS[pk.band], pk.x, t).toFixed(1));
+            });
+          };
+          const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+          const loop = (now: number) => { t += Math.min(now - last, 48); last = now; draw(); raf = requestAnimationFrame(loop); };
+          const io = new IntersectionObserver(([e]) => {
+            cancelAnimationFrame(raf); last = performance.now();
+            if (e.isIntersecting && !reduced.matches) raf = requestAnimationFrame(loop);
+          }, { threshold: 0.15 });
+          draw(); io.observe(el);
+          cleanup = () => { cancelAnimationFrame(raf); io.disconnect(); el.replaceChildren(); };
+        });
+        onBeforeUnmount(() => cleanup?.());
+        </script>
+
+        <template>
+          <section class="ambc">
+            <svg class="ambc-map" viewBox="0 0 1200 480" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+              <g ref="g" class="ambc-g"></g>
+            </svg>
+            <h2>Read the mountain like a map</h2>
+            <p>42 guided routes across the Alps, the Andes and Alaska.</p>
+          </section>
+        </template>
+
+        <style scoped>
+        .ambc { position: relative; overflow: clip; border-radius: 1.25rem; min-block-size: 22rem;
+        display: grid; place-content: center; text-align: center; background: #f8fafc; color: #0f172a; }
+        .ambc-map { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; }
+        .ambc-g path { fill: none; stroke: #0f766e; stroke-linecap: round; }
+        .ambc-g path.hot { stroke: var(--ambc-hot, #d97706); }
+        .ambc-dot { fill: #0f172a; cursor: pointer; }
+        .ambc-dot:hover { fill: var(--ambc-hot, #d97706); }
+        </style>
+        VUE,
+            'svelte' => <<<'SVELTE'
+        <!-- ContourHero.svelte — topographic contour lines drifting under the section -->
+        <script lang="ts">
+          import { onMount } from 'svelte';
+          import '@nabuxai/ui-core/css';
+
+          const NS = 'http://www.w3.org/2000/svg';
+          const BANDS = Array.from({ length: 8 }, (_, i) => ({
+            y: 405 - i * 32, amp: 26 - i * 2.2,
+            k1: (2 * Math.PI) / (300 - i * 12), k2: (2 * Math.PI) / (96 + i * 7),
+            s1: 0.0011 + i * 7e-5, s2: 0.0019 - i * 6e-5, o2: i * 1.7,
+          }));
+          const PEAKS = [
+            { band: 5, x: 320, c: '#d97706' }, { band: 6, x: 660, c: '#ea580c' }, { band: 7, x: 950, c: '#dc2626' },
+          ];
+          const yAt = (b: any, x: number, t: number) =>
+            b.y + b.amp * Math.sin(b.k1 * x + t * b.s1) + b.amp * 0.35 * Math.sin(b.k2 * x + t * b.s2 + b.o2);
+          let g: SVGGElement;
+
+          // Two sines per band redraw at ~30fps; hover lights a band with elevation colour.
+          onMount(() => {
+            const paths = BANDS.map((_, i) => {
+              const p = document.createElementNS(NS, 'path');
+              p.setAttribute('stroke-width', (1 + i * 0.35).toFixed(2));
+              g.appendChild(p); return p;
+            });
+            const dots = PEAKS.map((pk) => {
+              const d = document.createElementNS(NS, 'circle');
+              d.setAttribute('r', '6'); d.setAttribute('class', 'ambc-dot');
+              d.addEventListener('pointerenter', () => {
+                g.style.setProperty('--ambc-hot', pk.c); paths[pk.band].classList.add('hot');
+              });
+              d.addEventListener('pointerleave', () => {
+                g.style.removeProperty('--ambc-hot'); paths[pk.band].classList.remove('hot');
+              });
+              g.appendChild(d); return { pk, d };
+            });
+            let t = 0, raf = 0, last = performance.now();
+            const draw = () => {
+              paths.forEach((p, i) => {
+                const b = BANDS[i]; let dd = '';
+                for (let x = -60; x <= 1260; x += 24) dd += (x < 0 ? 'M' : 'L') + x + ' ' + yAt(b, x, t).toFixed(1);
+                p.setAttribute('d', dd);
+              });
+              dots.forEach(({ pk, d }: any) => {
+                d.setAttribute('cx', pk.x);
+                d.setAttribute('cy', yAt(BANDS[pk.band], pk.x, t).toFixed(1));
+              });
+            };
+            const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+            const loop = (now: number) => { t += Math.min(now - last, 48); last = now; draw(); raf = requestAnimationFrame(loop); };
+            const io = new IntersectionObserver(([e]) => {
+              cancelAnimationFrame(raf); last = performance.now();
+              if (e.isIntersecting && !reduced.matches) raf = requestAnimationFrame(loop);
+            }, { threshold: 0.15 });
+            draw(); io.observe(g);
+            return () => { cancelAnimationFrame(raf); io.disconnect(); g.replaceChildren(); };
+          });
+        </script>
+
+        <section class="ambc">
+          <svg class="ambc-map" viewBox="0 0 1200 480" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <g bind:this={g} class="ambc-g"></g>
+          </svg>
+          <h2>Read the mountain like a map</h2>
+          <p>42 guided routes across the Alps, the Andes and Alaska.</p>
+        </section>
+
+        <style>
+        .ambc { position: relative; overflow: clip; border-radius: 1.25rem; min-block-size: 22rem;
+        display: grid; place-content: center; text-align: center; background: #f8fafc; color: #0f172a; }
+        .ambc-map { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; }
+        .ambc-g path { fill: none; stroke: #0f766e; stroke-linecap: round; }
+        .ambc-g path.hot { stroke: var(--ambc-hot, #d97706); }
+        .ambc-dot { fill: #0f172a; cursor: pointer; }
+        .ambc-dot:hover { fill: var(--ambc-hot, #d97706); }
+        </style>
+        SVELTE,
+        ],
+    ],
+
+    'metaballs' => [
+        'title' => ['fa' => 'متابال‌ها', 'en' => 'Metaballs'],
+        'icon' => 'wand',
+        'oneLiner' => [
+            'fa' => 'پنج گوی چسبنده که در هم ذوب می‌شوند و از هم می‌کشند — یک گروه SVG با feGaussianBlur و آستانهٔ آلفای feColorMatrix آن‌ها را مایع می‌کند و حرکتشان فقط transform است؛ با کلید، دو نسخهٔ روشن و تیرهٔ بخش تحویل می‌شود.',
+            'en' => 'Five gooey balls melt into each other and pull apart — one SVG group runs feGaussianBlur plus an feColorMatrix alpha threshold to liquidise them while their wander stays pure transform; the toggle ships both the light and the dark section versions.',
+        ],
+        'js' => true,
+        'docs' => 'https://scrolltide.co',
+        'props' => [
+            ['name' => 'balls', 'type' => 'count', 'default' => "'5'", 'note' => [
+                'fa' => 'تعداد گوی‌ها؛ هرکدام شعاع، جهت و دورهٔ keyframe خودشان را دارند.',
+                'en' => 'The ball count; each owns its radius, direction and keyframe period.',
+            ]],
+            ['name' => '--ambm-blur', 'type' => 'length', 'default' => "'16'", 'note' => [
+                'fa' => 'انحراف معیار feGaussianBlur؛ بیشتر = گوی‌های نرم‌تر و چسبنده‌تر.',
+                'en' => 'The feGaussianBlur stdDeviation; more = softer, stickier blobs.',
+            ]],
+            ['name' => 'goo', 'type' => 'matrix', 'default' => "'α × 24 − 12'", 'note' => [
+                'fa' => 'آستانهٔ آلفای feColorMatrix که تصمیم می‌گیرد دو گوی از چه نزدیکی در هم بروند.',
+                'en' => 'The feColorMatrix alpha threshold that decides how close two balls must lean before they merge.',
+            ]],
+            ['name' => 'variant', 'type' => 'enum', 'default' => "'light | dark'", 'note' => [
+                'fa' => 'دو نسخهٔ بخش: کاغذی روشن با گوی‌های نیلی و شبانه با گوی‌های نورانی در blend صفحه‌نمایش.',
+                'en' => 'Two section versions: paper-light with indigo blobs and night-dark with luminous screen-blended ones.',
+            ]],
+            ['name' => 'pause', 'type' => 'state', 'default' => "'off-screen'", 'note' => [
+                'fa' => 'با IntersectionObserver بیرون از دید پارک و در حرکت کاهش‌یافته به شکل نهایی جمود می‌کند.',
+                'en' => 'An IntersectionObserver parks the goo off screen; reduced motion freezes it into its final shape.',
+            ]],
+        ],
+        'code' => [
+            'livewire' => [
+                'fa' => <<<'BLADE'
+        <section class="ambm" data-variant="light">
+            <svg class="ambm-map" viewBox="0 0 1200 480" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                <defs>
+                    <filter id="ambm-goo" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur in="SourceGraphic" stdDeviation="16" result="ambm-blur" />
+                        <feColorMatrix in="ambm-blur"
+                            values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -12" />
+                    </filter>
+                </defs>
+                <g filter="url(#ambm-goo)">
+                    <circle class="ambm-ball b1" cx="330" cy="300" r="86" />
+                    <circle class="ambm-ball b2" cx="620" cy="190" r="104" />
+                    <circle class="ambm-ball b3" cx="900" cy="300" r="92" />
+                </g>
+            </svg>
+            <h2>جایی که کارها در هم می‌آمیزند</h2>
+            <p>Meld سندها، گفتگوها و کارها را در یک سطح زنده جمع می‌کند.</p>
+        </section>
+
+        <style>
+        .ambm { position: relative; overflow: clip; border-radius: 1.25rem; min-block-size: 22rem;
+        display: grid; place-content: center; text-align: center; background: #f6f7fb; color: #1e1b4b; }
+        .ambm[data-variant='dark'] { background: #0b1020; color: #e0e7ff; }
+        .ambm-map { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; }
+        .ambm-ball { transform-box: fill-box; transform-origin: center; }
+        .ambm-ball.b1 { fill: #6366f1; animation: ambm-w1 24s ease-in-out infinite alternate; }
+        .ambm-ball.b2 { fill: #8b5cf6; animation: ambm-w2 19s ease-in-out infinite alternate; }
+        .ambm-ball.b3 { fill: #a855f7; animation: ambm-w3 28s ease-in-out infinite alternate; }
+        @keyframes ambm-w1 { from { translate: -120px 30px; scale: 1; } to { translate: 210px -60px; scale: 1.3; } }
+        @keyframes ambm-w2 { from { translate: 160px -40px; scale: 1.15; } to { translate: -230px 70px; scale: .9; } }
+        @keyframes ambm-w3 { from { translate: -90px -70px; scale: .95; } to { translate: 140px 90px; scale: 1.25; } }
+        .ambm[data-running='false'] .ambm-ball { animation-play-state: paused; }
+        @media (prefers-reduced-motion: reduce) { .ambm-ball { animation: none; } }
+        </style>
+
+        <script>
+        // گوی‌ها فقط با transform می‌گردند؛ بیرون از دید پارک می‌شوند.
+        (() => {
+        const sec = document.querySelector('.ambm');
+        const io = new IntersectionObserver(([e]) => {
+        sec.dataset.running = e.isIntersecting ? 'true' : 'false';
+        }, { threshold: .15 });
+        io.observe(sec);
+        })();
+        </script>
+        BLADE,
+                'en' => <<<'BLADE'
+        <section class="ambm" data-variant="light">
+        <svg class="ambm-map" viewBox="0 0 1200 480" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs>
+        <filter id="ambm-goo" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="16" result="ambm-blur" />
+        <feColorMatrix in="ambm-blur"
+        values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -12" />
+        </filter>
+        </defs>
+        <g filter="url(#ambm-goo)">
+        <circle class="ambm-ball b1" cx="330" cy="300" r="86" />
+        <circle class="ambm-ball b2" cx="620" cy="190" r="104" />
+        <circle class="ambm-ball b3" cx="900" cy="300" r="92" />
+        </g>
+        </svg>
+        <h2>Where work melds together</h2>
+        <p>Meld pools your docs, threads and tasks into one living surface.</p>
+        </section>
+
+        <style>
+        .ambm { position: relative; overflow: clip; border-radius: 1.25rem; min-block-size: 22rem;
+        display: grid; place-content: center; text-align: center; background: #f6f7fb; color: #1e1b4b; }
+        .ambm[data-variant='dark'] { background: #0b1020; color: #e0e7ff; }
+        .ambm-map { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; }
+        .ambm-ball { transform-box: fill-box; transform-origin: center; }
+        .ambm-ball.b1 { fill: #6366f1; animation: ambm-w1 24s ease-in-out infinite alternate; }
+        .ambm-ball.b2 { fill: #8b5cf6; animation: ambm-w2 19s ease-in-out infinite alternate; }
+        .ambm-ball.b3 { fill: #a855f7; animation: ambm-w3 28s ease-in-out infinite alternate; }
+        @keyframes ambm-w1 { from { translate: -120px 30px; scale: 1; } to { translate: 210px -60px; scale: 1.3; } }
+        @keyframes ambm-w2 { from { translate: 160px -40px; scale: 1.15; } to { translate: -230px 70px; scale: .9; } }
+        @keyframes ambm-w3 { from { translate: -90px -70px; scale: .95; } to { translate: 140px 90px; scale: 1.25; } }
+        .ambm[data-running='false'] .ambm-ball { animation-play-state: paused; }
+        @media (prefers-reduced-motion: reduce) { .ambm-ball { animation: none; } }
+        </style>
+
+        <script>
+        // Balls wander on transform only; the goo parks off screen.
+        (() => {
+        const sec = document.querySelector('.ambm');
+        const io = new IntersectionObserver(([e]) => {
+        sec.dataset.running = e.isIntersecting ? 'true' : 'false';
+        }, { threshold: .15 });
+        io.observe(sec);
+        })();
+        </script>
+        BLADE,
+            ],
+            'inertia' => <<<'TSX'
+        // app/Pages/Meld.jsx — Inertia (React) page; renders the React
+        // snippet below unchanged, with Inertia's Link wired into the provider.
+        import { Link } from '@inertiajs/react';
+        import { NabuXUIProvider } from '@nabuxai/ui-react';
+        import MeldHero from '@/components/MeldHero';
+
+        export default function Meld() {
+          return (
+            <NabuXUIProvider locale="en" linkComponent={Link}>
+              <main className="nx-page">
+                <MeldHero />
+              </main>
+            </NabuXUIProvider>
+          );
+        }
+        TSX,
+            'react' => <<<'REACT'
+        // MeldHero.jsx — gooey metaballs behind the section headline, light & dark
+        import { useEffect, useRef, useState } from 'react';
+        import '@nabuxai/ui-core/css';
+
+        export default function MeldHero() {
+          const [dark, setDark] = useState(false);
+          const [running, setRunning] = useState(true);
+          const sectionRef = useRef(null);
+
+          // Park the goo off screen; reduced motion freezes it via CSS.
+          useEffect(() => {
+            const io = new IntersectionObserver(
+              ([e]) => setRunning(e.isIntersecting),
+              { threshold: 0.15 },
+            );
+            io.observe(sectionRef.current);
+            return () => io.disconnect();
+          }, []);
+
+          return (
+            <>
+              <style>{`
+                .ambm { position: relative; overflow: clip; border-radius: 1.25rem; min-block-size: 22rem;
+                        display: grid; place-content: center; text-align: center; background: #f6f7fb;
+                        color: #1e1b4b; transition: background-color .35s ease, color .35s ease; }
+                .ambm[data-variant='dark'] { background: #0b1020; color: #e0e7ff; }
+                .ambm-map { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; }
+                .ambm-ball { transform-box: fill-box; transform-origin: center; will-change: transform; }
+                .ambm-ball.b1 { fill: #6366f1; animation: ambm-w1 24s ease-in-out infinite alternate; }
+                .ambm-ball.b2 { fill: #8b5cf6; animation: ambm-w2 19s ease-in-out infinite alternate; }
+                .ambm-ball.b3 { fill: #a855f7; animation: ambm-w3 28s ease-in-out infinite alternate; }
+                @keyframes ambm-w1 { from { translate: -120px 30px; scale: 1; } to { translate: 210px -60px; scale: 1.3; } }
+                @keyframes ambm-w2 { from { translate: 160px -40px; scale: 1.15; } to { translate: -230px 70px; scale: .9; } }
+                @keyframes ambm-w3 { from { translate: -90px -70px; scale: .95; } to { translate: 140px 90px; scale: 1.25; } }
+                .ambm[data-running='false'] .ambm-ball { animation-play-state: paused; }
+                .ambm-copy { position: relative; padding: 2rem; }
+                .ambm-toggle { display: inline-flex; gap: .3rem; padding: .3rem; border-radius: 999px;
+                               background: rgba(30, 27, 75, .08); margin-block-start: 1rem; }
+                .ambm-toggle button { padding: .45rem .95rem; border-radius: 999px; border: 0; cursor: pointer;
+                                       background: none; font: 600 .78rem system-ui; color: #4c4a6e; }
+                .ambm-toggle button[aria-pressed='true'] { background: #4f46e5; color: #fff; }
+                @media (prefers-reduced-motion: reduce) { .ambm-ball { animation: none; } }
+              `}</style>
+              <section className="ambm" ref={sectionRef}
+                data-variant={dark ? 'dark' : 'light'} data-running={running}>
+                <svg className="ambm-map" viewBox="0 0 1200 480" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                  <defs>
+                    <filter id="ambm-goo" x="-20%" y="-20%" width="140%" height="140%">
+                      <feGaussianBlur in="SourceGraphic" stdDeviation="16" result="ambm-blur" />
+                      <feColorMatrix in="ambm-blur"
+                        values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -12" />
+                    </filter>
+                  </defs>
+                  <g filter="url(#ambm-goo)">
+                    <circle className="ambm-ball b1" cx="330" cy="300" r="86" />
+                    <circle className="ambm-ball b2" cx="620" cy="190" r="104" />
+                    <circle className="ambm-ball b3" cx="900" cy="300" r="92" />
+                  </g>
+                </svg>
+                <div className="ambm-copy">
+                  <h2>Where work melds together</h2>
+                  <p>Meld pools your docs, threads and tasks into one living surface.</p>
+                  <div className="ambm-toggle" role="group" aria-label="Section version">
+                    <button type="button" aria-pressed={!dark} onClick={() => setDark(false)}>Light</button>
+                    <button type="button" aria-pressed={dark} onClick={() => setDark(true)}>Dark</button>
+                  </div>
+                </div>
+              </section>
+            </>
+          );
+        }
+        REACT,
+            'vue' => <<<'VUE'
+        <!-- MeldHero.vue — gooey metaballs behind the section headline, light & dark -->
+        <script setup lang="ts">
+        import { onBeforeUnmount, onMounted, ref } from 'vue';
+        import '@nabuxai/ui-core/css';
+
+        const dark = ref(false);
+        const running = ref(true);
+        const section = ref<HTMLElement | null>(null);
+        let io: IntersectionObserver | null = null;
+
+        // Park the goo off screen; reduced motion freezes it via CSS.
+        onMounted(() => {
+          io = new IntersectionObserver(([e]) => { running.value = e.isIntersecting; }, { threshold: 0.15 });
+          if (section.value) io.observe(section.value);
+        });
+        onBeforeUnmount(() => io?.disconnect());
+        </script>
+
+        <template>
+          <section ref="section" class="ambm" :data-variant="dark ? 'dark' : 'light'"
+            :data-running="running ? 'true' : 'false'">
+            <svg class="ambm-map" viewBox="0 0 1200 480" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+              <defs>
+                <filter id="ambm-goo" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur in="SourceGraphic" stdDeviation="16" result="ambm-blur" />
+                  <feColorMatrix in="ambm-blur"
+                    values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -12" />
+                </filter>
+              </defs>
+              <g filter="url(#ambm-goo)">
+                <circle class="ambm-ball b1" cx="330" cy="300" r="86" />
+                <circle class="ambm-ball b2" cx="620" cy="190" r="104" />
+                <circle class="ambm-ball b3" cx="900" cy="300" r="92" />
+              </g>
+            </svg>
+            <div class="ambm-copy">
+              <h2>Where work melds together</h2>
+              <p>Meld pools your docs, threads and tasks into one living surface.</p>
+              <div class="ambm-toggle" role="group" aria-label="Section version">
+                <button type="button" :aria-pressed="(!dark).toString()" @click="dark = false">Light</button>
+                <button type="button" :aria-pressed="dark.toString()" @click="dark = true">Dark</button>
+              </div>
+            </div>
+          </section>
+        </template>
+
+        <style scoped>
+        .ambm { position: relative; overflow: clip; border-radius: 1.25rem; min-block-size: 22rem;
+        display: grid; place-content: center; text-align: center; background: #f6f7fb; color: #1e1b4b;
+        transition: background-color .35s ease, color .35s ease; }
+        .ambm[data-variant='dark'] { background: #0b1020; color: #e0e7ff; }
+        .ambm-map { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; }
+        .ambm-ball { transform-box: fill-box; transform-origin: center; will-change: transform; }
+        .ambm-ball.b1 { fill: #6366f1; animation: ambm-w1 24s ease-in-out infinite alternate; }
+        .ambm-ball.b2 { fill: #8b5cf6; animation: ambm-w2 19s ease-in-out infinite alternate; }
+        .ambm-ball.b3 { fill: #a855f7; animation: ambm-w3 28s ease-in-out infinite alternate; }
+        @keyframes ambm-w1 { from { translate: -120px 30px; scale: 1; } to { translate: 210px -60px; scale: 1.3; } }
+        @keyframes ambm-w2 { from { translate: 160px -40px; scale: 1.15; } to { translate: -230px 70px; scale: .9; } }
+        @keyframes ambm-w3 { from { translate: -90px -70px; scale: .95; } to { translate: 140px 90px; scale: 1.25; } }
+        .ambm[data-running='false'] .ambm-ball { animation-play-state: paused; }
+        .ambm-copy { position: relative; padding: 2rem; }
+        .ambm-toggle { display: inline-flex; gap: .3rem; padding: .3rem; border-radius: 999px;
+        background: rgba(30, 27, 75, .08); margin-block-start: 1rem; }
+        .ambm-toggle button { padding: .45rem .95rem; border-radius: 999px; border: 0; cursor: pointer;
+        background: none; font: 600 .78rem system-ui; color: #4c4a6e; }
+        .ambm-toggle button[aria-pressed='true'] { background: #4f46e5; color: #fff; }
+        @media (prefers-reduced-motion: reduce) { .ambm-ball { animation: none; } }
+        </style>
+        VUE,
+            'svelte' => <<<'SVELTE'
+        <!-- MeldHero.svelte — gooey metaballs behind the section headline, light & dark -->
+        <script lang="ts">
+          import { onMount } from 'svelte';
+          import '@nabuxai/ui-core/css';
+
+          let dark = $state(false);
+          let running = $state(true);
+          let section: HTMLElement;
+
+          // Park the goo off screen; reduced motion freezes it via CSS.
+          onMount(() => {
+            const io = new IntersectionObserver(([e]) => { running = e.isIntersecting; }, { threshold: 0.15 });
+            io.observe(section);
+            return () => io.disconnect();
+          });
+        </script>
+
+        <section bind:this={section} class="ambm" data-variant={dark ? 'dark' : 'light'}
+          data-running={running ? 'true' : 'false'}>
+          <svg class="ambm-map" viewBox="0 0 1200 480" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <defs>
+              <filter id="ambm-goo" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="16" result="ambm-blur" />
+                <feColorMatrix in="ambm-blur"
+                  values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -12" />
+              </filter>
+            </defs>
+            <g filter="url(#ambm-goo)">
+              <circle class="ambm-ball b1" cx="330" cy="300" r="86"></circle>
+              <circle class="ambm-ball b2" cx="620" cy="190" r="104"></circle>
+              <circle class="ambm-ball b3" cx="900" cy="300" r="92"></circle>
+            </g>
+          </svg>
+          <div class="ambm-copy">
+            <h2>Where work melds together</h2>
+            <p>Meld pools your docs, threads and tasks into one living surface.</p>
+            <div class="ambm-toggle" role="group" aria-label="Section version">
+              <button type="button" aria-pressed={!dark} onclick={() => (dark = false)}>Light</button>
+              <button type="button" aria-pressed={dark} onclick={() => (dark = true)}>Dark</button>
+            </div>
+          </div>
+        </section>
+
+        <style>
+        .ambm { position: relative; overflow: clip; border-radius: 1.25rem; min-block-size: 22rem;
+        display: grid; place-content: center; text-align: center; background: #f6f7fb; color: #1e1b4b;
+        transition: background-color .35s ease, color .35s ease; }
+        .ambm[data-variant='dark'] { background: #0b1020; color: #e0e7ff; }
+        .ambm-map { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; }
+        .ambm-ball { transform-box: fill-box; transform-origin: center; will-change: transform; }
+        .ambm-ball.b1 { fill: #6366f1; animation: ambm-w1 24s ease-in-out infinite alternate; }
+        .ambm-ball.b2 { fill: #8b5cf6; animation: ambm-w2 19s ease-in-out infinite alternate; }
+        .ambm-ball.b3 { fill: #a855f7; animation: ambm-w3 28s ease-in-out infinite alternate; }
+        @keyframes ambm-w1 { from { translate: -120px 30px; scale: 1; } to { translate: 210px -60px; scale: 1.3; } }
+        @keyframes ambm-w2 { from { translate: 160px -40px; scale: 1.15; } to { translate: -230px 70px; scale: .9; } }
+        @keyframes ambm-w3 { from { translate: -90px -70px; scale: .95; } to { translate: 140px 90px; scale: 1.25; } }
+        .ambm[data-running='false'] .ambm-ball { animation-play-state: paused; }
+        .ambm-copy { position: relative; padding: 2rem; }
+        .ambm-toggle { display: inline-flex; gap: .3rem; padding: .3rem; border-radius: 999px;
+        background: rgba(30, 27, 75, .08); margin-block-start: 1rem; }
+        .ambm-toggle button { padding: .45rem .95rem; border-radius: 999px; border: 0; cursor: pointer;
+        background: none; font: 600 .78rem system-ui; color: #4c4a6e; }
+        .ambm-toggle button[aria-pressed='true'] { background: #4f46e5; color: #fff; }
+        @media (prefers-reduced-motion: reduce) { .ambm-ball { animation: none; } }
+        </style>
+        SVELTE,
+        ],
+    ],
 ];

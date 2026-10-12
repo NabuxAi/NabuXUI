@@ -1344,4 +1344,356 @@ return [
         SVELTE,
         ],
     ],
+
+    'elastic-letters' => [
+        'title' => ['fa' => 'حروف فنری', 'en' => 'Elastic letters'],
+        'icon' => 'sparkles',
+        'oneLiner' => [
+            'fa' => 'تیتری که واحدهایش با هاور کشیده می‌شوند و با رها کردن، فنرِ میرا می‌لرزند و سرِ جایشان می‌نشینند: کشش با اسکیل، لرزش از یک انتگرال‌گیر فنری واقعی؛ لاتین در سطح حرف، فارسی در سطح واژه.',
+            'en' => 'A headline whose units stretch under the pointer and, once released, wobble back on a real damped spring: the pull is a scale pair, the shimmy an actual spring integrator; Latin works per letter, Persian per whole word.',
+        ],
+        'js' => true,
+        'docs' => 'https://text-effects.colorion.co',
+        'props' => [
+            ['name' => 'stiffness', 'type' => 'k', 'default' => "'170'", 'note' => [
+                'fa' => 'سختی فنر؛ بالاتر یعنی کشش تندتر برمی‌گردد و لرزش کوتاه‌تر؛ با میرایی کم زیرمیرا می‌ماند و فنری می‌لرزد.',
+                'en' => 'Spring stiffness; higher snaps the release back faster with a shorter wobble — kept underdamped against the damping so it still shimmies.',
+            ]],
+            ['name' => 'damping', 'type' => 'c', 'default' => "'10'", 'note' => [
+                'fa' => 'میرایی کمتر از ۲√k فنر را زیرمیرا نگه می‌دارد؛ همین جا است که لرزش فنری از آن می‌آید.',
+                'en' => 'Damping below 2√k keeps the spring underdamped; this is exactly where the elastic shimmy comes from.',
+            ]],
+            ['name' => 'stretch', 'type' => 'scale pair', 'default' => "'scaleX 1.5 · scaleY .76'", 'note' => [
+                'fa' => 'شکل کشیده: پهنا باز و ارتفاع جمع می‌شود؛ مثل لاستیکی که با انگشت کشیده شود، نه متنِ بزرگ‌شده.',
+                'en' => 'The pulled shape: width opens and height gives — a rubber band under a finger, not a bigger font.',
+            ]],
+            ['name' => 'units', 'type' => 'letters | words', 'default' => "'script-aware'", 'note' => [
+                'fa' => 'لاتین حرف‌به‌حرف کش می‌آید؛ فارسی روی واژهٔ کامل فنری می‌شود تا اتصال حروف هرگز نشکند.',
+                'en' => 'Latin stretches letter by letter; Persian springs as whole words so the joined script never breaks.',
+            ]],
+            ['name' => 'idle-park', 'type' => 'rAF', 'default' => "'energy ε'", 'note' => [
+                'fa' => 'وقتی همهٔ فنرها بنشینند حلقهٔ فریمی خودش پارک می‌شود و بیرون از دید هم می‌خوابد؛ در حرکت کاهش‌یافته کشش بی‌لرزش و لحظه‌ای است.',
+                'en' => 'Once every spring has settled the frame loop parks itself, and off screen it sleeps; under reduced motion the stretch lands instantly with no wobble.',
+            ]],
+        ],
+        'code' => [
+            'livewire' => [
+                'fa' => <<<'BLADE'
+        {{-- resources/views/demos/components/kinetic/elastic-letters.blade.php --}}
+        <div class="eltr" x-data="{
+                units: [], raf: 0, io: null, mq: null, onMq: null, visible: true,
+                shape(e) { return 'scaleX(' + (1 + .5 * e).toFixed(3) + ') scaleY(' + (1 - .24 * e).toFixed(3) + ')'; },
+                enter(i) {
+                    if (this.mq.matches) { this.units[i].el.style.transform = this.shape(1); return; }
+                    this.units[i].over = true; this.run();
+                },
+                leave(i) {
+                    if (this.mq.matches) { this.units[i].el.style.transform = ''; return; }
+                    this.units[i].over = false; this.run();
+                },
+                frame() {
+                    let live = false;
+                    this.units.forEach((u) => {
+                        const target = u.over ? 1 : 0;
+                        u.v += (170 * (target - u.e) - 10 * u.v) / 60;   // damped spring
+                        u.e += u.v / 60;
+                        if (Math.abs(u.v) < .002 && Math.abs(target - u.e) < .002) { u.v = 0; u.e = target; }
+                        else live = true;
+                        u.el.style.transform = u.e === 0 ? '' : this.shape(u.e);
+                    });
+                    if (!live) { this.raf = 0; return; }   // every spring asleep → park the loop
+                    this.raf = requestAnimationFrame(() => this.frame());
+                },
+                run() {
+                    cancelAnimationFrame(this.raf); this.raf = 0;
+                    if (this.mq.matches || !this.visible) return;
+                    this.raf = requestAnimationFrame(() => this.frame());
+                },
+                init() {
+                    this.mq = matchMedia('(prefers-reduced-motion: reduce)');
+                    this.onMq = () => {
+                        if (this.mq.matches) this.units.forEach((u) => { u.el.style.transform = ''; u.over = false; });
+                        this.run();
+                    };
+                    this.mq.addEventListener('change', this.onMq);
+                    this.io = new IntersectionObserver((e) => { this.visible = e[0].isIntersecting; this.run(); });
+                    this.io.observe(this.$el);
+                    this.units = [...this.$refs.title.querySelectorAll('.eltr-u')].map((el) => ({ el, e: 0, v: 0, over: false }));
+                },
+                destroy() {
+                    cancelAnimationFrame(this.raf);
+                    if (this.io) this.io.disconnect();
+                    if (this.mq && this.onMq) this.mq.removeEventListener('change', this.onMq);
+                },
+            }">
+            <h4 class="eltr-title" x-ref="title">
+                @foreach (['قلم', 'فنری', 'اسپرینگ‌تایپ'] as $i => $w)
+                    <span class="eltr-u" x-on:pointerenter="enter({{ $i }})" x-on:pointerleave="leave({{ $i }})">{{ $w }}</span>{{ ' ' }}
+                @endforeach
+            </h4>
+        </div>
+
+        <style>
+        .eltr-title { display: flex; flex-wrap: wrap; margin: 0;
+                      font: 900 clamp(2rem, 8vw, 4rem)/1.2 'Vazirmatn', sans-serif; }
+        .eltr-u { display: inline-block; will-change: transform; cursor: default; }
+        </style>
+        BLADE,
+                'en' => <<<'BLADE'
+        {{-- resources/views/demos/components/kinetic/elastic-letters.blade.php --}}
+        <div class="eltr" x-data="{
+                units: [], raf: 0, io: null, mq: null, onMq: null, visible: true,
+                shape(e) { return 'scaleX(' + (1 + .5 * e).toFixed(3) + ') scaleY(' + (1 - .24 * e).toFixed(3) + ')'; },
+                enter(i) {
+                    if (this.mq.matches) { this.units[i].el.style.transform = this.shape(1); return; }
+                    this.units[i].over = true; this.run();
+                },
+                leave(i) {
+                    if (this.mq.matches) { this.units[i].el.style.transform = ''; return; }
+                    this.units[i].over = false; this.run();
+                },
+                frame() {
+                    let live = false;
+                    this.units.forEach((u) => {
+                        const target = u.over ? 1 : 0;
+                        u.v += (170 * (target - u.e) - 10 * u.v) / 60;   // damped spring
+                        u.e += u.v / 60;
+                        if (Math.abs(u.v) < .002 && Math.abs(target - u.e) < .002) { u.v = 0; u.e = target; }
+                        else live = true;
+                        u.el.style.transform = u.e === 0 ? '' : this.shape(u.e);
+                    });
+                    if (!live) { this.raf = 0; return; }   // every spring asleep → park the loop
+                    this.raf = requestAnimationFrame(() => this.frame());
+                },
+                run() {
+                    cancelAnimationFrame(this.raf); this.raf = 0;
+                    if (this.mq.matches || !this.visible) return;
+                    this.raf = requestAnimationFrame(() => this.frame());
+                },
+                init() {
+                    this.mq = matchMedia('(prefers-reduced-motion: reduce)');
+                    this.onMq = () => {
+                        if (this.mq.matches) this.units.forEach((u) => { u.el.style.transform = ''; u.over = false; });
+                        this.run();
+                    };
+                    this.mq.addEventListener('change', this.onMq);
+                    this.io = new IntersectionObserver((e) => { this.visible = e[0].isIntersecting; this.run(); });
+                    this.io.observe(this.$el);
+                    this.units = [...this.$refs.title.querySelectorAll('.eltr-u')].map((el) => ({ el, e: 0, v: 0, over: false }));
+                },
+                destroy() {
+                    cancelAnimationFrame(this.raf);
+                    if (this.io) this.io.disconnect();
+                    if (this.mq && this.onMq) this.mq.removeEventListener('change', this.onMq);
+                },
+            }">
+            <h4 class="eltr-title" x-ref="title">
+                @foreach (str_split('SPRINGTYPE') as $i => $chr)
+                    <span class="eltr-u" x-on:pointerenter="enter({{ $i }})" x-on:pointerleave="leave({{ $i }})">{{ $chr }}</span>
+                @endforeach
+            </h4>
+        </div>
+
+        <style>
+        .eltr-title { display: flex; flex-wrap: wrap; margin: 0;
+                      font: 900 clamp(2rem, 8vw, 4rem)/1.2 'IBM Plex Sans', sans-serif; letter-spacing: .02em; }
+        .eltr-u { display: inline-block; will-change: transform; cursor: default; }
+        </style>
+        BLADE,
+            ],
+            'inertia' => <<<'TSX'
+        // app/Pages/Foundry.jsx — Inertia (React) page; renders the React
+        // snippet below unchanged, with Inertia's Link wired into the provider.
+        import { Link } from '@inertiajs/react';
+        import { NabuXUIProvider } from '@nabuxai/ui-react';
+        import ElasticLetters from '@/components/ElasticLetters';
+
+        export default function Foundry() {
+          return (
+            <NabuXUIProvider locale="en" linkComponent={Link}>
+              <main className="nx-page">
+                <ElasticLetters word="SPRINGTYPE" />
+              </main>
+            </NabuXUIProvider>
+          );
+        }
+        TSX,
+            'react' => <<<'REACT'
+        // ElasticLetters.jsx — units stretch on hover, released on a damped spring
+        import { useEffect, useRef } from 'react';
+        import '@nabuxai/ui-core/css';
+
+        const shape = (e) => `scaleX(${(1 + 0.5 * e).toFixed(3)}) scaleY(${(1 - 0.24 * e).toFixed(3)})`;
+
+        export default function ElasticLetters({ word = 'SPRINGTYPE' }) {
+          const title = useRef(null);
+
+          useEffect(() => {
+            const mq = matchMedia('(prefers-reduced-motion: reduce)');
+            const units = [...title.current.querySelectorAll('.eltr-u')].map((el) => ({ el, e: 0, v: 0, over: false }));
+            let raf = 0, visible = true;
+
+            const frame = () => {
+              let live = false;
+              units.forEach((u) => {
+                const target = u.over ? 1 : 0;
+                u.v += (170 * (target - u.e) - 10 * u.v) / 60;   // damped spring
+                u.e += u.v / 60;
+                if (Math.abs(u.v) < 0.002 && Math.abs(target - u.e) < 0.002) { u.v = 0; u.e = target; }
+                else live = true;
+                u.el.style.transform = u.e === 0 ? '' : shape(u.e);
+              });
+              if (!live) { raf = 0; return; }   // every spring asleep → park
+              raf = requestAnimationFrame(frame);
+            };
+            const run = () => { cancelAnimationFrame(raf); raf = 0; if (!mq.matches && visible) raf = requestAnimationFrame(frame); };
+
+            const enter = (u) => () => { if (mq.matches) { u.el.style.transform = shape(1); return; } u.over = true; run(); };
+            const leave = (u) => () => { if (mq.matches) { u.el.style.transform = ''; return; } u.over = false; run(); };
+            const offs = units.map((u) => {
+              const on = enter(u), off = leave(u);
+              u.el.addEventListener('pointerenter', on);
+              u.el.addEventListener('pointerleave', off);
+              return () => {
+                u.el.removeEventListener('pointerenter', on);
+                u.el.removeEventListener('pointerleave', off);
+              };
+            });
+
+            const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; run(); });
+            io.observe(title.current);
+            return () => {
+              io.disconnect(); cancelAnimationFrame(raf); offs.forEach((off) => off());
+            };
+          }, []);
+
+          return (
+            <>
+              <style>{`
+                .eltr-title { display: flex; flex-wrap: wrap; margin: 0;
+                              font: 900 clamp(2rem, 8vw, 4rem)/1.2 'IBM Plex Sans', sans-serif; letter-spacing: .02em; }
+                .eltr-u { display: inline-block; will-change: transform; cursor: default; }
+              `}</style>
+              <h4 className="eltr-title" ref={title}>
+                {[...word].map((chr, i) => <span className="eltr-u" key={i}>{chr}</span>)}
+              </h4>
+            </>
+          );
+        }
+        REACT,
+            'vue' => <<<'VUE'
+        <!-- ElasticLetters.vue — units stretch on hover, released on a damped spring -->
+        <script setup>
+        import { onBeforeUnmount, onMounted, ref } from 'vue';
+        import '@nabuxai/ui-core/css';
+
+        const props = defineProps({ word: { type: String, default: 'SPRINGTYPE' } });
+        const title = ref(null);
+        const shape = (e) => `scaleX(${(1 + 0.5 * e).toFixed(3)}) scaleY(${(1 - 0.24 * e).toFixed(3)})`;
+
+        let units = [], raf = 0, io = null;
+        const mq = matchMedia('(prefers-reduced-motion: reduce)');
+
+        function frame() {
+          let live = false;
+          units.forEach((u) => {
+            const target = u.over ? 1 : 0;
+            u.v += (170 * (target - u.e) - 10 * u.v) / 60;   // damped spring
+            u.e += u.v / 60;
+            if (Math.abs(u.v) < 0.002 && Math.abs(target - u.e) < 0.002) { u.v = 0; u.e = target; }
+            else live = true;
+            u.el.style.transform = u.e === 0 ? '' : shape(u.e);
+          });
+          if (!live) { raf = 0; return; }   // every spring asleep → park
+          raf = requestAnimationFrame(frame);
+        }
+        function run() { cancelAnimationFrame(raf); raf = 0; if (!mq.matches) raf = requestAnimationFrame(frame); }
+        function enter(i) {
+          if (mq.matches) { units[i].el.style.transform = shape(1); return; }
+          units[i].over = true; run();
+        }
+        function leave(i) {
+          if (mq.matches) { units[i].el.style.transform = ''; return; }
+          units[i].over = false; run();
+        }
+
+        onMounted(() => {
+          units = [...title.value.querySelectorAll('.eltr-u')].map((el) => ({ el, e: 0, v: 0, over: false }));
+          io = new IntersectionObserver(([e]) => (e.isIntersecting ? run() : cancelAnimationFrame(raf)));
+          io.observe(title.value);
+        });
+        onBeforeUnmount(() => { io?.disconnect(); cancelAnimationFrame(raf); });
+        </script>
+
+        <template>
+          <h4 class="eltr-title" ref="title">
+            <span v-for="(chr, i) in [...word]" :key="i" class="eltr-u"
+                  @pointerenter="enter(i)" @pointerleave="leave(i)">{{ chr }}</span>
+          </h4>
+        </template>
+
+        <style scoped>
+        .eltr-title { display: flex; flex-wrap: wrap; margin: 0;
+                      font: 900 clamp(2rem, 8vw, 4rem)/1.2 'IBM Plex Sans', sans-serif; letter-spacing: .02em; }
+        .eltr-u { display: inline-block; will-change: transform; cursor: default; }
+        </style>
+        VUE,
+            'svelte' => <<<'SVELTE'
+        <!-- ElasticLetters.svelte — units stretch on hover, released on a damped spring -->
+        <script>
+          import { onMount } from 'svelte';
+          import '@nabuxai/ui-core/css';
+
+          export let word = 'SPRINGTYPE';
+          let title;
+          const shape = (e) => `scaleX(${(1 + 0.5 * e).toFixed(3)}) scaleY(${(1 - 0.24 * e).toFixed(3)})`;
+
+          let units = [], raf = 0, io = null;
+          const mq = matchMedia('(prefers-reduced-motion: reduce)');
+
+          function frame() {
+            let live = false;
+            units.forEach((u) => {
+              const target = u.over ? 1 : 0;
+              u.v += (170 * (target - u.e) - 10 * u.v) / 60;   // damped spring
+              u.e += u.v / 60;
+              if (Math.abs(u.v) < 0.002 && Math.abs(target - u.e) < 0.002) { u.v = 0; u.e = target; }
+              else live = true;
+              u.el.style.transform = u.e === 0 ? '' : shape(u.e);
+            });
+            if (!live) { raf = 0; return; }   // every spring asleep → park
+            raf = requestAnimationFrame(frame);
+          }
+          function run() { cancelAnimationFrame(raf); raf = 0; if (!mq.matches) raf = requestAnimationFrame(frame); }
+          function enter(i) {
+            if (mq.matches) { units[i].el.style.transform = shape(1); return; }
+            units[i].over = true; run();
+          }
+          function leave(i) {
+            if (mq.matches) { units[i].el.style.transform = ''; return; }
+            units[i].over = false; run();
+          }
+
+          onMount(() => {
+            units = [...title.querySelectorAll('.eltr-u')].map((el) => ({ el, e: 0, v: 0, over: false }));
+            io = new IntersectionObserver(([e]) => (e.isIntersecting ? run() : cancelAnimationFrame(raf)));
+            io.observe(title);
+            return () => { io?.disconnect(); cancelAnimationFrame(raf); };
+          });
+        </script>
+
+        <h4 class="eltr-title" bind:this={title}>
+          {#each [...word] as chr, i}
+            <span class="eltr-u" on:pointerenter={() => enter(i)} on:pointerleave={() => leave(i)}>{chr}</span>
+          {/each}
+        </h4>
+
+        <style>
+          .eltr-title { display: flex; flex-wrap: wrap; margin: 0;
+                        font: 900 clamp(2rem, 8vw, 4rem)/1.2 'IBM Plex Sans', sans-serif; letter-spacing: .02em; }
+          .eltr-u { display: inline-block; will-change: transform; cursor: default; }
+        </style>
+        SVELTE,
+        ],
+    ],
 ];
