@@ -1,0 +1,412 @@
+/*
+ * Blocks: icon motion.
+ *
+ *   Icon draw        a set of line icons that ink themselves stroke by stroke when they scroll
+ *                    into view — the pen hops from one stroke to the next on a stepped cadence
+ *   Icon toggle      a button whose icon morphs between its two states: a heart that fills and
+ *                    bursts, a bell that swings while its badge counts, a bookmark that fills,
+ *                    play and pause gliding through a sliding window
+ *   Icon loop        looping status icons: dots, an arc, counter-rotating sync arrows, a
+ *                    download bouncing into its tray, an upload whose fill is the progress,
+ *                    and a magnifier that pulses while a search is busy
+ *
+ * Behaviour: js/blocks/icon-motion.ts — drawIn() normalises every stroke with
+ * pathLength, writes a stepped --_d on each and sets data-nx-drawn when the
+ * element reaches view; pauseOffscreen() parks the loops out of view.
+ */
+@layer nx.components {
+  /* ---- Icon draw ------------------------------------------------------------------ */
+
+  .nx-icon-draw {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 7.25rem), 1fr));
+    gap: var(--nx-space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nx-icon-draw-tile {
+    display: grid;
+    gap: var(--nx-space-2);
+    justify-items: center;
+    padding: var(--nx-space-5) var(--nx-space-2) var(--nx-space-4);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-surface);
+    transition-property: border-color, background-color, translate;
+    transition-duration: var(--nx-dur-fast), var(--nx-dur-fast), var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-ease-out), var(--nx-ease-out), var(--nx-spring-snappy);
+
+    & svg {
+      display: block;
+      inline-size: 2.4rem;
+      block-size: 2.4rem;
+      overflow: visible;
+    }
+  }
+
+  .nx-icon-draw-name {
+    color: var(--nx-text-subtle);
+    font-size: var(--nx-text-xs);
+    font-weight: 600;
+    text-align: center;
+    transition: color var(--nx-dur-base) var(--nx-ease-out);
+  }
+
+  /* Every stroke is one normalised dash; the pen is a dashoffset transition. */
+  .nx-icon-draw-ink {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 1;
+  }
+
+  /* Blank until the behaviour inks it — and only where JS is there to ink it. */
+  :where(.nx-js) .nx-icon-draw-tile:not([data-nx-drawn]) .nx-icon-draw-ink {
+    stroke-dashoffset: 1;
+    transition: none;
+  }
+
+  :where(.nx-js) .nx-icon-draw-tile[data-nx-drawn] .nx-icon-draw-ink {
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset var(--nx-dur-slower) var(--nx-ease-out) var(--_d, 0ms);
+  }
+
+  :where(.nx-js) .nx-icon-draw-tile[data-nx-drawn] .nx-icon-draw-name { color: var(--nx-text); }
+
+  @media (hover: hover) and (pointer: fine) {
+    .nx-icon-draw-tile:hover {
+      border-color: var(--nx-accent-border);
+      background: var(--nx-surface-2);
+      translate: 0 calc(-2px * var(--nx-motion));
+    }
+  }
+
+  /* ---- Icon toggle ---------------------------------------------------------------- */
+
+  .nx-icon-toggle {
+    --_tone: var(--nx-accent);
+    --_tone-text: var(--nx-accent-text);
+    --_tone-soft: var(--nx-accent-soft);
+
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-space-2);
+    min-block-size: 2.75rem;
+    padding-inline: 1.1rem;
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    font: 600 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    letter-spacing: var(--nx-tracking-tight);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: var(--nx-shadow-xs);
+    transition-property: scale, background-color, border-color, color;
+    transition-duration: var(--nx-spring-snappy-duration), var(--nx-dur-fast), var(--nx-dur-fast), var(--nx-dur-fast);
+    transition-timing-function: var(--nx-spring-snappy), var(--nx-ease-out), var(--nx-ease-out), var(--nx-ease-out);
+
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+    &:is(:disabled, [aria-disabled="true"]) { cursor: not-allowed; opacity: 0.5; }
+    &:active:not(:disabled, [aria-disabled="true"], [data-static]) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+
+    &[data-variant="heart"] { --_tone: var(--nx-danger); --_tone-text: var(--nx-danger-text); --_tone-soft: var(--nx-danger-soft); }
+    &[data-size="sm"] { min-block-size: 2.25rem; padding-inline: 0.85rem; font-size: var(--nx-text-xs); }
+
+    /* Pressed is colour and label too — motion is never the only cue. */
+    &[aria-pressed="true"] {
+      color: var(--_tone-text);
+      border-color: color-mix(in oklab, var(--_tone) 40%, var(--nx-border));
+      background: color-mix(in oklab, var(--_tone-soft) 60%, var(--nx-surface));
+    }
+  }
+
+  .nx-icon-toggle-icon {
+    position: relative;
+    display: grid;
+    place-items: center;
+    inline-size: 1.5rem;
+    block-size: 1.5rem;
+
+    & svg {
+      display: block;
+      inline-size: 1.5rem;
+      block-size: 1.5rem;
+      overflow: visible;
+    }
+  }
+
+  .nx-icon-toggle-line {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* The fill is the arriving half of the icon swap: scale 0.25 → 1, blur → sharp. */
+  .nx-icon-toggle-fill {
+    fill: currentColor;
+    stroke: none;
+    scale: calc(1 - 0.75 * var(--nx-motion));
+    opacity: 0;
+    filter: blur(4px);
+    transform-box: fill-box;
+    transform-origin: center;
+    transition-property: scale, opacity, filter;
+    transition-duration: 300ms;
+    transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .nx-icon-toggle[aria-pressed="true"] .nx-icon-toggle-fill { scale: 1; opacity: 1; filter: none; }
+
+  /* The bell swings a springy shake the moment it turns on. */
+  .nx-icon-toggle-swing {
+    transform-box: fill-box;
+    transform-origin: 50% 10%;
+  }
+
+  .nx-icon-toggle[aria-pressed="true"] .nx-icon-toggle-swing { animation: nx-icon-toggle-ring 800ms var(--nx-ease-out); }
+
+  @keyframes nx-icon-toggle-ring {
+    0%, 100% { rotate: 0deg; }
+    18% { rotate: calc(14deg * var(--nx-motion)); }
+    38% { rotate: calc(-11deg * var(--nx-motion)); }
+    58% { rotate: calc(7deg * var(--nx-motion)); }
+    78% { rotate: calc(-4deg * var(--nx-motion)); }
+  }
+
+  .nx-icon-toggle-badge {
+    position: absolute;
+    inset-block-start: -0.4rem;
+    inset-inline-end: -0.55rem;
+    min-inline-size: 1.05rem;
+    padding: 0.08rem 0.3rem;
+    border-radius: var(--nx-radius-full);
+    background: var(--_tone);
+    color: var(--nx-accent-contrast);
+    font-size: 0.625rem;
+    font-weight: 700;
+    line-height: 1.5;
+    font-variant-numeric: tabular-nums;
+    animation: nx-icon-toggle-pop 420ms cubic-bezier(0.2, 0.9, 0.3, 1.3);
+  }
+
+  @keyframes nx-icon-toggle-pop {
+    from { scale: calc(1 - 0.6 * var(--nx-motion)); opacity: 0; }
+    70% { scale: calc(1 + 0.18 * var(--nx-motion)); }
+    to { scale: 1; opacity: 1; }
+  }
+
+  /* Play / pause: two halves behind a one-icon window; the track slides between them. */
+  .nx-icon-toggle-window {
+    display: block;
+    inline-size: 1.5rem;
+    block-size: 1.5rem;
+    overflow: clip;
+    direction: ltr;
+  }
+
+  .nx-icon-toggle-track {
+    display: flex;
+    inline-size: 3rem;
+    block-size: 1.5rem;
+    transition: translate var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+  }
+
+  .nx-icon-toggle-half {
+    display: block;
+    flex: none;
+    inline-size: 1.5rem;
+    block-size: 1.5rem;
+  }
+
+  .nx-icon-toggle[aria-pressed="true"] .nx-icon-toggle-track { translate: -1.5rem 0; }
+
+  /* The label crossfades with the same icon-swap move, both copies kept in the DOM. */
+  .nx-icon-toggle-label {
+    display: inline-grid;
+    justify-items: start;
+
+    > * {
+      grid-area: 1 / 1;
+      transition-property: scale, opacity, filter;
+      transition-duration: 300ms;
+      transition-timing-function: cubic-bezier(0.2, 0, 0, 1);
+    }
+
+    > [data-off] {
+      opacity: 0;
+      scale: calc(1 - 0.75 * var(--nx-motion));
+      filter: blur(4px);
+    }
+  }
+
+  .nx-icon-toggle[aria-pressed="true"] .nx-icon-toggle-label {
+    > :not([data-off]) { opacity: 0; scale: calc(1 - 0.75 * var(--nx-motion)); filter: blur(4px); }
+    > [data-off] { opacity: 1; scale: 1; filter: none; }
+  }
+
+  /* ---- Icon loop ------------------------------------------------------------------ */
+
+  .nx-icon-loop {
+    --_size: 2.5rem;
+    --_glyph: 1.4rem;
+
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    inline-size: var(--_size);
+    block-size: var(--_size);
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-accent-soft);
+    color: var(--nx-accent-text);
+
+    & svg {
+      display: block;
+      inline-size: var(--_glyph);
+      block-size: var(--_glyph);
+      overflow: visible;
+    }
+
+    /* The same loops without their tile, for inside buttons and inputs. */
+    &[data-bare] {
+      --_glyph: 1.2rem;
+      inline-size: auto;
+      block-size: auto;
+      background: none;
+      color: inherit;
+    }
+
+    /* Parked while its card is off screen (pauseOffscreen). */
+    &[data-paused] * { animation-play-state: paused; }
+    &[data-paused]::after { animation-play-state: paused; }
+  }
+
+  .nx-icon-loop-line {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .nx-icon-loop-dots {
+    display: flex;
+    gap: 0.28rem;
+
+    & i {
+      inline-size: 0.34rem;
+      block-size: 0.34rem;
+      border-radius: var(--nx-radius-full);
+      background: currentColor;
+      animation: nx-icon-loop-dot 1s var(--nx-ease-in-out) infinite;
+
+      &:nth-child(2) { animation-delay: 150ms; }
+      &:nth-child(3) { animation-delay: 300ms; }
+    }
+  }
+
+  @keyframes nx-icon-loop-dot {
+    0%, 100% { translate: 0 0; opacity: 0.45; }
+    40% { translate: 0 calc(-0.3rem * var(--nx-motion)); opacity: 1; }
+  }
+
+  .nx-icon-loop-arc {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: nx-icon-loop-spin 1.3s linear infinite;
+
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-dasharray: 30 70;
+  }
+
+  @keyframes nx-icon-loop-spin { to { rotate: 360deg; } }
+
+  .nx-icon-loop-sync {
+    & g { transform-box: view-box; transform-origin: 12px 12px; }
+    & .nx-icon-loop-cw { animation: nx-icon-loop-spin 1.7s linear infinite; }
+    & .nx-icon-loop-ccw { animation: nx-icon-loop-spin 1.7s linear infinite reverse; }
+  }
+
+  .nx-icon-loop-bounce { animation: nx-icon-loop-drop 1.5s var(--nx-ease-in-out) infinite; }
+
+  @keyframes nx-icon-loop-drop {
+    0%, 100% { translate: 0 0; }
+    42% { translate: 0 calc(3px * var(--nx-motion)); }
+    60% { translate: 0 calc(-3.5px * var(--nx-motion)); }
+    78% { translate: 0 calc(1px * var(--nx-motion)); }
+  }
+
+  /* The upload arrow's fill is the progress: a clip that opens from the tray upward. */
+  .nx-icon-loop-upfill {
+    clip-path: inset(calc(100% - var(--_p, 0%)) 0 0 0);
+    transition: clip-path var(--nx-dur-fast) var(--nx-ease-out);
+
+    & path { fill: currentColor; stroke: none; }
+  }
+
+  .nx-icon-loop-pct {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: calc(100% + var(--nx-space-2));
+    translate: 0 -50%;
+    min-inline-size: 3ch;
+    color: var(--nx-accent-text);
+    font: 650 var(--nx-text-xs) / 1 var(--nx-font-mono);
+    font-variant-numeric: tabular-nums;
+    text-align: end;
+  }
+
+  /* The magnifier pulses while the field is busy, with a halo leaving the tile. */
+  .nx-icon-loop[data-kind="search"] svg { transition: scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy); }
+
+  .nx-icon-loop[data-busy] svg { animation: nx-icon-loop-pulse 0.9s var(--nx-ease-in-out) infinite; }
+
+  .nx-icon-loop[data-busy]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: 2px solid currentColor;
+    border-radius: inherit;
+    pointer-events: none;
+    animation: nx-icon-loop-halo 1.2s var(--nx-ease-out) infinite;
+  }
+
+  @keyframes nx-icon-loop-pulse {
+    0%, 100% { scale: 1; }
+    50% { scale: calc(1 + 0.14 * var(--nx-motion)); }
+  }
+
+  @keyframes nx-icon-loop-halo {
+    from { opacity: 0.55; scale: calc(1 - 0.15 * var(--nx-motion)); }
+    to { opacity: 0; scale: calc(1 + 0.25 * var(--nx-motion)); }
+  }
+
+  /* ---- Reduced motion --------------------------------------------------------------- */
+  @media (prefers-reduced-motion: reduce) {
+    /* The icons are simply there; nothing hides waiting for a draw. */
+    :where(.nx-js) .nx-icon-draw-tile:not([data-nx-drawn]) .nx-icon-draw-ink { stroke-dashoffset: 0; }
+    .nx-icon-draw-ink { transition: none; }
+    .nx-icon-draw-tile { transition-property: border-color, background-color; }
+
+    .nx-icon-toggle-swing,
+    .nx-icon-toggle-badge { animation: none; }
+    :is(.nx-icon-toggle-fill, .nx-icon-toggle-track, .nx-icon-toggle-label > *) { transition-duration: 0ms; filter: none; }
+
+    .nx-icon-loop :is(i, svg, g, circle) { animation: none; }
+    .nx-icon-loop[data-busy]::after { animation: none; opacity: 0; }
+  }
+}

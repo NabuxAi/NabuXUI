@@ -1,0 +1,1044 @@
+/*
+ * Blocks: landing-page sections.
+ *
+ *   PricingSection   three plans under a monthly/yearly toggle whose prices
+ *                    bump when the interval flips, a featured plan on ink, and
+ *                    a comparison table underneath
+ *   FaqSection       a side column (heading, talk-to-sales, all-questions link)
+ *                    beside a single-open accordion whose answers unfurl
+ *                    through a 0fr→1fr grid row — no measuring JavaScript
+ *   StatsBand        a dark band with a fine dot texture where the counters
+ *                    roll in when the band scrolls into view (reveal group)
+ *   LogosTrust       brand marks resting in grayscale that take their colour
+ *                    back on hover; the same row can run as a slow marquee
+ *   TestimonialWall  one big quote at a time (buttons, dots, arrow keys) over
+ *                    a grid of short star-rated quotes
+ *
+ * No core JS behaviour of its own. The counters are NumberTicker's (React) and
+ * the state lives in the components. The stats band and the featured pricing
+ * card are always-dark surfaces built from ink tokens, so they read the same
+ * in both themes, like the lightbox and the terminal.
+ */
+@layer nx.components {
+  /* ---- Pricing section ----------------------------------------------------------- */
+
+  .nx-pricing-section {
+    display: grid;
+    gap: var(--nx-space-8);
+    justify-items: center;
+  }
+
+  .nx-pricing-section-head {
+    display: grid;
+    gap: var(--nx-space-3);
+    justify-items: center;
+    max-inline-size: 46ch;
+    text-align: center;
+  }
+
+  .nx-pricing-section-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding: 0.35rem 0.85rem;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface-2);
+    color: var(--nx-text-muted);
+    box-shadow: inset 0 0 0 1px var(--nx-border);
+    font-size: var(--nx-text-xs);
+    font-weight: 600;
+    white-space: nowrap;
+
+    &::before {
+      content: "";
+      inline-size: 0.45rem;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--nx-success);
+    }
+  }
+
+  .nx-pricing-section-title {
+    margin: 0;
+    font: 800 clamp(1.5rem, 3.4vw, 2.15rem) / 1.2 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tight);
+    color: var(--nx-text);
+    text-wrap: balance;
+  }
+
+  .nx-pricing-section-subtitle {
+    margin: 0;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+    line-height: 1.7;
+    text-wrap: pretty;
+  }
+
+  /* The interval toggle: a pill whose thumb slides to the pressed half. Both
+     halves stay equal (the savings note widens its button), so the 50% thumb
+     lands exactly on the pressed half. */
+  .nx-pricing-section-toggle {
+    position: relative;
+    display: inline-grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    padding: 3px;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface);
+    box-shadow: inset 0 0 0 1px var(--nx-border);
+  }
+
+  .nx-pricing-section-toggle-thumb {
+    position: absolute;
+    inset-block: 3px;
+    inset-inline-start: 3px;
+    inline-size: calc(50% - 3px);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-accent);
+    transition: translate var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+  }
+
+  .nx-pricing-section-toggle[data-interval="yearly"] .nx-pricing-section-toggle-thumb {
+    translate: calc(100% * var(--nx-dir)) 0;
+  }
+
+  .nx-pricing-section-toggle-button {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-space-2);
+    padding: 0.6rem 1.25rem;
+    border: 0;
+    border-radius: var(--nx-radius-full);
+    background: transparent;
+    color: var(--nx-text-muted);
+    font: 600 var(--nx-text-sm) / 1.2 var(--nx-font-sans);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color var(--nx-dur-base) var(--nx-ease-out);
+
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+    &[aria-pressed="true"] { color: var(--nx-accent-contrast); }
+  }
+
+  .nx-pricing-section-save {
+    padding: 0.16rem 0.55rem;
+    border-radius: var(--nx-radius-full);
+    background: color-mix(in oklab, var(--nx-ink-950) 22%, transparent);
+    color: var(--nx-accent-contrast);
+    font-size: 0.68rem;
+    font-weight: 700;
+    font-style: normal;
+    white-space: nowrap;
+    opacity: 0;
+    scale: calc(1 - 0.12 * var(--nx-motion));
+    transition:
+      opacity var(--nx-dur-base) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+  }
+
+  .nx-pricing-section-toggle-button[aria-pressed="true"] .nx-pricing-section-save { opacity: 1; scale: 1; }
+
+  .nx-pricing-section-cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--nx-space-5);
+    align-items: start;
+    inline-size: 100%;
+    max-inline-size: 62rem;
+  }
+
+  .nx-pricing-section-card {
+    position: relative;
+    display: grid;
+    gap: var(--nx-space-4);
+    align-content: start;
+    padding: var(--nx-space-6) var(--nx-space-5);
+    border-radius: var(--nx-radius-xl);
+    background: var(--nx-surface);
+    box-shadow:
+      inset 0 0 0 1px var(--nx-border),
+      var(--nx-shadow-sm);
+    transition:
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      box-shadow var(--nx-dur-base) var(--nx-ease-out);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .nx-pricing-section-card:hover {
+      translate: 0 calc(-3px * var(--nx-motion));
+      box-shadow:
+        inset 0 0 0 1px color-mix(in oklab, var(--nx-accent) 45%, var(--nx-border)),
+        var(--nx-shadow-md);
+    }
+  }
+
+  /* The featured plan stands on ink, whatever the page's theme. */
+  .nx-pricing-section-card[data-featured] {
+    background: var(--nx-ink-950);
+    color: var(--nx-ink-50);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in oklab, var(--nx-accent) 45%, transparent),
+      var(--nx-shadow-lg);
+  }
+
+  .nx-pricing-section-card[data-featured] :is(.nx-pricing-section-tag, .nx-pricing-section-suffix) {
+    color: var(--nx-ink-400);
+  }
+
+  .nx-pricing-section-badge {
+    position: absolute;
+    inset-block-start: calc(-0.75rem - 1px);
+    inset-inline-start: 50%;
+    translate: calc(-50% * var(--nx-dir)) 0;
+    padding: 0.28rem 0.8rem;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-accent);
+    color: var(--nx-accent-contrast);
+    font-size: 0.7rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .nx-pricing-section-name {
+    margin: 0;
+    display: grid;
+    gap: 0.2rem;
+    font-size: var(--nx-text-md);
+    font-weight: 700;
+    color: inherit;
+  }
+
+  .nx-pricing-section-tag {
+    font-size: var(--nx-text-xs);
+    font-weight: 500;
+    color: var(--nx-text-muted);
+  }
+
+  .nx-pricing-section-price {
+    margin: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+
+  .nx-pricing-section-amount {
+    display: inline-block;
+    font: 800 var(--nx-text-4xl) / 1 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tight);
+    font-variant-numeric: tabular-nums;
+
+    /* The interval flip re-keys the amount; the new one rises in. */
+    @starting-style {
+      opacity: 0;
+      translate: 0 calc(0.35em * var(--nx-motion));
+    }
+
+    transition:
+      opacity var(--nx-dur-base) var(--nx-ease-out),
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+  }
+
+  .nx-pricing-section-suffix {
+    font-size: var(--nx-text-xs);
+    color: var(--nx-text-muted);
+  }
+
+  .nx-pricing-section-perks {
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--nx-space-2);
+    list-style: none;
+    font-size: var(--nx-text-sm);
+    line-height: 1.5;
+    color: var(--nx-text-muted);
+
+    & li {
+      display: flex;
+      align-items: start;
+      gap: var(--nx-space-2);
+    }
+
+    & .nx-icon {
+      flex: none;
+      inline-size: 1rem;
+      block-size: 1rem;
+      margin-block-start: 0.14rem;
+      color: var(--nx-accent-text);
+    }
+  }
+
+  .nx-pricing-section-card[data-featured] .nx-pricing-section-perks .nx-icon { color: var(--nx-glow); }
+
+  .nx-pricing-section-cta {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-space-2);
+    min-block-size: 2.6rem;
+    margin-block-start: var(--nx-space-1);
+    padding-inline: var(--nx-space-4);
+    border-radius: var(--nx-radius-md);
+    background: transparent;
+    color: inherit;
+    font: 600 var(--nx-text-sm) / 1.2 var(--nx-font-sans);
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    box-shadow: inset 0 0 0 1px var(--nx-border);
+    transition-property: background-color, box-shadow, color, scale, filter;
+    transition-duration: var(--nx-dur-fast), var(--nx-dur-base), var(--nx-dur-fast), var(--nx-spring-snappy-duration), var(--nx-dur-fast);
+    transition-timing-function: var(--nx-ease-out), var(--nx-ease-out), var(--nx-ease-out), var(--nx-spring-snappy), var(--nx-ease-out);
+
+    &:hover {
+      box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--nx-accent) 55%, var(--nx-border));
+      color: var(--nx-accent-text);
+    }
+
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+  }
+
+  /* On the ink card the featured action is the accent itself. */
+  .nx-pricing-section-card[data-featured] .nx-pricing-section-cta {
+    background: var(--nx-accent);
+    color: var(--nx-accent-contrast);
+    box-shadow: var(--nx-shadow-glow);
+  }
+
+  .nx-pricing-section-card[data-featured] .nx-pricing-section-cta:hover {
+    color: var(--nx-accent-contrast);
+    filter: brightness(1.08);
+  }
+
+  .nx-pricing-section-compare {
+    display: grid;
+    gap: var(--nx-space-3);
+    inline-size: 100%;
+    max-inline-size: 62rem;
+  }
+
+  .nx-pricing-section-compare-title {
+    margin: 0;
+    font-size: var(--nx-text-md);
+    font-weight: 700;
+    color: var(--nx-text);
+  }
+
+  .nx-pricing-section-table-wrap {
+    overflow-x: auto;
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-surface);
+    box-shadow: inset 0 0 0 1px var(--nx-border);
+    scrollbar-width: thin;
+  }
+
+  .nx-pricing-section-table {
+    inline-size: 100%;
+    min-inline-size: 34rem;
+    border-collapse: collapse;
+    font-size: var(--nx-text-sm);
+  }
+
+  .nx-pricing-section-table th,
+  .nx-pricing-section-table td {
+    padding: 0.72rem 1rem;
+    border-block-start: 1px solid var(--nx-border);
+    text-align: start;
+  }
+
+  .nx-pricing-section-table thead th {
+    border-block-start: 0;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-xs);
+    font-weight: 600;
+  }
+
+  .nx-pricing-section-table thead th[data-featured] { color: var(--nx-accent-text); }
+  .nx-pricing-section-table tbody th { font-weight: 500; color: var(--nx-text); }
+
+  .nx-pricing-section-table td {
+    text-align: center;
+    color: var(--nx-text-muted);
+  }
+
+  .nx-pricing-section-table td[data-featured] {
+    color: var(--nx-text);
+    background: color-mix(in oklab, var(--nx-accent) 6%, transparent);
+  }
+
+  .nx-pricing-section-table .nx-icon { inline-size: 1.05rem; block-size: 1.05rem; vertical-align: -0.18em; }
+  .nx-pricing-section-table .nx-icon[data-included] { color: var(--nx-accent-text); }
+  .nx-pricing-section-table .nx-icon[data-missing] { opacity: 0.45; }
+
+  .nx-pricing-section-note {
+    margin: 0;
+    font-size: var(--nx-text-xs);
+    color: var(--nx-text-muted);
+    text-align: center;
+  }
+
+  @media (max-width: 640px) {
+    .nx-pricing-section-cards { grid-template-columns: 1fr; }
+    .nx-pricing-section-toggle { inline-size: 100%; }
+  }
+
+  /* ---- FAQ section ---------------------------------------------------------------- */
+
+  .nx-faq {
+    display: grid;
+    grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+    gap: clamp(var(--nx-space-6), 4vw, 3.5rem);
+    align-items: start;
+  }
+
+  .nx-faq-side {
+    display: grid;
+    gap: var(--nx-space-3);
+    align-content: start;
+    justify-items: start;
+    position: sticky;
+    inset-block-start: var(--nx-space-4);
+  }
+
+  .nx-faq-eyebrow {
+    margin: 0;
+    color: var(--nx-accent-text);
+    font-size: var(--nx-text-xs);
+    font-weight: 700;
+    letter-spacing: var(--nx-tracking-wide);
+    text-transform: uppercase;
+  }
+
+  .nx-faq-title {
+    margin: 0;
+    font: 800 clamp(1.35rem, 2.8vw, 1.9rem) / 1.3 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tight);
+    color: var(--nx-text);
+    text-wrap: balance;
+  }
+
+  .nx-faq-intro {
+    margin: 0;
+    max-inline-size: 38ch;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+    line-height: 1.75;
+    text-wrap: pretty;
+  }
+
+  .nx-faq-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    margin-block-start: var(--nx-space-1);
+    min-block-size: 2.6rem;
+    padding-inline: var(--nx-space-5);
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-accent);
+    color: var(--nx-accent-contrast);
+    font: 600 var(--nx-text-sm) / 1.2 var(--nx-font-sans);
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition-property: scale, filter;
+    transition-duration: var(--nx-spring-snappy-duration), var(--nx-dur-fast);
+    transition-timing-function: var(--nx-spring-snappy), var(--nx-ease-out);
+
+    & .nx-icon { inline-size: 1rem; block-size: 1rem; }
+    &:hover { filter: brightness(1.08); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+  }
+
+  .nx-faq-more {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-1);
+    color: var(--nx-accent-text);
+    font-size: var(--nx-text-sm);
+    font-weight: 600;
+    text-decoration: none;
+
+    & .nx-icon { inline-size: 0.95rem; block-size: 0.95rem; }
+    &:hover { text-decoration: underline; }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+  }
+
+  .nx-faq-list {
+    display: grid;
+    min-inline-size: 0;
+  }
+
+  /* The heading wraps its button but stays out of the grid's way. */
+  .nx-faq-heading {
+    display: contents;
+    margin: 0;
+    font: inherit;
+  }
+
+  /* The answer unfurls through a 0fr→1fr grid row: the height animates
+     without measuring anything. The effect is the size, so this is the one
+     layout property the family animates. */
+  .nx-faq-item {
+    display: grid;
+    grid-template-rows: auto 0fr;
+    transition: grid-template-rows var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+  }
+
+  .nx-faq-item[data-open] { grid-template-rows: auto 1fr; }
+
+  .nx-faq-q {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-4);
+    inline-size: 100%;
+    padding: var(--nx-space-4) 0.15rem;
+    border: 0;
+    border-block-end: 1px solid var(--nx-border);
+    background: transparent;
+    color: inherit;
+    font: 650 var(--nx-text-md) / 1.5 var(--nx-font-sans);
+    text-align: start;
+    cursor: pointer;
+    transition: color var(--nx-dur-fast) var(--nx-ease-out);
+
+    &:hover { color: var(--nx-accent-text); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: -2px; }
+
+    & > span:first-child { flex: 1; min-inline-size: 0; }
+  }
+
+  .nx-faq-a {
+    overflow: hidden;
+
+    & > div {
+      padding: 0.15rem 0.15rem var(--nx-space-5);
+      max-inline-size: 62ch;
+      color: var(--nx-text-muted);
+      font-size: var(--nx-text-sm);
+      line-height: 1.8;
+      opacity: 0.7;
+      transition: opacity var(--nx-dur-slow) var(--nx-ease-out);
+    }
+  }
+
+  .nx-faq-item[data-open] .nx-faq-a > div { opacity: 1; }
+
+  /* The plus that folds into a cross as the answer opens. */
+  .nx-faq-plus {
+    position: relative;
+    flex: none;
+    inline-size: 1.05rem;
+    aspect-ratio: 1;
+    color: var(--nx-accent-text);
+    transition: rotate var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+
+    &::before,
+    &::after {
+      content: "";
+      position: absolute;
+      inset-block-start: calc(50% - 1px);
+      inset-inline-start: 0;
+      inline-size: 100%;
+      block-size: 2px;
+      border-radius: 2px;
+      background: currentColor;
+    }
+
+    &::after { rotate: 90deg; }
+  }
+
+  .nx-faq-item[data-open] .nx-faq-plus { rotate: 45deg; }
+
+  .nx-faq-note {
+    margin: var(--nx-space-4) 0 0;
+    font-size: var(--nx-text-xs);
+    color: var(--nx-text-muted);
+  }
+
+  @media (max-width: 760px) {
+    .nx-faq { grid-template-columns: 1fr; }
+    .nx-faq-side { position: static; }
+  }
+
+  /* ---- Stats band ------------------------------------------------------------------ */
+
+  /* Always ink, whatever the theme: the band is the night the numbers live in. */
+  .nx-stats-band {
+    --_fg: var(--nx-ink-50);
+    --_muted: var(--nx-ink-400);
+    --_line: color-mix(in oklab, var(--nx-ink-50) 14%, transparent);
+
+    position: relative;
+    display: grid;
+    gap: var(--nx-space-8);
+    justify-items: center;
+    overflow: clip;
+    padding: clamp(var(--nx-space-8), 5vw, 3.5rem) clamp(var(--nx-space-4), 3.5vw, 2.5rem);
+    border-radius: var(--nx-radius-xl);
+    color: var(--_fg);
+    background:
+      radial-gradient(60rem 18rem at 85% -20%, color-mix(in oklab, var(--nx-glow) 14%, transparent), transparent 60%),
+      radial-gradient(color-mix(in oklab, var(--nx-ink-400) 15%, transparent) 1px, transparent 1.5px) 0 0 / 22px 22px,
+      var(--nx-ink-950);
+  }
+
+  .nx-stats-band-head {
+    display: grid;
+    gap: var(--nx-space-2);
+    justify-items: center;
+    text-align: center;
+  }
+
+  .nx-stats-band-eyebrow {
+    margin: 0;
+    color: var(--nx-glow);
+    font-size: var(--nx-text-xs);
+    font-weight: 700;
+    letter-spacing: var(--nx-tracking-wide);
+    text-transform: uppercase;
+  }
+
+  .nx-stats-band-title {
+    margin: 0;
+    font: 800 clamp(1.15rem, 2.4vw, 1.5rem) / 1.3 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tight);
+    text-wrap: balance;
+  }
+
+  .nx-stats-band-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    inline-size: 100%;
+    max-inline-size: 62rem;
+  }
+
+  .nx-stats-band-stat {
+    display: grid;
+    gap: var(--nx-space-2);
+    justify-items: center;
+    padding: var(--nx-space-3) var(--nx-space-3);
+    text-align: center;
+  }
+
+  .nx-stats-band-stat + .nx-stats-band-stat { border-inline-start: 1px solid var(--_line); }
+
+  .nx-stats-band-icon {
+    color: var(--nx-glow);
+
+    & .nx-icon { inline-size: 1.5rem; block-size: 1.5rem; }
+  }
+
+  .nx-stats-band-value {
+    margin: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 0.3rem;
+    justify-content: center;
+    font: 800 clamp(1.9rem, 4.6vw, 3.2rem) / 1 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tight);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nx-stats-band-unit {
+    font-size: 0.42em;
+    font-weight: 700;
+    color: var(--nx-glow);
+  }
+
+  .nx-stats-band-label {
+    color: var(--_muted);
+    font-size: var(--nx-text-xs);
+  }
+
+  .nx-stats-band-note {
+    margin: 0;
+    font-size: var(--nx-text-xs);
+    color: var(--_muted);
+    text-align: center;
+  }
+
+  @media (max-width: 640px) {
+    .nx-stats-band-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: var(--nx-space-6); }
+    .nx-stats-band-stat + .nx-stats-band-stat { border-inline-start: 0; }
+    .nx-stats-band-stat:nth-child(even) { border-inline-start: 1px solid var(--_line); }
+  }
+
+  /* ---- Logos trust ----------------------------------------------------------------- */
+
+  .nx-logos {
+    display: grid;
+    gap: var(--nx-space-8);
+    justify-items: center;
+  }
+
+  .nx-logos-head {
+    display: grid;
+    gap: var(--nx-space-2);
+    justify-items: center;
+    text-align: center;
+  }
+
+  .nx-logos-eyebrow {
+    margin: 0;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-xs);
+    font-weight: 700;
+    letter-spacing: var(--nx-tracking-wide);
+    text-transform: uppercase;
+  }
+
+  .nx-logos-title {
+    margin: 0;
+    font: 800 clamp(1.2rem, 2.6vw, 1.65rem) / 1.3 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tight);
+    color: var(--nx-text);
+    text-wrap: balance;
+  }
+
+  .nx-logos-switch {
+    display: inline-flex;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface-2);
+    box-shadow: inset 0 0 0 1px var(--nx-border);
+  }
+
+  .nx-logos-switch-button {
+    padding: 0.42rem 1.05rem;
+    border: 0;
+    border-radius: var(--nx-radius-full);
+    background: transparent;
+    color: var(--nx-text-muted);
+    font: 600 0.78rem / 1 var(--nx-font-sans);
+    cursor: pointer;
+    transition-property: background-color, color;
+    transition-duration: var(--nx-dur-base), var(--nx-dur-base);
+    transition-timing-function: var(--nx-ease-out), var(--nx-ease-out);
+
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+    &[aria-pressed="true"] { background: var(--nx-text); color: var(--nx-bg); }
+  }
+
+  .nx-logos-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--nx-space-6) var(--nx-space-5);
+    align-items: center;
+    justify-items: center;
+    inline-size: 100%;
+    max-inline-size: 58rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Marks rest in grayscale and take their colour back on hover or focus. */
+  .nx-logos-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    color: var(--_brand, var(--nx-text));
+    font-weight: 700;
+    font-size: var(--nx-text-md);
+    letter-spacing: var(--nx-tracking-tight);
+    white-space: nowrap;
+    text-decoration: none;
+    filter: grayscale(1);
+    opacity: 0.55;
+    border-radius: var(--nx-radius-sm);
+    transition:
+      filter var(--nx-dur-slow) var(--nx-ease-out),
+      opacity var(--nx-dur-slow) var(--nx-ease-out);
+
+    &:is(:hover, :focus-visible) { filter: grayscale(0); opacity: 1; }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 3px; }
+  }
+
+  .nx-logos-mark { inline-size: 1.5rem; block-size: 1.5rem; flex: none; }
+
+  .nx-logos-marquee {
+    inline-size: 100%;
+    max-inline-size: 62rem;
+    overflow: clip;
+    -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  }
+
+  .nx-logos-track {
+    display: flex;
+    gap: 3.25rem;
+    inline-size: max-content;
+    margin: 0;
+    padding: 0;
+    padding-inline: var(--nx-space-6);
+    list-style: none;
+    animation: nx-logos-run 36s linear infinite;
+  }
+
+  .nx-logos-marquee:is(:hover, :focus-within) .nx-logos-track { animation-play-state: paused; }
+
+  /* The row drifts toward the reading start, whichever way the page reads. */
+  @keyframes nx-logos-run {
+    to { translate: calc(-50% * var(--nx-dir)) 0; }
+  }
+
+  .nx-logos-footnote {
+    margin: 0;
+    font-size: var(--nx-text-xs);
+    color: var(--nx-text-muted);
+    text-align: center;
+  }
+
+  @media (max-width: 640px) {
+    .nx-logos-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--nx-space-5) var(--nx-space-4); }
+  }
+
+  /* ---- Testimonial wall --------------------------------------------------------------- */
+
+  .nx-testimonials {
+    display: grid;
+    gap: var(--nx-space-8);
+    justify-items: center;
+  }
+
+  .nx-testimonials-head {
+    display: grid;
+    gap: var(--nx-space-3);
+    justify-items: center;
+    max-inline-size: 46ch;
+    text-align: center;
+  }
+
+  .nx-testimonials-score {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding: 0.35rem 0.9rem;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface);
+    color: var(--nx-text-muted);
+    box-shadow: inset 0 0 0 1px var(--nx-border);
+    font-size: var(--nx-text-xs);
+    font-weight: 600;
+
+    & .nx-icon { inline-size: 0.95rem; block-size: 0.95rem; color: var(--nx-gold); }
+  }
+
+  .nx-testimonials-title {
+    margin: 0;
+    font: 800 clamp(1.4rem, 3vw, 2rem) / 1.25 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tight);
+    color: var(--nx-text);
+    text-wrap: balance;
+  }
+
+  .nx-testimonials-subtitle {
+    margin: 0;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+    line-height: 1.75;
+    text-wrap: pretty;
+  }
+
+  /* Every quote stacks in one cell, so the stage's height never jumps. */
+  .nx-testimonials-stage {
+    display: grid;
+    inline-size: 100%;
+    max-inline-size: 46rem;
+  }
+
+  .nx-testimonials-quote {
+    grid-area: 1 / 1;
+    margin: 0;
+    display: grid;
+    gap: var(--nx-space-5);
+    justify-items: center;
+    text-align: center;
+    transition:
+      opacity var(--nx-dur-slow) var(--nx-ease-out),
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+
+    &[data-off] {
+      opacity: 0;
+      pointer-events: none;
+      translate: 0 calc(0.75rem * var(--nx-motion));
+    }
+  }
+
+  .nx-testimonials-mark {
+    inline-size: 2.1rem;
+    block-size: 2.1rem;
+    fill: none;
+    stroke: var(--nx-accent);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0.9;
+  }
+
+  .nx-testimonials-text {
+    margin: 0;
+    max-inline-size: 40ch;
+    font: 650 clamp(1.12rem, 2.6vw, 1.55rem) / 1.75 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tight);
+    color: var(--nx-text);
+    text-wrap: pretty;
+  }
+
+  .nx-testimonials-who {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-3);
+    text-align: start;
+  }
+
+  .nx-testimonials-avatar {
+    display: inline-grid;
+    place-items: center;
+    inline-size: 2.85rem;
+    aspect-ratio: 1;
+    border-radius: var(--nx-radius-full);
+    background: var(--_avatar, var(--nx-accent));
+    color: var(--nx-ink-50);
+    font-size: var(--nx-text-xs);
+    font-weight: 700;
+  }
+
+  .nx-testimonials-name {
+    display: block;
+    font-size: var(--nx-text-sm);
+    font-weight: 700;
+    color: var(--nx-text);
+  }
+
+  .nx-testimonials-role {
+    display: block;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-xs);
+  }
+
+  .nx-testimonials-nav {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-3);
+  }
+
+  .nx-testimonials-arrow {
+    display: inline-grid;
+    place-items: center;
+    inline-size: 2.3rem;
+    aspect-ratio: 1;
+    border: 0;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface-2);
+    color: var(--nx-text);
+    cursor: pointer;
+    transition-property: background-color, scale;
+    transition-duration: var(--nx-dur-fast), var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-ease-out), var(--nx-spring-snappy);
+
+    & .nx-icon { inline-size: 1rem; block-size: 1rem; }
+    &:hover { background: var(--nx-surface-3); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+  }
+
+  .nx-testimonials-dots {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+
+  .nx-testimonials-dot {
+    inline-size: 0.5rem;
+    aspect-ratio: 1;
+    padding: 0;
+    border: 0;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-border-strong);
+    cursor: pointer;
+    transition:
+      inline-size var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+      background-color var(--nx-dur-base) var(--nx-ease-out);
+
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+    &[aria-current="true"] { inline-size: 1.3rem; background: var(--nx-accent); }
+  }
+
+  .nx-testimonials-shorts {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--nx-space-4);
+    inline-size: 100%;
+    max-inline-size: 62rem;
+  }
+
+  .nx-testimonials-short {
+    display: grid;
+    gap: var(--nx-space-2);
+    align-content: start;
+    margin: 0;
+    padding: var(--nx-space-5) var(--nx-space-4);
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-surface);
+    box-shadow: inset 0 0 0 1px var(--nx-border);
+  }
+
+  .nx-testimonials-stars {
+    display: inline-flex;
+    gap: 0.15rem;
+
+    & .nx-icon { inline-size: 0.9rem; block-size: 0.9rem; }
+    & .nx-icon[data-on] { color: var(--nx-gold); }
+    & .nx-icon:not([data-on]) { color: var(--nx-border-strong); }
+  }
+
+  .nx-testimonials-short > blockquote {
+    margin: 0;
+    font-size: var(--nx-text-sm);
+    font-weight: 600;
+    line-height: 1.65;
+    color: var(--nx-text);
+    text-wrap: pretty;
+  }
+
+  .nx-testimonials-short > figcaption {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    margin-block-start: var(--nx-space-1);
+    font-size: var(--nx-text-xs);
+    color: var(--nx-text-muted);
+  }
+
+  .nx-testimonials-mini {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    inline-size: 1.7rem;
+    aspect-ratio: 1;
+    border-radius: var(--nx-radius-full);
+    background: var(--_avatar, var(--nx-accent));
+    color: var(--nx-ink-50);
+    font-size: 0.62rem;
+    font-weight: 700;
+  }
+
+  @media (max-width: 860px) { .nx-testimonials-shorts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 480px) { .nx-testimonials-shorts { grid-template-columns: 1fr; } }
+
+  /* ---- Reduced motion -------------------------------------------------------------- */
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-logos-track { animation: none; }
+    :is(.nx-pricing-section-card, .nx-testimonials-quote) { transition: opacity var(--nx-dur-fast) var(--nx-ease-out); }
+    :is(.nx-faq-item, .nx-faq-plus, .nx-pricing-section-toggle-thumb) { transition-duration: var(--nx-dur-fast); }
+  }
+}

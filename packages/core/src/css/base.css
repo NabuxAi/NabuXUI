@@ -58,6 +58,11 @@
     /* Pinned to the start edge: left at its static spot inside a sideways
        scroller, it would sit beyond the page and widen it on phones. */
     inset-inline-start: 0;
+    /* Size containment: the table layout algorithm ignores width/height on
+       data tables (their used size follows the cells), so a hidden a11y
+       table still stretched its scroll area on phones. contain: size pins
+       the box to the declared 1px whatever the contents. */
+    contain: size;
     clip-path: inset(50%) !important;
     overflow: hidden !important;
     width: 1px !important;
@@ -87,7 +92,15 @@
 
   /* A table sizes to its content whatever its width says; fixed layout lets the
      hidden data tables of charts shrink instead of widening the page. */
-  :where(table.nx-visually-hidden):where(:not(:focus-within, :active)) { table-layout: fixed !important; }
+  :where(table.nx-visually-hidden):where(:not(:focus-within, :active)) {
+    table-layout: fixed !important;
+    /* Tables ignore width/contain for their used size, so a hidden data table
+       still widened its section's scroll area on phones. A fixed-position box
+       contributes to no ancestor's scrollable overflow — and these data
+       tables are never focusable, so the visible-on-focus state is moot. */
+    position: fixed !important;
+    inset-inline-start: 0;
+  }
 
   .nx-icon {
     inline-size: 1.15em;

@@ -19,6 +19,20 @@ import { AgentBlocks } from './blocks/agent';
 import { InteractBlocks } from './blocks/interact';
 import { ChartsPlusBlocks } from './blocks/charts-plus';
 import { EffectsBlocks } from './blocks/effects';
+import { CtaBlocks } from './blocks/cta';
+import { FlowsBlocks } from './blocks/flows';
+import { FootersBlocks } from './blocks/footers';
+import { HeroesBlocks } from './blocks/heroes';
+import { IconMotionBlocks } from './blocks/icon-motion';
+import { Icons3dBlocks } from './blocks/icons';
+import { LoadersBlocks } from './blocks/loaders';
+import { MapsBlocks } from './blocks/maps';
+import { MotionFxBlocks } from './blocks/motion-fx';
+import { NavbarsBlocks } from './blocks/navbars';
+import { ScrollBlocks } from './blocks/scroll';
+import { SectionsBlocks } from './blocks/sections';
+import { ShadersBlocks } from './blocks/shaders';
+import { TextFxBlocks } from './blocks/text-fx';
 
 const SECTIONS: Array<{ id: string; fa: string; en: string; icon: NonNullable<NavItem['children']>[number]['icon'] }> = [
   { id: 'text', fa: 'متن', en: 'Text', icon: 'edit' },
@@ -46,6 +60,20 @@ const BLOCK_GROUPS: Array<{ id: string; fa: string; en: string; icon: NonNullabl
   { id: 'backdrops', fa: 'پس‌زمینه‌های متحرک', en: 'Animated backdrops', icon: 'image' },
   { id: 'menus-blocks', fa: 'منو و پنل‌های شکل‌پذیر', en: 'Menus & morphing panels', icon: 'sliders' },
   { id: 'nav-extras-blocks', fa: 'فیلتر، آمار و مرتب‌سازی', en: 'Filter, stats & sort', icon: 'grid' },
+  { id: 'cta-blocks', fa: 'دعوت به کنش', en: 'CTA', icon: 'zap' },
+  { id: 'flows-blocks', fa: 'جریان‌های واقعی', en: 'Real flows', icon: 'arrow-right' },
+  { id: 'footers-blocks', fa: 'فوترها', en: 'Footers', icon: 'arrow-up' },
+  { id: 'heroes-blocks', fa: 'هیروها', en: 'Heroes', icon: 'sparkles' },
+  { id: 'icon-motion-blocks', fa: 'آیکون‌های متحرک', en: 'Animated icons', icon: 'play' },
+  { id: 'icons-blocks', fa: 'آیکون‌های سه‌بعدی', en: '3D icons', icon: 'star' },
+  { id: 'loaders-blocks', fa: 'بارگذارها', en: 'Loaders', icon: 'cpu' },
+  { id: 'maps-blocks', fa: 'نقشه', en: 'Maps', icon: 'globe' },
+  { id: 'motion-fx-blocks', fa: 'حرکت‌های تعاملی', en: 'Motion FX', icon: 'heart' },
+  { id: 'navbars-blocks', fa: 'نوبارها', en: 'Navbars', icon: 'menu' },
+  { id: 'scroll-blocks', fa: 'اسکرول', en: 'Scroll', icon: 'chevron-down' },
+  { id: 'sections-blocks', fa: 'بخش‌های لندینگ', en: 'Landing sections', icon: 'layers' },
+  { id: 'shaders-blocks', fa: 'شیدرها', en: 'Shaders', icon: 'image' },
+  { id: 'text-fx-blocks', fa: 'جادوی متن', en: 'Text FX', icon: 'wand' },
 ];
 
 function readLang(): Lang {
@@ -203,6 +231,20 @@ export function App() {
             <InteractBlocks />
             <ChartsPlusBlocks />
             <EffectsBlocks />
+            <HeroesBlocks />
+            <NavbarsBlocks />
+            <FootersBlocks />
+            <CtaBlocks />
+            <ScrollBlocks />
+            <Icons3dBlocks />
+            <IconMotionBlocks />
+            <TextFxBlocks />
+            <LoadersBlocks />
+            <MotionFxBlocks />
+            <MapsBlocks />
+            <ShadersBlocks />
+            <FlowsBlocks />
+            <SectionsBlocks />
           </main>
           <footer className="sc-footer">
             <div className="sc-container">

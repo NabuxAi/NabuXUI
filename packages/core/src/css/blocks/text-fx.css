@@ -1,0 +1,158 @@
+/*
+ * Blocks: text effects.
+ *
+ *   .nx-text-flow        a gradient that flows through the glyphs, at a set speed
+ *   .nx-outline-fill     outline type that fills from the baseline on hover or in view
+ *   .nx-text-extrude     type extruded by a stacked shadow, tilting under the pointer
+ *
+ * No behaviour file of its own: the flow and the wipe are pure CSS, the tilt
+ * reuses the core tilt() behaviour (--nx-rx / --nx-ry) and the in-view fill
+ * reuses reveal() ([data-nx-revealed]). The text is never split — Persian and
+ * Arabic keep their joins at every size.
+ */
+@layer nx.components {
+  /* ---- Gradient flow ------------------------------------------------------------
+   *   <span class="nx-text-flow" data-palette="aurora|ocean|dusk" style="--nx-flow-duration: 8s">
+   *     Payments that flow
+   *   </span>
+   * The gradient is symmetric (colour out and back) and the background drifts
+   * one full tile, so the loop closes without a seam. --nx-flow-duration is
+   * seconds per lap (8s unless the React component computes it from a speed).
+   * ------------------------------------------------------------------------------ */
+  .nx-text-flow {
+    background-image: linear-gradient(100deg, var(--nx-violet-400), var(--nx-cyan-400), var(--nx-gold-400), var(--nx-cyan-400), var(--nx-violet-400));
+    background-size: 200% auto;
+    animation: nx-text-flow-lap var(--nx-flow-duration, 8s) linear infinite;
+    overflow-wrap: break-word;
+
+    &[data-palette='ocean'] {
+      background-image: linear-gradient(100deg, var(--nx-cyan-400), var(--nx-lapis-400), var(--nx-violet-400), var(--nx-lapis-400), var(--nx-cyan-400));
+    }
+    &[data-palette='dusk'] {
+      background-image: linear-gradient(100deg, var(--nx-gold-400), var(--nx-violet-500), var(--nx-cyan-500), var(--nx-violet-500), var(--nx-gold-400));
+    }
+  }
+
+  /* The ink turns transparent only where the clip is supported, so the text
+     never disappears on an old engine. */
+  @supports (-webkit-background-clip: text) or (background-clip: text) {
+    .nx-text-flow {
+      color: transparent;
+      -webkit-background-clip: text;
+      background-clip: text;
+    }
+  }
+
+  /* The lap runs toward the reading direction; under reduced motion it rests. */
+  @keyframes nx-text-flow-lap {
+    to { background-position: calc(-200% * var(--nx-dir)) center; }
+  }
+
+  /* ---- Outline fill ----------------------------------------------------------------
+   *   <span class="nx-outline-fill" data-body="gradient|solid|pattern" data-trigger="hover|inview|always">
+   *     <span class="nx-visually-hidden">Frankfurt</span>
+   *     <span class="nx-outline-fill-ghost" aria-hidden="true">Frankfurt</span>
+   *     <span class="nx-outline-fill-fill" aria-hidden="true">Frankfurt</span>
+   *   </span>
+   * The stroke is the resting state; the fill copy wipes up from the baseline
+   * through clip-path. 'inview' fills once reveal() has marked the word seen.
+   * --------------------------------------------------------------------------------- */
+  .nx-outline-fill {
+    position: relative;
+    display: inline-block;
+    font-weight: 800;
+    line-height: 1.18;
+    letter-spacing: var(--nx-tracking-tight);
+    overflow-wrap: break-word;
+  }
+
+  .nx-outline-fill-ghost {
+    color: transparent;
+    -webkit-text-stroke: max(1px, 0.035em) var(--nx-border-strong);
+  }
+
+  .nx-outline-fill-fill {
+    position: absolute;
+    inset: 0;
+    color: transparent;
+    background-image: linear-gradient(15deg, var(--nx-accent), var(--nx-cyan-400));
+    -webkit-background-clip: text;
+    background-clip: text;
+    clip-path: inset(100% 0 0 0);
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: clip-path var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+
+    .nx-outline-fill[data-body='solid'] & {
+      background-image: linear-gradient(var(--nx-accent), var(--nx-accent));
+    }
+    .nx-outline-fill[data-body='pattern'] & {
+      background-image: repeating-conic-gradient(var(--nx-accent) 0 25%, var(--nx-accent-soft) 0 50%) 0 0 / 0.875rem 0.875rem;
+    }
+  }
+
+  /* Filled: the wipe climbs in and stays. */
+  .nx-outline-fill[data-trigger='always'] .nx-outline-fill-fill,
+  .nx-outline-fill[data-trigger='inview'][data-nx-revealed] .nx-outline-fill-fill {
+    clip-path: inset(0 0 0 0);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .nx-outline-fill[data-trigger='hover']:is(:hover, :focus-visible, :active) .nx-outline-fill-fill {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+
+  /* ---- Extrude -----------------------------------------------------------------------
+   *   <h2 class="nx-text-extrude" data-tone="accent|gold|ink" tabindex="0">
+   *     <span class="nx-text-extrude-word" style="text-shadow: …stack…">Nexus 2026</span>
+   *   </h2>
+   * The stack is one shadow per depth step, each a pixel further out toward the
+   * inline end (so it flips in RTL), pointing at --_shade / --_glow so both
+   * themes repaint it. tilt() (or the arrow keys) writes --nx-rx / --nx-ry on
+   * the root; the word leans inside the root's perspective.
+   * ----------------------------------------------------------------------------------- */
+  .nx-text-extrude {
+    --_face: var(--nx-accent-text);
+    --_shade: var(--nx-violet-500);
+    --_glow: color-mix(in oklab, var(--nx-accent) 32%, transparent);
+    display: inline-block;
+    perspective: 56.25rem;
+
+    &[data-tone='gold'] {
+      --_face: var(--nx-gold-text);
+      --_shade: var(--nx-gold-600);
+      --_glow: color-mix(in oklab, var(--nx-gold) 35%, transparent);
+    }
+    &[data-tone='ink'] {
+      --_face: var(--nx-text);
+      --_shade: color-mix(in oklab, var(--nx-text) 55%, transparent);
+      --_glow: color-mix(in oklab, var(--nx-text) 18%, transparent);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--nx-ring);
+      outline-offset: 4px;
+      border-radius: var(--nx-radius-md);
+    }
+  }
+
+  .nx-text-extrude-word {
+    display: inline-block;
+    color: var(--_face);
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: var(--nx-tracking-tight);
+    overflow-wrap: break-word;
+    transform: rotateX(calc(var(--nx-rx, 0deg) * var(--nx-motion))) rotateY(calc(var(--nx-ry, 0deg) * var(--nx-motion)));
+    transition: transform 120ms var(--nx-ease-out);
+  }
+
+  /* ---- Reduced motion -------------------------------------------------------------- */
+  @media (prefers-reduced-motion: reduce) {
+    .nx-text-flow { animation: none; }
+    .nx-outline-fill-fill { transition: none; }
+    .nx-text-extrude-word { transition: none; }
+  }
+}

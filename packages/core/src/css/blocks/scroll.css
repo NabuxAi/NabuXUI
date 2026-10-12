@@ -1,0 +1,503 @@
+/*
+ * Blocks: scroll — one tall stage whose own scroll run drives the scene pinned
+ * inside it. All three shapes read the same single progress variable.
+ *
+ *   ScrollStack       a runway of zones; each card sticks a little lower than
+ *                     the one before, and a buried card keeps a visible rim
+ *                     while it shrinks six percent and dims
+ *   ScrollHorizontal  a sticky viewport whose vertical scroll slides a
+ *                     horizontal track — the wheel never waits for a sideways
+ *                     drag; the meter under the frame mirrors the progress
+ *   ScrollRoadmap     a sticky board whose progress line fills while the
+ *                     stations zoom open in order, each out of a soft blur
+ *
+ * Behaviour: js/blocks/scroll.ts — scrollStage() writes --nx-stage (0–1) on
+ * the stage, --nx-buried on every .nx-scroll-card, --nx-gate on every
+ * .nx-scroll-stop and --nx-shift (px) for the horizontal track. Movement rides
+ * on translate / scale / opacity only and every travel is multiplied by
+ * var(--nx-motion); under reduced motion the horizontal lane becomes a plain
+ * scroller and the stations wake with colour and fade alone.
+ */
+@layer nx.components {
+  .nx-scroll-stage {
+    /* Where the sticky scene sits from the viewport's top (below a page header, say). */
+    --_inset: 4.5rem;
+    /* Viewport-heights of travel after the scene fits (horizontal / zoom). */
+    --_pages: 2;
+    /* One card's runway step (sticky). */
+    --_zone: 88vh;
+    /* The sticky board's and the stack card's width. */
+    --_board: 40rem;
+    --_card: 34rem;
+    position: relative;
+    display: grid;
+    overflow: clip;
+    border-radius: var(--nx-radius-xl);
+    background: var(--nx-surface-2);
+    color: var(--nx-text);
+
+    &[data-mode='horizontal'],
+    &[data-mode='zoom'] {
+      block-size: calc((1 + var(--_pages)) * 100vh);
+    }
+  }
+
+  /* The pinned scene every mode carries. */
+  .nx-scroll-view {
+    position: sticky;
+    inset-block-start: var(--_inset);
+    display: grid;
+    gap: var(--nx-space-4);
+    align-content: center;
+    inline-size: min(100%, var(--_board));
+    margin-inline: auto;
+    padding: var(--nx-space-4);
+  }
+
+  .nx-scroll-stage[data-mode='horizontal'] .nx-scroll-view {
+    grid-template-rows: auto 1fr auto;
+    align-content: start;
+    block-size: min(calc(100vh - var(--_inset) - var(--nx-space-4)), 44rem);
+  }
+
+  .nx-scroll-head {
+    display: grid;
+    gap: var(--nx-space-1);
+    justify-items: center;
+    text-align: center;
+
+    &[data-roadmap] {
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      justify-items: start;
+      gap: var(--nx-space-3);
+      inline-size: 100%;
+      text-align: start;
+    }
+
+    & .nx-scroll-title {
+      margin: 0;
+      font: 700 var(--nx-text-xl) / 1.2 var(--nx-font-display);
+      letter-spacing: var(--nx-tracking-tight);
+    }
+
+    & .nx-scroll-subtitle {
+      margin: 0;
+      max-inline-size: 56ch;
+      color: var(--nx-text-muted);
+      font-size: var(--nx-text-sm);
+    }
+  }
+
+  .nx-scroll-meter-group {
+    display: grid;
+    gap: var(--nx-space-2);
+  }
+
+  /* The progress pill every mode can carry: a dot and a tabular figure. */
+  .nx-scroll-meter {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-1) var(--nx-space-3);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface);
+    font-size: var(--nx-text-xs);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+
+    & i {
+      inline-size: 0.55rem;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--nx-accent);
+    }
+  }
+
+  .nx-scroll-bar {
+    block-size: 4px;
+    overflow: clip;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface-3);
+  }
+
+  .nx-scroll-bar-fill {
+    display: block;
+    block-size: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--nx-accent), color-mix(in oklab, var(--nx-accent) 65%, var(--nx-cyan-400)));
+    scale: var(--nx-stage, 0) 1;
+    transform-origin: 0 50%;
+  }
+
+  :dir(rtl) .nx-scroll-bar-fill {
+    background: linear-gradient(270deg, var(--nx-accent), color-mix(in oklab, var(--nx-accent) 65%, var(--nx-cyan-400)));
+    transform-origin: 100% 50%;
+  }
+
+  .nx-scroll-readout {
+    margin: 0;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-xs);
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
+
+  /* ---- Sticky stack ------------------------------------------------------------ *
+   *   <div class="nx-scroll-stage" data-mode="sticky">
+   *     <div class="nx-scroll-zone"><article class="nx-scroll-card">…</article></div> …
+   *   </div>
+   * --nx-buried (0–1) is written per card as the next one covers it.
+   * ------------------------------------------------------------------------- */
+  .nx-scroll-zone {
+    display: grid;
+    block-size: var(--_zone);
+  }
+
+  .nx-scroll-card {
+    --nx-buried: 0;
+    --_accent: var(--nx-accent);
+    position: sticky;
+    inset-block-start: calc(var(--_inset) + var(--nx-i, 0) * 0.875rem);
+    justify-self: center;
+    inline-size: min(100%, var(--_card));
+    margin-inline: auto;
+    padding: clamp(var(--nx-space-4), 3vw, var(--nx-space-6));
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-xl);
+    background: var(--nx-surface);
+    box-shadow: var(--nx-shadow-lg);
+    scale: calc(1 - var(--nx-buried) * 0.06 * var(--nx-motion));
+    opacity: calc(1 - var(--nx-buried) * 0.55);
+
+    /* The accent rail along the top rim — the card's own colour stays readable when buried. */
+    &::before {
+      content: '';
+      position: absolute;
+      inset-block-start: 0;
+      inset-inline: var(--nx-space-6);
+      block-size: 3px;
+      border-radius: var(--nx-radius-full);
+      background: var(--_accent);
+    }
+  }
+
+  .nx-scroll-card-icon {
+    display: inline-flex;
+    margin-inline-end: var(--nx-space-2);
+    color: var(--_accent);
+    vertical-align: -0.155em;
+
+    & .nx-icon {
+      inline-size: 1.1rem;
+      block-size: 1.1rem;
+    }
+  }
+
+  .nx-scroll-card-kicker {
+    margin: 0;
+    color: var(--_accent);
+    font-size: var(--nx-text-xs);
+    font-weight: 700;
+    letter-spacing: var(--nx-tracking-wide);
+    text-transform: uppercase;
+  }
+
+  .nx-scroll-card-title {
+    margin: var(--nx-space-1) 0 0;
+    font: 700 var(--nx-text-xl) / 1.2 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tight);
+  }
+
+  .nx-scroll-card-text {
+    margin: var(--nx-space-2) 0 0;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+  }
+
+  .nx-scroll-card-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--nx-space-3);
+    margin-block-start: var(--nx-space-5);
+    padding-block-start: var(--nx-space-4);
+    border-block-start: 1px dashed var(--nx-border);
+  }
+
+  .nx-scroll-card-chip {
+    margin-inline-start: auto;
+    padding: var(--nx-space-1) var(--nx-space-3);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface-3);
+    font-size: var(--nx-text-xs);
+    font-weight: 600;
+  }
+
+  /* ---- Horizontal strip ---------------------------------------------------------- *
+   *   <div class="nx-scroll-stage" data-mode="horizontal">
+   *     <div class="nx-scroll-view">
+   *       <div class="nx-scroll-head">…</div>
+   *       <div class="nx-scroll-lane"><div class="nx-scroll-track">panels…</div></div>
+   *       meter…
+   *     </div>
+   *   </div>
+   * --nx-shift (px) is re-measured on resize, so nothing ever overflows.
+   * ------------------------------------------------------------------------- */
+  .nx-scroll-lane {
+    position: relative;
+    display: grid;
+    overflow: clip;
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-surface);
+  }
+
+  .nx-scroll-track {
+    display: flex;
+    align-items: stretch;
+    gap: clamp(var(--nx-space-3), 2.5vw, var(--nx-space-5));
+    block-size: 100%;
+    inline-size: max-content;
+    margin: 0;
+    padding-inline: clamp(var(--nx-space-2), 2vw, var(--nx-space-5));
+    list-style: none;
+    translate: calc(var(--nx-stage, 0) * var(--nx-shift, 0px) * -1 * var(--nx-dir) * var(--nx-motion)) 0;
+  }
+
+  .nx-scroll-panel {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    inline-size: min(76vw, 24rem);
+    margin: 0;
+    overflow: clip;
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-surface);
+    box-shadow: var(--nx-shadow-md);
+  }
+
+  .nx-scroll-panel-media {
+    display: block;
+    inline-size: 100%;
+    aspect-ratio: 16 / 10;
+    background: var(--nx-surface-3);
+
+    /* Artwork outline: images and SVG scenes alike get a hairline inner rim. */
+    & > :is(img, svg) {
+      display: block;
+      inline-size: 100%;
+      block-size: 100%;
+      object-fit: cover;
+      outline: 1px solid var(--nx-glass-edge);
+      outline-offset: -1px;
+    }
+  }
+
+  .nx-scroll-panel-cap {
+    display: grid;
+    gap: var(--nx-space-2);
+    align-content: start;
+    padding: var(--nx-space-3) var(--nx-space-4) var(--nx-space-4);
+
+    & .nx-scroll-panel-title {
+      margin: 0;
+      font: 700 var(--nx-text-md) / 1.3 var(--nx-font-display);
+      letter-spacing: var(--nx-tracking-tight);
+    }
+  }
+
+  .nx-scroll-panel-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--nx-space-2);
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-xs);
+  }
+
+  .nx-scroll-state {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-1);
+    padding: calc(var(--nx-space-1) / 2) var(--nx-space-2);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface-3);
+    font-size: var(--nx-text-xs);
+    font-weight: 600;
+
+    & i {
+      inline-size: 0.5rem;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--nx-success);
+    }
+
+    &[data-state='canary'] i,
+    &[data-state='building'] i {
+      background: var(--nx-warning);
+    }
+
+    &[data-state='design'] i {
+      background: var(--nx-accent);
+    }
+
+    &[data-state='scheduled'] i {
+      background: var(--nx-text-subtle);
+    }
+  }
+
+  /* ---- Roadmap ------------------------------------------------------------------- *
+   *   <div class="nx-scroll-stage" data-mode="zoom">
+   *     <div class="nx-scroll-view">
+   *       <div class="nx-scroll-head">… + meter …</div>
+   *       <div class="nx-scroll-rail">
+   *         <span class="nx-scroll-line"><span class="nx-scroll-fill"/></span>
+   *         <div class="nx-scroll-stop"><span class="nx-scroll-node"/>…station…</div> …
+   *       </div>
+   *     </div>
+   *   </div>
+   * --nx-gate (0–1) is written per stop; the line drinks --nx-stage.
+   * ------------------------------------------------------------------------- */
+  .nx-scroll-rail {
+    position: relative;
+    display: grid;
+    gap: var(--nx-space-4);
+    margin: 0;
+    padding: 0;
+    padding-block-start: var(--nx-space-1);
+    list-style: none;
+  }
+
+  .nx-scroll-line {
+    position: absolute;
+    inset-block: var(--nx-space-1) var(--nx-space-6);
+    inset-inline-start: 1.02rem;
+    inline-size: 3px;
+    overflow: clip;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface-3);
+  }
+
+  .nx-scroll-fill {
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+    border-radius: inherit;
+    background: var(--nx-accent);
+    scale: 1 var(--nx-stage, 0);
+    transform-origin: 50% 0;
+  }
+
+  .nx-scroll-stop {
+    --nx-gate: 0;
+    position: relative;
+    padding-inline-start: 2.9rem;
+  }
+
+  .nx-scroll-node {
+    position: absolute;
+    inset-block-start: 0.95rem;
+    inset-inline-start: 0.47rem;
+    inline-size: 1.1rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: color-mix(in oklab, var(--nx-success) calc(var(--nx-gate) * 100%), var(--nx-surface-3));
+    box-shadow: 0 0 0 calc(var(--nx-gate) * 4px * var(--nx-motion)) color-mix(in oklab, var(--nx-success) 22%, transparent);
+    scale: calc(1 - (1 - var(--nx-gate)) * 0.4 * var(--nx-motion));
+  }
+
+  .nx-scroll-station {
+    display: grid;
+    gap: var(--nx-space-1);
+    padding: var(--nx-space-4) var(--nx-space-5);
+    border: 1px solid var(--nx-border);
+    border-inline-start: 3px solid color-mix(in oklab, var(--nx-accent) calc(var(--nx-gate) * 100%), var(--nx-border));
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-surface);
+    scale: calc(1 - (1 - var(--nx-gate)) * 0.26 * var(--nx-motion));
+    opacity: calc(0.25 + 0.75 * var(--nx-gate));
+    filter: blur(calc((1 - var(--nx-gate)) * 6px * var(--nx-motion)));
+    translate: calc((1 - var(--nx-gate)) * 12px * var(--nx-motion) * var(--nx-dir)) 0;
+  }
+
+  .nx-scroll-station-kicker {
+    color: var(--nx-text-subtle);
+    font-size: var(--nx-text-xs);
+    font-weight: 700;
+    letter-spacing: var(--nx-tracking-wide);
+    text-transform: uppercase;
+  }
+
+  .nx-scroll-station-title {
+    margin: 0;
+    font: 700 var(--nx-text-md) / 1.3 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tight);
+  }
+
+  .nx-scroll-station-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--nx-space-2);
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-xs);
+  }
+
+  .nx-scroll-station-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--nx-space-2);
+    margin-block-start: var(--nx-space-1);
+  }
+
+  /* The door at the end of the roadmap: an accent slab, not another milestone. */
+  .nx-scroll-station[data-cta] {
+    gap: var(--nx-space-2);
+    border: 0;
+    border-inline-start: 3px solid var(--nx-gold);
+    background: linear-gradient(135deg, var(--nx-lapis-700), color-mix(in oklab, var(--nx-lapis-700) 55%, var(--nx-ink-950)));
+    color: var(--nx-lapis-50);
+
+    & .nx-scroll-station-kicker {
+      color: color-mix(in oklab, var(--nx-lapis-50) 75%, transparent);
+    }
+
+    & .nx-scroll-station-text {
+      margin: 0;
+      color: color-mix(in oklab, var(--nx-lapis-50) 85%, transparent);
+      font-size: var(--nx-text-sm);
+    }
+  }
+
+  .nx-scroll-stop:has(.nx-scroll-station[data-cta]) .nx-scroll-node {
+    background: color-mix(in oklab, var(--nx-gold) calc(var(--nx-gate) * 100%), var(--nx-surface-3));
+    box-shadow: 0 0 0 calc(var(--nx-gate) * 4px * var(--nx-motion)) color-mix(in oklab, var(--nx-gold) 25%, transparent);
+  }
+
+  @media (max-width: 480px) {
+    .nx-scroll-stage {
+      --_inset: 3.25rem;
+      --_zone: 84vh;
+    }
+
+    .nx-scroll-panel {
+      inline-size: 80vw;
+    }
+  }
+
+  /* Reduced motion: no driven travel — the lane becomes a plain scroller the
+     pointer and keyboard can move, the stack and the stations settle into
+     colour and fade, and every driven value still reads. */
+  @media (prefers-reduced-motion: reduce) {
+    .nx-scroll-track {
+      translate: none;
+    }
+
+    .nx-scroll-lane {
+      overflow-x: auto;
+      overscroll-behavior-inline: contain;
+    }
+  }
+}

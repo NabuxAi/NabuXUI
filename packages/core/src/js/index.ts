@@ -35,3 +35,7 @@ export * from './blocks/agent';
 export * from './blocks/interact';
 export * from './blocks/charts-plus';
 export * from './blocks/effects';
+export * from './blocks/icon-motion';
+export * from './blocks/motion-fx';
+export * from './blocks/scroll';
+export * from './blocks/shaders';

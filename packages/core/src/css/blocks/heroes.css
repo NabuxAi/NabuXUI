@@ -1,0 +1,653 @@
+/*
+ * Blocks: heroes — the first screens, distilled from the playground demos.
+ * No behaviour file of their own: the spotlight hero rides the pointer vars
+ * the core spotlight() writes, the split hero the tilt() vars, and the
+ * marquee belt is pure CSS.
+ *
+ *   Spotlight hero   an ink-dark stage (always dark, like the lightbox, so
+ *                    the light reads true in both themes) with a halo that
+ *                    travels with the pointer over three drifting blobs;
+ *                    badge, display title, two CTAs and a trust row. <em>
+ *                    in the title takes the light gradient.
+ *   Split hero       copy on the start side; on the other a tilted product
+ *                    mockup wrapped in a soft halo, with capability chips
+ *                    floating over it and riding the same tilt.
+ *   Marquee hero     a centered title over an endless logo belt that pauses
+ *                    on hover and dissolves into a mask at both ends.
+ *
+ * The belt stays LTR on purpose: the marks are geometric and the default
+ * wordmarks Latin, so the loop's seam stays seamless in both page
+ * directions. All copy arrives through the frameworks' props.
+ */
+@layer nx.components {
+  /* ---- Shared: the copy's one-shot entrance -----------------------------------
+   * A small rise and fade, staggered by --nx-stagger per part (--nx-i from
+   * the nth-child rules). Reduced motion keeps it a fade: the travel is
+   * multiplied by --nx-motion.
+   * --------------------------------------------------------------------------- */
+  @keyframes nx-hero-part-in {
+    from {
+      opacity: 0;
+      translate: 0 calc(16px * var(--nx-motion));
+    }
+  }
+
+  :is(.nx-hero-spotlight-copy, .nx-hero-split-copy, .nx-hero-marquee-copy) > * {
+    margin: 0;
+    animation: nx-hero-part-in var(--nx-spring-soft-duration) var(--nx-spring-soft) backwards;
+    animation-delay: calc(var(--nx-i, 0) * var(--nx-stagger));
+  }
+
+  :is(.nx-hero-spotlight-copy, .nx-hero-split-copy, .nx-hero-marquee-copy) > :nth-child(2) { --nx-i: 1; }
+  :is(.nx-hero-spotlight-copy, .nx-hero-split-copy, .nx-hero-marquee-copy) > :nth-child(3) { --nx-i: 2; }
+  :is(.nx-hero-spotlight-copy, .nx-hero-split-copy, .nx-hero-marquee-copy) > :nth-child(4) { --nx-i: 3; }
+  :is(.nx-hero-spotlight-copy, .nx-hero-split-copy, .nx-hero-marquee-copy) > :nth-child(5) { --nx-i: 4; }
+
+  /* ---- Spotlight hero ---------------------------------------------------------- *
+   *   <section class="nx-hero-spotlight">                     (spotlight() here)
+   *     <div class="nx-hero-spotlight-blobs" aria-hidden="true"><i />×3</div>
+   *     <div class="nx-hero-spotlight-light" aria-hidden="true" />
+   *     <div class="nx-hero-spotlight-copy">
+   *       <p class="nx-hero-spotlight-badge">…</p>
+   *       <h1 class="nx-hero-spotlight-title">Ship with the <em>lights on</em></h1>
+   *       <p class="nx-hero-spotlight-subtitle">…</p>
+   *       <div class="nx-hero-spotlight-actions">…buttons…</div>
+   *       <ul class="nx-hero-spotlight-trust"><li>…</li></ul>
+   *     </div>
+   *   </section>
+   * ------------------------------------------------------------------------- */
+  .nx-hero-spotlight {
+    --_ink: var(--nx-ink-950);
+    --_ink-2: color-mix(in oklab, var(--nx-ink-900) 72%, var(--nx-violet-600));
+    --_fg: var(--nx-ink-50);
+    --_muted: color-mix(in oklab, var(--nx-ink-50) 66%, transparent);
+    --_glow: var(--nx-glow);
+    position: relative;
+    isolation: isolate;
+    overflow: clip;
+    display: grid;
+    justify-items: center;
+    gap: var(--nx-space-4);
+    padding-block: clamp(3.5rem, 9vw, 7rem) clamp(3rem, 7vw, 5.5rem);
+    padding-inline: var(--nx-space-5);
+    background: radial-gradient(120% 90% at 50% 0%, var(--_ink-2), var(--_ink) 62%);
+    color: var(--_fg);
+    text-align: center;
+  }
+
+  .nx-hero-spotlight-blobs {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  .nx-hero-spotlight-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: 0.5;
+    background: radial-gradient(circle, var(--_b, var(--nx-lapis-500)), transparent 70%);
+    animation: nx-hero-spotlight-drift var(--_t, 30s) var(--nx-ease-in-out) infinite alternate;
+  }
+
+  .nx-hero-spotlight-blob:nth-child(1) {
+    inline-size: 34rem;
+    aspect-ratio: 1;
+    inset-block-start: -12rem;
+    inset-inline-start: -8rem;
+    --_b: var(--nx-lapis-500);
+    --_t: 26s;
+  }
+
+  .nx-hero-spotlight-blob:nth-child(2) {
+    inline-size: 28rem;
+    aspect-ratio: 1.4;
+    inset-block-end: -10rem;
+    inset-inline-end: -6rem;
+    --_b: var(--nx-violet-500);
+    --_t: 32s;
+    animation-direction: alternate-reverse;
+  }
+
+  .nx-hero-spotlight-blob:nth-child(3) {
+    inline-size: 20rem;
+    aspect-ratio: 1;
+    inset-block-start: 22%;
+    inset-inline-start: 58%;
+    --_b: var(--nx-cyan-500);
+    --_t: 38s;
+    opacity: 0.32;
+  }
+
+  @keyframes nx-hero-spotlight-drift {
+    from { translate: 0 0; scale: 1; }
+    to {
+      translate: calc(6rem * var(--nx-motion)) calc(-3rem * var(--nx-motion));
+      scale: calc(1 + 0.18 * var(--nx-motion));
+    }
+  }
+
+  /* The halo follows the hand: spotlight() writes --nx-px/--nx-py (px from the
+     start corner); until a pointer arrives the light rests over the title. It
+     is direct manipulation, so it stays live even under reduced motion — only
+     the mesh behind it freezes. */
+  .nx-hero-spotlight-light {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        34rem circle at var(--nx-px, 50%) var(--nx-py, 28%),
+        color-mix(in oklab, var(--_glow) 24%, transparent),
+        color-mix(in oklab, var(--_glow) 7%, transparent) 42%,
+        transparent 70%
+      ),
+      radial-gradient(
+        7rem circle at var(--nx-px, 50%) var(--nx-py, 28%),
+        color-mix(in oklab, var(--nx-ink-50) 10%, transparent),
+        transparent 100%
+      );
+  }
+
+  .nx-hero-spotlight-copy {
+    display: grid;
+    justify-items: center;
+    gap: var(--nx-space-4);
+    max-inline-size: 46rem;
+    min-inline-size: 0;
+  }
+
+  .nx-hero-spotlight-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding-block: 0.3rem;
+    padding-inline: var(--nx-space-3);
+    border: 1px solid color-mix(in oklab, var(--nx-ink-50) 16%, transparent);
+    border-radius: var(--nx-radius-full);
+    background: color-mix(in oklab, var(--nx-ink-50) 7%, transparent);
+    color: var(--_muted);
+    font-size: var(--nx-text-sm);
+    font-weight: 500;
+  }
+
+  /* A breathing dot so the pill reads as a live announcement, not a label. */
+  .nx-hero-spotlight-badge::before {
+    content: "";
+    inline-size: 0.375rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--_glow);
+    animation: nx-pulse 2.4s var(--nx-ease-in-out) infinite;
+  }
+
+  .nx-hero-spotlight-title {
+    font: 800 clamp(2.4rem, 7vw, 4.75rem) / 1.06 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tight);
+    text-wrap: balance;
+    text-shadow: 0 0 3rem color-mix(in oklab, var(--_glow) 45%, transparent);
+  }
+
+  /* The light end of the palette: the stage is ink in both themes, so the
+     gradient must be the tones cut for dark grounds. */
+  .nx-hero-spotlight-title em {
+    font-style: normal;
+    background: linear-gradient(92deg, var(--nx-lapis-300), var(--nx-violet-300) 55%, var(--nx-cyan-300));
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  .nx-hero-spotlight-subtitle {
+    max-inline-size: 42ch;
+    font-size: var(--nx-text-lg);
+    line-height: 1.65;
+    color: var(--_muted);
+    text-wrap: pretty;
+  }
+
+  .nx-hero-spotlight-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--nx-space-3);
+  }
+
+  .nx-hero-spotlight-trust {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--nx-space-1) var(--nx-space-5);
+    margin-block-start: var(--nx-space-1);
+    padding: 0;
+    list-style: none;
+    font-size: var(--nx-text-xs);
+    color: var(--_muted);
+  }
+
+  .nx-hero-spotlight-trust li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+  }
+
+  .nx-hero-spotlight-trust .nx-icon {
+    inline-size: 0.875rem;
+    block-size: 0.875rem;
+    color: color-mix(in oklab, var(--_glow) 80%, var(--nx-ink-50));
+  }
+
+  /* ---- Split hero ---------------------------------------------------------------- *
+   *   <section class="nx-hero-split">
+   *     <div class="nx-hero-split-copy">badge · title · subtitle · actions · note</div>
+   *     <div class="nx-hero-split-stage">                    (tilt() here)
+   *       <i class="nx-hero-split-halo" aria-hidden="true" />
+   *       <div class="nx-hero-split-mock" aria-hidden="true">…wordless console sketch…</div>
+   *       <ul class="nx-hero-split-chips"><li class="nx-hero-split-chip">…</li></ul>
+   *     </div>
+   *   </section>
+   * The mock turns with the pointer (--nx-rx/--nx-ry from tilt(), damped by
+   * --_k on small screens); the chips ride the same turn, counter-rotating.
+   * ----------------------------------------------------------------------------- */
+  .nx-hero-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    gap: clamp(2rem, 5vw, 4.5rem);
+    align-items: center;
+    padding-block: clamp(3rem, 7vw, 5.5rem);
+    padding-inline: clamp(1.25rem, 4vw, 3rem);
+    background: radial-gradient(120% 100% at 50% 0%, color-mix(in oklab, var(--nx-surface) 60%, var(--nx-bg)), var(--nx-bg) 70%);
+  }
+
+  .nx-hero-split-copy {
+    display: grid;
+    justify-items: start;
+    gap: var(--nx-space-5);
+    min-inline-size: 0;
+  }
+
+  .nx-hero-split-title {
+    font: 800 clamp(2.2rem, 5.2vw, 4rem) / 1.08 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tight);
+    text-wrap: balance;
+  }
+
+  .nx-hero-split-subtitle {
+    max-inline-size: 44ch;
+    font-size: var(--nx-text-lg);
+    line-height: 1.65;
+    color: var(--nx-text-muted);
+    text-wrap: pretty;
+  }
+
+  .nx-hero-split-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--nx-space-3);
+  }
+
+  .nx-hero-split-note {
+    font-size: var(--nx-text-xs);
+    color: var(--nx-text-muted);
+  }
+
+  /* tilt() runs on the stage, but the stage itself must not turn — it only
+     hosts the rotation vars (and the pointer's faster transform timing) for
+     the mockup and the chips to inherit. */
+  .nx-hero-split-stage {
+    --_k: 1;
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    justify-items: center;
+    perspective: 1200px;
+    perspective-origin: 50% 45%;
+    min-inline-size: 0;
+  }
+
+  .nx-hero-split-stage[data-nx-tilt] { transform: none; }
+
+  .nx-hero-split-halo {
+    position: absolute;
+    inset: -12% -18%;
+    z-index: 0;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, color-mix(in oklab, var(--nx-accent) 34%, transparent), transparent 68%);
+    filter: blur(38px);
+    pointer-events: none;
+  }
+
+  .nx-hero-split-mock {
+    position: relative;
+    z-index: 1;
+    inline-size: min(100%, 30rem);
+    overflow: clip;
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-surface);
+    box-shadow: 0 0 0 1px var(--nx-border), var(--nx-shadow-xl);
+    transform: rotateY(calc(var(--nx-ry, 0deg) * var(--_k) - 9deg)) rotateX(calc(var(--nx-rx, 0deg) * var(--_k)));
+    transition: transform var(--nx-transform-duration, var(--nx-spring-gentle-duration)) var(--nx-transform-ease, var(--nx-spring-gentle));
+  }
+
+  /* The resting lean points into the reading direction, so it flips with it. */
+  .nx-hero-split-mock:dir(rtl) {
+    transform: rotateY(calc(var(--nx-ry, 0deg) * var(--_k) * -1 + 9deg)) rotateX(calc(var(--nx-rx, 0deg) * var(--_k)));
+  }
+
+  .nx-hero-split-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-2) var(--nx-space-3);
+    border-block-end: 1px solid var(--nx-border);
+    background: color-mix(in oklab, var(--nx-surface) 86%, var(--nx-accent) 4%);
+  }
+
+  .nx-hero-split-bar i {
+    inline-size: 0.6rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--nx-border-strong);
+  }
+
+  .nx-hero-split-bar i:nth-child(1) { background: var(--nx-danger); }
+  .nx-hero-split-bar i:nth-child(2) { background: var(--nx-warning); }
+  .nx-hero-split-bar i:nth-child(3) { background: var(--nx-success); }
+
+  /* The address pill: a quiet bar, so the mock says nothing in any language. */
+  .nx-hero-split-bar b {
+    flex: 1;
+    block-size: 0.95rem;
+    margin-inline-start: var(--nx-space-2);
+    border-radius: var(--nx-radius-full);
+    background: color-mix(in oklab, var(--nx-accent) 10%, transparent);
+  }
+
+  .nx-hero-split-body {
+    display: grid;
+    grid-template-columns: auto 1fr;
+  }
+
+  .nx-hero-split-nav {
+    display: grid;
+    gap: var(--nx-space-2);
+    align-content: start;
+    padding: var(--nx-space-3) var(--nx-space-2);
+    border-inline-end: 1px solid var(--nx-border);
+  }
+
+  .nx-hero-split-nav i {
+    inline-size: 4.5rem;
+    block-size: 0.55rem;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface-3);
+  }
+
+  .nx-hero-split-nav i:first-child {
+    background: color-mix(in oklab, var(--nx-accent) 55%, transparent);
+  }
+
+  .nx-hero-split-main {
+    display: grid;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-3);
+    min-inline-size: 0;
+  }
+
+  .nx-hero-split-row {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-2);
+    border-radius: var(--nx-radius-md);
+    box-shadow: inset 0 0 0 1px var(--nx-border);
+  }
+
+  .nx-hero-split-dot {
+    flex: none;
+    inline-size: 0.5rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--nx-success);
+    box-shadow: 0 0 0 3px color-mix(in oklab, var(--nx-success) 22%, transparent);
+  }
+
+  /* The one moving part of the sketch: a service mid-rollout breathes. */
+  .nx-hero-split-dot[data-run] {
+    background: var(--nx-accent);
+    animation: nx-hero-split-ping 1.6s var(--nx-ease-in-out) infinite;
+  }
+
+  @keyframes nx-hero-split-ping {
+    50% { box-shadow: 0 0 0 6px transparent; }
+  }
+
+  .nx-hero-split-line {
+    flex: 1;
+    block-size: 0.55rem;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface-3);
+  }
+
+  .nx-hero-split-state {
+    flex: none;
+    inline-size: 3.25rem;
+    block-size: 0.8rem;
+    border-radius: var(--nx-radius-full);
+    background: color-mix(in oklab, var(--nx-success) 14%, transparent);
+  }
+
+  .nx-hero-split-state[data-run] {
+    background: color-mix(in oklab, var(--nx-accent) 14%, transparent);
+  }
+
+  .nx-hero-split-bars {
+    display: flex;
+    align-items: end;
+    gap: var(--nx-space-1);
+    block-size: 2.6rem;
+    padding: var(--nx-space-2) var(--nx-space-2) 0;
+    border-block-start: 1px solid var(--nx-border);
+  }
+
+  /* The throughput sketch draws up out of its own footline: scale, not
+     height, so it stays on the compositor. */
+  .nx-hero-split-bars i {
+    flex: 1;
+    border-radius: var(--nx-radius-xs) var(--nx-radius-xs) 0 0;
+    background: linear-gradient(to top, color-mix(in oklab, var(--nx-accent) 30%, transparent), color-mix(in oklab, var(--nx-accent) 70%, transparent));
+    transform-origin: 50% 100%;
+    animation: nx-hero-split-grow 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+    animation-delay: calc(var(--nx-i, 0) * 90ms);
+  }
+
+  @keyframes nx-hero-split-grow {
+    from { scale: 1 0.12; }
+  }
+
+  .nx-hero-split-chips {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    pointer-events: none;
+  }
+
+  .nx-hero-split-chip {
+    position: absolute;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-2) var(--nx-space-3);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface);
+    box-shadow: 0 0 0 1px var(--nx-border), var(--nx-shadow-md);
+    color: var(--nx-text);
+    font-size: var(--nx-text-xs);
+    font-weight: 600;
+    white-space: nowrap;
+    rotate: calc(var(--nx-ry, 0deg) * -0.35 * var(--nx-motion));
+    transition: rotate var(--nx-transform-duration, var(--nx-spring-gentle-duration)) var(--nx-transform-ease, var(--nx-spring-gentle));
+    animation: nx-hero-split-float 6s var(--nx-ease-in-out) infinite;
+    animation-delay: var(--_d, 0s);
+  }
+
+  .nx-hero-split-chip:nth-child(1) { inset-block-start: -6%; inset-inline-end: 4%; }
+  .nx-hero-split-chip:nth-child(2) { inset-block-start: 38%; inset-inline-start: -7%; --_d: 1.4s; }
+  .nx-hero-split-chip:nth-child(3) { inset-block-end: -7%; inset-inline-end: 12%; --_d: 2.6s; }
+
+  .nx-hero-split-chip .nx-icon {
+    inline-size: 0.9rem;
+    block-size: 0.9rem;
+    color: var(--nx-accent);
+  }
+
+  @keyframes nx-hero-split-float {
+    50% { translate: 0 calc(-0.45rem * var(--nx-motion)); }
+  }
+
+  @media (max-width: 56.25rem) {
+    .nx-hero-split { grid-template-columns: 1fr; }
+    .nx-hero-split-stage { --_k: 0.5; margin-block-start: var(--nx-space-2); }
+    .nx-hero-split-chip:nth-child(2) { inset-inline-start: 0; }
+    .nx-hero-split-chip:nth-child(1),
+    .nx-hero-split-chip:nth-child(3) { inset-inline-end: 0; }
+    .nx-hero-split-body { grid-template-columns: 1fr; }
+    .nx-hero-split-nav { display: none; }
+  }
+
+  /* ---- Marquee hero ---------------------------------------------------------------- *
+   *   <section class="nx-hero-marquee">
+   *     <div class="nx-hero-marquee-copy">badge · title · subtitle · actions · note</div>
+   *     <p class="nx-hero-marquee-label">Trusted by shipping teams at</p>
+   *     <div class="nx-hero-marquee-belt">
+   *       <div class="nx-hero-marquee-track">                (one lap = --_speed)
+   *         <div class="nx-hero-marquee-group">…logos…</div>
+   *         <div class="nx-hero-marquee-group" aria-hidden="true">…again…</div>
+   *       </div>
+   *     </div>
+   *   </section>
+   * The belt is always LTR: the marks are geometric and the wordmarks Latin,
+   * so the seam stays seamless in both page directions. It pauses under the
+   * pointer and dissolves into a mask at both ends.
+   * ------------------------------------------------------------------------------- */
+  .nx-hero-marquee {
+    display: grid;
+    justify-items: center;
+    gap: var(--nx-space-4);
+    padding-block: clamp(3.5rem, 8vw, 6.5rem) clamp(2.5rem, 5vw, 4rem);
+    padding-inline: var(--nx-space-5);
+    overflow: clip;
+    text-align: center;
+    background: radial-gradient(120% 100% at 50% 0%, color-mix(in oklab, var(--nx-surface) 55%, var(--nx-bg)), var(--nx-bg) 70%);
+  }
+
+  .nx-hero-marquee-copy {
+    display: grid;
+    justify-items: center;
+    gap: var(--nx-space-4);
+    max-inline-size: 46rem;
+    min-inline-size: 0;
+  }
+
+  .nx-hero-marquee-title {
+    max-inline-size: 18ch;
+    font: 800 clamp(2.4rem, 7vw, 4.75rem) / 1.06 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tight);
+    text-wrap: balance;
+  }
+
+  .nx-hero-marquee-subtitle {
+    max-inline-size: 46ch;
+    font-size: var(--nx-text-lg);
+    line-height: 1.65;
+    color: var(--nx-text-muted);
+    text-wrap: pretty;
+  }
+
+  .nx-hero-marquee-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--nx-space-3);
+  }
+
+  .nx-hero-marquee-note {
+    font-size: var(--nx-text-xs);
+    color: var(--nx-text-muted);
+  }
+
+  .nx-hero-marquee-label {
+    margin-block-start: var(--nx-space-6);
+    color: var(--nx-text-muted);
+    font: 600 var(--nx-text-xs) / 1 var(--nx-font-mono);
+    letter-spacing: var(--nx-tracking-wider);
+    text-transform: uppercase;
+  }
+
+  .nx-hero-marquee-belt {
+    inline-size: min(100%, 64rem);
+    overflow: clip;
+    direction: ltr;
+    mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+  }
+
+  .nx-hero-marquee-track {
+    display: flex;
+    inline-size: max-content;
+    animation: nx-hero-marquee-scroll var(--_speed, 32s) linear infinite;
+  }
+
+  .nx-hero-marquee-belt:hover .nx-hero-marquee-track,
+  .nx-hero-marquee-belt:focus-within .nx-hero-marquee-track {
+    animation-play-state: paused;
+  }
+
+  .nx-hero-marquee-group {
+    display: flex;
+    align-items: center;
+    gap: clamp(2rem, 5vw, 3.5rem);
+    padding-inline-end: clamp(2rem, 5vw, 3.5rem);
+  }
+
+  @keyframes nx-hero-marquee-scroll {
+    to { translate: -50% 0; }
+  }
+
+  .nx-hero-marquee-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    flex: none;
+    color: var(--nx-text-muted);
+    font: 650 clamp(0.95rem, 2.6vw, 1.1rem) / 1 var(--nx-font-sans);
+    transition: color var(--nx-dur-fast) var(--nx-ease-out);
+  }
+
+  .nx-hero-marquee-logo svg {
+    inline-size: clamp(1.25rem, 3.4vw, 1.6rem);
+    block-size: clamp(1.25rem, 3.4vw, 1.6rem);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .nx-hero-marquee-logo:hover { color: var(--nx-text); }
+  }
+
+  /* ---- Reduced motion ----------------------------------------------------------- */
+  @media (prefers-reduced-motion: reduce) {
+    .nx-hero-spotlight-blob,
+    .nx-hero-spotlight-badge::before,
+    .nx-hero-split-dot[data-run],
+    .nx-hero-split-chip,
+    .nx-hero-split-bars i,
+    .nx-hero-marquee-track { animation: none; }
+
+    .nx-hero-split-mock,
+    .nx-hero-split-chip { transition: none; }
+  }
+}

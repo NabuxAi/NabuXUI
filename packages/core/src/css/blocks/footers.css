@@ -1,0 +1,567 @@
+/*
+ * Blocks: footers.
+ *
+ *   Wordmark footer    link columns over a giant outline wordmark that floods
+ *                      with the accent while the footer is hovered or focused
+ *   Newsletter footer  the signup form as the hero on a dotted ground: a
+ *                      live-validated field, a success note that takes its place
+ *   Minimal footer     one quiet line: © and the name, a pulsing status dot,
+ *                      a few links
+ *
+ * Pure CSS — the only behaviour is state the components own themselves (the
+ * newsletter's data-invalid field and its success swap). Nothing to clean up.
+ */
+@layer nx.components {
+  /* ---- Shared: column heads and links -------------------------------------- */
+
+  :is(.nx-footer-wordmark-head, .nx-footer-newsletter-head) {
+    margin: 0 0 var(--nx-space-3);
+    color: var(--nx-text-subtle);
+    font-size: var(--nx-text-xs);
+    font-weight: 650;
+    letter-spacing: var(--nx-tracking-wider);
+    text-transform: uppercase;
+  }
+
+  :is(.nx-footer-wordmark-list, .nx-footer-newsletter-list) {
+    display: grid;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  :is(.nx-footer-wordmark-link, .nx-footer-newsletter-link) {
+    display: inline-block;
+    padding-block: 0.2rem;
+    border-radius: var(--nx-radius-xs);
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+    text-decoration: none;
+    transition:
+      color var(--nx-dur-fast) var(--nx-ease-out),
+      translate var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+
+    &:hover {
+      color: var(--nx-accent-text);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--nx-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    :is(.nx-footer-wordmark-link, .nx-footer-newsletter-link):hover {
+      translate: calc(2px * var(--nx-dir) * var(--nx-motion)) 0;
+    }
+  }
+
+  /* ---- Wordmark footer ------------------------------------------------------ */
+
+  .nx-footer-wordmark {
+    padding-block: var(--nx-space-10) var(--nx-space-4);
+    padding-inline: var(--nx-space-4);
+    border-block-start: 1px solid var(--nx-border);
+    background: var(--nx-bg);
+    color: var(--nx-text);
+  }
+
+  .nx-footer-wordmark-cols {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
+    gap: var(--nx-space-6) var(--nx-space-8);
+    max-inline-size: 72rem;
+    margin-inline: auto;
+  }
+
+  .nx-footer-wordmark-col {
+    min-inline-size: 0;
+  }
+
+  /* The brand, drawn as an outline: hover or focus anywhere in the footer
+     floods it with the accent. Colour only — no travel to dampen. */
+  .nx-footer-wordmark-mark {
+    margin-block: var(--nx-space-10) 0;
+    overflow: clip;
+    color: transparent;
+    font: 800 clamp(2.6rem, 15vw, 8.75rem) / 1 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tightest);
+    text-align: center;
+    white-space: nowrap;
+    user-select: none;
+    -webkit-text-stroke: max(1px, 0.012em) var(--nx-border-strong);
+    transition:
+      color var(--nx-dur-slower) var(--nx-ease-out),
+      -webkit-text-stroke-color var(--nx-dur-slower) var(--nx-ease-out);
+  }
+
+  .nx-footer-wordmark:is(:hover, :focus-within) .nx-footer-wordmark-mark {
+    color: var(--nx-accent);
+    -webkit-text-stroke-color: var(--nx-accent);
+  }
+
+  .nx-footer-wordmark-base {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--nx-space-3) var(--nx-space-6);
+    align-items: center;
+    justify-content: space-between;
+    max-inline-size: 72rem;
+    margin-block: var(--nx-space-8) 0;
+    margin-inline: auto;
+    padding-block-start: var(--nx-space-4);
+    border-block-start: 1px solid var(--nx-border);
+  }
+
+  .nx-footer-wordmark-copy {
+    margin: 0;
+    color: var(--nx-text-subtle);
+    font-size: var(--nx-text-xs);
+  }
+
+  .nx-footer-wordmark-social {
+    display: flex;
+    gap: var(--nx-space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nx-footer-wordmark-social-link {
+    display: inline-grid;
+    place-items: center;
+    min-inline-size: 2rem;
+    block-size: 2rem;
+    padding-inline: var(--nx-space-2);
+    border-radius: var(--nx-radius-full);
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-xs);
+    font-weight: 600;
+    text-decoration: none;
+    transition-property: color, background-color, scale;
+    transition-duration: var(--nx-dur-fast), var(--nx-dur-fast), var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-ease-out), var(--nx-ease-out), var(--nx-spring-snappy);
+
+    &:hover {
+      color: var(--nx-text);
+      background: var(--nx-surface-3);
+    }
+
+    &:active:not([data-static]) {
+      scale: calc(1 - 0.04 * var(--nx-motion));
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--nx-ring);
+      outline-offset: 2px;
+    }
+
+    & .nx-icon {
+      inline-size: 1rem;
+      block-size: 1rem;
+    }
+  }
+
+  /* ---- Newsletter footer ----------------------------------------------------- */
+
+  .nx-footer-newsletter {
+    position: relative;
+    isolation: isolate;
+    overflow: clip;
+    padding-block: var(--nx-space-12) var(--nx-space-6);
+    padding-inline: var(--nx-space-4);
+    border-block-start: 1px solid var(--nx-border);
+    background-color: var(--nx-bg-subtle);
+    background-image: radial-gradient(circle at 1px 1px, color-mix(in oklab, var(--nx-text) 8%, transparent) 1px, transparent 1.5px);
+    background-size: 22px 22px;
+    color: var(--nx-text);
+
+    /* A soft light pooling above the form. */
+    &::before {
+      content: "";
+      position: absolute;
+      inset-block-start: -30%;
+      inset-inline: 0;
+      z-index: -1;
+      block-size: 70%;
+      pointer-events: none;
+      background: radial-gradient(60% 100% at 50% 0%, var(--nx-accent-soft), transparent 70%);
+    }
+  }
+
+  .nx-footer-newsletter-inner {
+    display: grid;
+    gap: var(--nx-space-3);
+    justify-items: center;
+    max-inline-size: 46rem;
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .nx-footer-newsletter-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding: 0.3rem var(--nx-space-3);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    background: color-mix(in oklab, var(--nx-surface) 72%, transparent);
+    color: var(--nx-accent-text);
+    font-size: var(--nx-text-xs);
+    font-weight: 600;
+    letter-spacing: var(--nx-tracking-wide);
+
+    & i {
+      inline-size: 0.4rem;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: var(--nx-accent);
+      animation: nx-pulse 2.4s var(--nx-ease-in-out) infinite;
+    }
+  }
+
+  .nx-footer-newsletter-title {
+    margin: 0;
+    font-family: var(--nx-font-display);
+    font-size: var(--nx-text-5xl);
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: var(--nx-tracking-tight);
+    text-wrap: balance;
+  }
+
+  .nx-footer-newsletter-sub {
+    margin: 0;
+    max-inline-size: 52ch;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-md);
+    text-wrap: pretty;
+  }
+
+  .nx-footer-newsletter-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--nx-space-2);
+    justify-content: center;
+    inline-size: 100%;
+    margin-block-start: var(--nx-space-2);
+  }
+
+  .nx-footer-newsletter-field {
+    display: grid;
+    flex: 1 1 15rem;
+    gap: 0.3rem;
+    text-align: start;
+  }
+
+  .nx-footer-newsletter-input {
+    inline-size: 100%;
+    block-size: 3rem;
+    margin: 0;
+    padding-inline: var(--nx-space-4);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    font: inherit;
+    transition:
+      border-color var(--nx-dur-fast) var(--nx-ease-out),
+      box-shadow var(--nx-dur-fast) var(--nx-ease-out);
+
+    &::placeholder {
+      color: var(--nx-text-subtle);
+      opacity: 1;
+    }
+
+    &:focus-visible {
+      outline: none;
+      border-color: var(--nx-accent-border);
+      box-shadow: 0 0 0 4px var(--nx-accent-soft);
+    }
+  }
+
+  .nx-footer-newsletter-field[data-invalid] .nx-footer-newsletter-input {
+    border-color: var(--nx-danger);
+    animation: nx-shake 360ms var(--nx-ease-out);
+  }
+
+  /* Always in the layout: the error takes its place without shifting the form. */
+  .nx-footer-newsletter-error {
+    min-block-size: 1.1em;
+    color: var(--nx-danger-text);
+    font-size: var(--nx-text-xs);
+    font-weight: 500;
+
+    &:empty {
+      visibility: hidden;
+    }
+  }
+
+  .nx-footer-newsletter-join {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-space-2);
+    align-self: center;
+    block-size: 3rem;
+    padding-inline: var(--nx-space-6);
+    border: 0;
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-accent);
+    color: var(--nx-accent-contrast);
+    font: 700 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    cursor: pointer;
+    transition-property: scale, background-color;
+    transition-duration: var(--nx-spring-snappy-duration), var(--nx-dur-fast);
+    transition-timing-function: var(--nx-spring-snappy), var(--nx-ease-out);
+
+    &:hover {
+      background: var(--nx-accent-hover);
+    }
+
+    &:active:not([data-static]) {
+      scale: calc(1 - 0.04 * var(--nx-motion));
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--nx-ring);
+      outline-offset: 2px;
+    }
+
+    & .nx-icon {
+      inline-size: 1.1rem;
+      block-size: 1.1rem;
+    }
+  }
+
+  /* The success note takes the form's place; it rises in (a fade when the
+     system asks for less motion). */
+  .nx-footer-newsletter-done {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-space-2);
+    margin-block-start: var(--nx-space-2);
+    padding: var(--nx-space-3) var(--nx-space-5);
+    border: 1px solid color-mix(in oklab, var(--nx-success) 40%, transparent);
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-success-soft);
+    color: var(--nx-success-text);
+    font-size: var(--nx-text-sm);
+    font-weight: 600;
+    animation: nx-rise var(--nx-dur-slow) var(--nx-ease-out) both;
+
+    & .nx-icon {
+      flex: none;
+      inline-size: 1.15rem;
+      block-size: 1.15rem;
+    }
+  }
+
+  .nx-footer-newsletter-again {
+    border: 0;
+    padding: 0;
+    background: none;
+    color: inherit;
+    font: 500 var(--nx-text-xs) var(--nx-font-sans);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    cursor: pointer;
+    opacity: 0.75;
+    transition: opacity var(--nx-dur-fast) var(--nx-ease-out);
+
+    &:hover {
+      opacity: 1;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--nx-ring);
+      outline-offset: 2px;
+      border-radius: var(--nx-radius-xs);
+    }
+  }
+
+  .nx-footer-newsletter-note {
+    margin: 0;
+    color: var(--nx-text-subtle);
+    font-size: var(--nx-text-xs);
+  }
+
+  .nx-footer-newsletter-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--nx-space-6) var(--nx-space-10);
+    align-items: flex-start;
+    justify-content: space-between;
+    max-inline-size: 72rem;
+    margin-block: var(--nx-space-12) 0;
+    margin-inline: auto;
+    padding-block-start: var(--nx-space-6);
+    border-block-start: 1px solid var(--nx-border);
+  }
+
+  .nx-footer-newsletter-cols {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--nx-space-8);
+  }
+
+  .nx-footer-newsletter-col {
+    min-inline-size: 0;
+  }
+
+  .nx-footer-newsletter-social {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--nx-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nx-footer-newsletter-social-link {
+    display: inline-flex;
+    align-items: center;
+    min-inline-size: 2.1rem;
+    block-size: 2.1rem;
+    padding-inline: var(--nx-space-3);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-xs);
+    font-weight: 600;
+    text-decoration: none;
+    transition-property: color, border-color, background-color, scale;
+    transition-duration: var(--nx-dur-fast), var(--nx-dur-fast), var(--nx-dur-fast), var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-ease-out), var(--nx-ease-out), var(--nx-ease-out), var(--nx-spring-snappy);
+
+    &:hover {
+      color: var(--nx-text);
+      border-color: var(--nx-accent-border);
+      background: var(--nx-accent-soft);
+    }
+
+    &:active:not([data-static]) {
+      scale: calc(1 - 0.04 * var(--nx-motion));
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--nx-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  /* ---- Minimal footer --------------------------------------------------------- */
+
+  .nx-footer-minimal {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--nx-space-2) var(--nx-space-5);
+    align-items: center;
+    justify-content: center;
+    padding-block: var(--nx-space-3);
+    padding-inline: var(--nx-space-4);
+    border-block-start: 1px solid var(--nx-border);
+    background: var(--nx-bg);
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+
+    &[data-align="spread"] {
+      justify-content: space-between;
+    }
+  }
+
+  .nx-footer-minimal-copy {
+    color: inherit;
+    font-size: inherit;
+  }
+
+  .nx-footer-minimal-status {
+    --_tone: var(--nx-success);
+
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    color: inherit;
+    font-size: inherit;
+    text-decoration: none;
+    transition: color var(--nx-dur-fast) var(--nx-ease-out);
+
+    &[data-tone="warning"] {
+      --_tone: var(--nx-warning);
+    }
+
+    &[data-tone="danger"] {
+      --_tone: var(--nx-danger);
+    }
+
+    &:is(:hover, :focus-visible) {
+      color: var(--nx-text);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--nx-ring);
+      outline-offset: 2px;
+      border-radius: var(--nx-radius-xs);
+    }
+  }
+
+  .nx-footer-minimal-dot {
+    position: relative;
+    flex: none;
+    inline-size: 0.45rem;
+    block-size: 0.45rem;
+    border-radius: 50%;
+    background: var(--_tone);
+
+    /* The ring pinging out of the dot; the dot's colour carries the state on
+       its own, so the loop can stop under reduced motion. */
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: var(--_tone);
+      animation: nx-ping 2.4s var(--nx-ease-out) infinite;
+    }
+  }
+
+  .nx-footer-minimal-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--nx-space-4);
+  }
+
+  .nx-footer-minimal-link {
+    color: inherit;
+    font-size: inherit;
+    text-decoration: none;
+    transition: color var(--nx-dur-fast) var(--nx-ease-out);
+
+    &:hover {
+      color: var(--nx-text);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--nx-ring);
+      outline-offset: 2px;
+      border-radius: var(--nx-radius-xs);
+    }
+  }
+
+  /* ---- Reduced motion ---------------------------------------------------------- */
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-footer-newsletter-eyebrow i,
+    .nx-footer-minimal-dot::after {
+      animation: none;
+    }
+  }
+}

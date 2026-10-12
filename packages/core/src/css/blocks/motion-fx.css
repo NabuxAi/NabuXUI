@@ -1,0 +1,394 @@
+/*
+ * Blocks: interactive motion.
+ *
+ *   Spotlight grid   a wall of cards with one halo that follows the pointer
+ *                    across the whole wall; the card under the hand lights its
+ *                    own edge from inside, and keyboard focus paints the same
+ *                    glow without any pointer at all
+ *   Cursor halo      a ring that trails the pointer and a dot that rides it;
+ *                    children ask for a state with data-cursor (link | text |
+ *                    play) — inside its own container, never position: fixed
+ *   Marquee wall     rows of marquee cards at unsynchronised speeds and
+ *                    directions; hover or focus freezes a row, one button
+ *                    flips every direction at once, and rows park off screen
+ *
+ * Behaviour: js/blocks/motion-fx.ts (pointerSpot, cursorHalo, marqueeWall).
+ * The rows themselves are the shared .nx-marquee component (components/
+ * display.css); this file only dresses the wall, its cards and its buttons.
+ */
+@layer nx.components {
+  /* ---- Spotlight grid --------------------------------------------------------- *
+   *   <div class="nx-spotlight-grid">            (pointerSpot writes --nx-spot-x/y/r, data-spot)
+   *     <ul class="nx-spotlight-list">
+   *       <li><article class="nx-spotlight-card" data-nx-spot>   (data-hot, --nx-px/--nx-py)
+   *         <h3 class="nx-spotlight-title"><a href="…">Live queries</a></h3>
+   *         <p class="nx-spotlight-note">…</p>
+   *         <span class="nx-spotlight-meta">p95 38ms</span>
+   *       </article></li>
+   *     </ul>
+   *   </div>
+   * ------------------------------------------------------------------------- */
+  .nx-spotlight-grid {
+    position: relative;
+    isolation: isolate;
+    overflow: clip;
+    border-radius: var(--nx-radius-xl);
+    background: var(--nx-surface-2);
+    padding: clamp(var(--nx-space-4), 3vw, var(--nx-space-6));
+  }
+
+  /* The one halo: the wall's own light, sweeping with the pointer. */
+  .nx-spotlight-grid::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: radial-gradient(calc(var(--nx-spot-r, 260px) * 2) circle at var(--nx-spot-x, 50%) var(--nx-spot-y, 10%), var(--nx-accent-soft), transparent 70%);
+    opacity: 0;
+    transition: opacity var(--nx-dur-slow) var(--nx-ease-out);
+    pointer-events: none;
+  }
+
+  .nx-spotlight-grid[data-spot]::before { opacity: 1; }
+
+  .nx-spotlight-list {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: var(--nx-space-4);
+    grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    & > li { display: grid; }
+  }
+
+  .nx-spotlight-card {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    gap: var(--nx-space-2);
+    align-content: start;
+    padding: var(--nx-space-5);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    transition:
+      background-color var(--nx-dur-base) var(--nx-ease-out),
+      border-color var(--nx-dur-base) var(--nx-ease-out),
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+
+    /* The 1px ring feeds off a light that lives in the card's own coordinates. */
+    &::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border-radius: inherit;
+      padding: 1px;
+      background: radial-gradient(16rem circle at var(--nx-px, 50%) var(--nx-py, 50%), color-mix(in oklab, var(--nx-accent) 85%, var(--nx-glow)), transparent 60%);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+      opacity: 0;
+      transition: opacity var(--nx-dur-base) var(--nx-ease-out);
+      pointer-events: none;
+    }
+
+    /* A soft inner wash under the content, at the same coordinates. */
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      border-radius: inherit;
+      background: radial-gradient(14rem circle at var(--nx-px, 50%) var(--nx-py, 50%), var(--nx-accent-soft), transparent 65%);
+      opacity: 0;
+      transition: opacity var(--nx-dur-base) var(--nx-ease-out);
+      pointer-events: none;
+    }
+
+    &:is([data-hot], :focus-within)::before,
+    &:is([data-hot], :focus-within)::after { opacity: 1; }
+  }
+
+  /* Motion is never the only cue: the hot card also changes colour. */
+  .nx-spotlight-card:is([data-hot], :focus-within) {
+    border-color: var(--nx-accent-border);
+
+    & .nx-spotlight-title { color: var(--nx-accent-text); }
+  }
+
+  .nx-spotlight-title {
+    margin: 0;
+    font-size: var(--nx-text-md);
+    font-weight: 650;
+    line-height: 1.3;
+
+    & a {
+      color: inherit;
+      text-decoration: none;
+
+      &:focus-visible {
+        outline: 2px solid var(--nx-ring);
+        outline-offset: 3px;
+        border-radius: var(--nx-radius-xs);
+      }
+    }
+  }
+
+  .nx-spotlight-note {
+    margin: 0;
+    font-size: var(--nx-text-sm);
+    line-height: 1.7;
+    color: var(--nx-text-muted);
+  }
+
+  .nx-spotlight-meta {
+    justify-self: start;
+    margin-block-start: var(--nx-space-1);
+    padding: 0.25rem var(--nx-space-2);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    font: 600 var(--nx-text-xs) / 1 var(--nx-font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: var(--nx-tracking-wide);
+    color: var(--nx-text-muted);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .nx-spotlight-card:hover {
+      translate: 0 calc(-2px * var(--nx-motion));
+      border-color: var(--nx-border-strong);
+    }
+  }
+
+  /* ---- Cursor halo ------------------------------------------------------------ *
+   *   <div class="nx-cursor-halo" data-fx data-active data-mode="link|text|play" data-pressed>
+   *     …content; children mark states with data-cursor / data-cursor-label…
+   *     <span class="nx-cursor-halo-ring" aria-hidden="true"><span class="nx-cursor-halo-face">Play</span></span>
+   *     <span class="nx-cursor-halo-dot" aria-hidden="true"></span>
+   *   </div>
+   * The behaviour carries both anchors by translate from the inline-start
+   * edge; the faces centre themselves on them. `data-fx` is only set while the
+   * behaviour runs, so the native cursor disappears only when the pair is real.
+   * ------------------------------------------------------------------------- */
+  .nx-cursor-halo {
+    position: relative;
+    overflow: clip;
+  }
+
+  .nx-cursor-halo-ring,
+  .nx-cursor-halo-dot {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    inline-size: 0;
+    block-size: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--nx-dur-base) var(--nx-ease-out);
+  }
+
+  .nx-cursor-halo-ring { z-index: 3; }
+  .nx-cursor-halo-dot { z-index: 4; }
+
+  .nx-cursor-halo[data-active] .nx-cursor-halo-ring,
+  .nx-cursor-halo[data-active] .nx-cursor-halo-dot { opacity: 1; }
+
+  .nx-cursor-halo-face {
+    position: absolute;
+    display: grid;
+    place-items: center;
+    translate: -50% -50%;
+    inline-size: 1.25rem;
+    block-size: 1.25rem;
+    border: 1.5px solid var(--nx-border-strong);
+    border-radius: var(--nx-radius-full);
+    color: transparent;
+    font: 600 var(--nx-text-xs) / 1 var(--nx-font-sans);
+    white-space: nowrap;
+    transition-property: inline-size, block-size, scale, background-color, color, border-color;
+    transition-duration: var(--nx-dur-fast);
+    transition-timing-function: var(--nx-ease-out);
+  }
+
+  .nx-cursor-halo-dot::before {
+    content: "";
+    position: absolute;
+    translate: -50% -50%;
+    inline-size: 5px;
+    block-size: 5px;
+    border-radius: 50%;
+    background: var(--nx-text);
+  }
+
+  /* The states children ask for: a wide lens over links, a reading bar over
+     text, a labelled disc over media. Unnamed states keep the plain ring. */
+  .nx-cursor-halo[data-mode="link"] .nx-cursor-halo-face {
+    inline-size: clamp(4rem, 18vw, 6rem);
+    block-size: 3rem;
+    background: color-mix(in oklab, var(--nx-text) 8%, transparent);
+    border-color: var(--nx-accent);
+  }
+
+  .nx-cursor-halo[data-mode="text"] .nx-cursor-halo-face {
+    inline-size: 4px;
+    block-size: 30px;
+    border-radius: 2px;
+    background: var(--nx-accent);
+    border-color: transparent;
+  }
+
+  .nx-cursor-halo[data-mode="play"] .nx-cursor-halo-face {
+    inline-size: 4.5rem;
+    block-size: 4.5rem;
+    background: var(--nx-text);
+    border-color: var(--nx-text);
+    color: var(--nx-bg);
+  }
+
+  .nx-cursor-halo[data-pressed] .nx-cursor-halo-face { scale: calc(1 - 0.05 * var(--nx-motion)); }
+
+  /* The native cursor steps aside only while the pair is live — and never over
+     fields, where the I-beam and the caret belong to the platform. */
+  @media (hover: hover) and (pointer: fine) {
+    .nx-cursor-halo[data-fx][data-hide-cursor],
+    .nx-cursor-halo[data-fx][data-hide-cursor] :is(a, button, summary, label) { cursor: none; }
+  }
+
+  @media (pointer: coarse) {
+    .nx-cursor-halo-ring,
+    .nx-cursor-halo-dot { display: none; }
+  }
+
+  /* ---- Marquee wall ------------------------------------------------------------ *
+   *   <div class="nx-marquee-wall" data-reversed data-paused>
+   *     <div class="nx-marquee-wall-toolbar">
+   *       <button class="nx-marquee-flip" aria-pressed="false">…</button>
+   *       <button class="nx-marquee-park" aria-pressed="true">…</button>
+   *     </div>
+   *     <div class="nx-marquee-wall-rows">
+   *       <section class="nx-marquee nx-marquee-wall-row" style="--nx-duration: 38s" data-direction="reverse">…
+   *         <div class="nx-marquee-card">…</div> (inside the track's groups)
+   *     </div>
+   *   </div>
+   * ------------------------------------------------------------------------- */
+  .nx-marquee-wall {
+    display: grid;
+    gap: var(--nx-space-4);
+    justify-items: center;
+  }
+
+  .nx-marquee-wall-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-space-2) var(--nx-space-4);
+  }
+
+  :is(.nx-marquee-flip, .nx-marquee-park) {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-2) var(--nx-space-4);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    font: 600 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    cursor: pointer;
+    transition-property: border-color, color, scale;
+    transition-duration: var(--nx-dur-fast), var(--nx-dur-fast), var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-ease-out), var(--nx-ease-out), var(--nx-spring-snappy);
+
+    &:hover { border-color: var(--nx-accent-border); color: var(--nx-accent-text); }
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+
+    & .nx-icon {
+      inline-size: 0.95rem;
+      block-size: 0.95rem;
+      transition: rotate var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy);
+    }
+  }
+
+  /* The arrow turns around with the wall; the pressed park button says so in colour. */
+  .nx-marquee-wall[data-reversed] .nx-marquee-flip .nx-icon { rotate: 180deg; }
+  .nx-marquee-park[aria-pressed="true"] { color: var(--nx-accent-text); border-color: var(--nx-accent-border); }
+
+  .nx-marquee-wall-rows {
+    display: grid;
+    gap: var(--nx-space-3);
+    inline-size: 100%;
+    border-block: 1px solid var(--nx-border);
+    padding-block: var(--nx-space-4);
+  }
+
+  .nx-marquee-wall-row { inline-size: 100%; }
+
+  /* Parked from the toolbar (rows park off screen through the same attribute). */
+  .nx-marquee-wall[data-paused] .nx-marquee-track { animation-play-state: paused; }
+
+  .nx-marquee-card {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    column-gap: var(--nx-space-3);
+    inline-size: min(21rem, 82vw);
+    padding: var(--nx-space-3) var(--nx-space-4);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-surface);
+  }
+
+  .nx-marquee-avatar {
+    display: grid;
+    place-items: center;
+    inline-size: 2.4rem;
+    block-size: 2.4rem;
+    border-radius: var(--nx-radius-full);
+    background: linear-gradient(135deg, var(--nx-accent), var(--nx-cyan-400));
+    color: var(--nx-ink-50);
+    font: 700 var(--nx-text-xs) / 1 var(--nx-font-sans);
+  }
+
+  .nx-marquee-quote {
+    display: grid;
+    gap: 0.15rem;
+    min-inline-size: 0;
+
+    & blockquote {
+      margin: 0;
+      font-size: var(--nx-text-sm);
+      line-height: 1.7;
+      color: var(--nx-text);
+    }
+  }
+
+  .nx-marquee-caption {
+    font-size: var(--nx-text-xs);
+    color: var(--nx-text-muted);
+  }
+
+  /* ---- Reduced motion ----------------------------------------------------------- */
+  @media (prefers-reduced-motion: reduce) {
+    .nx-spotlight-grid::before {
+      background: radial-gradient(calc(var(--nx-spot-r, 260px) * 2) circle at 50% 18%, var(--nx-accent-soft), transparent 70%);
+      opacity: 1;
+      transition: none;
+    }
+
+    .nx-spotlight-card,
+    .nx-spotlight-card::before,
+    .nx-spotlight-card::after { transition: none; }
+
+    .nx-cursor-halo-ring,
+    .nx-cursor-halo-dot,
+    .nx-cursor-halo-face { transition-duration: 1ms; }
+
+    .nx-marquee-flip .nx-icon { transition: none; }
+  }
+}

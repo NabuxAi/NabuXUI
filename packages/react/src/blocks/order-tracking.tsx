@@ -76,7 +76,7 @@ export interface OrderEvent {
   id?: string;
   title: ReactNode;
   description?: ReactNode;
-  /** Where it happened ("تهران، مرکز توزیع"). */
+  /** Where it happened ("Rotterdam, distribution hub"). */
   place?: ReactNode;
   time: Date | number | string;
   tone?: OrderEventTone;

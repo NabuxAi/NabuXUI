@@ -1,0 +1,925 @@
+/*
+ * Maps: hand-drawn SVG city blocks — no tiles, no SDK, nameless and global.
+ *
+ *   .nx-marker-map      points of interest: pins that swell and find their
+ *                       label, a details popover per pin (one open at a time),
+ *                       districts that light up under the pointer or their chip.
+ *   .nx-route-map       a transit route that inks itself through a wiping SVG
+ *                       mask while the numbered stops settle in behind the pen;
+ *                       the panel counts every leg, a button swaps the line.
+ *   .nx-store-locator  a list beside the city: search, city chips, and a pick
+ *                       that glides its marker to the centre of the frame.
+ *
+ * The stage is physical (an SVG viewBox), so it stays dir="ltr" even on RTL
+ * pages; every part around it (panels, lists, legends) stays logical.
+ */
+@layer nx.components {
+
+  /* ---- Shared city stage -------------------------------------------------- */
+
+  .nx-map-stage {
+    position: relative;
+    inline-size: 100%;
+    aspect-ratio: 16 / 10;
+    overflow: clip;
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-xl);
+    background: var(--nx-surface);
+    touch-action: manipulation;
+  }
+
+  .nx-map-art {
+    position: absolute;
+    inset: 0;
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  .nx-map-land { fill: var(--nx-surface); }
+
+  .nx-map-water {
+    fill: none;
+    stroke: color-mix(in oklab, var(--nx-cyan-400) 24%, var(--nx-surface));
+    stroke-width: 24;
+    stroke-linecap: round;
+  }
+
+  .nx-map-street {
+    fill: none;
+    stroke: var(--nx-border-strong);
+    stroke-width: 4;
+    opacity: 0.5;
+  }
+
+  .nx-map-block { fill: var(--nx-surface-3); }
+  .nx-map-park { fill: color-mix(in oklab, var(--nx-chart-7) 24%, var(--nx-surface)); }
+  .nx-map-leaf { fill: color-mix(in oklab, var(--nx-chart-7) 42%, var(--nx-surface-3)); }
+
+  /* Districts are felt, not read: a wash of accent while the pointer (or a
+     legend chip) is over them. */
+  .nx-map-district {
+    fill: transparent;
+    stroke: none;
+    pointer-events: all;
+    cursor: default;
+    transition: fill var(--nx-dur-base) var(--nx-ease-out);
+  }
+
+  .nx-map-district[data-active] { fill: var(--nx-accent-soft); }
+
+  .nx-map-district-name {
+    fill: var(--nx-text-subtle);
+    font-family: var(--nx-font-sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: var(--nx-tracking-wide);
+    text-anchor: middle;
+    pointer-events: none;
+  }
+
+  /* ---- Pins, labels, popovers --------------------------------------------- */
+
+  .nx-map-pin {
+    position: absolute;
+    translate: -50% -50%;
+    inline-size: 1.6rem;
+    aspect-ratio: 1;
+    z-index: 2;
+    border: 0;
+    padding: 0;
+    background: transparent;
+    font: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+  }
+
+  .nx-map-pin:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+
+  .nx-map-pin:focus-visible {
+    outline: 2px solid var(--nx-ring);
+    outline-offset: 3px;
+    border-radius: var(--nx-radius-full);
+  }
+
+  .nx-map-bead {
+    position: relative;
+    display: block;
+    inline-size: 100%;
+    aspect-ratio: 1;
+    border: 3px solid var(--nx-surface);
+    border-radius: var(--nx-radius-full);
+    background: var(--_tint, var(--nx-accent));
+    box-shadow: var(--nx-shadow-sm);
+    transition:
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+      background-color var(--nx-dur-base) var(--nx-ease-out);
+  }
+
+  /* Motion is never the only cue: the open pin also carries a halo. */
+  .nx-map-pin[aria-expanded="true"] .nx-map-bead,
+  .nx-map-pin[aria-pressed="true"] .nx-map-bead {
+    scale: calc(1 + 0.25 * var(--nx-motion));
+  }
+
+  .nx-map-pin[aria-expanded="true"] .nx-map-bead::after,
+  .nx-map-pin[aria-pressed="true"] .nx-map-bead::after {
+    content: "";
+    position: absolute;
+    inset: -7px;
+    border: 2px solid var(--_tint, var(--nx-accent));
+    border-radius: var(--nx-radius-full);
+    animation: nx-map-halo 1.6s var(--nx-ease-out) infinite;
+    pointer-events: none;
+  }
+
+  .nx-map-label {
+    /* display:none (not visibility) — a hidden label must not stretch the
+       map's scroll area at narrow widths; it pops in with a keyframe. */
+    position: absolute;
+    inset-block-end: calc(100% + 0.4rem);
+    inset-inline-start: 50%;
+    translate: -50% 0;
+    z-index: 1;
+    padding: var(--nx-space-1) var(--nx-space-2);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-sm);
+    background: var(--nx-surface-2);
+    color: var(--nx-text);
+    font-size: var(--nx-text-xs);
+    font-weight: 600;
+    white-space: nowrap;
+    box-shadow: var(--nx-shadow-sm);
+    pointer-events: none;
+    display: none;
+  }
+
+  .nx-map-pin:focus-visible .nx-map-label,
+  .nx-map-pin[aria-expanded="true"] .nx-map-label,
+  .nx-map-pin[aria-pressed="true"] .nx-map-label {
+    display: block;
+    animation: nx-map-label-in var(--nx-dur-base) var(--nx-ease-out) both;
+  }
+
+  @keyframes nx-map-label-in {
+    from { opacity: 0; translate: -50% calc(0.35rem * var(--nx-motion)); }
+    to { opacity: 1; translate: -50% 0; }
+  }
+
+  /* One popover per pin, scaled from its trigger: enters on the spring,
+     leaves on a soft fast fade. */
+  .nx-map-pop {
+    --_gap: 0.7rem;
+    /* display:none (not visibility) — closed popovers must not stretch the
+       map's scroll area at narrow widths; it springs in via the keyframe. */
+    position: absolute;
+    z-index: 3;
+    display: none;
+    gap: var(--nx-space-2);
+    inline-size: 12rem;
+    padding: var(--nx-space-3);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-surface-2);
+    color: var(--nx-text);
+    box-shadow: var(--nx-shadow-lg);
+    transform-origin: 50% 100%;
+    translate: -50% calc(-100% - var(--_gap));
+    pointer-events: none;
+  }
+
+  .nx-map-pop[data-open] {
+    display: grid;
+    pointer-events: auto;
+    animation: nx-map-pop-in var(--nx-spring-gentle-duration) var(--nx-spring-gentle) both;
+  }
+
+  @keyframes nx-map-pop-in {
+    from { opacity: 0; scale: 0.95; translate: -50% calc(-100% - var(--_gap) + (6px * var(--nx-motion))); }
+    to { opacity: 1; scale: 1; translate: -50% calc(-100% - var(--_gap)); }
+  }
+
+  /* Near the top edge the popover folds below its pin instead. */
+  .nx-map-pop[data-below] {
+    transform-origin: 50% 0%;
+    translate: -50% calc(var(--_gap) - (6px * var(--nx-motion)));
+  }
+
+  .nx-map-pop[data-below][data-open] { translate: -50% var(--_gap); }
+
+  .nx-map-thumb {
+    block-size: 3.25rem;
+    border-radius: var(--nx-radius-sm);
+    background: var(--_thumb, linear-gradient(135deg, var(--nx-chart-1), var(--nx-chart-2)));
+  }
+
+  .nx-map-pop-name {
+    display: flex;
+    align-items: baseline;
+    gap: var(--nx-space-2);
+    margin: 0;
+    font-size: var(--nx-text-sm);
+  }
+
+  .nx-map-pop-name b { font-weight: 700; overflow-wrap: anywhere; }
+  .nx-map-pop-name small { color: var(--nx-text-muted); font-size: var(--nx-text-xs); }
+
+  .nx-map-pop-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--nx-space-1);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nx-map-pop-meta li {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px var(--nx-space-2);
+    border-radius: var(--nx-radius-full);
+    background: color-mix(in oklab, var(--nx-text) 7%, transparent);
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-xs);
+    font-weight: 600;
+  }
+
+  .nx-map-pop-meta li[data-tone="star"] {
+    background: var(--nx-gold-soft);
+    color: var(--nx-gold-text);
+  }
+
+  .nx-map-pop-meta .nx-icon { inline-size: 0.7rem; block-size: 0.7rem; }
+
+  .nx-map-close {
+    position: absolute;
+    inset-block-start: var(--nx-space-1);
+    inset-inline-end: var(--nx-space-1);
+    display: grid;
+    place-items: center;
+    inline-size: 1.4rem;
+    aspect-ratio: 1;
+    border: 0;
+    border-radius: var(--nx-radius-full);
+    background: color-mix(in oklab, var(--nx-text) 8%, transparent);
+    color: var(--nx-text-muted);
+    font: inherit;
+    cursor: pointer;
+    transition:
+      color var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+  }
+
+  .nx-map-close .nx-icon { inline-size: 0.75rem; block-size: 0.75rem; }
+  .nx-map-close:hover { color: var(--nx-text); }
+  .nx-map-close:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+  .nx-map-close:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 1px; }
+
+  @keyframes nx-map-halo {
+    from { scale: 0.7; opacity: 0.8; }
+    to { scale: 1.6; opacity: 0; }
+  }
+
+  /* ---- Marker map ----------------------------------------------------------- */
+
+  .nx-marker-map {
+    display: grid;
+    gap: var(--nx-space-4);
+    justify-items: center;
+    inline-size: 100%;
+  }
+
+  .nx-marker-map .nx-map-stage { inline-size: min(100%, 44rem); }
+
+  .nx-marker-map-legend {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--nx-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nx-marker-map-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-1) var(--nx-space-3);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface-2);
+    color: var(--nx-text-muted);
+    font-family: inherit;
+    font-size: var(--nx-text-xs);
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      color var(--nx-dur-fast) var(--nx-ease-out),
+      border-color var(--nx-dur-fast) var(--nx-ease-out),
+      background-color var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+  }
+
+  .nx-marker-map-chip i {
+    inline-size: 0.55rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--nx-accent);
+    opacity: 0.5;
+    transition: opacity var(--nx-dur-fast) var(--nx-ease-out);
+  }
+
+  .nx-marker-map-chip[data-active] {
+    color: var(--nx-text);
+    border-color: var(--nx-accent);
+    background: var(--nx-accent-soft);
+  }
+
+  .nx-marker-map-chip[data-active] i { opacity: 1; }
+  .nx-marker-map-chip:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+  .nx-marker-map-chip:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+
+  /* ---- Route map -------------------------------------------------------------- */
+
+  .nx-route-map {
+    display: grid;
+    gap: var(--nx-space-5);
+    align-items: start;
+    grid-template-columns: minmax(0, 1.55fr) minmax(15rem, 1fr);
+  }
+
+  /* The ghost of the line not running stays on the map. */
+  .nx-route-map-ghost {
+    fill: none;
+    stroke: var(--nx-border-strong);
+    stroke-width: 3;
+    stroke-dasharray: 2 7;
+    stroke-linecap: round;
+  }
+
+  .nx-route-map-line {
+    fill: none;
+    stroke: var(--nx-accent);
+    stroke-width: 4.5;
+    stroke-linecap: round;
+  }
+
+  /* The pen is mask machinery, not a look: it needs full luminance to reveal
+     the line, whatever the theme. It rides the gentle spring. */
+  .nx-route-map-pen {
+    fill: none;
+    stroke: white;
+    stroke-width: 18;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: nx-route-map-draw var(--nx-spring-gentle-duration) var(--nx-spring-gentle) 0.15s forwards;
+  }
+
+  @keyframes nx-route-map-draw { to { stroke-dashoffset: 0; } }
+
+  .nx-route-map-stop {
+    opacity: 0;
+    scale: 0.95;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: nx-route-map-stop-in var(--nx-spring-snappy-duration) var(--nx-spring-snappy) both;
+    animation-delay: calc(0.2s + var(--nx-i, 0) * 0.3s);
+  }
+
+  @keyframes nx-route-map-stop-in { to { opacity: 1; scale: 1; } }
+
+  .nx-route-map-stop circle {
+    fill: var(--nx-surface-2);
+    stroke: var(--nx-accent);
+    stroke-width: 3;
+  }
+
+  .nx-route-map-stop[data-end] circle { fill: var(--nx-accent); }
+
+  .nx-route-map-stop text {
+    fill: var(--nx-accent);
+    font-family: var(--nx-font-sans);
+    font-size: 9.5px;
+    font-weight: 700;
+    text-anchor: middle;
+  }
+
+  .nx-route-map-stop[data-end] text { fill: var(--nx-accent-contrast); }
+
+  .nx-route-map-stop-name {
+    fill: var(--nx-text);
+    font-family: var(--nx-font-sans);
+    font-size: 11px;
+    font-weight: 600;
+    paint-order: stroke;
+    stroke: var(--nx-surface);
+    stroke-width: 3px;
+    stroke-linejoin: round;
+  }
+
+  .nx-route-map-panel {
+    display: grid;
+    gap: var(--nx-space-4);
+    align-content: start;
+    padding: var(--nx-space-5);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-xl);
+    background: var(--nx-surface-2);
+  }
+
+  .nx-route-map-title {
+    margin: 0;
+    font-size: var(--nx-text-base);
+    font-weight: 700;
+  }
+
+  .nx-route-map-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--nx-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nx-route-map-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-1);
+    padding: 2px var(--nx-space-2);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-accent-soft);
+    color: var(--nx-accent-text);
+    font-size: var(--nx-text-xs);
+    font-weight: 700;
+  }
+
+  .nx-route-map-steps {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nx-route-map-step {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1.7rem 1fr;
+    gap: 2px var(--nx-space-3);
+    align-items: baseline;
+    padding-block: var(--nx-space-2);
+  }
+
+  .nx-route-map-step:not(:last-child)::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0.8rem;
+    inset-block: 1.5rem 0;
+    border-inline-start: 2px dotted color-mix(in oklab, var(--nx-accent) 45%, transparent);
+  }
+
+  .nx-route-map-step i {
+    display: grid;
+    place-items: center;
+    inline-size: 1.7rem;
+    aspect-ratio: 1;
+    border: 2px solid var(--nx-accent);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface-2);
+    color: var(--nx-accent);
+    font-style: normal;
+    font-size: var(--nx-text-xs);
+    font-weight: 700;
+    translate: 0 0.15rem;
+  }
+
+  .nx-route-map-step b { font-size: var(--nx-text-sm); font-weight: 700; }
+  .nx-route-map-step small { grid-column: 2; color: var(--nx-text-muted); font-size: var(--nx-text-xs); }
+  .nx-route-map-step[data-end] i { background: var(--nx-accent); color: var(--nx-accent-contrast); }
+
+  .nx-route-map-swap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-2) var(--nx-space-4);
+    border: 0;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-accent);
+    color: var(--nx-accent-contrast);
+    font-family: inherit;
+    font-size: var(--nx-text-sm);
+    font-weight: 600;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+      box-shadow var(--nx-dur-base) var(--nx-ease-out);
+  }
+
+  .nx-route-map-swap .nx-icon { inline-size: 0.95rem; block-size: 0.95rem; }
+  .nx-route-map-swap:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+  .nx-route-map-swap:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+
+  .nx-route-map-note {
+    margin: 0;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-xs);
+  }
+
+  /* ---- Store locator ------------------------------------------------------------ */
+
+  .nx-store-locator {
+    display: grid;
+    gap: var(--nx-space-4);
+    align-items: start;
+    grid-template-columns: minmax(15rem, 1fr) minmax(0, 1.5fr);
+  }
+
+  .nx-store-locator-side {
+    display: grid;
+    gap: var(--nx-space-3);
+    align-content: start;
+  }
+
+  .nx-store-locator-searchbox {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding-block: 2px;
+    padding-inline: var(--nx-space-3);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-surface-2);
+    transition:
+      border-color var(--nx-dur-fast) var(--nx-ease-out),
+      box-shadow var(--nx-dur-fast) var(--nx-ease-out);
+  }
+
+  .nx-store-locator-searchbox:focus-within {
+    border-color: var(--nx-accent);
+    box-shadow: 0 0 0 3px var(--nx-accent-soft);
+  }
+
+  .nx-store-locator-searchbox .nx-icon {
+    flex: none;
+    inline-size: 1rem;
+    block-size: 1rem;
+    color: var(--nx-text-muted);
+  }
+
+  .nx-store-locator-search {
+    flex: 1;
+    min-inline-size: 0;
+    padding-block: var(--nx-space-2);
+    border: 0;
+    background: transparent;
+    color: var(--nx-text);
+    font-family: inherit;
+    font-size: var(--nx-text-sm);
+    line-height: 1.4;
+  }
+
+  .nx-store-locator-search::placeholder { color: var(--nx-text-muted); }
+
+  /* The box carries the ring; the input itself stays quiet. */
+  .nx-store-locator-search:focus,
+  .nx-store-locator-search:focus-visible { outline: none; }
+
+  .nx-store-locator-clear {
+    display: none;
+    place-items: center;
+    inline-size: 1.35rem;
+    aspect-ratio: 1;
+    border: 0;
+    border-radius: var(--nx-radius-full);
+    background: color-mix(in oklab, var(--nx-text) 8%, transparent);
+    color: var(--nx-text-muted);
+    font: inherit;
+    cursor: pointer;
+    transition:
+      color var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+  }
+
+  .nx-store-locator[data-has-query] .nx-store-locator-clear { display: grid; }
+  .nx-store-locator-clear .nx-icon { inline-size: 0.7rem; block-size: 0.7rem; }
+  .nx-store-locator-clear:hover { color: var(--nx-text); }
+  .nx-store-locator-clear:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+  .nx-store-locator-clear:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 1px; }
+
+  .nx-store-locator-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--nx-space-2);
+  }
+
+  .nx-store-locator-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-1) var(--nx-space-3);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface-2);
+    color: var(--nx-text-muted);
+    font-family: inherit;
+    font-size: var(--nx-text-xs);
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      color var(--nx-dur-fast) var(--nx-ease-out),
+      border-color var(--nx-dur-fast) var(--nx-ease-out),
+      background-color var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+  }
+
+  .nx-store-locator-chip i {
+    inline-size: 0.5rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--_tint, var(--nx-accent));
+  }
+
+  .nx-store-locator-chip[aria-pressed="true"] {
+    color: var(--nx-text);
+    border-color: var(--_tint, var(--nx-accent));
+    background: color-mix(in oklab, var(--_tint, var(--nx-accent)) 12%, transparent);
+  }
+
+  .nx-store-locator-chip:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+  .nx-store-locator-chip:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+
+  .nx-store-locator-count {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    margin: 0;
+    color: var(--nx-accent);
+    font-size: var(--nx-text-xs);
+    font-weight: 700;
+  }
+
+  .nx-store-locator-count::after {
+    content: "";
+    flex: 1;
+    border-block-end: 1px dashed var(--nx-border-strong);
+  }
+
+  .nx-store-locator-list {
+    display: grid;
+    gap: var(--nx-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nx-store-locator-row {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 2px var(--nx-space-2);
+    align-items: center;
+    inline-size: 100%;
+    padding: var(--nx-space-2) var(--nx-space-3);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-surface-2);
+    color: var(--nx-text);
+    font-family: inherit;
+    text-align: start;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition:
+      border-color var(--nx-dur-fast) var(--nx-ease-out),
+      box-shadow var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+  }
+
+  /* The picked row carries its marker's colour on its reading edge. */
+  .nx-store-locator-row[aria-current] {
+    border-color: var(--_tint, var(--nx-accent));
+    box-shadow: inset calc(2.5px * var(--nx-dir)) 0 0 var(--_tint, var(--nx-accent));
+  }
+
+  .nx-store-locator-row:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+  .nx-store-locator-row:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+
+  .nx-store-locator-dot {
+    inline-size: 0.65rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--_tint, var(--nx-accent));
+  }
+
+  .nx-store-locator-main {
+    display: grid;
+    gap: 1px;
+    min-inline-size: 0;
+  }
+
+  .nx-store-locator-main b {
+    font-size: var(--nx-text-sm);
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  .nx-store-locator-main small {
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-xs);
+    overflow-wrap: anywhere;
+  }
+
+  .nx-store-locator-tag {
+    padding: 2px var(--nx-space-2);
+    border-radius: var(--nx-radius-full);
+    background: color-mix(in oklab, var(--_tint, var(--nx-accent)) 16%, transparent);
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-xs);
+    font-weight: 700;
+  }
+
+  .nx-store-locator-empty {
+    display: grid;
+    gap: var(--nx-space-2);
+    justify-items: center;
+    padding: var(--nx-space-5) var(--nx-space-4);
+    border: 1.5px dashed var(--nx-border-strong);
+    border-radius: var(--nx-radius-lg);
+    text-align: center;
+  }
+
+  .nx-store-locator-empty .nx-icon {
+    inline-size: 1.6rem;
+    block-size: 1.6rem;
+    color: var(--nx-text-muted);
+  }
+
+  .nx-store-locator-empty p {
+    margin: 0;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+  }
+
+  .nx-store-locator-reset {
+    padding: var(--nx-space-2) var(--nx-space-4);
+    border: 0;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-accent);
+    color: var(--nx-accent-contrast);
+    font-family: inherit;
+    font-size: var(--nx-text-xs);
+    font-weight: 600;
+    cursor: pointer;
+    transition: scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+  }
+
+  .nx-store-locator-reset:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+  .nx-store-locator-reset:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+
+  .nx-store-locator-mapcol {
+    display: grid;
+    gap: var(--nx-space-2);
+  }
+
+  /* The world runs larger than its frame; a pick translates it until the
+     marker sits dead centre. */
+  .nx-store-locator-world {
+    position: absolute;
+    inset: 0;
+    inline-size: 155%;
+    block-size: 155%;
+    transition: translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+  }
+
+  .nx-store-locator-world .nx-map-art { position: absolute; inset: 0; }
+
+  .nx-store-locator-pin {
+    animation: nx-store-locator-pin-in var(--nx-spring-snappy-duration) var(--nx-spring-snappy) backwards;
+    animation-delay: calc(var(--nx-i, 0) * var(--nx-stagger));
+  }
+
+  @keyframes nx-store-locator-pin-in {
+    from {
+      opacity: 0;
+      scale: 0.95;
+      translate: -50% calc(-50% - (6px * var(--nx-motion)));
+    }
+  }
+
+  /* The locator's popover opens beside its pin; near the end edge it flips. */
+  .nx-store-locator-pop {
+    --_gap: 1rem;
+    inline-size: 9.5rem;
+    transform-origin: 0% 50%;
+    translate: calc(var(--_gap) - (6px * var(--nx-motion))) -50%;
+  }
+
+  .nx-store-locator-pop[data-open] { translate: var(--_gap) -50%; }
+  .nx-store-locator-pop[data-flip] {
+    transform-origin: 100% 50%;
+    translate: calc(-100% - var(--_gap) + (6px * var(--nx-motion))) -50%;
+  }
+
+  .nx-store-locator-pop[data-flip][data-open] { translate: calc(-100% - var(--_gap)) -50%; }
+
+  /* Name over street, stacked: the locator's popover is the narrower one. */
+  .nx-store-locator-pop .nx-map-pop-name {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+  }
+
+  .nx-store-locator-citybadge {
+    position: absolute;
+    inset-block-start: var(--nx-space-3);
+    inset-inline-start: var(--nx-space-3);
+    z-index: 4;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-1) var(--nx-space-3);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface-2);
+    color: var(--nx-text);
+    font-size: var(--nx-text-xs);
+    font-weight: 700;
+    pointer-events: none;
+  }
+
+  .nx-store-locator-citybadge i {
+    inline-size: 0.5rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--_tint, var(--nx-accent));
+  }
+
+  .nx-store-locator-note {
+    margin: 0;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-xs);
+  }
+
+  /* ---- Pointer-only motion ------------------------------------------------------ */
+
+  @media (hover: hover) and (pointer: fine) {
+    .nx-map-pin:hover .nx-map-bead { scale: calc(1 + 0.25 * var(--nx-motion)); }
+    .nx-map-pin:hover .nx-map-label { opacity: 1; visibility: visible; }
+
+    .nx-map-district:hover { fill: var(--nx-accent-soft); }
+
+    .nx-marker-map-chip:hover {
+      color: var(--nx-text);
+      border-color: var(--nx-accent);
+      background: var(--nx-accent-soft);
+    }
+
+    .nx-marker-map-chip:hover i { opacity: 1; }
+
+    .nx-route-map-swap:hover { box-shadow: var(--nx-shadow-glow); }
+
+    .nx-store-locator-chip:hover { color: var(--nx-text); }
+
+    .nx-store-locator-row:hover {
+      border-color: color-mix(in oklab, var(--_tint, var(--nx-accent)) 55%, var(--nx-border));
+    }
+  }
+
+  /* ---- Narrow frames ------------------------------------------------------------- */
+
+  @media (max-width: 48rem) {
+    .nx-route-map { grid-template-columns: 1fr; }
+    .nx-store-locator { grid-template-columns: 1fr; }
+
+    /* The map leads on small screens: pick from the list, see it move. */
+    .nx-store-locator-mapcol { order: -1; }
+  }
+
+  @media (max-width: 30rem) {
+    .nx-map-pop { inline-size: 10rem; }
+    .nx-map-thumb { block-size: 2.75rem; }
+    .nx-store-locator-pop { inline-size: 8.5rem; }
+  }
+
+  /* ---- Reduced motion -------------------------------------------------------------- */
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-route-map-pen { animation: none; stroke-dashoffset: 0; }
+    .nx-route-map-stop { animation: none; opacity: 1; scale: 1; }
+    .nx-store-locator-pin { animation: none; }
+    .nx-store-locator-world { transition: none; }
+
+    .nx-map-pin[aria-expanded="true"] .nx-map-bead::after,
+    .nx-map-pin[aria-pressed="true"] .nx-map-bead::after {
+      animation: none;
+      opacity: 0.5;
+    }
+  }
+}

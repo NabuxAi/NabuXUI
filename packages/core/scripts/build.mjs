@@ -3,7 +3,7 @@
 //   2. src/css/index.css     -> dist/nabuxui.css, dist/nabuxui.min.css
 //   3. src/js/index.ts       -> dist/index.js (ESM) and dist/types/*.d.ts
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { build } from 'esbuild';
@@ -67,7 +67,13 @@ ${decl(reducedMotion, '      ')}
 
 writeFileSync(resolve(root, 'src/css/tokens.css'), tokensCss());
 
-rmSync(resolve(root, 'dist'), { recursive: true, force: true });
+// dist is overwritten in place, never wiped: the react build, the react tests
+// and the showcase build resolve these files while a rebuild may be running in
+// parallel — a file that is one build old passes them, a missing one fails.
+// Declarations are emitted to a staging dir and swapped in, so dist/types is
+// never absent for more than the instant of the rename (and deleted sources
+// still leave no orphan d.ts behind).
+rmSync(resolve(root, 'dist/.types-next'), { recursive: true, force: true });
 mkdirSync(resolve(root, 'dist'), { recursive: true });
 
 // Browsers that fail a rule we rely on drop only that rule, so the CSS is not
@@ -85,6 +91,12 @@ await build({
   logLevel: 'warning',
 });
 
-execFileSync(resolve(root, 'node_modules/.bin/tsc'), ['-p', resolve(root, 'tsconfig.json')], { stdio: 'inherit' });
+execFileSync(
+  resolve(root, 'node_modules/.bin/tsc'),
+  ['-p', resolve(root, 'tsconfig.json'), '--outDir', resolve(root, 'dist/.types-next')],
+  { stdio: 'inherit' },
+);
+rmSync(resolve(root, 'dist/types'), { recursive: true, force: true });
+renameSync(resolve(root, 'dist/.types-next'), resolve(root, 'dist/types'));
 
 console.log('@nabuxai/ui-core built');

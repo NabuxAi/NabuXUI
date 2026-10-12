@@ -1,0 +1,460 @@
+/*
+ * Blocks: loaders.
+ *
+ *   Loader orbit    a real working button: dots chase each other round an
+ *                   elliptical orbit — the stagger reads as a comet tail —
+ *                   while it works; a tick draws itself on success, and the
+ *                   marks stand still for the error
+ *   Loader ring     a ring that never holds one shape: stroke weight trades
+ *                   against the dashes while a thin inner arc keeps the
+ *                   honest percent; it freezes red at the error, ends in a tick
+ *   Loader liquid   a tank that fills with two out-of-phase waves while the
+ *                   number counts with the level; the reading goes wet as the
+ *                   liquid passes it, grey and still at the error, a tick at
+ *                   the top
+ *
+ * No JS behaviour in this family: the loops are CSS, the state travels on
+ * data-state (idle | running | success | error) and the level on --_p (0–1),
+ * written by the framework components.
+ */
+@layer nx.components {
+
+  /* ---- The drawn marks (tick / cross), shared by the three loaders -------------
+   * Both paths carry pathLength="24", so one dash length draws either.
+   * ------------------------------------------------------------------------- */
+  :is(.nx-loader-orbit-mark, .nx-loader-ring-tick, .nx-loader-liquid-tick) {
+    --_mark: 1.15rem;
+    display: inline-block;
+    flex: none;
+    inline-size: var(--_mark);
+    block-size: var(--_mark);
+
+    path {
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 24;
+      stroke-dashoffset: 24;
+      animation: nx-loader-draw 450ms var(--nx-ease-out) forwards;
+    }
+  }
+
+  @keyframes nx-loader-draw {
+    to { stroke-dashoffset: 0; }
+  }
+
+  /* ---- Orbit button ----------------------------------------------------------- *
+   *   <button class="nx-loader-orbit" data-state="idle|running|success|error"
+   *           data-size="sm|md|lg" data-tone="accent|gold" aria-busy>
+   *     <span class="nx-loader-orbit-orbit" aria-hidden="true"><i></i>…</span>
+   *     <svg class="nx-loader-orbit-mark" data-kind="tick|cross" aria-hidden="true">…</svg>
+   *     <span class="nx-loader-orbit-label">
+   *       <span>Save changes</span><span data-off aria-hidden="true">Saving…</span>…
+   *     </span>
+   *   </button>
+   * All four labels stay stacked in one grid cell, so the button never changes
+   * width while it works; the off copies are aria-hidden.
+   * ------------------------------------------------------------------------- */
+  .nx-loader-orbit {
+    --_tone: var(--nx-accent);
+    --_contrast: var(--nx-accent-contrast);
+    --_h: 2.75rem;
+
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-space-2);
+    min-block-size: var(--_h);
+    padding-inline: var(--nx-space-5);
+    border: 1px solid transparent;
+    border-radius: var(--nx-radius-full);
+    background: var(--_tone);
+    color: var(--_contrast);
+    font: 600 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    letter-spacing: var(--nx-tracking-tight);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.18),
+      0 1px 2px rgb(0 0 0 / 0.12),
+      0 8px 20px -10px color-mix(in oklab, var(--_tone) 65%, transparent);
+    transition-property: scale, background-color, border-color, color, box-shadow;
+    transition-duration:
+      var(--nx-spring-snappy-duration),
+      var(--nx-dur-base),
+      var(--nx-dur-base),
+      var(--nx-dur-base),
+      var(--nx-dur-base);
+    transition-timing-function:
+      var(--nx-spring-snappy),
+      var(--nx-ease-out),
+      var(--nx-ease-out),
+      var(--nx-ease-out),
+      var(--nx-ease-out);
+
+    &:active:not(:disabled, [aria-disabled='true'], [data-static]) {
+      scale: calc(1 - 0.04 * var(--nx-motion));
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--nx-ring);
+      outline-offset: 2px;
+    }
+
+    &:is(:disabled, [aria-disabled='true']) { cursor: default; }
+
+    &[data-tone='gold'] {
+      --_tone: var(--nx-gold);
+      --_contrast: var(--nx-gold-contrast);
+    }
+
+    &[data-size='sm'] {
+      --_h: 2.25rem;
+      padding-inline: var(--nx-space-4);
+      font-size: var(--nx-text-xs);
+    }
+
+    &[data-size='lg'] {
+      --_h: 3.25rem;
+      padding-inline: var(--nx-space-6);
+      font-size: var(--nx-text-md);
+    }
+
+    /* Success settles green; the error stays quieter — a soft field, the tone
+       on the text and the border, so red reads without shouting. */
+    &[data-state='success'] {
+      --_tone: var(--nx-success);
+    }
+
+    &[data-state='error'] {
+      background: var(--nx-danger-soft);
+      border-color: color-mix(in oklab, var(--nx-danger) 40%, var(--nx-border));
+      color: var(--nx-danger-text);
+      box-shadow: none;
+    }
+  }
+
+  .nx-loader-orbit-orbit {
+    position: relative;
+    flex: none;
+    inline-size: 1.375rem;
+    block-size: 0.875rem;
+
+    i {
+      position: absolute;
+      inset: 0;
+      offset-path: path('M2 7 A9 5.5 0 1 1 20 7 A9 5.5 0 1 1 2 7');
+      animation: nx-loader-lap 1.15s cubic-bezier(0.62, 0.05, 0.37, 0.95) infinite;
+
+      &::after {
+        content: '';
+        position: absolute;
+        inset-block-start: 50%;
+        inset-inline-start: 50%;
+        inline-size: 5px;
+        block-size: 5px;
+        border-radius: var(--nx-radius-full);
+        background: currentColor;
+        translate: -50% -50%;
+      }
+    }
+
+    /* Each dot starts a little later and smaller: the tail of the comet. */
+    i:nth-child(2) { animation-delay: -0.16s; &::after { opacity: 0.7; scale: 0.8; } }
+    i:nth-child(3) { animation-delay: -0.32s; &::after { opacity: 0.5; scale: 0.6; } }
+    i:nth-child(4) { animation-delay: -0.48s; &::after { opacity: 0.35; scale: 0.45; } }
+    i:nth-child(5) { animation-delay: -0.6s; &::after { opacity: 0.25; scale: 0.35; } }
+    i:nth-child(6) { animation-delay: -0.72s; &::after { opacity: 0.18; scale: 0.28; } }
+  }
+
+  .nx-loader-orbit[data-size='sm'] .nx-loader-orbit-orbit { scale: 0.85; }
+  .nx-loader-orbit[data-size='lg'] .nx-loader-orbit-orbit { scale: 1.15; }
+
+  @keyframes nx-loader-lap {
+    from { offset-distance: 0%; }
+    to { offset-distance: 100%; }
+  }
+
+  .nx-loader-orbit-label {
+    display: inline-grid;
+    justify-items: center;
+    text-align: center;
+
+    > span {
+      grid-area: 1 / 1;
+      transition-property: opacity, translate;
+      transition-duration: 200ms;
+      transition-timing-function: var(--nx-ease-out);
+    }
+
+    /* The leaving label drifts out faster and softer than the arriving one. */
+    > [data-off] {
+      opacity: 0;
+      translate: 0 calc(4px * var(--nx-motion));
+      transition-duration: 150ms;
+      pointer-events: none;
+    }
+  }
+
+  /* ---- Morph ring -------------------------------------------------------------- *
+   *   <div class="nx-loader-ring" role="progressbar" aria-valuenow="58" …
+   *        data-state="idle|running|success|error" data-size="sm|md|lg"
+   *        style="--_p: 0.58">
+   *     <svg viewBox="0 0 120 120" aria-hidden="true">
+   *       <circle class="nx-loader-ring-track" pathLength="100"/>
+   *       <circle class="nx-loader-ring-morph" pathLength="100"/>
+   *       <circle class="nx-loader-ring-fill" pathLength="100"/>
+   *     </svg>
+   *     <span class="nx-loader-ring-read" aria-hidden="true">
+   *       <b class="nx-loader-ring-value">58%</b>
+   *       <svg class="nx-loader-ring-tick">…</svg>          (success)
+   *       <small class="nx-loader-ring-caption">Processing…</small>
+   *     </span>
+   *   </div>
+   * The morph circle trades stroke weight against its dashes and turns; the
+   * fill arc is the honest percent. Idle and error pause everything; success
+   * hides the morph and draws the tick.
+   * ------------------------------------------------------------------------- */
+  .nx-loader-ring {
+    --_size: 7.5rem;
+    --_value: var(--nx-text-xl);
+    --_tone: var(--nx-accent);
+
+    position: relative;
+    display: grid;
+    place-items: center;
+    inline-size: var(--_size);
+    aspect-ratio: 1;
+    color: var(--_tone);
+
+    &[data-size='sm'] { --_size: 4.5rem; --_value: var(--nx-text-md); }
+    &[data-size='lg'] { --_size: 10rem; --_value: var(--nx-text-3xl); }
+    &[data-state='error'] { --_tone: var(--nx-danger); }
+    &[data-state='success'] { --_tone: var(--nx-success); }
+
+    svg { position: absolute; inset: 0; }
+    circle { fill: none; }
+  }
+
+  .nx-loader-ring-track {
+    stroke: var(--nx-surface-3);
+    stroke-width: 3;
+  }
+
+  .nx-loader-ring-morph {
+    stroke: var(--_tone);
+    stroke-linecap: round;
+    animation:
+      nx-loader-morph 2.6s var(--nx-ease-in-out) infinite,
+      nx-loader-spin 1.8s linear infinite;
+    transition: opacity var(--nx-dur-base) var(--nx-ease-out);
+  }
+
+  .nx-loader-ring[data-state='idle'] .nx-loader-ring-morph { animation-play-state: paused; opacity: 0.3; }
+  .nx-loader-ring[data-state='error'] .nx-loader-ring-morph { animation-play-state: paused; opacity: 0.45; }
+  .nx-loader-ring[data-state='success'] .nx-loader-ring-morph { display: none; }
+
+  .nx-loader-ring-fill {
+    stroke: color-mix(in oklab, var(--_tone) 45%, transparent);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-dasharray: 100;
+    stroke-dashoffset: calc(100 - var(--_p, 0) * 100);
+    rotate: -90deg;
+    transition:
+      stroke-dashoffset var(--nx-dur-base) var(--nx-ease-out),
+      stroke var(--nx-dur-base) var(--nx-ease-out);
+  }
+
+  @keyframes nx-loader-morph {
+    0%, 100% { stroke-width: 3; stroke-dasharray: 58 42; }
+    28% { stroke-width: 10; stroke-dasharray: 22 30; }
+    52% { stroke-width: 5; stroke-dasharray: 84 16; }
+    76% { stroke-width: 12; stroke-dasharray: 10 26; }
+  }
+
+  @keyframes nx-loader-spin {
+    to { rotate: 360deg; }
+  }
+
+  .nx-loader-ring-read {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: var(--nx-space-1);
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nx-loader-ring-value {
+    font-size: var(--_value);
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .nx-loader-ring-tick { --_mark: 2rem; }
+
+  .nx-loader-ring-caption {
+    max-inline-size: 100%;
+    padding-inline: var(--nx-space-1);
+    overflow-wrap: anywhere;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-xs);
+    font-weight: 600;
+    transition: color var(--nx-dur-base) var(--nx-ease-out);
+  }
+
+  .nx-loader-ring[data-state='success'] .nx-loader-ring-caption { color: var(--nx-success-text); }
+  .nx-loader-ring[data-state='error'] .nx-loader-ring-caption { color: var(--nx-danger-text); }
+
+  /* ---- Liquid tank ------------------------------------------------------------- *
+   *   <div class="nx-loader-liquid" role="progressbar" aria-valuenow="34" …
+   *        data-state="idle|running|success|error" data-size="sm|md|lg"
+   *        style="--_p: 0.34">
+   *     <svg viewBox="0 0 200 200" aria-hidden="true">
+   *       <circle class="nx-loader-liquid-bowl"/>
+   *       <g clip-path="…"><g class="nx-loader-liquid-level">
+   *         <path class="nx-loader-liquid-wave nx-loader-liquid-back"/>
+   *         <path class="nx-loader-liquid-wave" fill="url(#…)"/>
+   *       </g></g>
+   *       <circle class="nx-loader-liquid-glass"/><circle class="nx-loader-liquid-rim"/>
+   *     </svg>
+   *     <span class="nx-loader-liquid-read" data-wet>
+   *       <b class="nx-loader-liquid-value">34%</b>
+   *       <svg class="nx-loader-liquid-tick">…</svg>          (success)
+   *       <small class="nx-loader-liquid-caption">Migrating…</small>
+   *     </span>
+   *   </div>
+   * Two same-frequency waves run out of phase — the back one paler, half a
+   * wavelength behind — while the level climbs with --_p. The error drains the
+   * colour and stills the waves; success tints the liquid and draws the tick.
+   * ------------------------------------------------------------------------- */
+  .nx-loader-liquid {
+    --_size: 10.5rem;
+    --_value: var(--nx-text-2xl);
+    --_liquid-a: var(--nx-cyan-400);
+    --_liquid-b: var(--nx-cyan-700);
+    --_wave-back: color-mix(in oklab, var(--nx-cyan-300) 55%, transparent);
+
+    position: relative;
+    display: grid;
+    place-items: center;
+    inline-size: var(--_size);
+    aspect-ratio: 1;
+
+    &[data-size='sm'] { --_size: 6.5rem; --_value: var(--nx-text-md); }
+    &[data-size='lg'] { --_size: 13rem; --_value: var(--nx-text-4xl); }
+
+    &[data-state='error'] {
+      --_liquid-a: color-mix(in oklab, var(--nx-text-muted) 55%, var(--nx-surface-3));
+      --_liquid-b: color-mix(in oklab, var(--nx-text-muted) 75%, var(--nx-surface-3));
+      --_wave-back: color-mix(in oklab, var(--nx-text-muted) 25%, transparent);
+    }
+
+    &[data-state='success'] {
+      --_liquid-a: var(--nx-success);
+      --_liquid-b: color-mix(in oklab, var(--nx-success) 70%, var(--nx-ink-900));
+      --_wave-back: color-mix(in oklab, var(--nx-success) 35%, transparent);
+    }
+
+    svg { position: absolute; inset: 0; }
+  }
+
+  .nx-loader-liquid-bowl { fill: var(--nx-surface-2); }
+  .nx-loader-liquid-glass {
+    fill: none;
+    stroke: color-mix(in oklab, var(--nx-text) 12%, transparent);
+    stroke-width: 3;
+  }
+  .nx-loader-liquid-rim {
+    fill: none;
+    stroke: color-mix(in oklab, var(--nx-text) 9%, transparent);
+    stroke-width: 1.5;
+  }
+
+  .nx-loader-liquid-level {
+    translate: 0 calc(176px * (1 - var(--_p, 0)));
+    transition: translate var(--nx-dur-base) var(--nx-ease-out);
+  }
+
+  .nx-loader-liquid-wave { animation: nx-loader-drift 3.2s linear infinite; }
+  .nx-loader-liquid-back { fill: var(--_wave-back); animation-delay: -1.6s; }
+
+  .nx-loader-liquid-front-a { stop-color: var(--_liquid-a); }
+  .nx-loader-liquid-front-b { stop-color: var(--_liquid-b); }
+
+  .nx-loader-liquid[data-state='error'] .nx-loader-liquid-wave { animation-play-state: paused; }
+
+  @keyframes nx-loader-drift {
+    to { translate: -100px 0; }
+  }
+
+  .nx-loader-liquid-read {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: 0.35rem;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    transition: color var(--nx-dur-base) var(--nx-ease-out);
+
+    /* The liquid has climbed past the reading: white on water. */
+    &[data-wet] {
+      color: var(--nx-ink-50);
+      text-shadow: 0 1px 4px rgb(0 0 0 / 0.4);
+
+      .nx-loader-liquid-caption { color: inherit; }
+    }
+  }
+
+  .nx-loader-liquid-value {
+    font-size: var(--_value);
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .nx-loader-liquid-tick { --_mark: 2rem; }
+
+  .nx-loader-liquid-caption {
+    max-inline-size: 6.5rem;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-xs);
+    font-weight: 700;
+    transition: color var(--nx-dur-base) var(--nx-ease-out);
+  }
+
+  .nx-loader-liquid[data-size='sm'] .nx-loader-liquid-caption { display: none; }
+
+  /* ---- Reduced motion ---------------------------------------------------------- *
+   * The loops stop (the dots sit spread round the orbit, the ring holds one
+   * shape, the waves stand), the one-shot draws land at once; the levels and
+   * colours still transition so the state stays readable.
+   * ------------------------------------------------------------------------- */
+  @media (prefers-reduced-motion: reduce) {
+    .nx-loader-orbit-orbit i { animation: none; }
+    .nx-loader-orbit-orbit i:nth-child(1) { offset-distance: 0%; }
+    .nx-loader-orbit-orbit i:nth-child(2) { offset-distance: 25%; }
+    .nx-loader-orbit-orbit i:nth-child(3) { offset-distance: 50%; }
+    .nx-loader-orbit-orbit i:nth-child(n + 4) { offset-distance: 75%; }
+
+    .nx-loader-ring-morph {
+      animation: none;
+      stroke-width: 6;
+      stroke-dasharray: 58 42;
+    }
+
+    .nx-loader-liquid-wave { animation: none; }
+
+    :is(.nx-loader-orbit, .nx-loader-ring-fill, .nx-loader-liquid-level) { transition-duration: 0ms; }
+
+    :is(.nx-loader-orbit-mark, .nx-loader-ring-tick, .nx-loader-liquid-tick) path {
+      animation: none;
+      stroke-dashoffset: 0;
+    }
+  }
+}

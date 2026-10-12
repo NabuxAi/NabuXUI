@@ -1,0 +1,171 @@
+/*
+ * Blocks: 3D icons.
+ *
+ *   .nx-icon3d        one hand-built SVG icon: a soft body gradient, a cooler
+ *                     accent gradient, a white edge highlight and an elliptical
+ *                     ground shadow. Purely CSS-driven look; the optional
+ *                     pointer tilt is the core tilt() behaviour (data-nx-tilt),
+ *                     and motion.css already owns that transform.
+ *   .nx-icon3d-cell   a tile: a tinted plate, the icon, a name — for grids,
+ *                     pickers, empty states.
+ *   .nx-icon3d-grid   the tiles in an auto-fill grid.
+ *   .nx-icon3d-row    a feature row: icon, title, text, an optional link.
+ *
+ * Tones recolour every gradient at once through --_c1…--_c4 (lapis · violet ·
+ * gold), so one data-tone on the icon re-skins the whole set. Nothing here
+ * assumes a light or a dark page: plates mix off the theme surfaces and the
+ * gradients are saturated enough to read on both.
+ */
+@layer nx.components {
+  /* ---- Icon ------------------------------------------------------------------ */
+  .nx-icon3d {
+    --_c1: var(--nx-lapis-200);
+    --_c2: var(--nx-lapis-600);
+    --_c3: var(--nx-cyan-300);
+    --_c4: var(--nx-cyan-600);
+    --_size: 3rem;
+    display: inline-grid;
+    place-items: center;
+    inline-size: var(--_size);
+    block-size: var(--_size);
+    vertical-align: middle;
+
+    /* The tilt writes transform; a lift and a shadow here compose with it. */
+    transition-property: translate, filter;
+    transition-duration: var(--nx-spring-gentle-duration), var(--nx-dur-base);
+    transition-timing-function: var(--nx-spring-gentle), var(--nx-ease-out);
+
+    &[data-tone="violet"] { --_c1: var(--nx-violet-300); --_c2: var(--nx-violet-700); }
+    &[data-tone="gold"] { --_c1: var(--nx-gold-200); --_c2: var(--nx-gold-600); }
+
+    &[data-size="sm"] { --_size: 1.5rem; }
+    &[data-size="lg"] { --_size: 4rem; }
+    &[data-size="display"] { --_size: 6.75rem; }
+
+    & svg {
+      inline-size: 100%;
+      block-size: 100%;
+      overflow: visible;
+    }
+  }
+
+  /* ---- Tile and grid ---------------------------------------------------------- */
+
+  .nx-icon3d-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
+    gap: var(--nx-space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nx-icon3d-cell {
+    display: grid;
+    justify-items: center;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-4) var(--nx-space-2) var(--nx-space-3);
+    border-radius: var(--nx-radius-lg);
+    background: color-mix(in oklab, var(--nx-accent) 6%, transparent);
+    transition: background-color var(--nx-dur-fast) var(--nx-ease-out);
+
+    &:focus-within {
+      outline: 2px solid var(--nx-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  .nx-icon3d-name {
+    font-size: var(--nx-text-xs);
+    font-weight: 600;
+    color: var(--nx-text-muted);
+    letter-spacing: var(--nx-tracking-tight);
+  }
+
+  /* Hover motion only where a real pointer can hover. */
+  @media (hover: hover) and (pointer: fine) {
+    .nx-icon3d-cell:hover { background: color-mix(in oklab, var(--nx-accent) 12%, transparent); }
+
+    .nx-icon3d-cell:hover .nx-icon3d {
+      translate: 0 calc(-4px * var(--nx-motion));
+      filter: drop-shadow(0 14px 12px color-mix(in oklab, var(--nx-ink-950) 18%, transparent));
+    }
+  }
+
+  /* ---- Feature row ------------------------------------------------------------ */
+
+  .nx-icon3d-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15.5rem), 1fr));
+    gap: var(--nx-space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nx-icon3d-item {
+    display: grid;
+    align-content: start;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-5);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-xl);
+    background: var(--nx-surface);
+    box-shadow: var(--nx-shadow-xs);
+    /* transform belongs to the tilt while it runs; the rest is our own. */
+    transition-property: translate, box-shadow, border-color, transform;
+    transition-duration: var(--nx-spring-gentle-duration), var(--nx-dur-base), var(--nx-dur-base), var(--nx-spring-gentle-duration);
+    transition-timing-function: var(--nx-spring-gentle), var(--nx-ease-out), var(--nx-ease-out), var(--nx-spring-gentle);
+  }
+
+  .nx-icon3d-title {
+    margin: 0;
+    color: var(--nx-text);
+    font-size: var(--nx-text-md);
+    font-weight: 650;
+  }
+
+  .nx-icon3d-text {
+    margin: 0;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+    line-height: 1.65;
+  }
+
+  .nx-icon3d-link {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-1);
+    margin-block-start: var(--nx-space-1);
+    border-radius: var(--nx-radius-xs);
+    color: var(--nx-accent-text);
+    font-size: var(--nx-text-sm);
+    font-weight: 650;
+    text-decoration: none;
+
+    &:hover { text-decoration: underline; }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+
+    .nx-icon { inline-size: 0.95rem; block-size: 0.95rem; }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .nx-icon3d-item:hover {
+      translate: 0 calc(-3px * var(--nx-motion));
+      border-color: color-mix(in oklab, var(--nx-accent) 32%, var(--nx-border));
+      box-shadow: var(--nx-shadow-md), 0 14px 28px -18px color-mix(in oklab, var(--nx-accent) 45%, transparent);
+    }
+
+    .nx-icon3d-item:hover .nx-icon3d {
+      translate: 0 calc(-2px * var(--nx-motion));
+      filter: drop-shadow(0 10px 10px color-mix(in oklab, var(--nx-ink-950) 16%, transparent));
+    }
+  }
+
+  /* ---- Reduced motion ---------------------------------------------------------- */
+  @media (prefers-reduced-motion: reduce) {
+    .nx-icon3d,
+    .nx-icon3d-item { transition-duration: 0ms; }
+  }
+}

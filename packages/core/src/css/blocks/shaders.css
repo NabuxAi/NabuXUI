@@ -1,0 +1,94 @@
+/*
+ * Shader stages
+ *
+ * One frame for the WebGL art in js/blocks/shaders.ts:
+ *
+ *   .nx-shader          the stage: clips its canvas, holds the content above
+ *                       it and shows the fallback gradient while (or if) the
+ *                       program has not proven itself — `data-fallback`.
+ *   .nx-shader-canvas   the half-resolution surface, absolute and inert.
+ *   .nx-shader-fallback the no-WebGL gradient (a token gradient by default;
+ *                       the behaviour can set any CSS background on it).
+ *   .nx-shader-content  the layer that lives on top of the art.
+ *   .nx-shader-pond     a stage that answers the touch: crosshair, 16/8,
+ *                       focusable so the keyboard can drop a wave too.
+ *
+ * The engine parks off screen and freezes under reduced motion; the swap
+ * between canvas and fallback is a plain fade either way.
+ */
+@layer nx.components {
+  .nx-shader {
+    --_radius: var(--nx-radius-2xl);
+    position: relative;
+    isolation: isolate;
+    overflow: clip;
+    border-radius: var(--_radius);
+    /* What shows before the first frame lands. */
+    background: var(--nx-surface-2);
+  }
+
+  .nx-shader-canvas {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    display: block;
+  }
+
+  .nx-shader-fallback {
+    position: absolute;
+    inset: 0;
+    display: block;
+    background: var(--nx-gradient-brand);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--nx-dur-base) var(--nx-ease-out);
+  }
+
+  .nx-shader[data-fallback] .nx-shader-fallback { opacity: 1; }
+  .nx-shader[data-fallback] .nx-shader-canvas { visibility: hidden; }
+
+  /* The content layer: fills the stage so a demo can align its copy. */
+  .nx-shader-content {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: var(--nx-space-3);
+    min-block-size: 100%;
+    padding: var(--nx-space-6);
+    align-content: var(--_align, center);
+    justify-items: var(--_justify, start);
+
+    &[data-align="start"] { --_align: start; }
+    &[data-align="center"] { --_align: center; }
+    &[data-align="end"] { --_align: end; }
+    &[data-align="between"] { --_align: space-between; }
+    &[data-justify="center"] { --_justify: center; }
+    &[data-justify="end"] { --_justify: end; }
+  }
+
+  /* A pond: a stage you press. */
+  .nx-shader-pond {
+    --_radius: var(--nx-radius-2xl);
+    aspect-ratio: 16 / 8;
+    cursor: crosshair;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+
+    &:focus-visible {
+      outline: 2px solid var(--nx-ring);
+      outline-offset: -2px;
+    }
+  }
+
+  @media (max-width: 30rem) {
+    .nx-shader-pond { aspect-ratio: 4 / 3; }
+  }
+
+  /* The colour probe the engine resolves token colours through; never seen. */
+  .nx-shader-probe {
+    position: absolute;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}

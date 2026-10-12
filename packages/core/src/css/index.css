@@ -57,3 +57,17 @@
 @import "./blocks/interact.css";
 @import "./blocks/charts-plus.css";
 @import "./blocks/effects.css";
+@import "./blocks/cta.css";
+@import "./blocks/flows.css";
+@import "./blocks/footers.css";
+@import "./blocks/heroes.css";
+@import "./blocks/icon-motion.css";
+@import "./blocks/icons.css";
+@import "./blocks/loaders.css";
+@import "./blocks/maps.css";
+@import "./blocks/motion-fx.css";
+@import "./blocks/navbars.css";
+@import "./blocks/scroll.css";
+@import "./blocks/sections.css";
+@import "./blocks/shaders.css";
+@import "./blocks/text-fx.css";

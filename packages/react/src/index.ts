@@ -60,6 +60,20 @@ export * from './blocks/agent';
 export * from './blocks/interact';
 export * from './blocks/charts-plus';
 export * from './blocks/effects';
+export * from './blocks/cta';
+export * from './blocks/flows';
+export * from './blocks/footers';
+export * from './blocks/heroes';
+export * from './blocks/icon-motion';
+export * from './blocks/icons';
+export * from './blocks/loaders';
+export * from './blocks/maps';
+export * from './blocks/motion-fx';
+export * from './blocks/navbars';
+export * from './blocks/scroll';
+export * from './blocks/sections';
+export * from './blocks/shaders';
+export * from './blocks/text-fx';
 
 // The framework-agnostic helpers, for pages that need them directly.
 export { theme, transition, toasts, type ToastInput, type ToastTone } from '@nabuxai/ui-core';

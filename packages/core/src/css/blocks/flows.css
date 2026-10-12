@@ -1,0 +1,727 @@
+/*
+ * Blocks: real flows — onboarding, checkout and the auth code.
+ *
+ * One shell, three journeys, all state inside the component:
+ *
+ *   .nx-flow            the frame: border, surface, a stage, a footer of actions
+ *   .nx-flow-bar        the segmented progress (role="progressbar"); segments
+ *                       light with data-on as the visitor moves
+ *   .nx-flow-stage      one grid cell; every step lives in it
+ *   .nx-flow-step       data-pos="before|current|after" — the leaving step
+ *                       glides toward the reading start, the arriving one
+ *                       springs in from the end; reversed going back, mirrored
+ *                       in RTL by --nx-dir, a fade when motion is reduced
+ *   .nx-flow-done       the finished state: a ring whose check draws itself
+ *
+ *   .nx-onboarding-*    role cards (a radiogroup), interest chips, the summary
+ *   .nx-checkout-*      cart rows with steppers, the card preview, the decline,
+ *                       the sticky order summary
+ *   .nx-auth-code-*     the demo-code hint, the resend timer, the quiet links
+ *
+ * The buttons, fields and the one-time code are the shared components
+ * (.nx-button, .nx-field, .nx-otp); this file only adds what a flow needs.
+ */
+@layer nx.components {
+  /* ---- The shared frame ------------------------------------------------------ */
+
+  .nx-flow {
+    display: grid;
+    gap: var(--nx-space-5);
+    inline-size: min(100%, var(--nx-flow-width, 27rem));
+    margin: 0;
+    padding: var(--nx-space-6);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-2xl);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    box-shadow: var(--nx-shadow-lg), inset 0 1px 0 var(--nx-highlight);
+  }
+
+  .nx-flow[data-size='wide'] { --nx-flow-width: 34rem; }
+
+  /* Each journey floors its stage so short steps do not collapse it. */
+  .nx-onboarding { --nx-flow-stage-min: 15.5rem; }
+  .nx-checkout { --nx-flow-stage-min: 22rem; }
+  .nx-auth-code { --nx-flow-stage-min: 12.5rem; }
+
+  @media (max-width: 30rem) {
+    .nx-flow { gap: var(--nx-space-4); padding: var(--nx-space-5) var(--nx-space-4); }
+  }
+
+  /* ---- The segmented progress bar --------------------------------------------- */
+
+  .nx-flow-top { display: grid; gap: var(--nx-space-2); }
+
+  .nx-flow-bar {
+    display: flex;
+    gap: var(--nx-space-1);
+  }
+
+  .nx-flow-bar i {
+    flex: 1;
+    block-size: 0.25rem;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface-3);
+    box-shadow: inset 0 0 0 1px var(--nx-border);
+    transition:
+      background-color var(--nx-dur-slow) var(--nx-ease-out),
+      box-shadow var(--nx-dur-slow) var(--nx-ease-out);
+  }
+
+  /* Colour and a rim both change — the fill is never motion alone. */
+  .nx-flow-bar i[data-on] {
+    background: var(--nx-gradient-brand);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--nx-accent) 55%, transparent);
+  }
+
+  .nx-flow-meta {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--nx-space-3);
+    color: var(--nx-text-muted);
+    font: 600 var(--nx-text-xs) / 1.5 var(--nx-font-sans);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nx-flow-meta > em {
+    font-style: normal;
+    color: var(--nx-accent-text);
+  }
+
+  /* ---- The stage and the step slide -------------------------------------------- */
+
+  .nx-flow-stage {
+    display: grid;
+    min-block-size: var(--nx-flow-stage-min, 0);
+  }
+
+  .nx-flow-step {
+    grid-area: 1 / 1;
+    display: grid;
+    gap: var(--nx-space-3);
+    align-content: start;
+    min-inline-size: 0;
+    translate: none;
+    transition:
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      opacity var(--nx-dur-base) var(--nx-ease-out) 50ms,
+      visibility 0s;
+
+    /* The steps not in view wait aside, out of the tab order. */
+    &:not([data-pos='current']) {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition:
+        translate 180ms var(--nx-ease-in),
+        opacity 150ms var(--nx-ease-in),
+        visibility 0s linear 180ms;
+    }
+
+    &[data-pos='before'] { translate: calc(-24px * var(--nx-dir) * var(--nx-motion)) 0; }
+    &[data-pos='after'] { translate: calc(24px * var(--nx-dir) * var(--nx-motion)) 0; }
+  }
+
+  .nx-flow-title {
+    margin: 0;
+    font: 700 var(--nx-text-lg) / 1.4 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tight);
+    text-wrap: pretty;
+  }
+
+  .nx-flow-text {
+    margin: 0;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+    line-height: 1.65;
+    text-wrap: pretty;
+  }
+
+  /* ---- The footer of actions ---------------------------------------------------- */
+
+  .nx-flow-nav {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-3);
+  }
+
+  .nx-flow-nav > .nx-button { margin-inline-start: auto; }
+
+  .nx-flow-note {
+    margin: 0;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-xs);
+    line-height: 1.6;
+  }
+
+  .nx-flow-brand {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    color: var(--nx-text-muted);
+    font: 600 var(--nx-text-xs) / 1 var(--nx-font-sans);
+  }
+
+  .nx-flow-brand > .nx-icon { inline-size: 1rem; block-size: 1rem; color: var(--nx-accent-text); }
+
+  /* ---- The finished state: a ring that draws its check --------------------------- */
+
+  .nx-flow-done {
+    display: grid;
+    justify-items: center;
+    gap: var(--nx-space-3);
+    padding: var(--nx-space-6) var(--nx-space-4);
+    text-align: center;
+  }
+
+  .nx-flow-done-ring {
+    display: grid;
+    place-items: center;
+    inline-size: 4.5rem;
+    aspect-ratio: 1;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-success-soft);
+    color: var(--nx-success);
+  }
+
+  .nx-flow-done-ring > svg { inline-size: 2.4rem; block-size: 2.4rem; }
+
+  /* The circle sweeps round, then the tick draws itself after it. */
+  .nx-flow-done-ring circle,
+  .nx-flow-done-ring path {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: nx-flow-draw 550ms var(--nx-ease-out) forwards;
+  }
+
+  .nx-flow-done-ring path { animation-delay: 140ms; }
+  @keyframes nx-flow-draw { to { stroke-dashoffset: 0; } }
+
+  .nx-flow-done-title {
+    margin: 0;
+    font: 700 var(--nx-text-lg) / 1.4 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tight);
+  }
+
+  .nx-flow-done-text {
+    margin: 0;
+    max-inline-size: 38ch;
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+    line-height: 1.65;
+  }
+
+  /* ---- Onboarding: role cards, chips, the summary -------------------------------- */
+
+  .nx-onboarding-points {
+    display: grid;
+    gap: var(--nx-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .nx-onboarding-points li {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    color: var(--nx-text);
+    font-size: var(--nx-text-sm);
+  }
+
+  .nx-onboarding-points .nx-icon {
+    flex: none;
+    inline-size: 1.05rem;
+    block-size: 1.05rem;
+    color: var(--nx-success);
+  }
+
+  .nx-onboarding-roles {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--nx-space-2);
+  }
+
+  @media (max-width: 24rem) {
+    .nx-onboarding-roles { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  /* A radio that wears its state: the border, the tint and the corner check
+     all change together; the check springs from 0.6, never from 0. */
+  .nx-onboarding-role {
+    position: relative;
+    display: grid;
+    gap: var(--nx-space-1);
+    padding: var(--nx-space-3);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+    transition-property: border-color, background-color, box-shadow, scale;
+    transition-duration: var(--nx-dur-fast), var(--nx-dur-fast), var(--nx-dur-fast), var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-ease-out), var(--nx-ease-out), var(--nx-ease-out), var(--nx-spring-snappy);
+
+    /* The radio itself is invisible but covers the card: it does the clicking,
+       the keys and the focus for us (the glass segmented control's pattern). */
+    & > input {
+      position: absolute;
+      inset: 0;
+      margin: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    &:active:not(:disabled, [data-static]) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:has(input:focus-visible) { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+    &:has(input:disabled) { opacity: 0.5; cursor: not-allowed; }
+
+    &[data-on] {
+      border-color: var(--nx-accent);
+      background: var(--nx-accent-soft);
+      box-shadow: inset 0 0 0 1px var(--nx-accent);
+    }
+
+    & b { font-size: var(--nx-text-sm); font-weight: 650; letter-spacing: var(--nx-tracking-tight); }
+    & small { color: var(--nx-text-muted); font-size: var(--nx-text-xs); line-height: 1.5; }
+  }
+
+  .nx-onboarding-role-check {
+    position: absolute;
+    inset-block-start: var(--nx-space-2);
+    inset-inline-end: var(--nx-space-2);
+    display: grid;
+    place-items: center;
+    inline-size: 1.15rem;
+    aspect-ratio: 1;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-accent);
+    color: var(--nx-accent-contrast);
+    opacity: 0;
+    scale: calc(0.6 + 0.4 * var(--nx-motion));
+    transition:
+      opacity var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy);
+
+    & .nx-icon { inline-size: 0.65rem; block-size: 0.65rem; }
+  }
+
+  .nx-onboarding-role[data-on] .nx-onboarding-role-check { opacity: 1; scale: 1; }
+
+  .nx-onboarding-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--nx-space-2);
+  }
+
+  .nx-onboarding-chip {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 2.25rem;
+    padding-inline: var(--nx-space-3);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    font: 600 var(--nx-text-xs) / 1 var(--nx-font-sans);
+    letter-spacing: var(--nx-tracking-tight);
+    cursor: pointer;
+    transition-property: border-color, background-color, color, scale;
+    transition-duration: var(--nx-dur-fast), var(--nx-dur-fast), var(--nx-dur-fast), var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-ease-out), var(--nx-ease-out), var(--nx-ease-out), var(--nx-spring-snappy);
+
+    &:active:not(:disabled, [data-static]) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+
+    &[aria-pressed='true'] {
+      border-color: var(--nx-accent);
+      background: var(--nx-accent);
+      color: var(--nx-accent-contrast);
+    }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .nx-onboarding-role:hover:not([data-on], :disabled) { border-color: var(--nx-accent-border); background: var(--nx-surface-2); }
+    .nx-onboarding-chip:hover:not([aria-pressed='true'], :disabled) { border-color: var(--nx-accent-border); }
+  }
+
+  .nx-onboarding-summary {
+    display: grid;
+    margin: 0;
+  }
+
+  .nx-onboarding-summary > div {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--nx-space-1) var(--nx-space-4);
+    padding-block: var(--nx-space-2);
+    border-block-start: 1px solid var(--nx-border);
+    font-size: var(--nx-text-sm);
+  }
+
+  .nx-onboarding-summary > div:first-child { border-block-start: 0; padding-block-start: 0; }
+  .nx-onboarding-summary dt { color: var(--nx-text-muted); }
+  .nx-onboarding-summary dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+
+  /* ---- Checkout: crumbs, cart rows, the card, the aside --------------------------- */
+
+  .nx-checkout { --nx-flow-width: min(100%, 46rem); }
+  .nx-checkout[data-step='3'] { --nx-flow-width: 27rem; }
+
+  .nx-checkout-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 16rem;
+    gap: var(--nx-space-5);
+    align-items: start;
+  }
+
+  @media (max-width: 44rem) {
+    .nx-checkout-grid { grid-template-columns: minmax(0, 1fr); }
+    .nx-checkout-aside { order: -1; position: static; }
+  }
+
+  .nx-checkout-stage { display: grid; gap: var(--nx-space-3); min-inline-size: 0; }
+
+  .nx-checkout-crumb {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--nx-space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--nx-text-muted);
+    font: 600 var(--nx-text-xs) / 1 var(--nx-font-sans);
+  }
+
+  .nx-checkout-crumb li { display: inline-flex; align-items: center; gap: var(--nx-space-2); }
+  .nx-checkout-crumb li + li::before { content: '·'; color: var(--nx-border-strong); }
+  .nx-checkout-crumb li[data-now] { color: var(--nx-accent-text); }
+
+  .nx-checkout-rows { display: grid; }
+
+  .nx-checkout-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: var(--nx-space-3);
+    padding-block: var(--nx-space-3);
+    border-block-start: 1px solid var(--nx-border);
+    font-size: var(--nx-text-sm);
+  }
+
+  .nx-checkout-row:first-child { border-block-start: 0; padding-block-start: 0; }
+  .nx-checkout-row small { display: block; color: var(--nx-text-muted); font-size: var(--nx-text-xs); }
+  .nx-checkout-row b { font-weight: 600; letter-spacing: var(--nx-tracking-tight); }
+
+  .nx-checkout-qty {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-1);
+    padding: var(--nx-space-1);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+  }
+
+  .nx-checkout-qty-btn {
+    display: grid;
+    place-items: center;
+    inline-size: 1.6rem;
+    block-size: 1.6rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--nx-radius-full);
+    background: transparent;
+    color: var(--nx-text);
+    cursor: pointer;
+    transition-property: background-color, color, scale;
+    transition-duration: var(--nx-dur-fast), var(--nx-dur-fast), var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-ease-out), var(--nx-ease-out), var(--nx-spring-snappy);
+
+    &:active:not(:disabled) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+
+    & .nx-icon { inline-size: 0.75rem; block-size: 0.75rem; }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .nx-checkout-qty-btn:hover:not(:disabled) { background: var(--nx-surface-2); }
+    .nx-checkout-remove:hover { background: var(--nx-danger-soft); color: var(--nx-danger-text); }
+  }
+
+  .nx-checkout-qty > b {
+    min-inline-size: 1.4rem;
+    text-align: center;
+    font-size: var(--nx-text-sm);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nx-checkout-price {
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nx-checkout-remove {
+    display: grid;
+    place-items: center;
+    inline-size: 1.85rem;
+    aspect-ratio: 1;
+    padding: 0;
+    border: 0;
+    border-radius: var(--nx-radius-full);
+    background: transparent;
+    color: var(--nx-text-muted);
+    cursor: pointer;
+    transition-property: background-color, color, scale;
+    transition-duration: var(--nx-dur-fast), var(--nx-dur-fast), var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-ease-out), var(--nx-ease-out), var(--nx-spring-snappy);
+
+    &:active:not(:disabled) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+
+    & .nx-icon { inline-size: 0.9rem; block-size: 0.9rem; }
+  }
+
+  .nx-checkout-empty {
+    display: grid;
+    justify-items: center;
+    gap: var(--nx-space-3);
+    padding-block: var(--nx-space-6);
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-sm);
+    text-align: center;
+  }
+
+  .nx-checkout-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--nx-space-3);
+  }
+
+  .nx-checkout-fields > .nx-field { min-inline-size: 0; }
+  .nx-checkout-fields > .nx-field:only-child,
+  .nx-checkout-fields > .nx-checkout-span { grid-column: 1 / -1; }
+
+  @media (max-width: 26rem) {
+    .nx-checkout-fields { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  /* The card preview: decorative, always the brand face whatever the theme. */
+  .nx-checkout-card {
+    position: relative;
+    display: grid;
+    gap: var(--nx-space-4);
+    padding: var(--nx-space-4) var(--nx-space-5);
+    border-radius: var(--nx-radius-xl);
+    background: var(--nx-gradient-brand);
+    color: var(--nx-ink-50);
+    overflow: clip;
+  }
+
+  .nx-checkout-card::after {
+    content: '';
+    position: absolute;
+    inline-size: 12rem;
+    aspect-ratio: 1;
+    border-radius: var(--nx-radius-full);
+    background: color-mix(in oklab, var(--nx-ink-50) 12%, transparent);
+    inset-block-end: -6rem;
+    inset-inline-end: -4rem;
+  }
+
+  .nx-checkout-card-chip {
+    inline-size: 2.1rem;
+    block-size: 1.5rem;
+    border-radius: var(--nx-radius-xs);
+    background: var(--nx-gradient-gold);
+  }
+
+  .nx-checkout-card-num {
+    min-block-size: 1.2em;
+    font: 600 var(--nx-text-md) / 1 var(--nx-font-mono);
+    letter-spacing: 0.12em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nx-checkout-card-foot {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--nx-space-4);
+    font-size: var(--nx-text-xs);
+    text-transform: uppercase;
+    letter-spacing: var(--nx-tracking-wide);
+  }
+
+  .nx-checkout-card-foot span {
+    max-inline-size: 60%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .nx-checkout-decline {
+    display: flex;
+    gap: var(--nx-space-2);
+    align-items: flex-start;
+    margin: 0;
+    padding: var(--nx-space-3);
+    border: 1px solid var(--nx-danger);
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-danger-soft);
+    color: var(--nx-danger-text);
+    font-size: var(--nx-text-sm);
+    line-height: 1.6;
+  }
+
+  .nx-checkout-decline .nx-icon { flex: none; inline-size: 1rem; block-size: 1rem; margin-block-start: 0.15rem; }
+
+  .nx-checkout-aside {
+    position: sticky;
+    inset-block-start: var(--nx-space-4);
+    display: grid;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-4);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-surface-2);
+    font-size: var(--nx-text-sm);
+  }
+
+  .nx-checkout-aside h3 {
+    margin: 0 0 var(--nx-space-1);
+    font: 650 var(--nx-text-sm) / 1.4 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-tight);
+  }
+
+  .nx-checkout-aside-row {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--nx-space-3);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nx-checkout-aside-row > span:first-child { color: var(--nx-text-muted); }
+  .nx-checkout-aside-row[data-tone='free'] > span:last-child { color: var(--nx-success-text); font-weight: 650; }
+
+  .nx-checkout-aside-row[data-tone='total'] {
+    border-block-start: 2px solid var(--nx-accent);
+    margin-block-start: var(--nx-space-1);
+    padding-block-start: var(--nx-space-2);
+    font-weight: 650;
+    font-size: var(--nx-text-md);
+  }
+
+  .nx-checkout-order {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-1) var(--nx-space-3);
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-surface-2);
+    font: 650 var(--nx-text-sm) / 1.5 var(--nx-font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nx-checkout-order .nx-icon { inline-size: 0.95rem; block-size: 0.95rem; color: var(--nx-text-muted); }
+
+  /* ---- The auth code: hint, timer, quiet links ------------------------------------ */
+
+  .nx-auth-code-boxes { display: grid; justify-items: center; padding-block: var(--nx-space-1); }
+  .nx-auth-code-boxes .nx-otp { inline-size: min(100%, 17.5rem); }
+
+  .nx-auth-code-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    justify-self: center;
+    padding: var(--nx-space-1) var(--nx-space-3);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface-2);
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-xs);
+  }
+
+  .nx-auth-code-hint .nx-icon { inline-size: 0.85rem; block-size: 0.85rem; }
+
+  .nx-auth-code-hint b {
+    font-family: var(--nx-font-mono);
+    letter-spacing: 0.18em;
+    color: var(--nx-text);
+  }
+
+  .nx-auth-code-error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-space-2);
+    margin: 0;
+    color: var(--nx-danger-text);
+    font: 600 var(--nx-text-sm) / 1.5 var(--nx-font-sans);
+    text-align: center;
+  }
+
+  .nx-auth-code-error .nx-icon { flex: none; inline-size: 0.95rem; block-size: 0.95rem; }
+
+  .nx-auth-code-resend {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-space-2);
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-xs);
+  }
+
+  .nx-auth-code-resend > b { font-variant-numeric: tabular-nums; }
+
+  .nx-auth-code-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-block-size: 2rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--nx-accent-text);
+    font: 600 var(--nx-text-xs) / 1.6 var(--nx-font-sans);
+    cursor: pointer;
+    transition-property: color, scale;
+    transition-duration: var(--nx-dur-fast), var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-ease-out), var(--nx-spring-snappy);
+
+    &:hover:not(:disabled) { text-decoration: underline; text-underline-offset: 3px; }
+    &:active:not(:disabled) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:disabled { color: var(--nx-text-subtle); cursor: default; }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; border-radius: var(--nx-radius-xs); }
+  }
+
+  .nx-auth-code-actions {
+    display: grid;
+    gap: var(--nx-space-2);
+    justify-items: center;
+  }
+
+  .nx-auth-code-actions > .nx-button { inline-size: 100%; }
+
+  /* ---- Reduced motion --------------------------------------------------------------- */
+
+  @media (prefers-reduced-motion: reduce) {
+    .nx-flow-step:not([data-pos='current']) { translate: none; }
+    .nx-flow-done-ring circle,
+    .nx-flow-done-ring path { animation-duration: 1ms; animation-delay: 0ms; }
+    .nx-onboarding-role-check { scale: 1; }
+  }
+
+  /* ---- Forced colours ------------------------------------------------------------------ */
+
+  @media (forced-colors: active) {
+    .nx-flow,
+    .nx-checkout-aside { border-color: CanvasText; }
+    .nx-flow-bar i { background: Canvas; }
+    .nx-flow-bar i[data-on] { background: Highlight; }
+    .nx-onboarding-chip[aria-pressed='true'] { background: Highlight; color: HighlightText; }
+    .nx-checkout-card { border: 1px solid CanvasText; }
+  }
+}
