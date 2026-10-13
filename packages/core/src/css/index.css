@@ -71,3 +71,9 @@
 @import "./blocks/sections.css";
 @import "./blocks/shaders.css";
 @import "./blocks/text-fx.css";
+@import "./blocks/ambient.css";
+@import "./blocks/depth-3d.css";
+@import "./blocks/entrances.css";
+@import "./blocks/hover-fx.css";
+@import "./blocks/kinetic.css";
+@import "./blocks/micro-fx.css";

@@ -1,0 +1,58 @@
+
+<?php $attributes ??= new \Illuminate\View\ComponentAttributeBag;
+
+$__newAttributes = [];
+$__propNames = \Illuminate\View\ComponentAttributeBag::extractPropNames((['items' => [], 'value' => null, 'variant' => 'pill', 'label' => null]));
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (in_array($__key, $__propNames)) {
+        $$__key = $$__key ?? $__value;
+    } else {
+        $__newAttributes[$__key] = $__value;
+    }
+}
+
+$attributes = new \Illuminate\View\ComponentAttributeBag($__newAttributes);
+
+unset($__propNames);
+unset($__newAttributes);
+
+foreach (array_filter((['items' => [], 'value' => null, 'variant' => 'pill', 'label' => null]), 'is_string', ARRAY_FILTER_USE_KEY) as $__key => $__value) {
+    $$__key = $$__key ?? $__value;
+}
+
+$__defined_vars = get_defined_vars();
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (array_key_exists($__key, $__defined_vars)) unset($$__key);
+}
+
+unset($__defined_vars, $__key, $__value); ?>
+<?php
+    $id = \NabuXUI\NabuXUI::id('nx-tabs');
+    $model = \NabuXUI\NabuXUI::model($attributes);
+    $first = array_key_first($items);
+    $value ??= $first;
+    $slots = $__laravel_slots ?? [];
+?>
+<div <?php echo e($attributes->whereDoesntStartWith('wire:model')->class('nx-tabs')->merge(['data-variant' => $variant === 'pill' ? null : $variant])); ?>
+
+    <?php if($model): ?> x-data="nxTabs(<?php if ((object) ($model) instanceof \Livewire\WireDirective) : ?>window.Livewire.find('<?php echo e($__livewire->getId()); ?>').entangle('<?php echo e($model->value()); ?>')<?php echo e($model->hasModifier('live') ? '.live' : ''); ?><?php else : ?>window.Livewire.find('<?php echo e($__livewire->getId()); ?>').entangle('<?php echo e($model); ?>')<?php endif; ?>)" <?php else: ?> x-data="nxTabs(<?php echo \Illuminate\Support\Js::from((string) $value)->toHtml() ?>)" <?php endif; ?>>
+    <div class="nx-tab-list" role="tablist" x-ref="list" <?php if($label): ?> aria-label="<?php echo e($label); ?>" <?php endif; ?> @keydown="onKey($event)">
+        <span class="nx-indicator" aria-hidden="true"></span>
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+            <?php $item = is_array($item) ? $item : ['label' => $item]; ?>
+            <button type="button" role="tab" class="nx-tab" id="<?php echo e($id); ?>-tab-<?php echo e($key); ?>" data-value="<?php echo e($key); ?>" aria-controls="<?php echo e($id); ?>-panel-<?php echo e($key); ?>"
+                x-bind:aria-selected="value === <?php echo \Illuminate\Support\Js::from((string) $key)->toHtml() ?> ? 'true' : 'false'" x-bind:tabindex="value === <?php echo \Illuminate\Support\Js::from((string) $key)->toHtml() ?> ? 0 : -1"
+                aria-selected="<?php echo e((string) $key === (string) $value ? 'true' : 'false'); ?>" tabindex="<?php echo e((string) $key === (string) $value ? 0 : -1); ?>"
+                @click="select(<?php echo \Illuminate\Support\Js::from((string) $key)->toHtml() ?>)" <?php if($item['disabled'] ?? false): echo 'disabled'; endif; ?>>
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(! empty($item['icon'])): ?><?php echo e(\NabuXUI\NabuXUI::icon($item['icon'])); ?><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?><?php echo e($item['label']); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(! empty($item['badge'])): ?><span class="nx-badge" data-tone="accent"><?php echo e($item['badge']); ?></span><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+            </button>
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+    </div>
+    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+        <div class="nx-tab-panel" role="tabpanel" id="<?php echo e($id); ?>-panel-<?php echo e($key); ?>" aria-labelledby="<?php echo e($id); ?>-tab-<?php echo e($key); ?>" tabindex="0"
+            x-show="value === <?php echo \Illuminate\Support\Js::from((string) $key)->toHtml() ?>" <?php if((string) $key !== (string) $value): ?> style="display: none" <?php endif; ?>><?php echo e($slots[$key] ?? ''); ?></div>
+    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+</div>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/packages/livewire/src/../resources/views/components/tabs.blade.php ENDPATH**/ ?>

@@ -1,0 +1,221 @@
+
+<?php $attributes ??= new \Illuminate\View\ComponentAttributeBag;
+
+$__newAttributes = [];
+$__propNames = \Illuminate\View\ComponentAttributeBag::extractPropNames((['columns' => [], 'quickAdd' => true, 'moveAction' => null, 'addAction' => null, 'height' => null, 'label' => null, 'locale' => null]));
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (in_array($__key, $__propNames)) {
+        $$__key = $$__key ?? $__value;
+    } else {
+        $__newAttributes[$__key] = $__value;
+    }
+}
+
+$attributes = new \Illuminate\View\ComponentAttributeBag($__newAttributes);
+
+unset($__propNames);
+unset($__newAttributes);
+
+foreach (array_filter((['columns' => [], 'quickAdd' => true, 'moveAction' => null, 'addAction' => null, 'height' => null, 'label' => null, 'locale' => null]), 'is_string', ARRAY_FILTER_USE_KEY) as $__key => $__value) {
+    $$__key = $$__key ?? $__value;
+}
+
+$__defined_vars = get_defined_vars();
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (array_key_exists($__key, $__defined_vars)) unset($$__key);
+}
+
+unset($__defined_vars, $__key, $__value); ?>
+<?php
+    use NabuXUI\NabuXUI;
+    // Kebab-case boolean props arrive as strings; read them like Blade does.
+    $quickAdd = ! in_array(strtolower((string) $quickAdd), ['0', 'false', 'no', 'off', ''], true);
+    $locale = str_replace('_', '-', $locale ?? app()->getLocale());
+    $lang = substr($locale, 0, 2);
+    // The board's own words live in the core i18n table (resources/lang, generated from it).
+    $say = fn (string $key) => __('nabuxui::ui.'.$key, [], $lang);
+    $labels = [
+        'board' => $label ?? $say('kanbanBoard'),
+        'addCard' => $say('kanbanAddCard'),
+        'add' => $say('kanbanAdd'),
+        'empty' => $say('kanbanEmpty'),
+        'moveTo' => $say('kanbanMoveTo'),
+        'menuFor' => $say('kanbanCardMenu'),
+        'cards' => $say('kanbanCards'),
+        'movedTo' => $say('kanbanMovedTo'),
+    ];
+    $toneOf = fn ($tone) => in_array($tone, ['accent', 'success', 'warning', 'danger', 'info', 'gold'], true) ? $tone : null;
+    $columns = array_values(array_map(fn ($column) => [
+        'id' => (string) $column['id'],
+        'title' => (string) $column['title'],
+        'tone' => $toneOf($column['tone'] ?? null),
+        'cards' => array_values(array_map(fn ($card) => [
+            'id' => (string) $card['id'],
+            'title' => (string) $card['title'],
+            'meta' => isset($card['meta']) ? (string) $card['meta'] : null,
+            'tone' => $toneOf($card['tone'] ?? null),
+            'assignee' => isset($card['assignee']['name']) ? ['name' => (string) $card['assignee']['name'], 'src' => $card['assignee']['src'] ?? null] : null,
+            'actions' => array_values(array_map(fn ($action) => [
+                'label' => (string) $action['label'],
+                'icon' => isset($action['icon']) && NabuXUI::hasIcon($action['icon']) ? $action['icon'] : null,
+                'href' => $action['href'] ?? null,
+                'danger' => ! empty($action['danger']),
+            ], $card['actions'] ?? [])),
+        ], $column['cards'] ?? [])),
+    ], $columns));
+    $boardId = NabuXUI::id('nx-kanban');
+    $listenerAttrs = $attributes->whereStartsWith(['x-on:', '@', 'wire:']);
+    $rest = $attributes->whereDoesntStartWith(['x-on:', '@', 'wire:']);
+?>
+<section <?php echo e($rest->class('nx-kanban')->merge([
+    'aria-label' => $labels['board'],
+    'data-nx-reveal' => '',
+    'style' => $height ? "--nx-kanban-height: {$height}" : null,
+])); ?> <?php echo e($listenerAttrs); ?> x-data="nxKanban(<?php echo \Illuminate\Support\Js::from(['columns' => $columns, 'labels' => $labels, 'locale' => $locale, 'moveAction' => $moveAction, 'addAction' => $addAction, 'quickAdd' => $quickAdd])->toHtml() ?>)">
+    <div class="nx-kanban-board" x-on:dragstart="dragStart($event)" x-on:dragend="dragEnd($event)">
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $columns; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $column): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+            <?php
+                $columnId = $column['id'];
+                $colKey = "{$boardId}-{$columnId}";
+            ?>
+            <div class="nx-kanban-column" data-column="<?php echo e($columnId); ?>" <?php if($column['tone']): ?> data-tone="<?php echo e($column['tone']); ?>" <?php endif; ?>
+                <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = ''.e($colKey).''; ?>wire:key="<?php echo e($colKey); ?>" x-bind:data-dropping="dropping === <?php echo \Illuminate\Support\Js::from($columnId)->toHtml() ?>">
+                <header class="nx-kanban-column-head">
+                    <span class="nx-kanban-column-dot" aria-hidden="true"></span>
+                    <h3 class="nx-kanban-column-title" id="<?php echo e($colKey); ?>-title"><?php echo e($column['title']); ?></h3>
+                    <span class="nx-kanban-column-count" aria-hidden="true">
+                        <?php if (isset($component)) { $__componentOriginal93ce6498ef66a4e04dee61d3b7d71c78 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal93ce6498ef66a4e04dee61d3b7d71c78 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::number','data' => ['value' => count($column['cards']),'reveal' => false,'locale' => $locale,'wire:ignore' => true]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::number'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(count($column['cards'])),'reveal' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(false),'locale' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($locale),'wire:ignore' => true]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal93ce6498ef66a4e04dee61d3b7d71c78)): ?>
+<?php $attributes = $__attributesOriginal93ce6498ef66a4e04dee61d3b7d71c78; ?>
+<?php unset($__attributesOriginal93ce6498ef66a4e04dee61d3b7d71c78); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal93ce6498ef66a4e04dee61d3b7d71c78)): ?>
+<?php $component = $__componentOriginal93ce6498ef66a4e04dee61d3b7d71c78; ?>
+<?php unset($__componentOriginal93ce6498ef66a4e04dee61d3b7d71c78); ?>
+<?php endif; ?>
+                    </span>
+                    
+                    <span class="nx-visually-hidden" x-text="countText(<?php echo \Illuminate\Support\Js::from($columnId)->toHtml() ?>)"><?php echo e(str_replace(':count', NabuXUI::formatNumber(count($column['cards']), 0, $locale), $labels['cards'])); ?></span>
+                </header>
+                <ul class="nx-kanban-list" aria-labelledby="<?php echo e($colKey); ?>-title"
+                    x-on:dragover="dragOver($event)" x-on:drop="drop($event)" x-on:dragleave="dragLeave($event)">
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $column['cards']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i => $card): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                        <?php
+                            $cardId = $card['id'];
+                            $menuId = "{$colKey}-menu-{$cardId}";
+                            $moveTargets = array_filter($columns, fn ($c) => $c['id'] !== $columnId);
+                        ?>
+                        <li class="nx-kanban-card" draggable="true" data-key="<?php echo e($cardId); ?>" <?php if($card['tone']): ?> data-tone="<?php echo e($card['tone']); ?>" <?php endif; ?>
+                            <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = ''.e($menuId).''; ?>wire:key="<?php echo e($menuId); ?>" style="--nx-i: <?php echo e($i); ?>"
+                            x-bind:data-dragging="dragging === <?php echo \Illuminate\Support\Js::from($cardId)->toHtml() ?>">
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($card['tone']): ?><span class="nx-kanban-card-dot" aria-hidden="true"></span><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                            <div class="nx-kanban-card-main">
+                                <p class="nx-kanban-card-title"><?php echo e($card['title']); ?></p>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($card['meta']): ?><p class="nx-kanban-card-meta"><?php echo e($card['meta']); ?></p><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                            </div>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($card['assignee']): ?>
+                                <?php if (isset($component)) { $__componentOriginal5df0f8ac1aa41529b23969e5b15d2269 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal5df0f8ac1aa41529b23969e5b15d2269 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::avatar','data' => ['name' => $card['assignee']['name'],'src' => $card['assignee']['src'],'size' => 'sm']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::avatar'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['name' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($card['assignee']['name']),'src' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($card['assignee']['src']),'size' => 'sm']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal5df0f8ac1aa41529b23969e5b15d2269)): ?>
+<?php $attributes = $__attributesOriginal5df0f8ac1aa41529b23969e5b15d2269; ?>
+<?php unset($__attributesOriginal5df0f8ac1aa41529b23969e5b15d2269); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal5df0f8ac1aa41529b23969e5b15d2269)): ?>
+<?php $component = $__componentOriginal5df0f8ac1aa41529b23969e5b15d2269; ?>
+<?php unset($__componentOriginal5df0f8ac1aa41529b23969e5b15d2269); ?>
+<?php endif; ?>
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(count($card['actions']) || count($moveTargets)): ?>
+                                <button type="button" class="nx-kanban-card-menu" data-menu-for="<?php echo e($cardId); ?>" popovertarget="<?php echo e($menuId); ?>"
+                                    aria-controls="<?php echo e($menuId); ?>" aria-haspopup="menu" aria-expanded="false"
+                                    x-bind:aria-expanded="menu === <?php echo \Illuminate\Support\Js::from($cardId)->toHtml() ?> ? 'true' : 'false'"
+                                    x-on:click="menuClick(<?php echo \Illuminate\Support\Js::from($cardId)->toHtml() ?>)"
+                                    aria-label="<?php echo e(str_replace(':name', $card['title'], $labels['menuFor'])); ?>">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" aria-hidden="true"><path d="M12 5.25h.01M12 12h.01M12 18.75h.01"/></svg>
+                                </button>
+                                <div class="nx-kanban-menu" id="<?php echo e($menuId); ?>" role="menu" popover wire:ignore.self
+                                    x-on:toggle="menuToggle(<?php echo \Illuminate\Support\Js::from($cardId)->toHtml() ?>, $event)" x-on:keydown="menuKey($event)">
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $card['actions']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $action): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                                        <button type="button" class="nx-kanban-menu-choice" role="menuitem" <?php if($action['danger']): ?> data-danger <?php endif; ?>
+                                            x-on:click="cardAction(<?php echo \Illuminate\Support\Js::from($cardId)->toHtml() ?>, <?php echo \Illuminate\Support\Js::from((string) $action['label'])->toHtml() ?>, $event)">
+                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($action['icon']): ?><?php echo e(NabuXUI::icon($action['icon'])); ?><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                            <span><?php echo e($action['label']); ?></span>
+                                        </button>
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(count($card['actions']) && count($moveTargets)): ?>
+                                        <hr class="nx-kanban-menu-sep" role="separator" />
+                                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $moveTargets; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $target): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                                        <button type="button" class="nx-kanban-menu-choice" role="menuitem"
+                                            x-on:click="menuMove(<?php echo \Illuminate\Support\Js::from($cardId)->toHtml() ?>, <?php echo \Illuminate\Support\Js::from($columnId)->toHtml() ?>, <?php echo \Illuminate\Support\Js::from($target['id'])->toHtml() ?>, $event)">
+                                            <?php echo e(NabuXUI::icon('chevron-right')); ?>
+
+                                            <span><?php echo e(str_replace(':column', $target['title'], $labels['moveTo'])); ?></span>
+                                        </button>
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                                </div>
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                        </li>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                    
+                    <li class="nx-kanban-placeholder" <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = ''.e($colKey).'-ph'; ?>wire:key="<?php echo e($colKey); ?>-ph" aria-hidden="true" hidden
+                        x-bind:hidden="dropping === <?php echo \Illuminate\Support\Js::from($columnId)->toHtml() ?> ? null : ''">
+                        <span class="nx-kanban-placeholder-dot"></span>
+                        <span class="nx-kanban-placeholder-bar"></span>
+                    </li>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(count($column['cards']) === 0): ?>
+                        <li class="nx-kanban-empty" <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = ''.e($colKey).'-empty'; ?>wire:key="<?php echo e($colKey); ?>-empty" x-show="dropping !== <?php echo \Illuminate\Support\Js::from($columnId)->toHtml() ?>"><?php echo e($labels['empty']); ?></li>
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                </ul>
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($quickAdd): ?>
+                    <div class="nx-kanban-add" <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = ''.e($colKey).'-add'; ?>wire:key="<?php echo e($colKey); ?>-add">
+                        <button type="button" class="nx-kanban-add-open" aria-expanded="false"
+                            aria-controls="<?php echo e($colKey); ?>-form" x-bind:aria-expanded="adding === <?php echo \Illuminate\Support\Js::from($columnId)->toHtml() ?> ? 'true' : 'false'"
+                            x-on:click="toggleAdd(<?php echo \Illuminate\Support\Js::from($columnId)->toHtml() ?>)">
+                            <?php echo e(NabuXUI::icon('plus')); ?>
+
+                            <span><?php echo e($labels['addCard']); ?></span>
+                        </button>
+                        <div class="nx-kanban-add-form" id="<?php echo e($colKey); ?>-form" wire:ignore
+                            x-bind:data-open="adding === <?php echo \Illuminate\Support\Js::from($columnId)->toHtml() ?> ? '' : null">
+                            <form class="nx-kanban-add-body" x-on:submit.prevent="submitAdd($event, <?php echo \Illuminate\Support\Js::from($columnId)->toHtml() ?>)">
+                                <input class="nx-kanban-add-input" name="title" type="text" autocomplete="off"
+                                    aria-label="<?php echo e($labels['addCard']); ?>" placeholder="<?php echo e($labels['addCard']); ?>" />
+                                <button type="submit" class="nx-kanban-add-submit"><?php echo e($labels['add']); ?></button>
+                            </form>
+                        </div>
+                    </div>
+                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+            </div>
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+    </div>
+    <p class="nx-visually-hidden" role="status" x-text="announce"></p>
+</section>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/packages/livewire/src/../resources/views/components/kanban.blade.php ENDPATH**/ ?>

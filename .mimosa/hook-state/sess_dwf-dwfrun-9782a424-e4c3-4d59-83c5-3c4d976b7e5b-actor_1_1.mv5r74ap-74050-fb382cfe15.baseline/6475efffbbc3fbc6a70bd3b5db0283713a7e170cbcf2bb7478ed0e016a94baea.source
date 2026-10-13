@@ -1,0 +1,146 @@
+
+<?php if (isset($component)) { $__componentOriginal4837f5b450f9d59421c88eb37fd388cd = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal4837f5b450f9d59421c88eb37fd388cd = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page','data' => ['active' => 'analytics','title' => __('admin.analytics_title'),'subtitle' => __('admin.analytics_subtitle')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('admin.page'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['active' => 'analytics','title' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.analytics_title')),'subtitle' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.analytics_subtitle'))]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+    <div class="ap-grid">
+        <div class="ap-stats" data-nx-reveal="group" x-nx-reveal.group aria-label="<?php echo e(__('admin.analytics_title')); ?>">
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $stats; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $stat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                <?php if (isset($component)) { $__componentOriginal115e9b8aa57119555d56a7fd33d35bc2 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal115e9b8aa57119555d56a7fd33d35bc2 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::stat-card','data' => ['style' => '--nx-i: '.e($loop->index).'','label' => $stat['label'],'value' => $stat['value'],'decimals' => $stat['decimals'],'suffix' => $stat['suffix'],'delta' => $stat['delta'],'trend' => $stat['trend'],'caption' => $stat['caption']]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::stat-card'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['style' => '--nx-i: '.e($loop->index).'','label' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($stat['label']),'value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($stat['value']),'decimals' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($stat['decimals']),'suffix' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($stat['suffix']),'delta' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($stat['delta']),'trend' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($stat['trend']),'caption' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($stat['caption'])]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal115e9b8aa57119555d56a7fd33d35bc2)): ?>
+<?php $attributes = $__attributesOriginal115e9b8aa57119555d56a7fd33d35bc2; ?>
+<?php unset($__attributesOriginal115e9b8aa57119555d56a7fd33d35bc2); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal115e9b8aa57119555d56a7fd33d35bc2)): ?>
+<?php $component = $__componentOriginal115e9b8aa57119555d56a7fd33d35bc2; ?>
+<?php unset($__componentOriginal115e9b8aa57119555d56a7fd33d35bc2); ?>
+<?php endif; ?>
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+        </div>
+
+        <div class="ap-duo">
+            <?php if (isset($component)) { $__componentOriginalcc784a08b6dc5c696a4c3b16ea5c7b9b = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalcc784a08b6dc5c696a4c3b16ea5c7b9b = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::metric-chart','data' => ['title' => __('admin.analytics_chart_title'),'caption' => __('admin.chart_caption'),'labels' => $months,'metrics' => $metrics]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::metric-chart'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['title' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.analytics_chart_title')),'caption' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.chart_caption')),'labels' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($months),'metrics' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($metrics)]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalcc784a08b6dc5c696a4c3b16ea5c7b9b)): ?>
+<?php $attributes = $__attributesOriginalcc784a08b6dc5c696a4c3b16ea5c7b9b; ?>
+<?php unset($__attributesOriginalcc784a08b6dc5c696a4c3b16ea5c7b9b); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalcc784a08b6dc5c696a4c3b16ea5c7b9b)): ?>
+<?php $component = $__componentOriginalcc784a08b6dc5c696a4c3b16ea5c7b9b; ?>
+<?php unset($__componentOriginalcc784a08b6dc5c696a4c3b16ea5c7b9b); ?>
+<?php endif; ?>
+            <?php if (isset($component)) { $__componentOriginal066de424e31b29dc224b9fee6c6110cc = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal066de424e31b29dc224b9fee6c6110cc = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::analytics-card','data' => ['title' => __('admin.analytics_label_traffic'),'active' => '30d','periods' => $traffic,'format' => ['maximumFractionDigits' => 0]]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::analytics-card'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['title' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.analytics_label_traffic')),'active' => '30d','periods' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($traffic),'format' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(['maximumFractionDigits' => 0])]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal066de424e31b29dc224b9fee6c6110cc)): ?>
+<?php $attributes = $__attributesOriginal066de424e31b29dc224b9fee6c6110cc; ?>
+<?php unset($__attributesOriginal066de424e31b29dc224b9fee6c6110cc); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal066de424e31b29dc224b9fee6c6110cc)): ?>
+<?php $component = $__componentOriginal066de424e31b29dc224b9fee6c6110cc; ?>
+<?php unset($__componentOriginal066de424e31b29dc224b9fee6c6110cc); ?>
+<?php endif; ?>
+        </div>
+
+        <div class="ap-duo">
+            <?php if (isset($component)) { $__componentOriginal3937c579db97a311de4302a1795187bf = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal3937c579db97a311de4302a1795187bf = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::comparison-table','data' => ['caption' => __('admin.analytics_compare_plans'),'recommended' => 'growth','plans' => $plans,'features' => $features]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::comparison-table'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['caption' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.analytics_compare_plans')),'recommended' => 'growth','plans' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($plans),'features' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($features)]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal3937c579db97a311de4302a1795187bf)): ?>
+<?php $attributes = $__attributesOriginal3937c579db97a311de4302a1795187bf; ?>
+<?php unset($__attributesOriginal3937c579db97a311de4302a1795187bf); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal3937c579db97a311de4302a1795187bf)): ?>
+<?php $component = $__componentOriginal3937c579db97a311de4302a1795187bf; ?>
+<?php unset($__componentOriginal3937c579db97a311de4302a1795187bf); ?>
+<?php endif; ?>
+            <?php if (isset($component)) { $__componentOriginal3043d5c6bc6144d85e647bb2a6c75d0d = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal3043d5c6bc6144d85e647bb2a6c75d0d = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::usage-card','data' => ['title' => __('admin.usage_title'),'plan' => __('admin.usage_plan'),'limit' => $usage['limit'],'categories' => $usage['categories'],'unit' => __('admin.usage_unit'),'decimals' => 1,'note' => __('admin.usage_note'),'action' => ['label' => __('admin.usage_upgrade'), 'href' => route('admin.settings')]]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::usage-card'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['title' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.usage_title')),'plan' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.usage_plan')),'limit' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($usage['limit']),'categories' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($usage['categories']),'unit' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.usage_unit')),'decimals' => 1,'note' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.usage_note')),'action' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(['label' => __('admin.usage_upgrade'), 'href' => route('admin.settings')])]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal3043d5c6bc6144d85e647bb2a6c75d0d)): ?>
+<?php $attributes = $__attributesOriginal3043d5c6bc6144d85e647bb2a6c75d0d; ?>
+<?php unset($__attributesOriginal3043d5c6bc6144d85e647bb2a6c75d0d); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal3043d5c6bc6144d85e647bb2a6c75d0d)): ?>
+<?php $component = $__componentOriginal3043d5c6bc6144d85e647bb2a6c75d0d; ?>
+<?php unset($__componentOriginal3043d5c6bc6144d85e647bb2a6c75d0d); ?>
+<?php endif; ?>
+        </div>
+    </div>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal4837f5b450f9d59421c88eb37fd388cd)): ?>
+<?php $attributes = $__attributesOriginal4837f5b450f9d59421c88eb37fd388cd; ?>
+<?php unset($__attributesOriginal4837f5b450f9d59421c88eb37fd388cd); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal4837f5b450f9d59421c88eb37fd388cd)): ?>
+<?php $component = $__componentOriginal4837f5b450f9d59421c88eb37fd388cd; ?>
+<?php unset($__componentOriginal4837f5b450f9d59421c88eb37fd388cd); ?>
+<?php endif; ?>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/playground/resources/views/livewire/admin/analytics.blade.php ENDPATH**/ ?>

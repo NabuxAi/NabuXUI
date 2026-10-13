@@ -1,0 +1,321 @@
+interface ReviewFinding {
+  /** مسیر فایل (با شماره خط اگر مربوط است). */
+  where: string;
+  /** یک جمله: مشکل چیست. */
+  what: string;
+  /** شدت؛ high فقط برای از دست رفتن داده یا رخنه امنیتی واقعی. */
+  severity: "low" | "medium" | "high";
+  /** راهنمای کوتاه اصلاح. */
+  fix_hint: string;
+}
+
+interface WorkflowReportShape {
+  conclusion: string;
+  findings: ReviewFinding[];
+  verified: string[];
+  notCovered: string[];
+}
+
+const CMS = "/Users/mrchatgpt/Sites/nabux-cms";
+const DOC = "/Users/mrchatgpt/Sites/Nabuxai.com/docs/cms-architecture.md";
+const PANEL_MOCK = "/Users/mrchatgpt/Sites/Nabuxai.com/lib/panel.js";
+
+/* قرارداد مشترک همه ماژول‌ها — در اسکلت نوشته و در CONVENTIONS.md ثبت می‌شود. */
+const SPEC = [
+  "ریپو: " + CMS + " · کریت nabux-cms · Rust 2024 (پیش‌فرض cargo).",
+  "پشته: axum 0.8 + tokio(rt-multi-thread,macros) + rusqlike(bundled) یعنی rusqlite با features=[\"bundled\"] + serde/serde_json + uuid(v4) + argon2(password-hash) + rand + sha2 + thiserror + tower + tower-http(cors,trace,fs) + tracing + tracing-subscriber + toml + time (rfc3339).",
+  "چیدمان: src/main.rs (کانفیگ از env: BIND_ADDR=127.0.0.1:8080، DATABASE_PATH=./data/nabux.db، ADMIN_EMAIL/ADMIN_PASSWORD برای بوت‌استرپ)، src/state.rs (AppState { db: Arc<Mutex<rusqlite::Connection>>, hooks })، src/error.rs، src/db.rs، src/models.rs، src/routes.rs، src/seo.rs، src/hooks.rs، src/handlers/{types,content,auth,users,media,settings}.rs، migrations/ با include_str!، تست‌های یکپارچگی در tests/api.rs به‌صورت درون‌پردازشی با tower::ServiceExt::oneshot و دیتابیس :memory: (هرگز به ./data دست نزن؛ بدون شبکه، قطعی و تکرارپذیر).",
+  "شکل خطا: {\"error\":{\"code\":\"...\",\"message\":\"...\"}} با status درست؛ AppError در error.rs با thiserror و IntoResponse.",
+  "REST: GET /healthz عمومی؛ POST /api/v1/auth/login عمومی؛ GET /api/v1/me؛ GET/POST /api/v1/types؛ GET/POST /api/v1/contents?type=&status=&q=&page=&per_page= (سرصفحه X-Total-Count)؛ GET/PATCH/DELETE /api/v1/contents/:id (DELETE=تراش به trash؛ ?hard=true حذف قطعی)؛ GET /api/v1/contents/:id/revisions؛ GET/POST /api/v1/users و PATCH /api/v1/users/:id؛ POST /api/v1/media (multipart با فیلد file، حداکثر ۱۰MB، نام‌گذاری sha256، ذخیره در ./media/) و GET /media/* عمومی؛ GET/PUT /api/v1/settings (JSON واحد شامل theme/accent/site)؛ GET /sitemap.xml و /robots.txt عمومی از محتوای published با انکود URL اسلیگ‌های فارسی.",
+  "احراز هویت: Bearer توکن؛ توکن تصادفی ۳۲بایتی hex که فقط sha256 آن ذخیره می‌شود؛ scope از نقش: admin→همه، editor→read+write، viewer→read؛ نقشه دسترسی: عمومی=healthz/login/sitemap/robots/سرو media؛ GET دیگر=read؛ جهش‌ها=write؛ users=admin؛ با middleware از axum دور روت‌های موجود.",
+  "مدل داده: content_types(slug PK,name,created_at)؛ contents(id,type FK,slug,title,status draft|published|trash,payload JSON,author_id,created_at,updated_at,published_at,UNIQUE(type,slug)) با ایندکس (type,status,published_at)؛ content_revisions(id,content_id,title,status,payload,saved_at)؛ users(id,email UNIQUE,name,password_hash,role,created_at)؛ tokens(id,user_id,token_hash,scopes,created_at,last_used_at)؛ media(id,file_path,mime,bytes,uploader_id,created_at)؛ settings(key PK,value JSON).",
+  "اسلیگ: اگر نبود از title ساخته می‌شود؛ نرمال‌سازی یونیکد (فاصله→-، فشرده‌سازی تیره)، حروف کلمه‌ای از جمله فارسی مجازند؛ اگر خالی شد uuid کوتاه.",
+  "باس هوک (قرارداد M0): KNOWN_HOOKS = content.render, content.filter, content.import, head.meta, head.schema, route.sitemap, module.position, event.form, event.agent, notify.push, crm.mutation, commerce.catalog؛ Registry با add_action/add_filter/apply_filter؛ مانیفست plugins/*.toml با id,name,version,source(native|wordpress|joomla),enabled,hooks,capabilities که ولیدیشن می‌شود: هوک ناشناس = خطا با فهرست مجازها.",
+  "قواعد: هر فایل با cargo fmt؛ کلیدنیم clippy بدون هشدار؛ SQL فقط پارامتری؛ همه پاسخ‌ها و لاگ‌ها بدون رمز/توکن خام.",
+].join("\n");
+
+const RULES = [
+  "قوانین کار:",
+  "- فقط داخل " + CMS + " بنویس (خواندن " + DOC + " و " + PANEL_MOCK + " آزاد).",
+  "- اول CONVENTIONS.md ریپو را بخوان و از آن پیروی کن؛ اگر چیزی را تغییر دادی، همان‌جا به‌روز کن.",
+  "- اجرای cargo check مجاز است؛ cargo test و build --release را اجرا نکن — اسکریپت گردش کار گیت می‌گذارد.",
+  "- فایل‌هایت را cargo fmt کن. کد باید بدون هشدار clippy باشد.",
+  "- تست‌هایت قطعی باشند: بدون زمان واقعی، بدون شبکه، بدون ترتیب وابسته.",
+  "- پاسخ نهایی فارسی و مختصر: چه ساخت، چه تستی نوشتی، تصمیم‌های مهم.",
+].join("\n");
+
+const fixer = agent("تعمیرکار", {
+  system:
+    "مهندس ارشد Rust هستی. خطای بیلد/تست را از ریشه حل می‌کنی، نه با تضعیف تست، حذف assertion یا دور زدن گیت. " +
+    "اگر گیت به‌طور صادقانه قابل پاس شدن نیست، صریح بنویس و اسکیلیت کن — پاسخ جعلی ممنوع. " +
+    "فارسی و مختصر پاسخ بده.",
+});
+
+artifact.board("modules", {
+  key: "module",
+  status: "stage",
+  columns: ["در صف", "در ساخت", "گیت", "آماده"],
+  cardTitle: "module",
+});
+
+const MODULES = ["اسکلت", "داده", "محتوا", "هویت", "رسانه", "هوک"];
+for (const m of MODULES) report({ module: m, stage: "در صف" });
+
+async function gate(label: string, cmdArgs: string[], timeoutMs: number, fixHint: string): Promise<boolean> {
+  report({ module: label, stage: "گیت" });
+  for (let round = 1; round <= 3; round++) {
+    const r = await world.run("cargo", cmdArgs, { timeoutMs });
+    if (r.exitCode === 0) {
+      log(`${label}: گیت پاس شد${round > 1 ? " (راند " + round + ")" : ""}`);
+      report({ module: label, stage: "آماده" });
+      return true;
+    }
+    log(`${label}: گیت شکست خورد — راند ${round} از ۳، تعمیرکار صدا زده شد`);
+    await fixer.ask(
+      `گیت «${label}» در ${CMS} شکست خورده است (راند ${round} از 3):\n\n` +
+      "خروجی خطا:\n" + r.stderr.slice(-4000) + "\n\n" + fixHint + "\n" + RULES,
+    );
+  }
+  log(`${label}: پس از ۳ راند نگرفت — توقف ساخت`);
+  return false;
+}
+
+/* ═══════════ فاز ۱: اسکلت ═══════════ */
+phase("اسکلت پروژه و قراردادها");
+report({ module: "اسکلت", stage: "در ساخت" });
+await agent("پیكربند").ask(
+  "پروژه‌ی هسته‌ی CMS نبکس را از صفر بپیکربند.\n\n" + SPEC + "\n\n" +
+  "کارهای تو:\n" +
+  "1. دایرکتوری " + CMS + " را بساز، cargo init کن (نام nabux-cms)، وابستگی‌های پشته را در Cargo.toml بگذار (بخش Linker/featureها دقیقاً طبق SPEC).\n" +
+  "2. ماژول‌های خالی ولی کامپایل‌شونده بساز: main.rs (خواندن env، ساخت AppState با دیتابیس مسیر‌دار، سرو /healthz با خاموشی مؤدبانه)، state.rs، error.rs (AppError با شکل خطای SPEC)، routes.rs (فقط healthz فعلاً)، دایرکتوری handlers/ خالی با mod های آماده، دایرکتوری خالی migrations/.\n" +
+  "3. CONVENTIONS.md بنویس: پشته، چیدمان، شکل خطا، سبک تست درون‌پردازشی oneshot، قواعد SQL پارامتری، قواعد fmt/clippy — این سند مرجع ماژول‌های بعدی است.\n" +
+  "4. .gitignore (target/, data/, media/)، README.md اسکلتی فارسی (معرفی یک‌پاراگرافی + نحوه اجرا + فهرست endpointها به‌صورت TODO که بعداً کامل می‌شود).\n" +
+  "5. tests/api.rs با یک تست دودی /healthz از طریق oneshot.\n" +
+  "6. git init و کامیت اولیه.\n" + RULES,
+);
+const skelOk = await gate("اسکلت", ["build", "--manifest-path", CMS + "/Cargo.toml"], 900000,
+  "خطای کامپایل اسکلت را ریشه‌ای حل کن؛ وابستگی‌ها را فقط اگر نسخه‌شان ناسازگار است عوض کن و دلیلش را در CONVENTIONS.md ثبت کن.");
+if (!skelOk) {
+  return {
+    conclusion: "حتی اسکلت پس از ۳ راند تعمیر کامپایل نشد؛ ساخت متوقف شد تا انسان بررسی کند. لاگ کامل در کارت گزارش پرواز است.",
+    findings: [],
+    verified: ["cargo build روی اسکلت (شکست خورد و مستند شد)"],
+    notCovered: ["همه ماژول‌ها — روی اسکلت متوقف شد"],
+  } satisfies WorkflowReportShape;
+}
+
+/* ═══════════ فاز ۲: اسکیما ═══════════ */
+phase("اسکیمای داده و مدل‌ها");
+report({ module: "داده", stage: "در ساخت" });
+await agent("معمار داده").ask(
+  "لایه‌ی داده‌ی هسته را بساز.\n\n" + SPEC + "\n\n" +
+  "کارهای تو:\n" +
+  "1. migrations/0001_init.sql با کل اسکیمای SPEC (همه جدول‌ها، UNIQUE و ایندکس‌ها؛ payload و value از نوع TEXT با JSON معتبر).\n" +
+  "2. src/db.rs: باز کردن مسیر یا :memory:، اجرای مهاجرت‌ها با pragma user_version (هر مهاجرت یک تراکنش)، و چند تابع کمکی کوئری عمومی.\n" +
+  "3. src/models.rs: ساختارهای Rust همه موجودیت‌ها + مپ‌کننده‌های rusqlite::Row + serde Serialize/Deserialize مناسب (اتم‌ها با time::OffsetDateTime و فرمت rfc3339).\n" +
+  "4. error.rs را با نگاشت خطای rusqlite به AppError کامل کن.\n" +
+  "5. تست: در :memory: مهاجرت idempotent است، insert/select همه جدول‌ها با کلیدهای خارجی روشن (PRAGMA foreign_keys=ON در اتصال) roundtrip می‌شود، نقض UNIQUE(type,slug) خطای تکرار می‌دهد.\n" + RULES,
+);
+const dataOk = await gate("داده", ["test", "--manifest-path", CMS + "/Cargo.toml"], 600000,
+  "تست‌های لایه داده را سبز کن بدون تضعیف assertionها.");
+
+/* ═══════════ فاز ۳: محتوا ═══════════ */
+phase("محتوا، مسیریابی و سئو");
+report({ module: "محتوا", stage: "در ساخت" });
+await agent("معمار محتوا").ask(
+  "CRUD محتوا و سئوی پایه را بساز.\n\n" + SPEC + "\n\n" +
+  "کارهای تو (handlers/types.rs و handlers/content.rs + routes.rs + src/seo.rs + اسلیگ‌ساز):\n" +
+  "1. types: GET فهرست، POST ساخت (slug یونیک).\n" +
+  "2. contents: POST ساخت (اسلیگ خودکار طبق SPEC اگر نبود؛ payload اعتبارسنجی JSON باشد)، GET فهرست با فیلترها و صفحه‌بندی + X-Total-Count، GET یکی با id، PATCH (هر به‌روزرسانی رکورد فعلی را در content_revisions آرشیو کند؛ published شدن published_at را ست کند)، DELETE=تراش به trash و ?hard=true حذف قطعی.\n" +
+  "3. GET /api/v1/contents/:id/revisions فهرست وارونه.\n" +
+  "4. seo.rs: sitemap.xml از محتوای published (urlencoded، ترتیب published_at نزولی، lastmod=updated_at) و robots.txt با ارجاع به sitemap.\n" +
+  "5. تست‌ها در tests/api.rs: چرخه‌ی کامل عمر محتوا شامل اسلیگ فارسی، فیلترها، صفحه‌بندی، revisions، sitemap فقط publishedها را می‌بیند، trash از فهرست پیش‌فرض حذف است.\n" + RULES,
+);
+const contentOk = await gate("محتوا", ["test", "--manifest-path", CMS + "/Cargo.toml"], 600000,
+  "تست‌های محتوا را سبز کن؛ اگر خطا از لایه داده است همان‌جا ریشه‌یابی کن.");
+
+/* ═══════════ فاز ۴: هویت ═══════════ */
+phase("کاربران و احراز هویت");
+report({ module: "هویت", stage: "در ساخت" });
+await agent("معمار هویت").ask(
+  "احراز هویت و مدیریت کاربران را بساز.\n\n" + SPEC + "\n\n" +
+  "کارهای تو (handlers/auth.rs و handlers/users.rs + middleware در routes.rs):\n" +
+  "1. argon2 برای هش گذرواژه (پارامترهای پیش‌فرض Argon2id کافی).\n" +
+  "2. login: POST /api/v1/auth/login با email+password → توکن hex ۳۲بایتی که فقط sha256 آن در tokens ذخیره می‌شود و scopes از نقش می‌آید؛ توکن خام فقط در همین پاسخ برمی‌گردد.\n" +
+  "3. middleware: نقشه دسترسی دقیق SPEC را روی روت‌های موجود اعمال کن (ردوت‌های عمومی همان‌ها؛ GET=read؛ جهش=write؛ users=admin)؛ 401 بدون توکن، 403 scope ناکافی؛ last_used_at توکن را به‌روز کن.\n" +
+  "4. بوت‌استرپ: اگر جدول users خالی بود و env های ADMIN_* آمده بودند، ادمین اول را بساز و در لاگ بنویس «admin bootstrapped».\n" +
+  "5. users: GET/POST و PATCH (تغییر نقش فقط admin)؛ GET /api/v1/me.\n" +
+  "6. تست‌ها: 401/403 طبق نقشه، login موفق، چرخه‌ی کامل محتوا با توکن editor، viewer نمی‌تواند POST کند، توکن در لاگ/پاسخ‌های دیگر نشت نمی‌کند.\n" + RULES,
+);
+const authOk = await gate("هویت", ["test", "--manifest-path", CMS + "/Cargo.toml"], 600000,
+  "تست‌های احراز هویت را سبز کن؛ توجه: تست‌های قبلی محتوا که بدون توکن بودند حالا باید توکن بگیرند یا عمومی‌بودن‌شان درست توجیه شود.");
+
+/* ═══════════ فاز ۵: رسانه و تنظیمات ═══════════ */
+phase("رسانه و تنظیمات");
+report({ module: "رسانه", stage: "در ساخت" });
+await agent("معمار رسانه").ask(
+  "رسانه و تنظیمات را بساز.\n\n" + SPEC + "\n\n" +
+  "کارهای تو (handlers/media.rs و handlers/settings.rs):\n" +
+  "1. آپلود multipart (فیلد file، سقف ۱۰MB → خطای 413): نام فایل = sha256 محتوا + پسوند از mime/path، ذخیره در ./media/، ردیف metadata، پاسخ {id,url,bytes,mime}.\n" +
+  "2. سرو عمومی GET /media/* با tower-http ServeDir؛ مطمئن شو پیمایش مسیر (../../Cargo.toml) ممکن نیست — تستش کن.\n" +
+  "3. GET /api/v1/media فهرست ابرداده‌ها.\n" +
+  "4. settings: GET مقدار JSON واحد را برمی‌گرداند (پیش‌فرض {theme:\"obsidian\",accent:\"lapis\",site:{...}})، PUT ادغام عمیق JSON و ذخیره؛ این همان مدلی است که پنل ادمین سایت (فایل " + PANEL_MOCK + " را ببین) استفاده می‌کند.\n" +
+  "5. تست‌ها: roundtrip تنظیمات با ادغام عمیق، آپلود multipart دست‌ساز (بادی خام با boundary) و بازخوانی فایل، رد traversal، 413 برای بزرگ‌تر از سقف.\n" + RULES,
+);
+const mediaOk = await gate("رسانه", ["test", "--manifest-path", CMS + "/Cargo.toml"], 600000,
+  "تست‌های رسانه/تنظیمات را سبز کن.");
+
+/* ═══════════ فاز ۶: باس هوک ═══════════ */
+phase("باس هوک و مانیفست افزونه");
+report({ module: "هوک", stage: "در ساخت" });
+await agent("معمار هوك").ask(
+  "قرارداد باس هوک و مانیفست افزونه (M0) را بساز.\n\n" + SPEC + "\n\n" +
+  "کارهای تو (src/hooks.rs + دایرکتوری plugins/):\n" +
+  "1. Registry در AppState: add_action(hook, plugin_id, callback)، add_filter(hook, plugin_id, fn(&Value)->Value)، apply_filter که زنجیره را به ترتیب ثبت اجرا کند و run_actions هم؛ thread-safe پشت همان Mutex یا RwLock داخلی خودش.\n" +
+  "2. const KNOWN_HOOKS دقیقاً فهرست SPEC؛ تابع ولیدیشن مانیفست.\n" +
+  "3. سه مانیفست نمونه در plugins/: seo.toml (همان «SEO Forge» پنل)، telegram.toml، woo-bridge.toml با source=\"wordpress\" و هوک commerce.catalog — از " + PANEL_MOCK + " برای هم‌زبان‌شدن با پنل الگو بگیر.\n" +
+  "4. لودر: در بوت، plugins/*.toml خوانده و ولید شود؛ مانیفست نامعتبر = هشدار لاگ و رد شدن آن افزونه، نه کرش سرور.\n" +
+  "5. یک نقطه اتصال واقعی برای نمونه: GET /api/v1/contents/:id قبل از پاسخ، apply_filter(\"content.render\", payload) را صدا بزند (فعلاً بدون مشترک = همان مقدار).\n" +
+  "6. تست‌ها: ولیدیشن می‌پذیرد/رد می‌کند، apply_filter ترتیب و زنجیره را حفظ می‌کند، سه مانیفست نمونه معتبرند، endpoint محتوا از فیلتر رد می‌شود.\n" + RULES,
+);
+const hookOk = await gate("هوک", ["test", "--manifest-path", CMS + "/Cargo.toml"], 600000,
+  "تست‌های باس هوک را سبز کن.");
+
+/* ═══════════ فاز ۷: پذیرش نهایی ═══════════ */
+phase("پذیرش نهایی: کلیدزنی، تست‌ها، بیلد ریلز");
+const failed: string[] = [];
+const fmtOk = await gate("کلیدزنی", ["fmt", "--manifest-path", CMS + "/Cargo.toml", "--check"], 300000,
+  "اجازه داری خودت cargo fmt --manifest-path " + CMS + "/Cargo.toml را اجرا کنی و نتیجه را کامیت کنی.");
+if (!fmtOk) failed.push("cargo fmt --check");
+const clippyOk = await gate("کلیدیپلی", ["clippy", "--manifest-path", CMS + "/Cargo.toml", "--all-targets", "--", "-D", "warnings"], 600000,
+  "هشدارهای clippy را از ریشه حل کن؛ #![allow] فقط با توجیه واقعی و ثبت در CONVENTIONS.md.");
+if (!clippyOk) failed.push("cargo clippy -D warnings");
+const testOk = await gate("تست کامل", ["test", "--manifest-path", CMS + "/Cargo.toml"], 600000,
+  "کل مجموعه تست را سبز کن.");
+if (!testOk) failed.push("cargo test");
+const relOk = await gate("بیلد ریلز", ["build", "--release", "--manifest-path", CMS + "/Cargo.toml"], 900000,
+  "بیلد release را درست کن.");
+if (!relOk) failed.push("cargo build --release");
+
+let binSize = "نامشخص";
+if (relOk) {
+  const ls = await world.run("ls", ["-lh", CMS + "/target/release/nabux-cms"]);
+  const m = /[\d.]+\s*[KM]?/.exec(ls.stdout);
+  if (m && m[0]) binSize = m[0].trim() + "B";
+}
+
+/* ═══════════ فاز ۸: بازبینی مستقل ═══════════ */
+/* تابع پادزهر: عامل‌ها گاهی به‌جای آرایه‌ی ساخت‌یافته، متن ساده (شاید با JSON
+   داخلش) برمی‌گردانند — نرمال می‌کنیم و یک بار دوباره می‌پرسیم. */
+function asFindings(raw: unknown): ReviewFinding[] | null {
+  if (Array.isArray(raw)) return raw as ReviewFinding[];
+  if (typeof raw === "string") {
+    const m = /\[[\s\S]*\]/.exec(raw);
+    if (m && m[0]) {
+      try {
+        const parsed: unknown = JSON.parse(m[0]);
+        if (Array.isArray(parsed)) return parsed as ReviewFinding[];
+      } catch { /* متن JSON نبود */ }
+    }
+  }
+  return null;
+}
+
+phase("بازبینی مستقل و رفع اشکال");
+const reviewer = agent("بازبین مستقل", {
+  system:
+    "بازبین امنیت و طراحی API هستی با چشم تازه؛ هیچ فایلی را ویرایش نمی‌کنی. یافته‌هایت را با مسیر و شاهد دقیق بنویس؛ چیزی را که بررسی نکردی گزارش نکن. اگر گیت یا الزامی صادقانه ممکن نیست، صریح بگو. فارسی پاسخ بده.",
+});
+const reviewRaw: unknown = await reviewer.ask(
+  "کد کامل هسته در " + CMS + " را بخوان (همه src/، migrations/، tests/، plugins/) و با سند معماری " + DOC + " و مدل پنل " + PANEL_MOCK + " مقایسه کن. هیچ فایلی را تغییر نده.\n\n" +
+  "چک‌لیست:\n" +
+  "- نقشه دسترسی: آیا همه جهش‌ها write می‌خواهند؟ users فقط admin؟ هیچ endpoint محافظت‌نشده‌ای نمانده؟\n" +
+  "- SQL پارامتری در همه‌جا؟ کپی‌گذاری رشته در کوئری؟\n" +
+  "- پیمایش مسیر در media و ServeDir؟\n" +
+  "- توکن: فقط هش ذخیره می‌شود؟ در لاگ یا پاسخ‌های دیگر نشت نمی‌کند؟ مقایسه‌ها امن؟\n" +
+  "- خطاها: پیام خطای داخلی/مسیر به بیرون نشت نمی‌کند؟\n" +
+  "- هم‌خوانی REST با SPEC و CONVENTIONS.md؟\n" +
+  "- ولیدیشن مانیفست: افزونه‌ی بدخواه با هوک ساختگی رد می‌شود؟\n" +
+  "- تست‌ها: assertion واقعی دارند یا تشریفاتی‌اند؟\n" +
+  "فقط یافته‌های واقعی را با شدت درست برگردان؛ سلیقه‌های سبک را low بگذار یا ننویس.",
+);
+let findings: ReviewFinding[] = asFindings(reviewRaw) ?? [];
+let retryRaw: unknown = null;
+if (findings.length === 0 && Array.isArray(reviewRaw) === false) {
+  retryRaw = await reviewer.ask(
+    "پاسخ قبلی‌ت به‌صورت آرایه‌ی ساخت‌یافته نرسید. همین یافته‌ها را این بار فقط و فقط به شکل آرایه‌ی JSON برگردان — بدون هیچ متن اضافه — با دقیقاً این کلیدها برای هر آیتم: where, what, severity (low|medium|high), fix_hint. اگر یافته‌ای نداشتی، آرایه‌ی خالی [] بفرست.",
+  );
+  findings = asFindings(retryRaw) ?? [];
+  if (findings.length === 0 && Array.isArray(retryRaw) === false) {
+    log("بازبین مستقل نتیجه‌ی ساخت‌یافته نداد — در گزارش به‌عنوان پوشش‌داده‌نشده ثبت می‌شود");
+  }
+}
+log(`بازبینی مستقل: ${findings.length} یافته`);
+const heavy = findings.filter((f) => f.severity !== "low");
+if (heavy.length > 0) {
+  await fixer.ask(
+    "بازبین مستقل این یافته‌ها را در " + CMS + " گزارش کرده؛ متوسط و بالاترها را ریشه‌ای حل کن و برای هر کدام بگو چه کردی:\n\n" +
+    JSON.stringify(heavy, null, 2) + "\n\n" +
+    "پس از اصلاح، فقط cargo check بزن؛ گیت کامل را گردش کار می‌گذارد.\n" + RULES,
+  );
+  const recheck = await world.run("cargo", ["test", "--manifest-path", CMS + "/Cargo.toml"], { timeoutMs: 600000 });
+  const reclippy = await world.run("cargo", ["clippy", "--manifest-path", CMS + "/Cargo.toml", "--all-targets", "--", "-D", "warnings"], { timeoutMs: 600000 });
+  log(`بازگیت پس از رفع: test=${recheck.exitCode === 0 ? "پاس" : "شکست"}، clippy=${reclippy.exitCode === 0 ? "پاس" : "شکست"}`);
+  if (recheck.exitCode !== 0 || reclippy.exitCode !== 0) failed.push("بازگیت پس از رفع یافته‌ها");
+}
+
+/* ═══════════ فاز ۹: تحویل ═══════════ */
+phase("تحویل: کامیت و گزارش");
+await world.run("git", ["-C", CMS, "add", "-A"]);
+const commit = await world.run("git", ["-C", CMS, "commit", "-m", "M0+M1: هسته nabux-cms — اسکیما، CRUD محتوا، احراز هویت، رسانه، تنظیمات، باس هوک، سئو، تست‌های درون‌پردازشی"]);
+log(commit.exitCode === 0 ? "کامیت تحویل زده شد" : "کامیت نشد: " + commit.stdout.slice(0, 200));
+
+const lines: string[] = [
+  "# هسته‌ی CMS نبکس — گزارش ساخت (M0+M1)",
+  "",
+  "ریپو: `" + CMS + "` · کامیت تحویل: " + (commit.exitCode === 0 ? "زده شد" : "ناموفق") + " · اندازه باینری release: **" + binSize + "**",
+  "",
+  "## گیت‌های قطعی که اجرا شد",
+  "- cargo build (اسکلت): " + (skelOk ? "پاس" : "شکست"),
+  "- cargo test per ماژول (داده/محتوا/هویت/رسانه/هوک): " + [dataOk, contentOk, authOk, mediaOk, hookOk].map((ok) => (ok ? "پاس" : "شکست")).join(" · "),
+  "- cargo fmt --check: " + (fmtOk ? "پاس" : "شکست"),
+  "- cargo clippy -D warnings: " + (clippyOk ? "پاس" : "شکست"),
+  "- cargo test (کامل): " + (testOk ? "پاس" : "شکست"),
+  "- cargo build --release: " + (relOk ? "پاس" : "شکست"),
+  "",
+];
+if (failed.length > 0) lines.push("## گیت‌های ناموفق", ...failed.map((f) => "- " + f), "");
+lines.push("## یافته‌های بازبین مستقل");
+if (findings.length === 0) lines.push("- یافته‌ای نبود.");
+for (const f of findings) {
+  lines.push("- **" + f.severity + "** · `" + f.where + "` — " + f.what + (f.fix_hint ? " (اصلاح: " + f.fix_hint + ")" : ""));
+}
+lines.push("", "## بعد از این (طبق سند معماری)", "- M2: اجرای واقعی افزونه‌ها با WASM/Extism روی همین Registry", "- M3: آداپتور ایمپورت WXR وردپرس", "- M4: اتصال پنل ادمین سایت (Extensions/Appearance) به همین API", "- M5: سازنده SSG و آداپتور قالب");
+const md = lines.join("\n");
+await artifact.markdown("report", md, {
+  title: "گزارش ساخت هسته CMS نبکس",
+  description: "M0+M1 کامل: " + (failed.length === 0 ? "همه گیت‌ها پاس" : failed.length + " گیت ناموفق") + " · باینری " + binSize,
+  primary: true,
+});
+
+const allOk = failed.length === 0 && [dataOk, contentOk, authOk, mediaOk, hookOk].every((ok) => ok);
+const reviewMissing = findings.length === 0 && !Array.isArray(reviewRaw) && !Array.isArray(retryRaw);
+return {
+  conclusion: allOk
+    ? "هسته‌ی CMS نبکس ساخته شد و همه گیت‌ها پاس شد: اسکیمای SQLite با مهاجرت، CRUD کامل محتوا با revision و اسلیگ فارسی، احراز هویت argon2+توکن هش‌شده با نقشه scope، رسانه، تنظیمات هم‌مدل پنل، باس هوک با مانیفست ولید شونده، سئو (sitemap/robots). باینری release: " + binSize + "؛ کامیت تحویل " + (commit.exitCode === 0 ? "زده شد" : "ناموفق") + (reviewMissing ? ". توجه: بازبینی مستقل نتیجه‌ی ساخت‌یافته برنگرداند و در این اجرا انجام نشد." : "") + "."
+    : "ساخت انجام شد اما این گیت‌ها پاس نشدند: " + failed.join("، ") + " — کد و گزارش در ریپو هست، نیاز به یک نگاه انسانی دارد.",
+  findings,
+  verified: [
+    "cargo build روی اسکلت",
+    "cargo test بعد از هر ماژول (داده، محتوا، هویت، رسانه، هوک)",
+    "cargo fmt --check و cargo clippy -D warnings",
+    "cargo test کامل + cargo build --release",
+  ].concat(reviewMissing ? [] : ["بازبینی مستقل امنیت/API توسط زیرمجموعه‌ای که کد را از نو خواند" + (heavy.length > 0 ? " + بازگیت پس از رفع یافته‌ها" : "")]),
+  notCovered: [
+    "اجرای واقعی افزونه با WASM (M2) — باس هوک فعلاً قرارداد + رجیستری درون‌حافظه است",
+    "آداپتور ایمپورت WXR/وردپرس و جوملا (M3)",
+    "موتور پکیج تم و اتصال پنل سایت به این API (M4) — پنل هنوز روی داده‌ی نمونه است",
+    "سازنده SSG و آداپتور قالب (M5)",
+    "بارگذاری زیر بار واقعی/بنچمارک — فقط صحت عملکرد با تست‌های درون‌پردازشی اثبات شد",
+  ].concat(reviewMissing ? ["بازبینی مستقل امنیت/API — عامل بازبین نتیجه ساخت‌یافته برنگرداند؛ یک اجرای دستی بعداً لازم است"] : []),
+} satisfies WorkflowReportShape;

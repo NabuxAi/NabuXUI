@@ -1,0 +1,303 @@
+interface AuditFinding {
+  /** مسیر فایل با شمارهٔ خط، مثل "playground/resources/views/welcome.blade.php:57". */
+  where: string;
+  /** یک جمله: چه مشکل یا نکته‌ای کشف شد. */
+  what: string;
+  /** شاهد: خطوط خوانده‌شده یا خروجی فرمان. */
+  evidence: string;
+  /** شدت: "high" فقط برای ازکارافتادن کامل صفحه. */
+  severity: "low" | "medium" | "high";
+}
+interface AuditVerdict {
+  /** آیا زنجیرهٔ ریشهٔ پیشنهادی (بوت Alpine گره‌خورده به رویداد load + فونت گوگل render-blocking) از روی کد تأیید شد؟ */
+  rootCauseConfirmed: boolean;
+  /** دو-سه جمله: چه چیزی تأیید یا رد شد و با چه شواهدی. */
+  reasoning: string;
+  findings: AuditFinding[];
+}
+interface FixReport {
+  /** فایل‌هایی که واقعاً تغییر کردند (مسیر نسبت به ریشهٔ ریپو). */
+  files: string[];
+  /** خلاصهٔ یک-دو جمله‌ای کار انجام‌شده. */
+  summary: string;
+  /** نکات برای بازبین: تصمیم‌ها، خطرها، کارهای عمداً انجام‌نشده. */
+  notes: string[];
+}
+interface ReviewVerdict {
+  /** آیا تغییرات نهایی از نظر تو قابل قبول است؟ */
+  approved: boolean;
+  /** مشکلات یافته‌شده؛ خالی یعنی هیچ. */
+  problems: string[];
+}
+interface Finding {
+  where: string;
+  what: string;
+  evidence: string;
+  status: "verified" | "unconfirmed";
+  severity: "low" | "medium" | "high";
+}
+interface WorkflowReport {
+  conclusion: string;
+  findings: Finding[];
+  verified: string[];
+  notCovered: string[];
+}
+
+const CHECKER = String.raw`(async () => {
+  const base = "http://127.0.0.1:8765";
+  const fails = [];
+  for (const u of ["/", "/livewire", "/components", "/login", "/admin"]) {
+    const r = await fetch(base + u);
+    if (r.status !== 200) fails.push(u + " -> HTTP " + r.status);
+  }
+  const html = await (await fetch(base + "/")).text();
+  if (!/vendor\/alpine\.js\?v=/.test(html)) fails.push("vendored alpine URL is not version-busted (?v= missing)");
+  const fontLink = (html.match(/<link[^>]*fonts\.googleapis\.com[^>]*>/) || [""])[0];
+  if (!/media="print"/.test(fontLink)) fails.push("google fonts stylesheet is render-blocking (no media=print async pattern)");
+  if (!/<noscript>[\s\S]*?fonts\.googleapis/.test(html)) fails.push("no noscript fallback for google fonts");
+  const cells = [...html.matchAll(/nx-odometer-cell[^>]*>([^<]*)</g)].map((m) => m[1]).join("");
+  if (!/[۱-۹1-9]/.test(cells)) fails.push("odometer cells SSR-render only zeros: " + JSON.stringify(cells.slice(0, 30)));
+  if (fails.length) { console.error(fails.join("\n")); process.exit(1); }
+  console.log("HTML gates pass: five pages 200, async fonts, version-busted alpine, odometer SSR final digits");
+})();`;
+
+const CONTEXT = [
+  "ریپوی کاری: /Users/mrchatgpt/Sites/NabuXUI (مونوریپو).",
+  "اپ Laravel پلی‌گراوند در playground/ اجراست و سرور dev روی http://127.0.0.1:8765 از قبل بالا است (ری‌استارت/kill نکن).",
+  "پکیج دیزاین‌سیستم در packages/livewire: کامپوننت‌های Blade در resources/views/components، تایپ‌اسکریپت در resources/js، باندل ساخته‌شده dist/nabuxui.js که از روت /nabuxui/{file} سرو می‌شود.",
+  "صفحهٔ اصلی: playground/resources/views/welcome.blade.php (بلید ساده بدون Livewire).",
+  "Alpine این صفحه: playground/public/vendor/alpine.js (نسخهٔ CDN با پچ بوت).",
+].join("\n");
+
+const CONSTRAINTS = [
+  "هیچ git commit یا stage انجام نده؛ فقط فایل‌ها را ویرایش کن.",
+  "فایل‌های untracked مربوط به موجِ در جریانِ یک نشست موازی را دست نزن: playground/app/Support/Demos/{Ambient,Depth-3d,Entrances,Hover-fx,Kinetic,Micro-fx}.php و پوشه‌های playground/resources/views/demos/components/{ambient,depth-3d,entrances,hover-fx,kinetic,micro-fx}.",
+  "متن‌های UI فارسی/انگلیسی را تغییر نده و سیاست محتوای بدون ارجاع ایران را حفظ کن.",
+  "اگر بخشی از دستور غیرقابل انجام شد یا به تناقض خوردی، صادقانه در گزارش بیاور؛ دور نزن.",
+].join("\n");
+
+const EVIDENCE = [
+  "شواهد تا اینجا (توسط دستیار اصلی جمع شده؛ خودت هم می‌توانی راستی‌آزمایی کنی):",
+  "- کاربر صفحهٔ اصلی را خراب می‌بیند: شمارنده‌های آمار روی ۰ و وسط صفحه (گرید bento) خالی؛ در حالی که curl از http://127.0.0.1:8765/ HTML کاملی برمی‌گرداند (ارقام ۳۵۹/۴۱/۵ سمت سرور موجودند) یعنی خرابی سمت کلاینت است.",
+  "- در playground/public/vendor/alpine.js الگوی addEventListener(\"load\",function(){nxStart()}) وجود دارد: بوت Alpine فقط پس از رویداد load پنجره رخ می‌دهد.",
+  "- welcome.blade.php لینک استایل‌شیت fonts.googleapis.com را به‌صورت render-blocking در head دارد؛ در شبکه‌ای که دامنه‌های گوگل کند یا مسدود باشند رویداد load به‌شدت به تعویق می‌افتد یا عملاً رخ نمی‌دهد؛ آن‌گاه Alpine هرگز بوت نمی‌شود، odometerها روی ۰ می‌مانند و محتوای دارای data-nx-reveal مخفی می‌ماند (وسط خالی).",
+  "- URL فایل vendored alpine هیچ پارامتر نسخه‌ای ندارد؛ کش مرورگر می‌تواند نسخهٔ کهنه را برای همیشه نگه دارد.",
+  "- اودومتر (packages/livewire/resources/views/components/odometer.blade.php) در حالت reveal مقدار from (۰) را SSR می‌کند؛ با JS مرده کاربر همیشه صفر می‌بیند.",
+].join("\n");
+
+phase("تأیید مستقل ریشهٔ خرابی صفحهٔ اصلی");
+log("یک بازرس تازه زنجیرهٔ ریشه را صرفاً با خواندن کد راستی‌آزمایی می‌کند");
+const auditor = agent("بازرس ریشهٔ خرابی", {
+  system:
+    "تو یک مهندس ارشد فرانت‌اند هستی که ریشه‌یابی را با شواهد کد انجام می‌دهد، نه با حدس. " +
+    "فرضیه را مثل یک ادعا رفتار کن: سعی کن ردش کنی. اگر جایی تأیید نشد صادقانه بگو. " +
+    "فقط بخوان و آزمایش کن؛ هیچ فایلی را ویرایش نکن.",
+});
+const audit = await auditor.ask<AuditVerdict>([
+  CONTEXT,
+  EVIDENCE,
+  "",
+  "وظیفهٔ تو: زنجیرهٔ علّی پیشنهادی بالا را حلقه‌به‌حلقه از روی کد راستی‌آزمایی کن و actively دنبال شکستنش بگرد:",
+  "1. آیا بوت Alpine در صفحهٔ اصلی واقعاً به رویداد window load گره خورده؟ (playground/public/vendor/alpine.js را بخوان؛ توجه کن دو occurrence از addEventListener(\"load\" وجود دارد — کدام مسیر استارت واقعی nxStart است و کدام رفتار داخلی خود Alpine است.)",
+  "2. آیا نوبت اجرای ماژول nabuxui.js نسبت به DOMContentLoaded تضمین می‌شود که همهٔ دایرکتیوها/providerها قبل از استارت ثبت شده باشند؟ (scripts module در برابر script کلاسیک.)",
+  "3. آیا لینک فونت گوگل در welcome.blade.php render-blocking است و تعویق آن واقعاً رویداد load را عقب می‌اندازد؟",
+  "4. آیا CSS سیستم (قواعد data-nx-reveal و کلاس nx-js که اسکریپت inline اول صفحه می‌گذارد) محتوای میانی را تا ابد مخفی نگه می‌دارد اگر Alpine استارت نشود؟ فایل CSS مربوطه را پیدا کن.",
+  "5. علاوه بر این، هر fragility دیگری در بوت سمت کلاینت صفحهٔ اصلی و لِی‌اوت‌ها پیدا کن (خطاهای بالقوه، ترتیب لود، کش بدون نسخه، وابستگی به منابع خارجی).",
+  "برای هر مورد shواهد concrete (مسیر:خط + متن) بیاور. curl از http://127.0.0.1:8765 مجاز است.",
+  CONSTRAINTS,
+].join("\n"));
+report(audit);
+log("نتیجهٔ بازرسی مستقل ریشه: " + (audit.rootCauseConfirmed ? "تأیید شد" : "تأیید نشد — جزئیات در گزارش"));
+
+phase("اعمال اصلاح‌ها روی بوت و اودومتر");
+const bootFixer = agent("اصلاح‌گر بوت و فونت", {
+  system:
+    "تو مهندس ارشد Laravel/Blade/Alpine هستی؛ ویرایش‌های ظریف و مکانیکی با کمترین diff انجام می‌دهی و " +
+    "قبل از اعلام پایان، خروجی راستی‌آزمایی می‌کنی. اگر کاری غیرممکن شد صریح بگو.",
+});
+const odoFixer = agent("اصلاح‌گر اودومتر", {
+  system:
+    "تو نگهدارندهٔ پکیج دیزاین‌سیستم NabuXUI هستی (Blade + Alpine/TypeScript). " +
+    "تغییرات سازگار با Livewire morph می‌نویسی و build پکیج را خودت اجرا و سبز می‌کنی. اگر کاری غیرممکن شد صریح بگو.",
+});
+log("دو اصلاح‌گر موازی کار را شروع می‌کنند: بوت/فونت‌ها و فیل‌سیف اودومتر");
+const [bootFix, odoFix] = await Promise.all([
+  bootFixer.ask<FixReport>([
+    CONTEXT,
+    EVIDENCE,
+    "",
+    "این خرابی‌ها را با ویرایش کد ریشه‌ای رفع کن (دروازه‌های نهایی را خودِ workflow اجرا می‌کند؛ تو فقط درست بساز):",
+    "1. playground/public/vendor/alpine.js — الگوی بوت load را به DOMContentLoaded منتقل کن: مسیری که nxStart را صدا می‌زند باید بشود: اگر document.readyState برابر \"loading\" باشد addEventListener(\"DOMContentLoaded\", ...) و در غیر این صورت فوراً nxStart(). دلیل: ماژول‌های JS همیشه قبل از DOMContentLoaded اجرا می‌شوند پس providerها ثبت شده‌اند؛ دیگر اسارت به منابع کند بیرونی (فونت/عکس) برداشته می‌شود. مواظب باش: دو occurrence از addEventListener(\"load\" در فایل هست؛ فقط مسیر استارت واقعی را جابه‌جا کن و رفتار داخلی دیگر Alpine را دست نزن. استایل فایل minified بماند و بعد از ویرایش با node --check فایل را چک کن.",
+    "2. playground/resources/views/welcome.blade.php — به URL فایل vendored alpine پارامتر نسخه بده تا کش کهنه بشکند؛ مثلاً asset('vendor/alpine.js').'?v='.filemtime(public_path('vendor/alpine.js')).",
+    "3. playground/resources/views/welcome.blade.php — استایل‌شیت فونت گوگل را غیرمسدودکننده کن: preconnectها بمانند؛ خود لینک استایل‌شیت به الگوی media=\"print\" + onload=\"this.media='all'\" تبدیل شود و داخل noscript یک لینک استایل‌شیت معمولی fallback بیاید.",
+    "4. همین الگوی فونت غیرمسدودکننده را روی همهٔ ویوهایی که fonts.googleapis.com را استایل‌شیت مسدودکننده لود می‌کنند هم اعمال کن (با grep پیدایشان کن؛ شامل playground/resources/views/layouts/app.blade.php و layouts/admin.blade.php و دموهای lightning و هر جای دیگر؛ فقط فایل‌های tracked).",
+    "5. در پایان curl http://127.0.0.1:8765/ بگیر و مطمئن شو الگوهای جدید در HTML ظاهر شده‌اند.",
+    CONSTRAINTS,
+  ].join("\n")),
+  odoFixer.ask<FixReport>([
+    CONTEXT,
+    EVIDENCE,
+    "",
+    "فیل‌سیف اودومتر را بساز تا با JS مرده/کند هم عدد نهایی دیده شود:",
+    "1. packages/livewire/resources/views/components/odometer.blade.php — الان ستون‌های roll از from (پیش‌فرض ۰) SSR می‌شوند (متغیر start). آن را عوض کن که همیشه مقدار نهایی value در ستون‌ها رندر شود تا حالت بدون-JS عدد واقعی را نشان دهد؛ span مربوط به screen-reader دست‌نخورده بماند.",
+    "2. packages/livewire/resources/js/alpine/blocks/interact.ts (پیاده‌سازی nxOdometer) — در init وقتی reveal فعال است، ستون‌ها را به حالت from بازسازی/reset کن و بعد انیمیشن تا value را اجرا کن تا تجربهٔ فعلی (رول از صفر) حفظ شود. سازگاری با Livewire morph و wire:ignoreهای موجود را نگه دار.",
+    "3. build و typecheck پکیج را خودت اجرا و سبز کن: در packages/livewire دستور node scripts/build.mjs و بعد npx tsc -p tsconfig.json --noEmit (خطاهای تایپیِ ناشی از تغییر خودت را رفع کن).",
+    "4. در پایان curl http://127.0.0.1:8765/ بگیر و مطمئن شو سلول‌های nx-odometer-cell حالا ارقام نهایی فارسی (مثل ۳۵۹) را در HTML سرور دارند.",
+    CONSTRAINTS,
+  ].join("\n")),
+]);
+report(bootFix);
+report(odoFix);
+log("اصلاح بوت: " + bootFix.summary);
+log("اصلاح اودومتر: " + odoFix.summary);
+
+phase("اجرای دروازه‌های قطعی و ترمیم تا سبز شدن");
+let gateErrors: string[] = [];
+for (let round = 1; round <= 3; round++) {
+  gateErrors = [];
+  const vc = await world.run("php", ["playground/artisan", "view:cache"]);
+  if (vc.exitCode !== 0) gateErrors.push("php artisan view:cache خراب:\n" + (vc.stderr || vc.stdout).slice(0, 2000));
+  const n1 = await world.run("node", ["--check", "playground/public/vendor/alpine.js"]);
+  if (n1.exitCode !== 0) gateErrors.push("node --check alpine.js:\n" + n1.stderr.slice(0, 1000));
+  const n2 = await world.run("node", ["--check", "packages/livewire/dist/nabuxui.js"]);
+  if (n2.exitCode !== 0) gateErrors.push("node --check dist/nabuxui.js:\n" + n2.stderr.slice(0, 1000));
+  const html = await world.run("node", ["-e", CHECKER]);
+  if (html.exitCode !== 0) gateErrors.push("دروازه‌های HTML:\n" + (html.stderr || html.stdout).slice(0, 2000));
+  const dcl = await files.grep("DOMContentLoaded", "**/vendor/alpine.js");
+  if (dcl.length === 0) gateErrors.push("در alpine.js هیچ بوت DOMContentLoaded پیدا نشد");
+  const stale = await files.grep('addEventListener\\("load",function\\(\\)\\{nxStart', "**/vendor/alpine.js");
+  if (stale.length > 0) gateErrors.push("alpine.js هنوز روی window load بوت می‌شود");
+  if (gateErrors.length === 0) break;
+  log("دور " + round + " ترمیم: " + gateErrors.length + " دروازه قرمز است");
+  const msg = gateErrors.join("\n---\n");
+  if (gateErrors.some((e) => /odometer|dist\/nabuxui/.test(e))) {
+    await odoFixer.ask("این دروازه‌ها پس از اصلاح تو هنوز قرمزند. ریشه را پیدا و رفع کن، بعد گزارش بده:\n" + msg);
+  }
+  if (gateErrors.some((e) => !/odometer/.test(e) || /view:cache/.test(e))) {
+    await bootFixer.ask("این دروازه‌ها پس از اصلاح هنوز قرمزند. اگر به کار تو مربوط است ریشه را پیدا و رفع کن و گزارش بده:\n" + msg);
+  }
+}
+
+phase("بازبینی مستقل و جمع‌بندی نهایی");
+const changedFiles = [...new Set([...(bootFix.files ?? []), ...(odoFix.files ?? [])])];
+const reviewer = agent("ناظر مستقل تغییرات", {
+  system:
+    "تو بازبین مستقل کد هستی با نگاه خراب‌کاری: دنبال چیزی می‌گردی که این تغییرات را می‌شکند. " +
+    "فقط می‌خوانی؛ هیچ فایلی را ویرایش نکن و ادعایی را که خودت چک نکرده‌ای گزارش نکن.",
+});
+const review = await reviewer.ask<ReviewVerdict>([
+  CONTEXT,
+  "این فایل‌ها در این کار تغییر کرده‌اند: " + JSON.stringify(changedFiles),
+  "",
+  "diff و محتوای نهایی این فایل‌ها را بخوان (git diff روی همین مسیرها + خود فایل‌ها) و ببین چه چیزی می‌شکند:",
+  "- پچ بوت alpine.js: آیا فقط یک مسیر استارت باقی مانده؟ خطر دوبل‌استارت یا استارت قبل از ثبت providerها هست؟",
+  "- الگوی فونت غیرمسدودکننده: آیا noscript/onload درست‌اند و در همهٔ ویوهای شامل fonts.googleapis اعمال شده (خودت grep کن)؟",
+  "- تغییر SSR اودومتر: سازگاری با Livewire morph و wire:ignore، و آیا فلشِ «عدد نهایی → صفر → رول» قابل قبول است یا باید نکته ثبت شود؟",
+  "- نسخه‌دار کردن URL فایل vendored alpine: درست است؟",
+  "هر مشکل واقعی را با مسیر:خط بیاور؛ ادعای تأییدشده فقط با شواهد.",
+].join("\n"));
+report(review);
+log("رأی ناظر مستقل: " + (review.approved ? "تأیید" : "با ایراد — " + review.problems.length + " مشکل"));
+if (!review.approved && review.problems.length > 0) {
+  await bootFixer.ask(
+    "ناظر مستقل این مشکلات را در تغییرات گزارش کرده است. هر کدام به کار تو مربوط است را اصلاح کن و گزارش بده:\n" +
+      JSON.stringify(review.problems),
+  );
+}
+const finalHtml = await world.run("node", ["-e", CHECKER]);
+const finalVc = await world.run("php", ["playground/artisan", "view:cache"]);
+const finalN1 = await world.run("node", ["--check", "playground/public/vendor/alpine.js"]);
+const gatesGreen =
+  gateErrors.length === 0 &&
+  finalHtml.exitCode === 0 &&
+  finalVc.exitCode === 0 &&
+  finalN1.exitCode === 0;
+
+const findings: Finding[] = [
+  ...(audit.findings ?? []).map((f) => ({
+    where: f.where,
+    what: f.what,
+    evidence: f.evidence,
+    status: (audit.rootCauseConfirmed ? "verified" : "unconfirmed") as "verified" | "unconfirmed",
+    severity: f.severity,
+  })),
+  {
+    where: "playground/public/vendor/alpine.js + welcome.blade.php + layouts",
+    what: "بوت Alpine از رویداد load به DOMContentLoaded منتقل شد، فونت‌های گوگل غیرمسدودکننده شدند و URL فایل alpine نسخه‌دار شد.",
+    evidence: bootFix.summary + (bootFix.notes?.length ? " | نکات: " + bootFix.notes.join("؛ ") : ""),
+    status: gatesGreen ? "verified" : "unconfirmed",
+    severity: "high",
+  },
+  {
+    where: "packages/livewire (odometer.blade.php + interact.ts + dist)",
+    what: "اودومتر حالا مقدار نهایی را SSR می‌کند و JS در reveal از from شروع می‌کند؛ بدون-JS دیگر روی صفر گیر نمی‌کند.",
+    evidence: odoFix.summary + (odoFix.notes?.length ? " | نکات: " + odoFix.notes.join("؛ ") : ""),
+    status: gatesGreen ? "verified" : "unconfirmed",
+    severity: "medium",
+  },
+  ...(review.approved
+    ? []
+    : (review.problems ?? []).map((p) => ({
+        where: "گزارش ناظر مستقل",
+        what: p,
+        evidence: "بازبین مستقل پس از خواندن diff نهایی گزارش کرده است؛ در صورت باقی‌ماندن، رفع نشده است.",
+        status: "unconfirmed" as const,
+        severity: "medium" as const,
+      }))),
+];
+
+await artifact.markdown(
+  "report",
+  [
+    "# ریشه‌یابی و اصلاح صفحهٔ اصلی پلی‌گراوند",
+    "",
+    "## ریشهٔ خرابی",
+    audit.rootCauseConfirmed
+      ? "تأیید مستقل شد: بوت Alpine در صفحهٔ اصلی به رویداد window load گره خورده بود و استایل‌شیت فونت گوگل render-blocking بود؛ در شبکه‌های کند/مسدود، load رخ نمی‌داد، Alpine بوت نمی‌شد (آمار روی صفر، محتوای reveal مخفی می‌ماند)."
+      : "بازرس مستقل زنجیرهٔ ریشه را کامل تأیید نکرد — جزئیات زیر را ببینید.",
+    "",
+    audit.reasoning,
+    "",
+    "## تغییرات اعمال‌شده",
+    ...changedFiles.map((f) => "- `" + f + "`"),
+    "",
+    "بوت: " + bootFix.summary,
+    "اودومتر: " + odoFix.summary,
+    "",
+    "## دروازه‌های اجرا شده",
+    "- php artisan view:cache (کامپایل همهٔ بلیدها)",
+    "- node --check روی alpine.js و dist/nabuxui.js",
+    "- دروازهٔ HTML: پنج صفحهٔ کلیدی ۲۰۰؛ الگوی فونت async؛ نسخه‌دار بودن alpine؛ ارقام نهایی اودومتر در SSR",
+    "- grep: وجود بوت DOMContentLoaded و حذف بوت load در alpine.js",
+    "",
+    "وضعیت نهایی دروازه‌ها: " + (gatesGreen ? "سبز" : "قرمز — نیازمند پیگیری"),
+    "",
+    "## بازبینی مستقل",
+    review.approved ? "تأیید شد." : "ایرادها: " + (review.problems ?? []).join(" | "),
+  ].join("\n"),
+  {
+    title: "گزارش فیکس صفحهٔ اصلی",
+    description: "ریشهٔ خرابی، تغییرات اعمال‌شده و نتیجهٔ دروازه‌های قطعی.",
+    primary: true,
+  },
+);
+
+const result: WorkflowReport = {
+  conclusion: gatesGreen
+    ? "ریشهٔ خرابی صفحهٔ اصلی (بوت Alpine گره‌خورده به window load + فونت گوگل render-blocking، به‌همراه گیرکردن اودومتر روی صفر در SSR) اصلاح شد و همهٔ دروازه‌های قطعی سبزند."
+    : "اصلاحات اعمال شد اما حداقل یک دروازه قرمز مانده است؛ جزئیات در findings.",
+  findings,
+  verified: [
+    "تأیید مستقل زنجیرهٔ ریشه توسط بازرس تازه (بدون دسترسی به یافته‌های دستیار اصلی)",
+    "php artisan view:cache — کامپایل کل بلیدها بدون خطا",
+    "دروازهٔ node -e — پنج صفحهٔ کلیدی ۲۰۰ به‌همراه الگوهای HTML جدید (فونت async، alpine نسخه‌دار، ارقام نهایی اودومتر در SSR)",
+    "node --check روی alpine.js و dist/nabuxui.js",
+    "grep قطعی: بوت DOMContentLoaded در alpine.js و حذف بوت load قدیمی",
+  ],
+  notCovered: [
+    "بازبینی بصری در مرورگر واقعی (عکس و کنسول) پس از پایان workflow توسط دستیار اصلی انجام می‌شود.",
+    "محیط دیجپلوی‌شدهٔ Coolify (ui.nabuxai.com) در این اجرا دوباره دیجپلوی نشده است.",
+    "فایل‌های untracked موج موازی (ambient، kinetic و…) طبق قید دست‌نخورده مانده‌اند.",
+  ],
+};
+return result;

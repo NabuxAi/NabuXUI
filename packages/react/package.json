@@ -1,6 +1,6 @@
 {
   "name": "@nabuxai/ui-react",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "NabuXUI for React: animated, accessible components on the shared NabuXUI core",
   "type": "module",
   "sideEffects": false,

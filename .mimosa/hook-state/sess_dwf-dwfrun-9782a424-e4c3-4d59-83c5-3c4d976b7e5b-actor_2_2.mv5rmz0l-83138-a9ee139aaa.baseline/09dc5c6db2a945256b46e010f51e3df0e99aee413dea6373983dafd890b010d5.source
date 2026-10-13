@@ -1,0 +1,221 @@
+
+<?php $attributes ??= new \Illuminate\View\ComponentAttributeBag;
+
+$__newAttributes = [];
+$__propNames = \Illuminate\View\ComponentAttributeBag::extractPropNames((['events' => [], 'value' => null, 'month' => null, 'weekStart' => null, 'maxPerCell' => 3, 'locale' => null, 'label' => null, 'emptyText' => null, 'today' => null]));
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (in_array($__key, $__propNames)) {
+        $$__key = $$__key ?? $__value;
+    } else {
+        $__newAttributes[$__key] = $__value;
+    }
+}
+
+$attributes = new \Illuminate\View\ComponentAttributeBag($__newAttributes);
+
+unset($__propNames);
+unset($__newAttributes);
+
+foreach (array_filter((['events' => [], 'value' => null, 'month' => null, 'weekStart' => null, 'maxPerCell' => 3, 'locale' => null, 'label' => null, 'emptyText' => null, 'today' => null]), 'is_string', ARRAY_FILTER_USE_KEY) as $__key => $__value) {
+    $$__key = $$__key ?? $__value;
+}
+
+$__defined_vars = get_defined_vars();
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (array_key_exists($__key, $__defined_vars)) unset($$__key);
+}
+
+unset($__defined_vars, $__key, $__value); ?>
+<?php
+    use NabuXUI\NabuXUI;
+    $locale = str_replace('_', '-', $locale ?? app()->getLocale());
+    $lang = substr($locale, 0, 2);
+    // The calendar's own words live in the core i18n table (resources/lang, generated from it).
+    $say = fn (string $key) => __('nabuxui::ui.'.$key, [], $lang);
+    $labels = [
+        'calendar' => $label ?? $say('calendar'),
+        'prevMonth' => $say('calendarPrevMonth'),
+        'nextMonth' => $say('calendarNextMonth'),
+        'eventsCount' => $say('calendarEventsCount'),
+        'emptyDay' => $emptyText ?? $say('calendarEmptyDay'),
+    ];
+    // The week starts on Saturday in the Persian and Arabic calendars, Sunday
+    // elsewhere. Kebab-case numeric props arrive as strings; compare textually.
+    $weekStart = in_array((string) $weekStart, ['0', '1', '6'], true) ? (int) $weekStart : ($lang === 'fa' || $lang === 'ar' ? 6 : 0);
+    $maxPerCell = max(1, (int) $maxPerCell);
+    $toneOf = fn ($tone) => in_array($tone, ['accent', 'success', 'warning', 'danger', 'info', 'gold'], true) ? $tone : null;
+    $isoDay = fn ($date) => $date instanceof \DateTimeInterface ? $date->format('Y-m-d') : substr((string) $date, 0, 10);
+
+    // Events grouped by day; every field the client needs goes in the config once.
+    $byDay = collect($events)->groupBy(fn ($event) => $isoDay($event['date'] ?? ''))->map(fn ($day) => $day->values()->map(fn ($event) => [
+        'date' => $isoDay($event['date'] ?? ''),
+        'label' => (string) ($event['label'] ?? ''),
+        'time' => isset($event['time']) ? (string) $event['time'] : null,
+        'tone' => $toneOf($event['tone'] ?? null),
+        'href' => $event['href'] ?? null,
+    ])->all())->all();
+    $allDays = collect($byDay)->map(fn ($day, $iso) => ['date' => $iso, 'events' => $day])->values()->sortBy('date')->values();
+
+    $todayIso = $today instanceof \DateTimeInterface ? $today->format('Y-m-d') : (is_string($today) && $today !== '' ? substr($today, 0, 10) : (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format('Y-m-d'));
+    $selected = is_string($value) && $value !== '' ? substr($value, 0, 10) : null;
+    $viewing = substr(is_string($month) && $month !== '' ? $month : ($selected ?? $todayIso), 0, 7);
+    if (! preg_match('/^\d{4}-\d{2}$/', $viewing)) { $viewing = substr($todayIso, 0, 7); }
+
+    // Month math on UTC days: the grid opens on the week's first day, closes on its last.
+    $first = \DateTimeImmutable::createFromFormat('Y-m-d H:i:s', "{$viewing}-01 00:00:00", new \DateTimeZone('UTC')) ?: new \DateTimeImmutable("{$viewing}-01", new \DateTimeZone('UTC'));
+    $offset = ((int) $first->format('w') - $weekStart + 7) % 7;
+    $daysInMonth = (int) $first->modify('last day of this month')->format('j');
+    $weeks = (int) ceil(($offset + $daysInMonth) / 7);
+    $start = $offset > 0 ? $first->modify("-{$offset} days") : $first;
+    $days = [];
+    for ($i = 0; $i < $weeks * 7; $i++) { $days[] = $start->modify("+{$i} days"); }
+
+    $fmt = function (string $pattern, \DateTimeInterface $date) use ($locale): string {
+        if (class_exists(\IntlDateFormatter::class)) {
+            return (string) (new \IntlDateFormatter($locale, \IntlDateFormatter::NONE, \IntlDateFormatter::NONE, 'UTC', null, $pattern))->format($date);
+        }
+        return $date->format(match ($pattern) { 'EEEE' => 'l', 'EEE' => 'D', 'MMMM y' => 'F Y', default => 'Y-m-d' });
+    };
+    $weekdayNames = [];
+    $reference = \DateTimeImmutable::createFromFormat('Y-m-d H:i:s', '2026-01-04 00:00:00', new \DateTimeZone('UTC')); // a Sunday
+    for ($i = 0; $i < 7; $i++) { $weekdayNames[] = $fmt('EEE', $reference->modify('+'.(($weekStart + $i) % 7).' days')); }
+    $monthTitle = $fmt('MMMM y', $first);
+    $dayEvents = $selected ? ($byDay[$selected] ?? []) : [];
+    // The roving tab stop: the selected day when visible, else today, else the first cell.
+    $anchorIso = $selected;
+    if ($anchorIso === null) {
+        $anchorIso = substr($todayIso, 0, 7) === $viewing ? $todayIso : $days[0]->format('Y-m-d');
+    }
+    $calendarId = NabuXUI::id('nx-cal');
+    $listenerAttrs = $attributes->whereStartsWith(['x-on:', '@', 'wire:']);
+    $rest = $attributes->whereDoesntStartWith(['x-on:', '@', 'wire:']);
+?>
+<section <?php echo e($rest->class('nx-calendar')->merge(['aria-labelledby' => "{$calendarId}-title", 'data-nx-reveal' => ''])); ?> <?php echo e($listenerAttrs); ?>
+
+    x-data="nxCalendar(<?php echo \Illuminate\Support\Js::from([
+        'events' => $allDays,
+        'labels' => $labels,
+        'locale' => $locale,
+        'weekStart' => $weekStart,
+        'maxPerCell' => $maxPerCell,
+        'month' => $viewing,
+        'selected' => $selected,
+        'today' => $todayIso,
+    ])->toHtml() ?>)" x-modelable="model">
+    <header class="nx-calendar-head">
+        <h3 class="nx-calendar-title" id="<?php echo e($calendarId); ?>-title" aria-live="polite"
+            x-text="titleText" x-bind:data-month="month"><?php echo e($monthTitle); ?></h3>
+        <nav class="nx-calendar-nav" aria-label="<?php echo e($labels['calendar']); ?>">
+            <button type="button" class="nx-calendar-nav-btn" aria-label="<?php echo e($labels['prevMonth']); ?>" x-on:click="go(-1)">
+                <?php echo e(NabuXUI::icon('chevron-left')); ?>
+
+            </button>
+            <button type="button" class="nx-calendar-nav-btn" aria-label="<?php echo e($labels['nextMonth']); ?>" x-on:click="go(1)">
+                <?php echo e(NabuXUI::icon('chevron-right')); ?>
+
+            </button>
+        </nav>
+    </header>
+
+    <div class="nx-calendar-weekdays" aria-hidden="true">
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $weekdayNames; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $name): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+            <span class="nx-calendar-weekday"><?php echo e($name); ?></span>
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+    </div>
+
+    
+    <div class="nx-calendar-grid" role="grid" aria-labelledby="<?php echo e($calendarId); ?>-title" x-ref="grid" x-on:keydown="gridKey($event)">
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = array_chunk($days, 7); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $week): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+            <div class="nx-calendar-week" role="row">
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $week; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $day): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                    <?php
+                        $iso = $day->format('Y-m-d');
+                        $list = $byDay[$iso] ?? [];
+                        $shown = array_slice($list, 0, $maxPerCell);
+                        $more = count($list) - count($shown);
+                        $isToday = $iso === $todayIso;
+                        $isSelected = $iso === $selected;
+                        $anchor = $isSelected || (! $selected && $isToday);
+                    ?>
+                    <div class="nx-calendar-cell" role="gridcell" data-date="<?php echo e($iso); ?>"
+                        <?php if(substr($iso, 0, 7) !== $viewing): ?> data-out <?php endif; ?>
+                        <?php if($isToday): ?> data-today <?php endif; ?>
+                        <?php if($isSelected): ?> aria-selected="true" <?php endif; ?>>
+                        <button type="button" class="nx-calendar-day" data-date="<?php echo e($iso); ?>"
+                            <?php if(count($list)): ?> data-count <?php endif; ?>
+                            tabindex="<?php echo e($iso === $anchorIso ? '0' : '-1'); ?>"
+                            <?php if($isToday): ?> aria-current="date" <?php endif; ?>
+                            aria-label="<?php echo e($fmt('EEEE, d MMMM y', $day)); ?><?php echo e(count($list) ? ', '.str_replace(':count', NabuXUI::formatNumber(count($list), 0, $locale), $labels['eventsCount']) : ''); ?>"
+                            x-on:click="pick(<?php echo \Illuminate\Support\Js::from($iso)->toHtml() ?>)">
+                            <span class="nx-calendar-daynum"><?php echo e(NabuXUI::formatNumber((int) $day->format('j'), 0, $locale)); ?></span>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($isToday): ?><span class="nx-calendar-today-dot" aria-hidden="true"></span><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(count($shown) || $more > 0): ?>
+                                <span class="nx-calendar-day-events" aria-hidden="true">
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $shown; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $event): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                                        <span class="nx-calendar-chip" <?php if($event['tone']): ?> data-tone="<?php echo e($event['tone']); ?>" <?php endif; ?>></span>
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($more > 0): ?>
+                                        <span class="nx-calendar-more">+<?php echo e(NabuXUI::formatNumber($more, 0, $locale)); ?></span>
+                                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                </span>
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                        </button>
+                    </div>
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+            </div>
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+    </div>
+
+    
+    <div class="nx-calendar-panel" x-ref="panel" aria-live="polite" x-bind:data-open="selected ? '' : null">
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($selected): ?>
+            <header class="nx-calendar-panel-head">
+                <h4 class="nx-calendar-panel-title"><?php echo e($fmt('EEEE, d MMMM y', new \DateTimeImmutable("{$selected} 00:00:00", new \DateTimeZone('UTC')))); ?></h4>
+                <span class="nx-calendar-panel-count"><?php echo e(str_replace(':count', NabuXUI::formatNumber(count($dayEvents), 0, $locale), $labels['eventsCount'])); ?></span>
+            </header>
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(count($dayEvents)): ?>
+                <ul class="nx-calendar-panel-list">
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $dayEvents; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i => $event): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                        <li style="--nx-i: <?php echo e($i); ?>">
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($event['href']): ?>
+                                <a class="nx-calendar-panel-item" href="<?php echo e($event['href']); ?>">
+                            <?php else: ?>
+                                <div class="nx-calendar-panel-item">
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                <span class="nx-calendar-panel-time"><?php echo e($event['time'] ?? ''); ?></span>
+                                <span class="nx-calendar-panel-dot" <?php if($event['tone']): ?> data-tone="<?php echo e($event['tone']); ?>" <?php endif; ?> aria-hidden="true"></span>
+                                <span class="nx-calendar-panel-label"><?php echo e($event['label']); ?></span>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($event['href']): ?>
+                                </a>
+                            <?php else: ?>
+                                </div>
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                        </li>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                </ul>
+            <?php else: ?>
+                <p class="nx-calendar-panel-empty"><?php echo e($labels['emptyDay']); ?></p>
+            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+    </div>
+
+    
+    <table class="nx-visually-hidden">
+        <caption><?php echo e($labels['calendar']); ?></caption>
+        <tbody>
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $allDays; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $day): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $day['events']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $event): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                    <tr>
+                        <th scope="row"><?php echo e($fmt('EEEE, d MMMM y', new \DateTimeImmutable($event['date'].' 00:00:00', new \DateTimeZone('UTC')))); ?></th>
+                        <td><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($event['time']): ?><?php echo e($event['time']); ?> — <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?><?php echo e($event['label']); ?></td>
+                    </tr>
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                <tr><td><?php echo e($labels['emptyDay']); ?></td></tr>
+            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+        </tbody>
+    </table>
+</section>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/packages/livewire/src/../resources/views/components/calendar.blade.php ENDPATH**/ ?>

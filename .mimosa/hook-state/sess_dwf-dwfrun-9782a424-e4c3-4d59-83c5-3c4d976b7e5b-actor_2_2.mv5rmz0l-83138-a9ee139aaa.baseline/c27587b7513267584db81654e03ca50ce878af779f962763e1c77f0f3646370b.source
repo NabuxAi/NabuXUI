@@ -1,0 +1,315 @@
+
+<?php
+    $fa = app()->getLocale() === 'fa';
+    $say = fn (string $en, string $faText) => $fa ? $faText : $en;
+?>
+
+<style>
+    .mfrb-root {
+        --mfrb-fg: #1c1917; --mfrb-muted: #78716c; --mfrb-border: #e7e5e4;
+        --mfrb-bg: #ffffff; --mfrb-soft: #f5f5f4; --mfrb-accent: #4f46e5;
+        display: grid; gap: 1rem; justify-items: start;
+        font-family: 'Inter', 'Vazirmatn', ui-sans-serif, system-ui, sans-serif;
+        color: var(--mfrb-fg);
+    }
+    html[data-theme="dark"] .mfrb-root {
+        --mfrb-fg: #fafaf9; --mfrb-muted: #a8a29e; --mfrb-border: #292524;
+        --mfrb-bg: #1c1917; --mfrb-soft: #292524; --mfrb-accent: #a5b4fc;
+    }
+    @media (prefers-color-scheme: dark) {
+        html:not([data-theme="light"]) .mfrb-root {
+            --mfrb-fg: #fafaf9; --mfrb-muted: #a8a29e; --mfrb-border: #292524;
+            --mfrb-bg: #1c1917; --mfrb-soft: #292524; --mfrb-accent: #a5b4fc;
+        }
+    }
+    .mfrb-card {
+        position: relative; overflow: clip;
+        inline-size: min(100%, 30rem); padding: 1.2rem 1.4rem;
+        border: 1px solid var(--mfrb-border); border-radius: 1.1rem;
+        background: var(--mfrb-bg);
+        box-shadow: 0 20px 42px -32px rgb(0 0 0 / .45);
+    }
+    .mfrb-cv { position: absolute; inset: 0; inline-size: 100%; block-size: 100%;
+               pointer-events: none; z-index: 3; }
+    .mfrb-head { display: flex; align-items: center; gap: .65rem; }
+    .mfrb-avatar {
+        display: grid; place-items: center; inline-size: 2.4rem; block-size: 2.4rem;
+        border-radius: 50%; background: color-mix(in oklab, var(--mfrb-accent) 18%, var(--mfrb-bg));
+        color: var(--mfrb-accent); font-size: .8rem; font-weight: 700; letter-spacing: .02em;
+        flex: none;
+    }
+    .mfrb-who { display: grid; }
+    .mfrb-who b { font-size: .86rem; }
+    .mfrb-who span { font-size: .72rem; color: var(--mfrb-muted); }
+    .mfrb-msg { margin: .8rem 0 0; font-size: .88rem; line-height: 1.75;
+                color: var(--mfrb-fg); }
+    .mfrb-bar {
+        display: flex; flex-wrap: wrap; gap: .45rem;
+        margin-block-start: 1rem; position: relative; z-index: 2;
+    }
+    .mfrb-btn {
+        display: inline-flex; align-items: center; gap: .45rem;
+        padding: .5rem .85rem; border-radius: 999px;
+        border: 1px solid var(--mfrb-border);
+        background: color-mix(in oklab, var(--mfrb-soft) 62%, var(--mfrb-bg));
+        color: var(--mfrb-muted); font-family: inherit; cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: border-color .16s ease, color .16s ease, background-color .16s ease,
+                    translate .16s ease, scale .16s ease;
+    }
+    .mfrb-btn:hover { border-color: color-mix(in oklab, var(--mfrb-tint) 55%, var(--mfrb-border));
+                      color: var(--mfrb-tint); }
+    .mfrb-btn:active { scale: .94; }
+    .mfrb-btn:focus-visible { outline: 2px solid var(--mfrb-tint); outline-offset: 2px; }
+    .mfrb-btn[aria-pressed="true"] {
+        border-color: var(--mfrb-tint); color: var(--mfrb-tint);
+        background: color-mix(in oklab, var(--mfrb-tint) 12%, var(--mfrb-bg));
+        box-shadow: 0 0 0 3px color-mix(in oklab, var(--mfrb-tint) 16%, transparent);
+    }
+    .mfrb-btn[aria-pressed="true"] .mfrb-ico { animation: mfrb-thump .4s cubic-bezier(.34, 1.56, .64, 1); }
+    @keyframes mfrb-thump { 45% { scale: 1.35; } }
+    .mfrb-ico { inline-size: 1rem; block-size: 1rem; flex: none; display: block; }
+    .mfrb-ico svg { inline-size: 100%; block-size: 100%; stroke: currentColor; stroke-width: 2;
+                    fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .mfrb-odo {
+        display: inline-flex; direction: ltr;
+        font-variant-numeric: tabular-nums; font-size: .78rem; font-weight: 700;
+        line-height: 1.2; min-inline-size: 2.2em; justify-content: flex-end;
+    }
+    .mfrb-col { block-size: 1.2em; overflow: clip; }
+    .mfrb-strip { display: grid; transition: transform .48s cubic-bezier(.2, .7, .2, 1); }
+    .mfrb-cell { block-size: 1.2em; text-align: center; }
+    .mfrb-note { margin: 0; font-size: .78rem; color: var(--mfrb-muted); min-block-size: 1.2em; }
+    .mfrb-hint { margin: 0; font-family: ui-monospace, monospace;
+                 font-size: .72rem; color: var(--mfrb-muted); }
+    @media (prefers-reduced-motion: reduce) {
+        .mfrb-btn { transition: none; }
+        .mfrb-btn:active { scale: 1; }
+        .mfrb-btn[aria-pressed="true"] .mfrb-ico { animation: none; }
+        .mfrb-strip { transition: none; }
+    }
+</style>
+
+<section class="pg-box" style="gap: 1.25rem">
+    <div>
+        <h3 class="pg-title" style="font-size: var(--nx-text-xl)"><?php echo e($say('A reaction you can hear land', 'ری‌اکشنی که فرودش شنیده می‌شود')); ?></h3>
+        <p style="margin: .25rem 0 0; color: var(--nx-text-muted)">
+            <?php echo e($say('Four abstract reactions — heart, star, sparkles, flame — under a release note, single-select and toggleable off. Each pick throws sixteen particles from the top of the button (gravity, drag, spin — the same particle grammar as the confetti cannon), while the count rolls on a vertical odometer: every digit owns a full 0–9 strip, Persian locales roll ۰–۹, and the damped 480ms glide makes 128 become 129 visibly. Switching slots moves the reaction without a party; the burst parks off screen and goes silent under reduced motion.', 'چهار ری‌اکشن انتزاعی — قلب، ستاره، درخشش، شعله — زیر یک یادداشت انتشار؛ تک‌انتخابی و قابل‌برداشتن. هر انتخاب شانزده پارتیکل از سر دکمه به هوا می‌فرستد (جاذبه، پسا، چرخش — همان دستور ذره‌ایِ توپ کانفتی) و شمارنده مثل اسطوانهٔ شمارش می‌غلتد: هر رقم یک نوار کامل ۰ تا ۹ دارد، فارسی با ۰ تا ۹ فارسی می‌غلتد و گلوی دامپ‌دار ۴۸۰ میلی‌ثانیه‌ای می‌گذارد ۱۲۸ جلوی چشم ۱۲۹ شود. جابه‌جایی بین خانه‌ها ری‌اکشن را بی‌جشن منتقل می‌کند؛ انفجار خارج از دید پارک می‌شود و در حرکت کاهش‌یافته ساکت است.')); ?>
+
+        </p>
+    </div>
+
+    <div class="mfrb-root"
+        x-data="{
+            io: null, ro: null, mq: null, ctx: null, raf: 0, last: 0,
+            parts: [], visible: true, sel: null,
+            list: [
+                { id: 'heart', n: 128, tint: '#e11d48',
+                  fa: 'عشق', en: 'Love',
+                  paths: ['M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z'] },
+                { id: 'star', n: 96, tint: '#f59e0b',
+                  fa: 'مفید', en: 'Useful',
+                  paths: ['m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1L3.2 9.5l6.1-.9Z'] },
+                { id: 'sparkles', n: 41, tint: '#8b5cf6',
+                  fa: 'الهام‌بخش', en: 'Inspiring',
+                  paths: ['M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9Z', 'M5 3v2M4 4h2', 'M18.5 18.5v2M17.5 19.5h2'] },
+                { id: 'flame', n: 203, tint: '#ea580c',
+                  fa: 'شعله‌ور', en: 'On fire',
+                  paths: ['M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5Z'] },
+            ],
+            fa: <?php echo \Illuminate\Support\Js::from($fa)->toHtml() ?>,
+            faDigit(d) {
+                return this.fa ? '۰۱۲۳۴۵۶۷۸۹'[d] : String(d);
+            },
+            faNum(n) {
+                const s = String(n);
+                return this.fa ? s.replace(/\d/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[d]) : s;
+            },
+            init() {
+                const cv = this.$refs.cv;
+                this.ctx = cv.getContext('2d');
+                this.mq = matchMedia('(prefers-reduced-motion: reduce)');
+                this.ro = new ResizeObserver(() => this.size());
+                this.ro.observe(cv);
+                this.io = new IntersectionObserver((entries) => {
+                    this.visible = entries[0].isIntersecting;
+                    this.run();
+                });
+                this.io.observe(cv);
+                this.size();
+            },
+            size() {
+                const cv = this.$refs.cv;
+                const dpr = Math.min(2, window.devicePixelRatio || 1);
+                cv.width = Math.max(2, Math.round(cv.clientWidth * dpr));
+                cv.height = Math.max(2, Math.round(cv.clientHeight * dpr));
+                this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                this.paint();
+            },
+            pick(id, el) {
+                const prev = this.list.find((r) => r.id === this.sel);
+                const next = this.list.find((r) => r.id === id);
+                if (!next) return;
+                if (this.sel === id) {
+                    next.n -= 1;
+                    this.sel = null;
+                    return;
+                }
+                if (prev) prev.n -= 1;
+                next.n += 1;
+                this.sel = id;
+                this.burst(next, el);
+            },
+            burst(r, el) {
+                if (this.mq.matches) return;
+                const cv = this.$refs.cv;
+                const b = cv.getBoundingClientRect();
+                const t = el.getBoundingClientRect();
+                const x = t.left + t.width / 2 - b.left;
+                const y = t.top - b.top + t.height * 0.25;
+                for (let i = 0; i < 16; i++) {
+                    const a = -Math.PI / 2 + (Math.random() - 0.5) * 1.5;
+                    const sp = 180 + Math.random() * 260;
+                    this.parts.push({
+                        x: x, y: y,
+                        vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+                        r: 1.6 + Math.random() * 2.2,
+                        rot: Math.random() * 6.283, vr: (Math.random() - 0.5) * 12,
+                        c: i % 4 === 0 ? '#ffffff' : r.tint,
+                        life: 0.65 + Math.random() * 0.4, t: 0,
+                        shape: i % 3,
+                    });
+                }
+                this.run();
+            },
+            run() {
+                if (this.mq.matches) { this.parts = []; this.paint(); return; }
+                if (!this.parts.length || !this.visible || this.raf) return;
+                this.last = 0;
+                this.raf = requestAnimationFrame((n) => this.step(n));
+            },
+            step(now) {
+                const cv = this.$refs.cv;
+                const dt = Math.min(0.032, (now - this.last) / 1000) || 0.016;
+                this.last = now;
+                this.parts = this.parts.filter((p) => {
+                    p.t += dt;
+                    p.vy += 900 * dt;
+                    p.vx *= Math.exp(-dt * 0.8);
+                    p.x += p.vx * dt;
+                    p.y += p.vy * dt;
+                    p.rot += p.vr * dt;
+                    if (p.t > p.life || p.y > cv.clientHeight + 12) return false;
+                    return true;
+                });
+                this.paint();
+                if (this.parts.length && this.visible) {
+                    this.raf = requestAnimationFrame((n) => this.step(n));
+                } else {
+                    this.raf = 0;
+                }
+            },
+            paint() {
+                const cv = this.$refs.cv;
+                if (!this.ctx) return;
+                this.ctx.clearRect(0, 0, cv.clientWidth, cv.clientHeight);
+                for (const p of this.parts) {
+                    const ctx = this.ctx;
+                    ctx.save();
+                    ctx.globalAlpha = Math.max(0, 1 - p.t / p.life);
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rot);
+                    ctx.fillStyle = p.c;
+                    if (p.shape === 0) {
+                        ctx.beginPath();
+                        ctx.arc(0, 0, p.r, 0, 6.283);
+                        ctx.fill();
+                    } else if (p.shape === 1) {
+                        ctx.fillRect(-p.r, -p.r, p.r * 2, p.r * 2);
+                    } else {
+                        ctx.beginPath();
+                        ctx.moveTo(0, -p.r * 1.2);
+                        ctx.lineTo(p.r, p.r);
+                        ctx.lineTo(-p.r, p.r);
+                        ctx.closePath();
+                        ctx.fill();
+                    }
+                    ctx.restore();
+                }
+            },
+            label() {
+                if (!this.sel) {
+                    return this.fa
+                        ? 'هنوز ری‌اکشی انتخاب نشده — یکی از چهار دکمه را بزنید'
+                        : 'No reaction picked yet — press one of the four buttons';
+                }
+                const r = this.list.find((q) => q.id === this.sel);
+                return this.fa
+                    ? '«' + r.fa + '» فعال است — ' + this.faNum(r.n) + ' نفر؛ دوباره بزنید تا برداشته شود'
+                    : '“' + r.en + '” is active — ' + r.n + ' people; press again to take it back';
+            },
+            destroy() {
+                cancelAnimationFrame(this.raf);
+                this.parts = [];
+                if (this.io) this.io.disconnect();
+                if (this.ro) this.ro.disconnect();
+            },
+        }">
+        <article class="mfrb-card">
+            <canvas class="mfrb-cv" x-ref="cv" aria-hidden="true"></canvas>
+
+            <div class="mfrb-head">
+                <span class="mfrb-avatar" aria-hidden="true">MA</span>
+                <div class="mfrb-who">
+                    <b>Maya Anders</b>
+                    <span><?php echo e($say('Product Lead · Polar Labs', 'سر محصول · پولار لبز')); ?></span>
+                </div>
+            </div>
+
+            <p class="mfrb-msg">
+                <?php echo e($say('Lumen Canvas 3.2 is live: dark mode, search 40% faster, and shared cursors so the whole team can sketch together in real time. Tell us what this release feels like — pick one.', 'لومن کنواس ۳٫۲ منتشر شد: حالت تیره، جست‌وجوی ۴۰٪ سریع‌تر و مکان‌نماهای مشترک تا کل تیم هم‌زمان روی بوم طرح بزند. این انتشار چه حسی دارد — یکی را انتخاب کنید.')); ?>
+
+            </p>
+
+            <div class="mfrb-bar" role="group"
+                x-bind:aria-label="<?php echo \Illuminate\Support\Js::from($say('Reactions to the Lumen Canvas 3.2 release note — one at a time', 'ری‌اکشن‌های یادداشت انتشار لومن کنواس ۳٫۲ — یکی در هر لحظه'))->toHtml() ?>">
+                <template x-for="r in list" :key="r.id">
+                    <button type="button" class="mfrb-btn"
+                        x-bind:style="'--mfrb-tint:' + r.tint"
+                        x-bind:aria-pressed="sel === r.id ? 'true' : 'false'"
+                        x-bind:aria-label="(fa ? r.fa : r.en) + (fa ? '، ' : ', ') + faNum(r.n)"
+                        x-on:pointerdown="pick(r.id, $event.currentTarget)"
+                        x-on:keydown.enter.prevent="pick(r.id, $event.currentTarget)"
+                        x-on:keydown.space.prevent="pick(r.id, $event.currentTarget)">
+                        <span class="mfrb-ico" aria-hidden="true">
+                            <svg viewBox="0 0 24 24">
+                                <path x-bind:d="r.paths.join(' ')"></path>
+                            </svg>
+                        </span>
+                        <span class="mfrb-odo" dir="ltr" aria-hidden="true">
+                            <template x-for="(ch, i) in Array.from(String(r.n))" :key="i">
+                                <span class="mfrb-col">
+                                    <span class="mfrb-strip"
+                                        x-bind:style="'transform: translateY(-' + (ch * 10) + '%)'">
+                                        <template x-for="d in 10" :key="d">
+                                            <span class="mfrb-cell" x-text="faDigit(d - 1)"></span>
+                                        </template>
+                                    </span>
+                                </span>
+                            </template>
+                        </span>
+                    </button>
+                </template>
+            </div>
+        </article>
+
+        <div class="mfrb-root-foot" style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem 1.25rem; inline-size: min(100%, 30rem)">
+            <p class="mfrb-note" role="status" x-text="label()"></p>
+            <p class="mfrb-hint">
+                <?php echo e($say('16 particles · gravity 900px/s² · odometer strip 0–9 · 480ms damped glide · parked off screen · silent under reduced motion', '۱۶ پارتیکل · جاذبه ۹۰۰px/s² · نوار اسطوانه ۰–۹ · گلوی دامپ‌دار ۴۸۰ms · پارک خارج از دید · سکوت در حرکت کاهش‌یافته')); ?>
+
+            </p>
+        </div>
+    </div>
+</section>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/playground/resources/views/demos/components/micro-fx/reaction-bar.blade.php ENDPATH**/ ?>

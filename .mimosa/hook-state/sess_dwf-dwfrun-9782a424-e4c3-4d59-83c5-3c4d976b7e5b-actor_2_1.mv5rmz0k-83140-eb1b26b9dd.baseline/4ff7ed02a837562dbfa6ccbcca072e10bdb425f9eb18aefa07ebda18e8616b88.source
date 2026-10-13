@@ -1,0 +1,225 @@
+interface FixOutcome {
+  /** مسیر فایل‌های تغییر‌یافته نسبت به ریشهٔ ریپو. */
+  changedFiles: string[];
+  /** یک جمله: چه تغییری اعمال شد. */
+  summary: string;
+}
+
+interface PushOutcome {
+  /** شای کامل کامیتِ پوش‌شده؛ رشتهٔ خالی اگر پوش نشد. */
+  sha: string;
+  /** آیا پوش به origin/main انجام شد. */
+  pushed: boolean;
+  /** فایل‌های داخل کامیت. */
+  committedFiles: string[];
+  /** اگر پوش نشد، دلیل آن در یک جمله. */
+  note: string;
+}
+
+interface Finding {
+  /** مسیر یا مکان، با شماره خط در صورت نیاز: "playground/Dockerfile:15". */
+  where: string;
+  /** یک جمله: چه چیزی پیدا شد. */
+  what: string;
+  /** شاهد: خطوط خوانده‌شده یا دستور و خروجی‌ای که ثابتش کرد. */
+  evidence: string;
+  /** "verified" وقتی بازتولید یا گیت مستقل تأییدش کرد؛ وگرنه "unconfirmed". */
+  status: "verified" | "unconfirmed";
+  /** اهمیت؛ "high" فقط برای خرابی یا نتیجهٔ غلط. */
+  severity: "low" | "medium" | "high";
+}
+
+interface WorkflowReport {
+  /** دو-سه جمله پاسخ مستقیم به درخواست کاربر. */
+  conclusion: string;
+  findings: Finding[];
+  /** چه چیزهایی و چگونه بررسی شد: دستورها و پوشش فایل‌ها. */
+  verified: string[];
+  /** چه چیزهایی بررسی نشد و چرا. */
+  notCovered: string[];
+}
+
+const REPO = "/Users/mrchatgpt/Sites/NabuXUI";
+const EXPORT = "/tmp/nbx-fix-export";
+
+const findings: Finding[] = [
+  {
+    where: "playground/Dockerfile:15",
+    what: "ایمیج php اکستنشن zip ندارد؛ openspout/openspout (وابستهٔ filament/actions برای اکسپورت) به ext-zip نیاز دارد و composer install با exit code 2 می‌ایستد.",
+    evidence: "بازتولید محلی docker build روی اکسپورت تمیزِ HEAD همان خطای سرور را داد: «openspout/openspout v4.32.0 requires ext-zip * -> it is missing from your system» با همان exit code: 2.",
+    status: "verified",
+    severity: "high",
+  },
+  {
+    where: "Coolify 4.4.6 — کانفیگ اپ 0bzamjemjyzxklgqav2jl15n",
+    what: "هشدار «build-time env» باعث شد Coolify خودش ۱۶ خط ARG به Dockerfile تزریق کند؛ بی‌ضرر بود اما شماره خط‌ها را جابه‌جا کرد و هر دیپلوی نویز می‌سازد. تعریف خودِ ARGها در ریپو تزریق را بی‌اثر می‌کند.",
+    evidence: "لاگ دیپلوی: «Added 16 ARG declarations to Dockerfile … (multi-stage build, added to 2 stages)» و تطابق Dockerfile:43 گزارش‌شده با خط ۲۷ ریپو + ۱۶ خط تزریقی.",
+    status: "verified",
+    severity: "low",
+  },
+];
+
+phase("اعمال فیکس Dockerfile و راستی‌آزمایی با بیلد کامل داکر");
+const fixer = agent("مهندس Dockerfile", {
+  system:
+    "تو متخصص Docker و PHP هستی و روی ریپو NabuXUI کار می‌کنی. فقط فایل‌هایی را تغییر بده که ازت خواسته شده. " +
+    "playground/composer.json و playground/composer.lock کارِ دست‌نخوردهٔ یک نشست موازی‌اند: هرگز تغییرشان نده، stash نکن و کامیت نکن. " +
+    "اگر کاری نشدنی شد یا دستورالعمل‌ها تناقض داشتند، صریح همین را گزارش کن؛ دور زدن ممنوع.",
+});
+
+const fixSpec =
+  "فایل " + REPO + "/playground/Dockerfile را بخوان و دقیقاً این دو تغییر را اعمال کن (چیز دیگری نه):\n" +
+  "\n" +
+  "۱) در RUN مربوط به apt، بستهٔ libzip-dev را به apt-get install اضافه کن و docker-php-ext-install intl را به " +
+  "docker-php-ext-install intl zip ارتقا بده — چون openspout/openspout (وابستهٔ filament/actions در composer.lock) " +
+  "به ext-zip نیاز دارد و کمبودش همان exit code 2 دیپلوی بوده.\n" +
+  "۲) بلافاصله بعد از هر دو خط FROM (استیج assets و استیج php) این بلوک را اضافه کن تا Coolify دیگر خودش ARG تزریق نکند:\n" +
+  "# Declared for Coolify's build-time env scan; values unused at build time.\n" +
+  "ARG COOLIFY_FQDN\n" +
+  "ARG APP_PORT\n" +
+  "ARG VITE_PORT\n" +
+  "ARG APP_NAME\n" +
+  "ARG APP_ENV\n" +
+  "ARG APP_DEBUG\n" +
+  "ARG APP_KEY\n" +
+  "ARG APP_URL\n" +
+  "\n" +
+  "در پایان، نتیجه را در قالب FixOutcome برگردان.";
+
+let buildTail = "";
+let buildOk = false;
+for (let round = 1; round <= 3; round += 1) {
+  if (round === 1) {
+    await fixer.ask<FixOutcome>(fixSpec);
+  } else {
+    await fixer.ask(
+      "بیلد داکر هنوز قرمز است. انتهای خروجی بیلد:\n" +
+        buildTail.slice(-4000) +
+        "\n\nمشکل را از همین خروجی پیدا کن و Dockerfile را حداقلی اصلاح کن. فقط وقتی دلیل واقعی داشتی تغییر بده.",
+    );
+  }
+
+  const prep = await world.run(
+    "bash",
+    [
+      "-c",
+      "set -e; rm -rf " + EXPORT + " && mkdir -p " + EXPORT + " && cd " + REPO +
+        " && git archive HEAD | tar -x -C " + EXPORT +
+        " && cp playground/Dockerfile " + EXPORT + "/playground/Dockerfile",
+    ],
+  );
+  if (prep.exitCode !== 0) {
+    buildTail = "آماده‌سازی اکسپورت تمیز شکست خورد:\n" + prep.stdout + "\n" + prep.stderr;
+    log("دور " + round + ": اکسپورت آماده نشد؛ دوباره تلاش می‌کنیم");
+    continue;
+  }
+
+  log("دور " + round + ": بیلد کامل داکر روی اکسپورت تمیز اجرا می‌شود (همان مسیر Coolify، چند دقیقه)…");
+  const build = await world.run(
+    "bash",
+    [
+      "-c",
+      "set -o pipefail; docker build --pull --progress=plain -f " + EXPORT +
+        "/playground/Dockerfile " + EXPORT + " 2>&1 | tail -c 100000",
+    ],
+    { timeoutMs: 1_500_000 },
+  );
+  buildOk = build.exitCode === 0;
+  buildTail = build.stdout + build.stderr;
+  log("دور " + round + ": " + (buildOk ? "بیلد کامل سبز شد ✅" : "بیلد شکست خورد ❌ — برای دور بعد تحلیل می‌شود"));
+  if (buildOk) break;
+}
+
+phase("کامیت و پوش فقط همین فایل روی main");
+let push: PushOutcome | null = null;
+if (buildOk) {
+  const pusher = agent("کامیت‌کار", {
+    system:
+      "تو مسئول کامیت و پوش تمیز در ریپو NabuXUI هستی. قانون طلایی: فقط فایل‌های stage-شدهٔ خودت را کامیت کن؛ " +
+      "playground/composer.json و playground/composer.lock تغییراتِ دست‌نخوردهٔ یک نشست موازی‌اند و هرگز نباید stage، stash یا revert شوند. " +
+      "اگر push رد شد یا وضعیت git با انتظار فرق داشت، فقط گزارش بده؛ force و pull و reset ممنوع. اگر کاری غیرممکن شد، صریح بگو و راه دور نزن.",
+  });
+  push = await pusher.ask<PushOutcome>(
+    "در " + REPO + " این کارها را به ترتیب انجام بده:\n" +
+      "۱) git status --porcelain بگیر. انتظار: « M playground/Dockerfile» (کار خودمان) به‌علاوهٔ « M playground/composer.json» و « M playground/composer.lock» (نشست موازی — دست نزن). " +
+      "اگر چیز متفاوت و نگران‌کننده‌ای دیدی، کاملاً در note گزارش بده و ادامه نده.\n" +
+      "۲) فقط فایل فیکس را stage کن: git add playground/Dockerfile\n" +
+      "۳) کامیت کن با پیام: playground image: install ext-zip (filament/openspout) + declare Coolify build ARGs\n" +
+      "۴) پوش کن: git push origin main\n" +
+      "۵) شای کامل را از git log -1 --format=%H بردار و مطمئن شو playground/composer.json و composer.lock هنوز به‌صورت unstaged modified هستند.\n" +
+      "نتیجه را در قالب PushOutcome برگردان.",
+  );
+} else {
+  findings.push({
+    where: "بیلد محلی داکر",
+    what: "سه دور تلاش برای سبز کردن بیلد کامل شکست خورد؛ هیچ چیزی کامیت یا پوش نشده است.",
+    evidence: buildTail.slice(-2000),
+    status: "verified",
+    severity: "high",
+  });
+}
+
+const conclusion =
+  buildOk && push !== null && push.pushed
+    ? "ریشهٔ خطای دیپلوی کمبود ext-zip در ایمیج بود (وابستگی openspout/openspout از موج فیلامنت). Dockerfile اصلاح شد، بیلد کامل داکر روی اکسپورت تمیز سبز شد و با کامیت " +
+      push.sha.slice(0, 7) +
+      " روی origin/main پوش شد. دیپلوی Coolify بلافاصله بعد از این ورک‌فلو توسط اورکستراتور اجرا می‌شود."
+    : buildOk
+      ? "فیکس آماده و بیلد محلی سبز شد، اما پوش انجام نشد: " +
+        (push !== null ? push.note : "دلیل نامشخص") +
+        " — دیپلوی ممکن نیست تا پوش انجام شود."
+      : "فیکس در سه دور به بیلد سبز نرسید؛ هیچ چیزی کامیت یا پوش نشده و جزئیات در یافته‌ها آمده است.";
+
+const verified: string[] = [
+  "بازتولید دقیق خطای سرور: docker build روی اکسپورت تمیز HEAD همان exit code 2 و همان متن openspout/openspout → ext-zip را داد (قبل از ورک‌فلو).",
+];
+if (buildOk) {
+  verified.push(
+    "بیلد کامل داکر (npm ci + vite + apt + ext-intl/zip + composer install + اسکریپت‌های artisan) روی اکسپورت تمیزِ HEAD + فیکس، سبز شد — همان دستوری که Coolify اجرا می‌کند.",
+  );
+}
+if (push !== null && push.pushed) {
+  verified.push(
+    "پوش به origin/main انجام شد: " + push.sha + " شامل فقط " + push.committedFiles.join(", ") + "؛ تغییرات نشست موازی (composer.json/lock) دست‌نخورده و unstaged ماندند.",
+  );
+}
+
+const report: WorkflowReport = {
+  conclusion,
+  findings,
+  verified,
+  notCovered: [
+    "دیپلوی واقعی روی Coolify و سلامت https://ui.nabuxai.com — اورکستراتور بلافاصله بعد از پایان ورک‌فلو آن را اجرا و راستی‌آزمایی می‌کند.",
+    "رفتار runtime فیچرهای اکسپورت اکسل/CSV (openspout) در دموی زنده تست نشده؛ فقط وابستگی build رفع شد.",
+  ],
+};
+
+await artifact.markdown(
+  "report",
+  [
+    "# فیکس خطای دیپلوی NabuXUI (composer install، exit code 2)",
+    "",
+    "## ریشهٔ خطا",
+    "کمیت فیلامنت (e43a466) که بعد از آخرین دیپلوی موفق (۷ اکتبر) آمده، openspout/openspout را برای اکسپورت‌های اکسل فیلامنت آورده؛ این پکیج **ext-zip** می‌خواهد ولی ایمیج `php:8.4-cli` فقط ext-intl نصب داشت. Composer هنگام install در platform check گیر می‌کند و با exit code 2 می‌ایستد — همان خطای Dockerfile:43 دیپلوی. ARGهای تزریقی Coolify بی‌تأثیر بودند و فقط شماره خط‌ها را جابه‌جا کردند.",
+    "",
+    "## فیکس",
+    "1. `libzip-dev` + `docker-php-ext-install intl zip` در `playground/Dockerfile`",
+    "2. تعریف صریح ۸ ARG مورد انتظار Coolify بعد از هر دو FROM تا موتور «build-time env» دیگر Dockerfile را بازنویسی نکند.",
+    "",
+    "## راستی‌آزمایی",
+    ...verified.map((v) => "- " + v),
+    "",
+    "## پوشش‌نیافته",
+    ...report.notCovered.map((v) => "- " + v),
+    "",
+    "## گام بعدی",
+    "اورکستراتور دیپلوی Coolify را اجرا می‌کند و وضعیت https://ui.nabuxai.com را بررسی خواهد کرد.",
+  ].join("\n"),
+  {
+    title: "گزارش فیکس دیپلوی NabuXUI",
+    description: "ریشهٔ exit code 2 (کمبود ext-zip)، فیکس Dockerfile، بیلد سبز محلی و پوش روی main.",
+    primary: true,
+  },
+);
+
+return report;

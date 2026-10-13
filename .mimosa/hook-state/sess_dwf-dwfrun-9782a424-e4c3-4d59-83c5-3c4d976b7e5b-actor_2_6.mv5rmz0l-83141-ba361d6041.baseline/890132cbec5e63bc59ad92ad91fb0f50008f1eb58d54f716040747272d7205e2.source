@@ -1,0 +1,87 @@
+
+<style>
+    .ep-page { min-height: 100dvh; display: grid; place-items: center; padding: clamp(1rem, 4vw, 2rem); }
+    .ep-stack { display: grid; gap: var(--nx-space-2); justify-items: center; text-align: center;
+        max-inline-size: 28rem; }
+    .ep-code { margin: 0; font: 800 var(--nx-text-display) / 1 var(--nx-font-display);
+        letter-spacing: var(--nx-tracking-tight); background: var(--nx-gradient-text);
+        -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .ep-stack { transition-property: opacity, translate; transition-duration: var(--nx-dur-base);
+        transition-timing-function: var(--nx-ease-out); }
+    :where(.nx-js) .ep-stack[data-nx-reveal]:not([data-nx-revealed]) { opacity: 0; translate: 0 calc(16px * var(--nx-motion)); }
+</style>
+<div class="ep-page">
+    <main class="ep-stack" data-nx-reveal x-data x-nx-reveal>
+        <h1 class="nx-visually-hidden"><?php echo e($title); ?></h1>
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($display): ?>
+            <p class="ep-code" aria-hidden="true"><?php echo e($display); ?></p>
+        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+        <?php if (isset($component)) { $__componentOriginala7a723caad3d223d78a2eb9a7554da22 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginala7a723caad3d223d78a2eb9a7554da22 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::empty-state','data' => ['icon' => $icon,'size' => 'lg','title' => $title,'description' => $description]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::empty-state'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['icon' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($icon),'size' => 'lg','title' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($title),'description' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($description)]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+             <?php $__env->slot('actions', null, []); ?> 
+                <?php if (isset($component)) { $__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::button','data' => ['variant' => 'primary','icon' => 'grid','href' => ''.e(route('admin.dashboard')).'']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::button'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['variant' => 'primary','icon' => 'grid','href' => ''.e(route('admin.dashboard')).'']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+<?php echo e(__('admin.errors_back_panel')); ?> <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42)): ?>
+<?php $attributes = $__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42; ?>
+<?php unset($__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42)): ?>
+<?php $component = $__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42; ?>
+<?php unset($__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42); ?>
+<?php endif; ?>
+                <?php if (isset($component)) { $__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::button','data' => ['variant' => 'secondary','icon' => 'external-link','href' => ''.e(url('/')).'']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::button'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['variant' => 'secondary','icon' => 'external-link','href' => ''.e(url('/')).'']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+<?php echo e(__('admin.stub_secondary')); ?> <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42)): ?>
+<?php $attributes = $__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42; ?>
+<?php unset($__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42)): ?>
+<?php $component = $__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42; ?>
+<?php unset($__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42); ?>
+<?php endif; ?>
+             <?php $__env->endSlot(); ?>
+         <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginala7a723caad3d223d78a2eb9a7554da22)): ?>
+<?php $attributes = $__attributesOriginala7a723caad3d223d78a2eb9a7554da22; ?>
+<?php unset($__attributesOriginala7a723caad3d223d78a2eb9a7554da22); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginala7a723caad3d223d78a2eb9a7554da22)): ?>
+<?php $component = $__componentOriginala7a723caad3d223d78a2eb9a7554da22; ?>
+<?php unset($__componentOriginala7a723caad3d223d78a2eb9a7554da22); ?>
+<?php endif; ?>
+    </main>
+</div>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/playground/resources/views/livewire/admin/error-page.blade.php ENDPATH**/ ?>

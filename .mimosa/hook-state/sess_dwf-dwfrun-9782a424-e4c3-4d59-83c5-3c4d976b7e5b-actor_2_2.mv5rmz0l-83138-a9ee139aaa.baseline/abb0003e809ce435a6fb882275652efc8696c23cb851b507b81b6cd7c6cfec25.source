@@ -1,0 +1,184 @@
+
+<?php $attributes ??= new \Illuminate\View\ComponentAttributeBag;
+
+$__newAttributes = [];
+$__propNames = \Illuminate\View\ComponentAttributeBag::extractPropNames(([
+    'groups' => [],
+    'active' => null,
+    'collapsed' => false,
+    'brand' => null,
+    'brandMark' => null,
+    'navLabel' => null,
+    'title' => null,
+    'subtitle' => null,
+    'searchPlaceholder' => null,
+    'searchHint' => null,
+    'user' => null,
+    'height' => null,
+    'minHeight' => null,
+    'radius' => null,
+    'border' => null,
+]));
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (in_array($__key, $__propNames)) {
+        $$__key = $$__key ?? $__value;
+    } else {
+        $__newAttributes[$__key] = $__value;
+    }
+}
+
+$attributes = new \Illuminate\View\ComponentAttributeBag($__newAttributes);
+
+unset($__propNames);
+unset($__newAttributes);
+
+foreach (array_filter(([
+    'groups' => [],
+    'active' => null,
+    'collapsed' => false,
+    'brand' => null,
+    'brandMark' => null,
+    'navLabel' => null,
+    'title' => null,
+    'subtitle' => null,
+    'searchPlaceholder' => null,
+    'searchHint' => null,
+    'user' => null,
+    'height' => null,
+    'minHeight' => null,
+    'radius' => null,
+    'border' => null,
+]), 'is_string', ARRAY_FILTER_USE_KEY) as $__key => $__value) {
+    $$__key = $$__key ?? $__value;
+}
+
+$__defined_vars = get_defined_vars();
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (array_key_exists($__key, $__defined_vars)) unset($$__key);
+}
+
+unset($__defined_vars, $__key, $__value); ?>
+<?php
+    use NabuXUI\NabuXUI;
+    $drawerId = NabuXUI::id('nx-admin-drawer');
+    $active = (string) ($active ?? ($groups[0]['items'][0]['id'] ?? ''));
+    $style = implode('; ', array_filter([
+        $height ? "--nx-admin-height: {$height}" : null,
+        $minHeight ? "--nx-admin-min-height: {$minHeight}" : null,
+        $radius ? "--nx-admin-radius: {$radius}" : null,
+        $border ? "--nx-admin-border: {$border}" : null,
+    ]));
+?>
+<div <?php echo e($attributes->class('nx-admin')); ?> x-data="nxAdminShell(<?php echo \Illuminate\Support\Js::from($active)->toHtml() ?>, <?php echo \Illuminate\Support\Js::from((bool) $collapsed)->toHtml() ?>)" x-modelable="active"
+    <?php if($style): ?> style="<?php echo e($style); ?>" <?php endif; ?>>
+    <div class="nx-admin-frame" <?php if($collapsed): ?> data-collapsed <?php endif; ?> x-bind:data-collapsed="collapsed ? '' : null">
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(isset($sidebar)): ?>
+            <?php echo e($sidebar); ?>
+
+        <?php else: ?>
+            <?php if (isset($component)) { $__componentOriginalee0fb1451a7c52916c28050fc2a85379 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalee0fb1451a7c52916c28050fc2a85379 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::admin-sidebar','data' => ['wired' => true,'groups' => $groups,'active' => $active,'collapsed' => $collapsed,'brand' => $brand,'brandMark' => $brandMark,'label' => $navLabel]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::admin-sidebar'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['wired' => true,'groups' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($groups),'active' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($active),'collapsed' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($collapsed),'brand' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($brand),'brandMark' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($brandMark),'label' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($navLabel)]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalee0fb1451a7c52916c28050fc2a85379)): ?>
+<?php $attributes = $__attributesOriginalee0fb1451a7c52916c28050fc2a85379; ?>
+<?php unset($__attributesOriginalee0fb1451a7c52916c28050fc2a85379); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalee0fb1451a7c52916c28050fc2a85379)): ?>
+<?php $component = $__componentOriginalee0fb1451a7c52916c28050fc2a85379; ?>
+<?php unset($__componentOriginalee0fb1451a7c52916c28050fc2a85379); ?>
+<?php endif; ?>
+        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+        <div class="nx-admin-main">
+            <header class="nx-admin-topbar">
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(isset($topbar)): ?>
+                    <?php echo e($topbar); ?>
+
+                <?php else: ?>
+                    <?php if (isset($component)) { $__componentOriginal2b7bd9c8df716abab70f35e46f0dfcbb = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal2b7bd9c8df716abab70f35e46f0dfcbb = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::admin-topbar','data' => ['drawer' => $drawerId,'title' => $title,'subtitle' => $subtitle,'searchPlaceholder' => $searchPlaceholder,'searchHint' => $searchHint,'user' => $user]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::admin-topbar'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['drawer' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($drawerId),'title' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($title),'subtitle' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($subtitle),'search-placeholder' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($searchPlaceholder),'search-hint' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($searchHint),'user' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($user)]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(isset($actions)): ?>
+                             <?php $__env->slot('actions', null, []); ?> <?php echo e($actions); ?> <?php $__env->endSlot(); ?>
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(isset($search)): ?>
+                             <?php $__env->slot('search', null, []); ?> <?php echo e($search); ?> <?php $__env->endSlot(); ?>
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(isset($heading)): ?>
+                             <?php $__env->slot('heading', null, []); ?> <?php echo e($heading); ?> <?php $__env->endSlot(); ?>
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(isset($userMenu)): ?>
+                             <?php $__env->slot('userMenu', null, []); ?> <?php echo e($userMenu); ?> <?php $__env->endSlot(); ?>
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                     <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal2b7bd9c8df716abab70f35e46f0dfcbb)): ?>
+<?php $attributes = $__attributesOriginal2b7bd9c8df716abab70f35e46f0dfcbb; ?>
+<?php unset($__attributesOriginal2b7bd9c8df716abab70f35e46f0dfcbb); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal2b7bd9c8df716abab70f35e46f0dfcbb)): ?>
+<?php $component = $__componentOriginal2b7bd9c8df716abab70f35e46f0dfcbb; ?>
+<?php unset($__componentOriginal2b7bd9c8df716abab70f35e46f0dfcbb); ?>
+<?php endif; ?>
+                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+            </header>
+            <div class="nx-admin-content"><?php echo e($slot); ?></div>
+        </div>
+    </div>
+    <div class="nx-admin-drawer" id="<?php echo e($drawerId); ?>" popover="auto" wire:ignore.self aria-label="<?php echo e($navLabel ?? $brand ?? __('nabuxui::ui.menu')); ?>">
+        <button type="button" class="nx-admin-drawer-close" x-on:click="closeDrawer()">
+            <?php echo e(NabuXUI::icon('x')); ?>
+
+            <span class="nx-visually-hidden"><?php echo e(__('nabuxui::ui.close')); ?></span>
+        </button>
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(isset($sidebar)): ?>
+            <?php echo e($sidebar); ?>
+
+        <?php else: ?>
+            <?php if (isset($component)) { $__componentOriginalee0fb1451a7c52916c28050fc2a85379 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalee0fb1451a7c52916c28050fc2a85379 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::admin-sidebar','data' => ['wired' => true,'groups' => $groups,'active' => $active,'brand' => $brand,'brandMark' => $brandMark,'label' => $navLabel]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::admin-sidebar'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['wired' => true,'groups' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($groups),'active' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($active),'brand' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($brand),'brandMark' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($brandMark),'label' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($navLabel)]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalee0fb1451a7c52916c28050fc2a85379)): ?>
+<?php $attributes = $__attributesOriginalee0fb1451a7c52916c28050fc2a85379; ?>
+<?php unset($__attributesOriginalee0fb1451a7c52916c28050fc2a85379); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalee0fb1451a7c52916c28050fc2a85379)): ?>
+<?php $component = $__componentOriginalee0fb1451a7c52916c28050fc2a85379; ?>
+<?php unset($__componentOriginalee0fb1451a7c52916c28050fc2a85379); ?>
+<?php endif; ?>
+        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+    </div>
+</div>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/packages/livewire/src/../resources/views/components/admin-shell.blade.php ENDPATH**/ ?>

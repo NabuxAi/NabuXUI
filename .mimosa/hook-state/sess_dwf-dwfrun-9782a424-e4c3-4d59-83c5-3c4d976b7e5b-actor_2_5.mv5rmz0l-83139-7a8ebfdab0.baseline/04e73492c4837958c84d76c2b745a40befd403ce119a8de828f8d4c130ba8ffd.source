@@ -1,0 +1,175 @@
+{{--
+    aurora-bg's real scenario: the hero of "Borealis Cloud" — a dark edge-compute
+    section whose sky is four heavily blurred, screen-blended colour blobs
+    drifting and breathing on their own periods (transform only, GPU-cheap).
+    Three palette dots retune the whole sky through CSS variables; the drift
+    parks with an IntersectionObserver the moment the section leaves view and
+    freezes to a still sky under prefers-reduced-motion.
+--}}
+@php
+    $fa = app()->getLocale() === 'fa';
+    $say = fn (string $en, string $faText) => $fa ? $faText : $en;
+
+    $palettes = [
+        ['id' => 'borealis', 'fa' => 'شفق', 'en' => 'Borealis', 'c1' => '#22d3ee', 'c2' => '#34d399', 'c3' => '#818cf8'],
+        ['id' => 'sunset', 'fa' => 'غروب', 'en' => 'Sunset', 'c1' => '#f97316', 'c2' => '#ec4899', 'c3' => '#8b5cf6'],
+        ['id' => 'ocean', 'fa' => 'اقیانوس', 'en' => 'Ocean', 'c1' => '#38bdf8', 'c2' => '#6366f1', 'c3' => '#0ea5e9'],
+    ];
+    $active = $palettes[0];
+@endphp
+
+<style>
+    .amba-root {
+        --amba-ink: #1c1917; --amba-muted: #78716c; --amba-border: #e7e5e4;
+        --amba-font: 'Inter', 'Vazirmatn', ui-sans-serif, system-ui, sans-serif;
+        display: grid; gap: 1rem; font-family: var(--amba-font); color: var(--amba-ink);
+    }
+    html[data-theme="dark"] .amba-root {
+        --amba-ink: #fafaf9; --amba-muted: #a8a29e; --amba-border: #292524;
+    }
+    @media (prefers-color-scheme: dark) {
+        html:not([data-theme="light"]) .amba-root {
+            --amba-ink: #fafaf9; --amba-muted: #a8a29e; --amba-border: #292524;
+        }
+    }
+    .amba-stage {
+        position: relative; overflow: clip; border-radius: 1.25rem;
+        min-block-size: 24rem; display: grid; place-content: center; justify-items: center;
+        gap: 1rem; padding: 3rem 1.25rem; text-align: center;
+        background: #0a1120; color: #f1f5f9; isolation: isolate;
+    }
+    .amba-sky { position: absolute; inset: 0; z-index: -1; }
+    .amba-blob {
+        position: absolute; border-radius: 50%;
+        inline-size: 24rem; block-size: 24rem;
+        filter: blur(64px); mix-blend-mode: screen; opacity: .55;
+        background: var(--amba-c1, #22d3ee);
+        will-change: transform;
+    }
+    .amba-blob.b { inline-size: 30rem; block-size: 30rem; background: var(--amba-c2, #34d399); }
+    .amba-blob.c { inline-size: 20rem; block-size: 20rem; background: var(--amba-c3, #818cf8); }
+    .amba-blob.d { inline-size: 26rem; block-size: 26rem; background: var(--amba-c1, #22d3ee); opacity: .4; }
+    .amba-blob.a { inset-inline-start: 4%;  inset-block-start: 2%;  animation: amba-drift-a 26s ease-in-out infinite alternate; }
+    .amba-blob.b { inset-inline-start: 46%; inset-block-start: 12%; animation: amba-drift-b 32s ease-in-out infinite alternate; }
+    .amba-blob.c { inset-inline-start: 62%; inset-block-start: 48%; animation: amba-drift-c 24s ease-in-out infinite alternate; }
+    .amba-blob.d { inset-inline-start: 12%; inset-block-start: 52%; animation: amba-drift-d 34s ease-in-out infinite alternate; }
+    @keyframes amba-drift-a { from { translate: -12% -18%; scale: 1; } to { translate: 10% 8%; scale: 1.25; } }
+    @keyframes amba-drift-b { from { translate: 6% 10%; scale: 1.2; } to { translate: -8% -12%; scale: .95; } }
+    @keyframes amba-drift-c { from { translate: 4% -10%; scale: .9; } to { translate: -10% 10%; scale: 1.3; } }
+    @keyframes amba-drift-d { from { translate: -8% 6%; scale: 1.1; } to { translate: 10% -8%; scale: .9; } }
+    .amba-stage[data-running="false"] .amba-blob { animation-play-state: paused; }
+    .amba-eyebrow {
+        display: inline-flex; align-items: center; gap: .45rem;
+        padding: .35rem .85rem; border-radius: 999px;
+        background: rgba(241, 245, 249, .1); border: 1px solid rgba(241, 245, 249, .22);
+        font-size: .76rem; font-weight: 600; letter-spacing: .02em; color: #e2e8f0;
+    }
+    .amba-eyebrow svg { inline-size: .85rem; block-size: .85rem; stroke: currentColor; stroke-width: 2;
+                        fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .amba-h {
+        max-inline-size: 34rem; margin: 0; font-size: clamp(1.6rem, 4.5vw, 2.4rem);
+        font-weight: 700; line-height: 1.25; letter-spacing: -.01em;
+    }
+    .amba-p { max-inline-size: 30rem; margin: 0; color: #cbd5e1; font-size: .95rem; line-height: 1.7; }
+    .amba-cta-row { display: flex; flex-wrap: wrap; justify-content: center; gap: .6rem; margin-block-start: .4rem; }
+    .amba-cta {
+        display: inline-flex; align-items: center; gap: .45rem; padding: .65rem 1.3rem;
+        border-radius: 999px; border: 1px solid transparent; cursor: pointer;
+        font: 600 .85rem var(--amba-font); text-decoration: none;
+        transition: translate .15s ease, background-color .15s ease, border-color .15s ease;
+    }
+    .amba-cta:hover { translate: 0 -1px; }
+    .amba-cta:focus-visible { outline: 2px solid #7dd3fc; outline-offset: 2px; }
+    .amba-cta-primary { background: #f1f5f9; color: #0a1120; }
+    .amba-cta-primary:hover { background: #ffffff; }
+    .amba-cta-ghost { background: rgba(241, 245, 249, .06); color: #e2e8f0; border-color: rgba(241, 245, 249, .25); }
+    .amba-cta-ghost:hover { background: rgba(241, 245, 249, .12); }
+    .amba-cta svg { inline-size: .9rem; block-size: .9rem; stroke: currentColor; stroke-width: 2;
+                    fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .amba-dots {
+        display: flex; align-items: center; gap: .55rem; margin-block-start: 1.25rem;
+        padding: .45rem .7rem; border-radius: 999px;
+        background: rgba(10, 17, 32, .45); border: 1px solid rgba(241, 245, 249, .18);
+        backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    }
+    .amba-dots-label { font-size: .72rem; color: #94a3b8; }
+    .amba-dot {
+        inline-size: 1.7rem; block-size: 1.7rem; border-radius: 50%; cursor: pointer;
+        border: 2px solid rgba(241, 245, 249, .3); padding: 0;
+        transition: border-color .15s ease, scale .15s ease;
+    }
+    .amba-dot:hover { scale: 1.1; }
+    .amba-dot:focus-visible { outline: 2px solid #7dd3fc; outline-offset: 2px; }
+    .amba-dot[aria-pressed="true"] { border-color: #f8fafc; scale: 1.15; }
+    .amba-hint { margin: 0; font: 400 .74rem/1.6 ui-monospace, monospace; color: var(--amba-muted); text-align: center; }
+    @media (prefers-reduced-motion: reduce) {
+        .amba-blob { animation: none; }
+        .amba-cta, .amba-dot { transition: none; }
+        .amba-cta:hover, .amba-dot:hover { translate: 0 0; scale: 1; }
+        .amba-dot[aria-pressed="true"] { scale: 1; }
+    }
+</style>
+
+<section class="pg-box" style="gap: 1.25rem"
+    x-data="{
+        io: null,
+        running: true,
+        pal: 'borealis',
+        palColors: {
+            borealis: ['#22d3ee', '#34d399', '#818cf8'],
+            sunset: ['#f97316', '#ec4899', '#8b5cf6'],
+            ocean: ['#38bdf8', '#6366f1', '#0ea5e9'],
+        },
+        init() {
+            this.io = new IntersectionObserver((entries) => {
+                this.running = entries[0].isIntersecting;
+            }, { threshold: 0.15 });
+            this.io.observe(this.$refs.stage);
+        },
+        destroy() { if (this.io) this.io.disconnect(); },
+    }">
+    <div>
+        <h3 class="pg-title" style="font-size: var(--nx-text-xl)">{{ $say('A sky that breathes under the headline', 'آسمانی که زیر سرتیتر نفس می‌کشد') }}</h3>
+        <p style="margin: .25rem 0 0; color: var(--nx-text-muted)">
+            {{ $say('Four blobs at 64px blur and screen blend drift on their own 24–34s periods — only transform animates, so the section stays GPU-cheap. The palette dots retune the sky live; off screen the drift parks and under reduced motion it settles into a still aurora.', 'چهار بلاب با blur روی ۶۴ پیکسل و blend نوع screen با دوره‌های جداگانهٔ ۲۴ تا ۳۴ ثانیه جابه‌جا می‌شوند — فقط transform انیمیت می‌شود تا بخش سبک بماند. نقاط پالت آسمان را زنده ری‌تیون می‌کنند؛ بیرون از دید، رانش پارک می‌شود و در حرکت کاهش‌یافته به شفق ساکن می‌نشیند.') }}
+        </p>
+    </div>
+
+    <div class="amba-stage" x-ref="stage"
+        x-bind:data-running="running ? 'true' : 'false'"
+        x-bind:style="`--amba-c1: ${palColors[pal][0]}; --amba-c2: ${palColors[pal][1]}; --amba-c3: ${palColors[pal][2]}`">
+        <div class="amba-sky" aria-hidden="true">
+            <i class="amba-blob a"></i>
+            <i class="amba-blob b"></i>
+            <i class="amba-blob c"></i>
+            <i class="amba-blob d"></i>
+        </div>
+        <span class="amba-eyebrow">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12h2"/><path d="M20 12h2"/><path d="m12 2v2"/><path d="m12 20v2"/><path d="m4.9 4.9 1.4 1.4"/><path d="m17.7 17.7 1.4 1.4"/><path d="m4.9 19.1 1.4-1.4"/><path d="m17.7 6.3 1.4-1.4"/></svg>
+            {{ $say('Borealis Cloud · Edge network', 'Borealis Cloud · شبکهٔ لبه') }}
+        </span>
+        <h4 class="amba-h">{{ $say('Cold deploys under the aurora', 'زیر نور شفق، استقرار سرد است') }}</h4>
+        <p class="amba-p">{{ $say('Edge compute in 31 cities — sub-50ms latency, zero config. Your build lands where your users already are.', 'رایانش لبه در ۳۱ شهر — تأخیر زیر ۵۰ میلی‌ثانیه، بدون پیکربندی. بیلد شما همان‌جا فرود می‌آید که کاربرانتید.') }}</p>
+        <div class="amba-cta-row">
+            <a class="amba-cta amba-cta-primary" href="#">{{ $say('Start deploying', 'شروع استقرار') }}</a>
+            <a class="amba-cta amba-cta-ghost" href="#">
+                {{ $say('Read the latency report', 'گزارش تأخیر را بخوانید') }}
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+            </a>
+        </div>
+        <div class="amba-dots" role="group" aria-label="{{ $say('Aurora palette', 'پالت شفق') }}">
+            <span class="amba-dots-label">{{ $say('Palette', 'پالت') }}</span>
+            @foreach ($palettes as $p)
+                <button type="button" class="amba-dot"
+                    x-bind:aria-pressed="pal === '{{ $p['id'] }}' ? 'true' : 'false'"
+                    aria-label="{{ $say($p['en'], $p['fa']) }}"
+                    x-on:click="pal = '{{ $p['id'] }}'"
+                    style="background: {{ $p['c1'] }}"></button>
+            @endforeach
+        </div>
+    </div>
+
+    <p class="amba-hint">
+        {{ $say('4 blobs · blur 64px · mix-blend-mode: screen · transform-only drift · pauses off screen', '۴ بلاب · blur روی ۶۴px · mix-blend-mode: screen · رانش فقط با transform · توقف بیرون از دید') }}
+    </p>
+</section>

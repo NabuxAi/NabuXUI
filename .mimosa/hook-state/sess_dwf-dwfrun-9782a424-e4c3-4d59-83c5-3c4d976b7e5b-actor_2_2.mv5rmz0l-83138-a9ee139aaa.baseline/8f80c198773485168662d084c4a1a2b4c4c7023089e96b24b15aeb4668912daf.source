@@ -1,0 +1,208 @@
+{{--
+    live-ticker's real scenario: the Meridian Watchlist strip — five
+    fictional assets (AUR, HEL, TID, VEL, CAS) take a small random walk
+    every 1.6 seconds. Each price is a per-digit odometer: every digit
+    owns a vertical 0–9 strip (۰–۹ in Persian) that glides 500ms with a
+    damped curve, separators stay put. The arrow and the change-from-open
+    percent flip green/red with the session sign, quotes are
+    bidi-isolated so they read correctly in RTL and LTR alike, hovering
+    (or focusing) the bar holds the flow, the timer only ticks while the
+    bar is on screen, reduced motion snaps digits without rolling, and
+    destroy clears the interval and the observer.
+--}}
+@php
+    $fa = app()->getLocale() === 'fa';
+    $say = fn (string $en, string $faText) => $fa ? $faText : $en;
+@endphp
+
+<style>
+    .mflt-root {
+        --mflt-fg: #1c1917; --mflt-muted: #78716c; --mflt-border: #e7e5e4;
+        --mflt-bg: #ffffff; --mflt-soft: #f5f5f4; --mflt-accent: #4f46e5;
+        --mflt-up: #059669; --mflt-down: #e11d48;
+        display: grid; gap: 1rem;
+        font-family: 'Inter', 'Vazirmatn', ui-sans-serif, system-ui, sans-serif;
+        color: var(--mflt-fg);
+    }
+    html[data-theme="dark"] .mflt-root {
+        --mflt-fg: #fafaf9; --mflt-muted: #a8a29e; --mflt-border: #292524;
+        --mflt-bg: #1c1917; --mflt-soft: #292524; --mflt-accent: #a5b4fc;
+        --mflt-up: #34d399; --mflt-down: #fb7185;
+    }
+    @media (prefers-color-scheme: dark) {
+        html:not([data-theme="light"]) .mflt-root {
+            --mflt-fg: #fafaf9; --mflt-muted: #a8a29e; --mflt-border: #292524;
+            --mflt-bg: #1c1917; --mflt-soft: #292524; --mflt-accent: #a5b4fc;
+            --mflt-up: #34d399; --mflt-down: #fb7185;
+        }
+    }
+    .mflt-bar {
+        display: flex; flex-wrap: wrap; gap: .6rem; padding: .8rem;
+        border: 1px solid var(--mflt-border); border-radius: 1.1rem;
+        background: color-mix(in oklab, var(--mflt-soft) 55%, var(--mflt-bg));
+    }
+    .mflt-cell {
+        display: grid; gap: .2rem; align-content: center;
+        padding: .6rem .95rem; border-radius: .9rem;
+        border: 1px solid var(--mflt-border); background: var(--mflt-bg);
+        min-inline-size: 9rem; flex: 1 1 9rem; max-inline-size: 100%;
+        transition: border-color .2s ease;
+    }
+    .mflt-cell[data-dir="up"] { border-color: color-mix(in oklab, var(--mflt-up) 38%, var(--mflt-border)); }
+    .mflt-cell[data-dir="down"] { border-color: color-mix(in oklab, var(--mflt-down) 38%, var(--mflt-border)); }
+    .mflt-sym { display: flex; align-items: baseline; gap: .45rem; }
+    .mflt-sym b { font-size: .82rem; letter-spacing: .04em; }
+    .mflt-sym span { font-size: .7rem; color: var(--mflt-muted); }
+    .mflt-quote {
+        display: inline-flex; align-items: baseline; gap: .55rem;
+        direction: ltr; unicode-bidi: isolate;
+        font-variant-numeric: tabular-nums; line-height: 1.25;
+    }
+    .mflt-price { display: inline-flex; font-size: 1.02rem; font-weight: 700; }
+    .mflt-col { block-size: 1.25em; overflow: clip; }
+    .mflt-strip { display: grid; transition: transform .5s cubic-bezier(.2, .7, .2, 1); }
+    .mflt-digit { block-size: 1.25em; text-align: center; }
+    .mflt-lit { line-height: 1.25; }
+    .mflt-chg {
+        display: inline-flex; align-items: center; gap: .25rem;
+        font-size: .76rem; font-weight: 700;
+        transition: color .2s ease;
+    }
+    .mflt-cell[data-dir="up"] .mflt-chg { color: var(--mflt-up); }
+    .mflt-cell[data-dir="down"] .mflt-chg { color: var(--mflt-down); }
+    .mflt-chg svg { inline-size: .95rem; block-size: .95rem; stroke: currentColor; stroke-width: 2;
+                    fill: none; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+    .mflt-foot {
+        display: flex; flex-wrap: wrap; align-items: center;
+        justify-content: space-between; gap: .6rem 1.25rem;
+    }
+    .mflt-note { margin: 0; font-size: .8rem; color: var(--mflt-muted); min-block-size: 1.2em; }
+    .mflt-note b { color: var(--mflt-fg); font-variant-numeric: tabular-nums; }
+    .mflt-hint { margin: 0; font-family: ui-monospace, monospace;
+                 font-size: .72rem; color: var(--mflt-muted); }
+    @media (prefers-reduced-motion: reduce) {
+        .mflt-cell, .mflt-chg { transition: none; }
+        .mflt-strip { transition: none; }
+    }
+</style>
+
+<section class="pg-box" style="gap: 1.25rem">
+    <div>
+        <h3 class="pg-title" style="font-size: var(--nx-text-xl)">{{ $say('Numbers that move like numbers', 'عددهایی که مثل عدد حرکت می‌کنند') }}</h3>
+        <p style="margin: .25rem 0 0; color: var(--nx-text-muted)">
+            {{ $say('Five fictional assets take a small random step every 1.6 seconds. Each price is a per-digit odometer: every digit owns a full vertical 0–9 strip that glides with a damped curve while separators stay put, so 1,284.52 visibly becomes 1,284.61 — no library, one interval and pure CSS transforms. The arrow and change-from-open percent flip green and red with the session sign, quotes are bidi-isolated to read correctly in RTL and LTR, and hovering (or focusing) the bar holds the flow for easy reading.', 'پنج دارایی خیالی هر ۱٫۶ ثانیه یک گام تصادفی کوچک برمی‌دارند. هر قیمت یک اسطوانهٔ رقمی است: هر رقم یک نوار عمودی کامل ۰ تا ۹ دارد که با منحنی دامپ‌شده می‌غلتد و جداکننده‌ها سر جایشان می‌مانند، پس ۱٬۲۸۴٫۵۲ جلوی چشم ۱٬۲۸۴٫۶۱ می‌شود — بدون کتابخانه، فقط یک interval و ترنسفورم‌های CSS. فلش و درصدِ تغییر نسبت به شروع نشست با علامت نشست سبز و قرمز می‌شوند، سهم‌ها با ایزولهٔ دوجهته در RTL و LTR درست می‌خوانند و هاور (یا فوکوس) روی نوار جریان را برای خواندن نگه می‌دارد.') }}
+        </p>
+    </div>
+
+    <div class="mflt-root"
+        x-data="{
+            io: null, timer: null, visible: true, paused: false, ticks: 0,
+            list: [
+                { sym: 'AUR', fa: 'آئوروم', en: 'Aurum', p: 1284.52, open: 1284.52 },
+                { sym: 'HEL', fa: 'هلیوس', en: 'Helios', p: 87.19, open: 87.19 },
+                { sym: 'TID', fa: 'تایدل', en: 'Tidal', p: 12.84, open: 12.84 },
+                { sym: 'VEL', fa: 'ولا', en: 'Vela', p: 341.07, open: 341.07 },
+                { sym: 'CAS', fa: 'کاسکید', en: 'Cascade', p: 56.40, open: 56.40 },
+            ],
+            fa: @js($fa),
+            faDigit(d) {
+                return this.fa ? '۰۱۲۳۴۵۶۷۸۹'[d] : String(d);
+            },
+            faNum(s) {
+                const t = String(s);
+                return this.fa ? t.replace(/\d/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[d]) : t;
+            },
+            init() {
+                this.io = new IntersectionObserver((entries) => {
+                    this.visible = entries[0].isIntersecting;
+                });
+                this.io.observe(this.$refs.bar);
+                this.timer = setInterval(() => this.tick(), 1600);
+            },
+            tick() {
+                if (!this.visible || this.paused || document.hidden) return;
+                for (const a of this.list) {
+                    a.p = Math.max(0.01, a.p * (1 + (Math.random() - 0.5) * 0.006));
+                }
+                this.ticks += 1;
+            },
+            fmt(p) {
+                return p.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            },
+            chars(a) {
+                return Array.from(this.fmt(a.p));
+            },
+            pct(a) {
+                return (a.p / a.open - 1) * 100;
+            },
+            chgText(a) {
+                const v = this.pct(a).toFixed(2);
+                return (this.pct(a) >= 0 ? '+' : '') + (this.fa ? this.faNum(v) : v) + '%';
+            },
+            note() {
+                if (this.paused) {
+                    return this.fa
+                        ? 'نوار نگه داشته شد — برای ادامه موس را بردارید'
+                        : 'Bar held — move the pointer away to resume';
+                }
+                return this.fa
+                    ? 'زنده — <b>' + this.faNum(this.ticks) + '</b> تیک در این نشست'
+                    : 'Live — <b>' + this.ticks + '</b> ticks this session';
+            },
+            destroy() {
+                clearInterval(this.timer);
+                if (this.io) this.io.disconnect();
+            },
+        }">
+        <div class="mflt-bar" x-ref="bar" role="group" tabindex="0"
+            x-bind:aria-label="@js($say('Meridian Watchlist — live prices of five fictional assets', 'دیده‌بان مریدین — قیمت‌های زندهٔ پنج دارایی خیالی'))"
+            x-on:pointerenter="paused = true"
+            x-on:pointerleave="paused = false"
+            x-on:focusin="paused = true"
+            x-on:focusout="paused = false">
+            <template x-for="a in list" :key="a.sym">
+                <div class="mflt-cell"
+                    x-bind:data-dir="pct(a) >= 0 ? 'up' : 'down'"
+                    x-bind:aria-label="a.sym + ' ' + chgText(a)">
+                    <span class="mflt-sym">
+                        <b x-text="a.sym"></b>
+                        <span x-text="fa ? a.fa : a.en"></span>
+                    </span>
+                    <span class="mflt-quote" dir="ltr">
+                        <span class="mflt-price" aria-hidden="true">
+                            <template x-for="(ch, i) in chars(a)" :key="i">
+                                <span class="mflt-col">
+                                    <template x-if="/[0-9]/.test(ch)">
+                                        <span class="mflt-strip"
+                                            x-bind:style="'transform: translateY(-' + (ch * 10) + '%)'">
+                                            <template x-for="d in 10" :key="d">
+                                                <span class="mflt-digit" x-text="faDigit(d - 1)"></span>
+                                            </template>
+                                        </span>
+                                    </template>
+                                    <template x-if="/[^0-9]/.test(ch)">
+                                        <span class="mflt-lit" x-text="ch"></span>
+                                    </template>
+                                </span>
+                            </template>
+                        </span>
+                        <span class="mflt-chg">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path x-bind:d="pct(a) >= 0 ? 'M22 7l-8.5 8.5-5-5L2 17' : 'M22 17l-8.5-8.5-5 5L2 7'"></path>
+                                <path x-bind:d="pct(a) >= 0 ? 'M16 7h6v6' : 'M16 17h6v-6'"></path>
+                            </svg>
+                            <span x-text="chgText(a)"></span>
+                        </span>
+                    </span>
+                </div>
+            </template>
+        </div>
+
+        <div class="mflt-foot">
+            <p class="mflt-note" role="status" x-html="note()"></p>
+            <p class="mflt-hint">
+                {{ $say('walk ±0.3% · tick 1600ms · per-digit strips 0–9 · damped 500ms glide · bidi-isolated quotes · hover/focus holds · parked off screen', 'گام ±۰٫۳٪ · تیک ۱۶۰۰ms · نوار رقمی ۰–۹ · گلوی دامپ‌دار ۵۰۰ms · سهم‌های ایزولهٔ دوجهته · هاور/فوکوس نگه می‌دارد · پارک خارج از دید') }}
+            </p>
+        </div>
+    </div>
+</section>

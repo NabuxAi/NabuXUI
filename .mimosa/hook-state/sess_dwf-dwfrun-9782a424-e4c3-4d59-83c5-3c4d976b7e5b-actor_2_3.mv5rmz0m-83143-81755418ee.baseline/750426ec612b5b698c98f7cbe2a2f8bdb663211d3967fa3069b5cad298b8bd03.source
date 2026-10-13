@@ -1,0 +1,363 @@
+
+<?php
+    use App\Support\DemoCatalog;
+    use NabuXUI\NabuXUI;
+
+    $fa = app()->getLocale() === 'fa';
+    $say = fn (string $en, string $faText) => $fa ? $faText : $en;
+
+    $chipOptions = ['all' => $say('All groups', 'همهٔ گروه‌ها')];
+    $chipCounts = ['all' => NabuXUI::formatNumber($total)];
+    foreach ($groups as $id => $manifest) {
+        $chipOptions[$id] = DemoCatalog::pick($manifest['label']);
+        $chipCounts[$id] = NabuXUI::formatNumber(count($manifest['items']));
+    }
+?>
+<div>
+    <main class="nx-page" wire:transition.navigate="nx-page">
+        <div class="pg">
+            <nav class="pg-row" style="justify-content: space-between" aria-label="<?php echo e($say('Playground', 'پلی‌گراوند')); ?>">
+                <div class="pg-row">
+                    <?php if (isset($component)) { $__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::button','data' => ['size' => 'sm','variant' => 'ghost','icon' => 'home','href' => '/','wire:navigate' => true]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::button'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['size' => 'sm','variant' => 'ghost','icon' => 'home','href' => '/','wire:navigate' => true]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+<?php echo e($say('Home', 'خانه')); ?> <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42)): ?>
+<?php $attributes = $__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42; ?>
+<?php unset($__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42)): ?>
+<?php $component = $__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42; ?>
+<?php unset($__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42); ?>
+<?php endif; ?>
+                    <?php if (isset($component)) { $__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::button','data' => ['size' => 'sm','variant' => 'ghost','icon' => 'grid','href' => '/livewire','wire:navigate' => true]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::button'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['size' => 'sm','variant' => 'ghost','icon' => 'grid','href' => '/livewire','wire:navigate' => true]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+<?php echo e($say('Showcase', 'نمایشگاه')); ?> <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42)): ?>
+<?php $attributes = $__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42; ?>
+<?php unset($__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42)): ?>
+<?php $component = $__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42; ?>
+<?php unset($__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42); ?>
+<?php endif; ?>
+                    <?php if (isset($component)) { $__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::button','data' => ['size' => 'sm','variant' => 'ghost','icon' => 'sparkles','href' => '/blocks/text','wire:navigate' => true]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::button'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['size' => 'sm','variant' => 'ghost','icon' => 'sparkles','href' => '/blocks/text','wire:navigate' => true]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+<?php echo e($say('Blocks', 'بلوک‌ها')); ?> <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42)): ?>
+<?php $attributes = $__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42; ?>
+<?php unset($__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42)): ?>
+<?php $component = $__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42; ?>
+<?php unset($__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42); ?>
+<?php endif; ?>
+                </div>
+                <?php if (isset($component)) { $__componentOriginal022422a32faa8ab68b11ed13aebc2341 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal022422a32faa8ab68b11ed13aebc2341 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::language-menu','data' => ['value' => $locale,'wire:model.live' => 'locale','label' => $say('Language', 'زبان'),'languages' => \App\Support\Locales::forMenu()]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::language-menu'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($locale),'wire:model.live' => 'locale','label' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($say('Language', 'زبان')),'languages' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(\App\Support\Locales::forMenu())]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal022422a32faa8ab68b11ed13aebc2341)): ?>
+<?php $attributes = $__attributesOriginal022422a32faa8ab68b11ed13aebc2341; ?>
+<?php unset($__attributesOriginal022422a32faa8ab68b11ed13aebc2341); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal022422a32faa8ab68b11ed13aebc2341)): ?>
+<?php $component = $__componentOriginal022422a32faa8ab68b11ed13aebc2341; ?>
+<?php unset($__componentOriginal022422a32faa8ab68b11ed13aebc2341); ?>
+<?php endif; ?>
+            </nav>
+
+            <header style="display: grid; gap: .5rem">
+                <div class="pg-row" style="gap: .75rem">
+                    <h1 style="margin: 0; font: 700 var(--nx-text-3xl) / 1.2 var(--nx-font-display); letter-spacing: var(--nx-tracking-tight)">
+                        <?php echo e($say('Component demos', 'دموهای کامپوننت‌ها')); ?>
+
+                    </h1>
+                    <?php if (isset($component)) { $__componentOriginal88b19148b030a6c82e2be7bc3872e2be = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal88b19148b030a6c82e2be7bc3872e2be = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::badge','data' => ['tone' => 'neutral']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::badge'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['tone' => 'neutral']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+<?php echo e(NabuXUI::formatNumber($total)); ?> <?php echo e($say('demos', 'دمو')); ?> <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal88b19148b030a6c82e2be7bc3872e2be)): ?>
+<?php $attributes = $__attributesOriginal88b19148b030a6c82e2be7bc3872e2be; ?>
+<?php unset($__attributesOriginal88b19148b030a6c82e2be7bc3872e2be); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal88b19148b030a6c82e2be7bc3872e2be)): ?>
+<?php $component = $__componentOriginal88b19148b030a6c82e2be7bc3872e2be; ?>
+<?php unset($__componentOriginal88b19148b030a6c82e2be7bc3872e2be); ?>
+<?php endif; ?>
+                </div>
+                <p style="margin: 0; max-inline-size: 46rem; color: var(--nx-text-muted)">
+                    <?php echo e($say(
+                        'Every component on its own page, in real scenarios — search by name, filter by group, open a demo for the props and a copyable snippet.',
+                        'هر کامپوننت در صفحهٔ خودش و در سناریوهای واقعی — با نام جست‌وجو کنید، گروه را فیلتر کنید و برای پراپ‌ها و تکه‌کد، دمو را باز کنید.',
+                    )); ?>
+
+                </p>
+            </header>
+
+            <div class="pg-box" style="gap: 1.25rem">
+                <?php if (isset($component)) { $__componentOriginal2fb3ed9d008db6d56137d7f687f87f19 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal2fb3ed9d008db6d56137d7f687f87f19 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::input','data' => ['label' => $say('Search demos', 'جست‌وجوی دموها'),'icon' => 'search','size' => 'md','placeholder' => $say('button, card, table…', 'دکمه، کارت، جدول…'),'wire:model.live.debounce.300ms' => 'search']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::input'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['label' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($say('Search demos', 'جست‌وجوی دموها')),'icon' => 'search','size' => 'md','placeholder' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($say('button, card, table…', 'دکمه، کارت، جدول…')),'wire:model.live.debounce.300ms' => 'search']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal2fb3ed9d008db6d56137d7f687f87f19)): ?>
+<?php $attributes = $__attributesOriginal2fb3ed9d008db6d56137d7f687f87f19; ?>
+<?php unset($__attributesOriginal2fb3ed9d008db6d56137d7f687f87f19); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal2fb3ed9d008db6d56137d7f687f87f19)): ?>
+<?php $component = $__componentOriginal2fb3ed9d008db6d56137d7f687f87f19; ?>
+<?php unset($__componentOriginal2fb3ed9d008db6d56137d7f687f87f19); ?>
+<?php endif; ?>
+                <?php if (isset($component)) { $__componentOriginal6a71c49d1a08ebecfe7a6986a59dba78 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal6a71c49d1a08ebecfe7a6986a59dba78 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::chip-filter','data' => ['options' => $chipOptions,'counts' => $chipCounts,'wire:model.live' => 'group','label' => $say('Group', 'گروه')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::chip-filter'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['options' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($chipOptions),'counts' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($chipCounts),'wire:model.live' => 'group','label' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($say('Group', 'گروه'))]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal6a71c49d1a08ebecfe7a6986a59dba78)): ?>
+<?php $attributes = $__attributesOriginal6a71c49d1a08ebecfe7a6986a59dba78; ?>
+<?php unset($__attributesOriginal6a71c49d1a08ebecfe7a6986a59dba78); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal6a71c49d1a08ebecfe7a6986a59dba78)): ?>
+<?php $component = $__componentOriginal6a71c49d1a08ebecfe7a6986a59dba78; ?>
+<?php unset($__componentOriginal6a71c49d1a08ebecfe7a6986a59dba78); ?>
+<?php endif; ?>
+            </div>
+
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(count($demos) === 0): ?>
+                <section class="pg-box" <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'demos-empty'; ?>wire:key="demos-empty">
+                    <?php if (isset($component)) { $__componentOriginala7a723caad3d223d78a2eb9a7554da22 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginala7a723caad3d223d78a2eb9a7554da22 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::empty-state','data' => ['icon' => 'search','title' => $say('Nothing found', 'چیزی پیدا نشد'),'description' => $say('No demo matches this search in this group. Clear the filters and try another name.', 'دمویی با این جست‌وجو در این گروه نیست. فیلترها را پاک کنید و نام دیگری را امتحان کنید.')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::empty-state'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['icon' => 'search','title' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($say('Nothing found', 'چیزی پیدا نشد')),'description' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($say('No demo matches this search in this group. Clear the filters and try another name.', 'دمویی با این جست‌وجو در این گروه نیست. فیلترها را پاک کنید و نام دیگری را امتحان کنید.'))]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+                         <?php $__env->slot('actions', null, []); ?> 
+                            <?php if (isset($component)) { $__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::button','data' => ['variant' => 'primary','icon' => 'x','wire:click' => 'resetFilters']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::button'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['variant' => 'primary','icon' => 'x','wire:click' => 'resetFilters']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+<?php echo e($say('Clear filters', 'پاک‌کردن فیلترها')); ?> <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42)): ?>
+<?php $attributes = $__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42; ?>
+<?php unset($__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42)): ?>
+<?php $component = $__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42; ?>
+<?php unset($__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42); ?>
+<?php endif; ?>
+                         <?php $__env->endSlot(); ?>
+                     <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginala7a723caad3d223d78a2eb9a7554da22)): ?>
+<?php $attributes = $__attributesOriginala7a723caad3d223d78a2eb9a7554da22; ?>
+<?php unset($__attributesOriginala7a723caad3d223d78a2eb9a7554da22); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginala7a723caad3d223d78a2eb9a7554da22)): ?>
+<?php $component = $__componentOriginala7a723caad3d223d78a2eb9a7554da22; ?>
+<?php unset($__componentOriginala7a723caad3d223d78a2eb9a7554da22); ?>
+<?php endif; ?>
+                </section>
+            <?php else: ?>
+                
+                <?php if (isset($component)) { $__componentOriginal7a54050537a2df5497c9832c08b7cf52 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal7a54050537a2df5497c9832c08b7cf52 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::grid','data' => ['min' => '17rem','stagger' => false,'wire:key' => 'demos-grid']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::grid'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['min' => '17rem','stagger' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(false),'wire:key' => 'demos-grid']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $demos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $demo): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                        <?php if (isset($component)) { $__componentOriginalab383cfe4921ba943f4916d49aa0f81e = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalab383cfe4921ba943f4916d49aa0f81e = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::card','data' => ['interactive' => true,'wire:key' => 'demo-'.e($demo['group']).'-'.e($demo['slug']).'','href' => '/components/'.$demo['group'].'/'.$demo['slug'],'wire:navigate' => true,'icon' => $demo['icon'] ?? 'grid','title' => $demo['title'],'description' => $demo['oneLiner']]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::card'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['interactive' => true,'wire:key' => 'demo-'.e($demo['group']).'-'.e($demo['slug']).'','href' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute('/components/'.$demo['group'].'/'.$demo['slug']),'wire:navigate' => true,'icon' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($demo['icon'] ?? 'grid'),'title' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($demo['title']),'description' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($demo['oneLiner'])]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+                             <?php $__env->slot('footer', null, []); ?> 
+                                <div class="pg-row" style="gap: .5rem">
+                                    <?php if (isset($component)) { $__componentOriginal88b19148b030a6c82e2be7bc3872e2be = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal88b19148b030a6c82e2be7bc3872e2be = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::badge','data' => ['tone' => 'neutral','size' => 'sm']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::badge'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['tone' => 'neutral','size' => 'sm']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+<?php echo e(DemoCatalog::pick($groups[$demo['group']]['label'])); ?> <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal88b19148b030a6c82e2be7bc3872e2be)): ?>
+<?php $attributes = $__attributesOriginal88b19148b030a6c82e2be7bc3872e2be; ?>
+<?php unset($__attributesOriginal88b19148b030a6c82e2be7bc3872e2be); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal88b19148b030a6c82e2be7bc3872e2be)): ?>
+<?php $component = $__componentOriginal88b19148b030a6c82e2be7bc3872e2be; ?>
+<?php unset($__componentOriginal88b19148b030a6c82e2be7bc3872e2be); ?>
+<?php endif; ?>
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($demo['js']): ?>
+                                        <?php if (isset($component)) { $__componentOriginal88b19148b030a6c82e2be7bc3872e2be = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal88b19148b030a6c82e2be7bc3872e2be = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::badge','data' => ['tone' => 'info','size' => 'sm']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::badge'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['tone' => 'info','size' => 'sm']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+<?php echo e($say('JS behaviour', 'رفتار JS')); ?> <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal88b19148b030a6c82e2be7bc3872e2be)): ?>
+<?php $attributes = $__attributesOriginal88b19148b030a6c82e2be7bc3872e2be; ?>
+<?php unset($__attributesOriginal88b19148b030a6c82e2be7bc3872e2be); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal88b19148b030a6c82e2be7bc3872e2be)): ?>
+<?php $component = $__componentOriginal88b19148b030a6c82e2be7bc3872e2be; ?>
+<?php unset($__componentOriginal88b19148b030a6c82e2be7bc3872e2be); ?>
+<?php endif; ?>
+                                    <?php else: ?>
+                                        <?php if (isset($component)) { $__componentOriginal88b19148b030a6c82e2be7bc3872e2be = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal88b19148b030a6c82e2be7bc3872e2be = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::badge','data' => ['tone' => 'success','size' => 'sm']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::badge'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['tone' => 'success','size' => 'sm']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+<?php echo e($say('Pure CSS', 'خالص CSS')); ?> <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal88b19148b030a6c82e2be7bc3872e2be)): ?>
+<?php $attributes = $__attributesOriginal88b19148b030a6c82e2be7bc3872e2be; ?>
+<?php unset($__attributesOriginal88b19148b030a6c82e2be7bc3872e2be); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal88b19148b030a6c82e2be7bc3872e2be)): ?>
+<?php $component = $__componentOriginal88b19148b030a6c82e2be7bc3872e2be; ?>
+<?php unset($__componentOriginal88b19148b030a6c82e2be7bc3872e2be); ?>
+<?php endif; ?>
+                                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                </div>
+                             <?php $__env->endSlot(); ?>
+                         <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalab383cfe4921ba943f4916d49aa0f81e)): ?>
+<?php $attributes = $__attributesOriginalab383cfe4921ba943f4916d49aa0f81e; ?>
+<?php unset($__attributesOriginalab383cfe4921ba943f4916d49aa0f81e); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalab383cfe4921ba943f4916d49aa0f81e)): ?>
+<?php $component = $__componentOriginalab383cfe4921ba943f4916d49aa0f81e; ?>
+<?php unset($__componentOriginalab383cfe4921ba943f4916d49aa0f81e); ?>
+<?php endif; ?>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                 <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal7a54050537a2df5497c9832c08b7cf52)): ?>
+<?php $attributes = $__attributesOriginal7a54050537a2df5497c9832c08b7cf52; ?>
+<?php unset($__attributesOriginal7a54050537a2df5497c9832c08b7cf52); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal7a54050537a2df5497c9832c08b7cf52)): ?>
+<?php $component = $__componentOriginal7a54050537a2df5497c9832c08b7cf52; ?>
+<?php unset($__componentOriginal7a54050537a2df5497c9832c08b7cf52); ?>
+<?php endif; ?>
+            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+        </div>
+    </main>
+</div>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/playground/resources/views/livewire/component-catalog.blade.php ENDPATH**/ ?>

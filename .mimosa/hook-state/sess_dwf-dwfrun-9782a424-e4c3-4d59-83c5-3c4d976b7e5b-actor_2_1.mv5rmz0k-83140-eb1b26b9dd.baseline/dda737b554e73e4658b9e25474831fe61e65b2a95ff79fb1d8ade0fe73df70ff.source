@@ -1,0 +1,283 @@
+interface BuildReport {
+  /** شناسهٔ طعم: react | vue | svelte | inertia */
+  flavor: string;
+  /** آیا build سبز شد و dist آماده است؟ */
+  built: boolean;
+  /** مسیرهای خروجی build نسبت به ریشهٔ ریپو (مثل apps/showcase/dist). */
+  distPaths: string[];
+  /** خلاصهٔ یک-دو جمله‌ای. */
+  summary: string;
+  /** نکات برای یکپارچه‌ساز: id المان mount، خطوط روت پیشنهادی، وابستگی‌ها، خطرها. */
+  notes: string[];
+}
+interface ReviewVerdict {
+  approved: boolean;
+  problems: string[];
+}
+interface FlavorStatus {
+  slug: string;
+  label: string;
+  stage: "build" | "wired" | "verified" | "failed";
+}
+interface Finding {
+  where: string;
+  what: string;
+  evidence: string;
+  status: "verified" | "unconfirmed";
+  severity: "low" | "medium" | "high";
+}
+interface WorkflowReport {
+  conclusion: string;
+  findings: Finding[];
+  verified: string[];
+  notCovered: string[];
+}
+
+const CHECKER = String.raw`(async () => {
+  const fs = require("fs");
+  const base = "http://127.0.0.1:8765";
+  const fails = [];
+  const targets = [
+    ["/", ["NabuXUI"]],
+    ["/react", ["id=\"root\"", "assets/"]],
+    ["/react/admin", ["id=\"root\"", "assets/"]],
+    ["/vue", ["assets/"]],
+    ["/svelte", ["assets/"]],
+    ["/inertia", ["data-page", "assets/"]],
+  ];
+  for (const [path, markers] of targets) {
+    let r, html;
+    try { r = await fetch(base + path); html = await r.text(); } catch (e) { fails.push(path + " fetch: " + e.message); continue; }
+    if (r.status !== 200) { fails.push(path + " -> HTTP " + r.status); continue; }
+    for (const m of markers) if (!html.includes(m)) fails.push(path + " missing marker " + JSON.stringify(m));
+    const asset = (html.match(/<(?:script|link)[^>]+(?:src|href)="([^"]+assets\/[^"]+)"/) || [])[1];
+    if (asset) {
+      const ar = await fetch(new URL(asset, base + path + "/").toString());
+      if (ar.status !== 200) fails.push(path + " asset " + asset + " -> HTTP " + ar.status);
+    } else if (path !== "/") fails.push(path + " no asset reference found");
+  }
+  const fil = await fetch(base + "/filament");
+  if (!fil.url.includes("/filament") || fil.status !== 200) fails.push("/filament -> " + fil.status + " " + fil.url);
+  const gi = fs.readFileSync(".gitignore", "utf8");
+  for (const p of ["public/react", "public/vue", "public/svelte", "public/inertia"]) if (!gi.includes(p)) fails.push(".gitignore missing " + p);
+  const routes = fs.readFileSync("playground/routes/web.php", "utf8");
+  for (const p of ["react", "vue", "svelte", "inertia"]) if (!routes.includes(p)) fails.push("routes/web.php missing " + p);
+  if (fails.length) { console.error(fails.join("\n")); process.exit(1); }
+  console.log("flavor gates pass: seven addresses 200, SPA assets load, wiring present");
+})();`;
+
+artifact.board("flavors", {
+  title: "طعم‌های per-framework",
+  key: "slug",
+  status: "stage",
+  columns: ["build", "wired", "verified", "failed"],
+  cardTitle: "label",
+});
+
+const CONTEXT = [
+  "ریپوی کاری: /Users/mrchatgpt/Sites/NabuXUI (مونوریپوی pnpm). پکیج‌ها: packages/{core,react,livewire,filament,inertia}؛ اپ‌ها: apps/{showcase,admin,admin-vue,admin-svelte}. پلی‌گراوند Laravel 13 در playground/ (Livewire 4 + Filament 5) و سرور dev روی http://127.0.0.1:8765 از قبل بالا است (ری‌استارت/kill نکن).",
+  "هدف نهایی این کار: هر طعم فریمورک با نشانی جدا قابل دیدن باشد — / یعنی Livewire (موجود)، /react و /react/admin یعنی اپ‌های React (showcase و admin)، /vue یعنی admin-vue، /svelte یعنی admin-svelte، /inertia طعمِ تازهٔ Inertia، /filament هم از قبل هست.",
+  "pnpm 8.7.5 و node 26 نصب‌اند. الگوی نصب امنِ هم‌زمان (از docker-compose.override.yml): تا وقتی mkdir node_modules/.install-lock موفق نشده بچرخ، بعد pnpm install --filter <app>... --no-frozen-lockfile و در پایان rmdir همان قفل — چهار عامل موازی با همین قفل روی هم نمی‌افتند.",
+  "نکتهٔ build: اپ‌ها خروجیِ buildشدگیِ پکیج‌ها را مصرف می‌کنند (packages/*/dist از قبل موجود است؛ بازسازیشان نکن مگر لازم شود).",
+  "الگوی نشانی: dist هر اپ همان‌جا در apps/<app>/dist می‌ماند؛ کپی به public و روت‌ها و welcome و Dockerfile کار عامل «یکپارچه‌ساز» است، نه تو.",
+].join("\n");
+
+const CONSTRAINTS = [
+  "هیچ git commit یا stage انجام نده.",
+  "این فایل‌ها/مسیرها مال عامل‌های دیگرند و دست نمی‌زنی: playground/routes/web.php، playground/resources/views/welcome.blade.php، playground/resources/views/layouts/، playground/Dockerfile، .gitignore ریشه (استثنا فقط عامل Inertia: bootstrap/app.php و middleware خودش).",
+  "فایل‌های untracked موجِ در جریانِ نشست موازی را دست نزن: playground/app/Support/Demos/{Ambient,Depth-3d,Entrances,Hover-fx,Kinetic,Micro-fx}.php و پوشه‌های playground/resources/views/demos/components/{ambient,depth-3d,entrances,hover-fx,kinetic,micro-fx}.",
+  "محتوا بدون ارجاع ایران؛ رابط کاربری دوزبانه fa/en مثل اپ‌های خواهر (ماژول lang). متن UI انگلیسی‌ات هرگز مثال ایرانی نداشته باشد.",
+  "اگر کاری غیرممکن شد (مثلاً شبکه برای composer/pnpm نیست) صادقانه در گزارش بیاور یا escalate کن؛ جعل نکن.",
+].join("\n");
+
+phase("ساخت اپ‌های چهار طعم در موازی");
+log("چهار سازنده موازی: React (showcase+admin)، Vue، Svelte و Inertia تازه");
+const reactBuilder = agent("سازندهٔ React", {
+  system: "تو مهندس فرانت‌اند ارشد React/Vite هستی در مونوریپوی NabuXUI؛ build را خودت اجرا و سبز می‌کنی و گزارش دقیق می‌دهی. اگر غیرممکن شد صریح بگو.",
+});
+const vueBuilder = agent("سازندهٔ Vue", {
+  system: "تو مهندس ارشد Vue 3/Vite هستی در مونوریپوی NabuXUI؛ build و typecheck را خودت اجرا و سبز می‌کنی و گزارش دقیق می‌دهی. اگر غیرممکن شد صریح بگو.",
+});
+const svelteBuilder = agent("سازندهٔ Svelte", {
+  system: "تو مهندس ارشد Svelte 5/Vite هستی در مونوریپوی NabuXUI؛ build و svelte-check را خودت اجرا و سبز می‌کنی و گزارش دقیق می‌دهی. اگر غیرممکن شد صریح بگو.",
+});
+const inertiaBuilder = agent("سازندهٔ Inertia", {
+  system: "تو مهندس ارشد Laravel + Inertia + React هستی؛ طعم Inertia را از صفر واقعی می‌سازی (نه نمایشی) و اگر شبکه/وابستگی اجازه نداد صریح escalate می‌کنی، دور نمی‌زنی.",
+});
+const [reactRep, vueRep, svelteRep, inertiaRep] = await Promise.all([
+  reactBuilder.ask<BuildReport>([
+    CONTEXT,
+    "",
+    "وظیفه: دو اپ React را برای سرو شدن زیر مسیر /react و /react/admin آماده و build کن:",
+    "1. apps/showcase و apps/admin را بررسی کن: vite base باید نسبی باشد ('./') تا خروجی زیر subpath کار کند؛ اگر مطلق است درستش کن. روتر سمت کلاینت (در صورت وجود) نباید به root path وابسته باشد — راستی‌آزمایی کن.",
+    "2. هر دو اپ را build کن (با الگوی قفل install از CONTEXT). اگر پکیج‌های مشترک باید build شوند و dist ندارند، فقط همان‌ها را بساز.",
+    "3. مطمئن شو index.html هر دو، assetها را نسبی ارجاع می‌دهد و المان mount مشخص است (id=root و امثالهم).",
+    "4. هیچ فایلی خارج از apps/showcase، apps/admin و پکیج‌های لازم برای build ویرایش نکن.",
+    CONSTRAINTS,
+  ].join("\n")),
+  vueBuilder.ask<BuildReport>([
+    CONTEXT,
+    "",
+    "وظیفه: اپ Vue را برای سرو شدن زیر مسیر /vue آماده و build کن:",
+    "1. apps/admin-vue: روتر hash است (کارش زیر هر prefix درست است) — تأیید کن. vite base باید './' باشد؛ اگر نیست درست کن.",
+    "2. با الگوی قفل install، نصب و build کن و typecheck (vue-tsc) را سبز کن.",
+    "3. index.html باید assetها را نسبی ارجاع دهد؛ المان mount (id=app و امثالهم) را در notes ثبت کن.",
+    CONSTRAINTS,
+  ].join("\n")),
+  svelteBuilder.ask<BuildReport>([
+    CONTEXT,
+    "",
+    "وظیفه: اپ Svelte را برای سرو شدن زیر مسیر /svelte آماده و build کن:",
+    "1. apps/admin-svelte: روتر hash است — تأیید کن. vite base باید './' باشد؛ اگر نیست درست کن.",
+    "2. با الگوی قفل install، نصب و build کن و svelte-check را سبز کن.",
+    "3. index.html باید assetها را نسبی ارجاع دهد؛ المان mount را در notes ثبت کن.",
+    CONSTRAINTS,
+  ].join("\n")),
+  inertiaBuilder.ask<BuildReport>([
+    CONTEXT,
+    "",
+    "وظیفه: طعم Inertia را واقعی بساز — بستهٔ جدا لازم نیست (طبق docs/FRAMEWORKS.md: همان کامپوننت‌های @nabuxai/ui-react با linkComponent):",
+    "1. در playground دستور composer require inertiajs/inertia-laravel را اجرا کن (شبکه را امتحان کن؛ اگر نشد escalate کن و جعل نکن).",
+    "2. اپ تازه apps/inertia بساز: React + @inertiajs/react + کامپوننت‌های @nabuxai/ui-react؛ vite با base './' و پورت جدا؛ build سبز. دو-سه صفحهٔ واقعی: یک داشبورد کوچک (stat strip و چند کامپوننت) و یک صفحهٔ گالری بلوک‌ها؛ دوزبانه با ماژول lang مثل اپ‌های خواهر.",
+    "3. سمت Laravel فقط این‌ها مال توست: کنترلرهای جدید در playground/app/Http/Controllers/Inertia/، middleware مربوط به Inertia (HandleInertiaRequests)، ویرایش playground/bootstrap/app.php برای ثبت middleware، و ویوی ریشه (مثلاً playground/resources/views/inertia-root.blade.php) با @nabuxuiHead و @nabuxuiStyles و @nabuxuiScripts و فونت غیرمسدودکننده و @inertia. routes/web.php را دست نزن — خطوط روت دقیق را در notes بده تا یکپارچه‌ساز بگذارد.",
+    "4. ویوی ریشه باید اسکریپت/استایل buildشدگی apps/inertia/dist را از مسیر عمومی inertia/ لود کند (asset('inertia/...')) — قرارداد کپی با یکپارچه‌ساز همین است.",
+    CONSTRAINTS,
+  ].join("\n")),
+]);
+const builds = [reactRep, vueRep, svelteRep, inertiaRep];
+for (const b of builds) report({ slug: b.flavor, label: b.flavor === "react" ? "React (+ ادمین React)" : b.flavor === "vue" ? "Vue" : b.flavor === "svelte" ? "Svelte" : "Inertia", stage: b.built ? "build" : "failed" } satisfies FlavorStatus, "flavors");
+report({ slug: "filament", label: "Filament", stage: "verified" } satisfies FlavorStatus, "flavors");
+log("build ها تمام شد: " + builds.map((b) => b.flavor + "=" + (b.built ? "ok" : "FAIL")).join(" "));
+
+phase("سیم‌کشی آدرس‌ها، سوییچر و Dockerfile");
+const integrator = agent("یکپارچه‌ساز نشانی‌ها", {
+  system: "تو مهندس ارشد Laravel/DevOps هستی که سیم‌کشی نهایی را دقیق و کم‌دیف انجام می‌دهی؛ قبل از اعلام پایان همهٔ curlها را خودت اجرا کرده‌ای. اگر چیزی ناممکن شد صریح بگو.",
+});
+const wiring = await integrator.ask<string>([
+  CONTEXT,
+  "گزارش سازنده‌ها (distPaths و نکاتشان معتبر است؛ اگر جایی ناسازگار دیدی در گزارشِ خودت بنویس):",
+  JSON.stringify(builds, null, 1),
+  "",
+  "وظیفه: همه را زیر نشانی‌های جدا سیم‌کشی کن:",
+  "1. یک اسکریپت تکرارپذیر bin/sync-flavors.sh بنویس که dist اپ‌ها را به playground/public کپی کند: showcase→public/react، admin→public/react/admin، admin-vue→public/vue، admin-svelte→public/svelte، apps/inertia/dist→public/inertia. اجرایش کن.",
+  "2. .gitignore ریشه: همین مسیرهای عمومی را کنار خط playground/public/build/ اضافه کن (خروجی build کامیتی نیست).",
+  "3. playground/routes/web.php: برای هر پیشوند SPA یک روت catch-all که index.html را با response()->file بدهد (الگوی {any?} تا ریفرش عمیق هم بی‌خطر باشد؛ assetهای static خودشان از public سرو می‌شوند)؛ روت‌های Inertia را هم عیناً از notes سازندهٔ Inertia اضافه کن؛ /filament دست نخورد.",
+  "4. سوییچر فریمورک: اول بگرد آیا سوییچر/تب فریمورکی از قبل در ویوها هست (grep -ri framework در playground/resources/views و ارجاع‌های docs/FRAMEWORKS.md) — اگر هست گسترشش بده، وگرنه یک پارشال مشترک بساز و در welcome (نوار بالا) و لِی‌اوت کاتالوگ بگذار: پیوندهای / ، /react ، /vue ، /svelte ، /inertia ، /filament با برچسب دوزبانه و زبان بصری nx خود سیستم.",
+  "5. docs/FRAMEWORKS.md: بخش کوتاه «نشانی‌ها در پلی‌گراوند» با همین شش نشانی اضافه کن.",
+  "6. playground/Dockerfile: یک استیج pnpm اضافه کن که هر پنج خروجی (شامل inertia و بسته‌های لازم) را می‌سازد و در ایمیج نهایی به public/{react,vue,svelte,inertia} کپی می‌شود (داکر روی این ماشین در دسترس نیست — با دقت روی الگوی استیج assets موجود بنویس؛ بازبین می‌خواندش).",
+  "7. در پایان خودت curl همهٔ این‌ها را بگیر و سبز ببین: / و /react و /react/admin و /vue و /svelte و /inertia و /filament به‌همراه حداقل یک asset از هر SPA.",
+  CONSTRAINTS,
+].join("\n"));
+for (const b of builds) if (b.built) report({ slug: b.flavor, label: b.flavor === "react" ? "React (+ ادمین React)" : b.flavor === "vue" ? "Vue" : b.flavor === "svelte" ? "Svelte" : "Inertia", stage: "wired" } satisfies FlavorStatus, "flavors");
+log("سیم‌کشی انجام شد");
+
+phase("دروازه‌های نشانی‌ها و ترمیم تا سبز شدن");
+let gateErrors: string[] = [];
+for (let round = 1; round <= 3; round++) {
+  gateErrors = [];
+  const html = await world.run("node", ["-e", CHECKER]);
+  if (html.exitCode !== 0) gateErrors.push("دروازهٔ نشانی‌ها:\n" + (html.stderr || html.stdout).slice(0, 2500));
+  const vc = await world.run("php", ["playground/artisan", "view:cache"]);
+  if (vc.exitCode !== 0) gateErrors.push("view:cache:\n" + (vc.stderr || vc.stdout).slice(0, 1500));
+  if (gateErrors.length === 0) break;
+  log("دور " + round + " ترمیم: " + gateErrors.length + " دروازه قرمز");
+  const msg = gateErrors.join("\n---\n");
+  if (/inertia/.test(msg)) await inertiaBuilder.ask("این دروازه‌ها پس از کار تو قرمزند؛ ریشه را در بخش خودت پیدا و رفع کن:\n" + msg);
+  if (/\/react/.test(msg)) await reactBuilder.ask("این دروازه‌ها پس از کار تو قرمزند؛ ریشه را در بخش خودت پیدا و رفع کن:\n" + msg);
+  if (/\/vue/.test(msg)) await vueBuilder.ask("این دروازه‌ها پس از کار تو قرمزند؛ ریشه را در بخش خودت پیدا و رفع کن:\n" + msg);
+  if (/\/svelte/.test(msg)) await svelteBuilder.ask("این دروازه‌ها پس از کار تو قرمزند؛ ریشه را در بخش خودت پیدا و رفع کن:\n" + msg);
+  await integrator.ask("این دروازه‌ها قرمزند؛ هر چیزی که به سیم‌کشی/کپی/روت/سوییچر/Dockerfile مربوط است ریشه‌یابی و رفع کن:\n" + msg);
+}
+if (gateErrors.length === 0) for (const b of builds) if (b.built) report({ slug: b.flavor, label: b.flavor === "react" ? "React (+ ادمین React)" : b.flavor === "vue" ? "Vue" : b.flavor === "svelte" ? "Svelte" : "Inertia", stage: "verified" } satisfies FlavorStatus, "flavors");
+
+phase("بازبینی مستقل و جمع‌بندی نهایی");
+const reviewer = agent("ناظر مستقل طعم‌ها", {
+  system: "تو بازبین مستقل کد هستی با نگاه خراب‌کاری: چیزی که این تغییرات را در پروडاکشن می‌شکند پیدا می‌کنی. فقط می‌خوانی؛ ادعایی که خودت چک نکردی گزارش نکن.",
+});
+const review = await reviewer.ask<ReviewVerdict>([
+  CONTEXT,
+  "تغییرات این کار را با git status/diff ببین (فایل‌های apps/، playground/routes/web.php، playground/Dockerfile، .gitignore، bin/sync-flavors.sh، welcome/سوییچر و فایل‌های Inertia) و ببین چه چیزی می‌شکند:",
+  "- Dockerfile: استیج pnpm جدید از بیرون image درست می‌سازد؟ (lockfile/filters/مسیر کپی‌ها/ترتیب استیج‌ها؛ داکر محلی در دسترس نیست پس با دقت بخوان)",
+  "- روت‌های SPA: تداخل با روت‌های موجود /components و /admin و غیرت؟ index.html برای هر عمقی سرو می‌شود؟",
+  "- الگوی فونت غیرمسدودکننده در ویوی Inertia رعایت شده؟ (درس فیکس قبلی: media=print + onload + noscript و در ناحیه morph عاری از گره به load)",
+  "- سوییچر دوزبانه و RTL درست است و به مسیر اشتباهی لینک نمی‌دهد؟",
+  "- محتوای بدون ایران و قید فایل‌های untracked رعایت شده؟",
+  "هر مشکل را با مسیر:خط بیاور.",
+].join("\n"));
+report(review);
+log("رأی ناظر: " + (review.approved ? "تأیید" : review.problems.length + " مشکل"));
+if (!review.approved && review.problems.length > 0) {
+  await integrator.ask("ناظر مستقل این مشکلات را گزارش کرد؛ هرچه به سیم‌کشی/فایل‌های تو مربوز است رفع کن:\n" + JSON.stringify(review.problems));
+}
+const finalGate = await world.run("node", ["-e", CHECKER]);
+const finalVc = await world.run("php", ["playground/artisan", "view:cache"]);
+const gatesGreen = gateErrors.length === 0 && finalGate.exitCode === 0 && finalVc.exitCode === 0;
+
+const findings: Finding[] = [
+  ...builds.map((b) => ({
+    where: b.flavor === "react" ? "apps/showcase + apps/admin" : b.flavor === "vue" ? "apps/admin-vue" : b.flavor === "svelte" ? "apps/admin-svelte" : "apps/inertia + playground Inertia wiring",
+    what: "طعم " + b.flavor + " زیر نشانی خودش build و سیم‌کشی شد. " + b.summary,
+    evidence: "dist: " + b.distPaths.join("، ") + (b.notes.length ? " | نکات: " + b.notes.join("؛ ").slice(0, 600) : ""),
+    status: b.built && gatesGreen ? ("verified" as const) : ("unconfirmed" as const),
+    severity: "high" as const,
+  })),
+  {
+    where: "playground (routes، welcome/سوییچر، Dockerfile، bin/sync-flavors.sh)",
+    what: "شش نشانی جدا: / و /react و /react/admin و /vue و /svelte و /inertia و /filament؛ کپی dist با اسکریپت تکرارپذیر؛ استیج pnpm در Dockerfile برای دیجپلوی.",
+    evidence: (typeof wiring === "string" ? wiring : JSON.stringify(wiring)).slice(0, 900),
+    status: gatesGreen ? ("verified" as const) : ("unconfirmed" as const),
+    severity: "high" as const,
+  },
+  ...(review.approved
+    ? []
+    : (review.problems ?? []).map((p) => ({
+        where: "گزارش ناظر مستقل",
+        what: p,
+        evidence: "بازبین مستقل پس از خواندن diff نهایی گزارش کرده است.",
+        status: "unconfirmed" as const,
+        severity: "medium" as const,
+      }))),
+];
+
+await artifact.markdown(
+  "report",
+  [
+    "# طعم‌های جدا per-framework با نشانی‌های جدا",
+    "",
+    "## نشانی‌ها",
+    "- `/` — Livewire/Blade (کاتالوگ کامل، موجود)",
+    "- `/react` — اپ showcase ری‌اکت؛ `/react/admin` — پنل ادمین ری‌اکت",
+    "- `/vue` — پنل ادمین Vue",
+    "- `/svelte` — پنل ادمین Svelte",
+    "- `/inertia` — طعم تازهٔ Inertia (همان ui-react با لایهٔ Inertia)",
+    "- `/filament` — پنل Filament (موجود)",
+    "",
+    "## وضعیت دروازه‌ها",
+    gatesGreen ? "سبز: هر هفت نشانی ۲۰۰، asset هر SPA لود می‌شود، سیم‌کشی و gitignore موجود، view:cache سالم." : "قرمز — جزئیات در یافته‌ها.",
+    "",
+    "## خلاصهٔ سازنده‌ها",
+    ...builds.map((b) => "- **" + b.flavor + "**: " + b.summary),
+    "",
+    "## بازبینی مستقل",
+    review.approved ? "تأیید شد." : (review.problems ?? []).map((p) => "- " + p).join("\n"),
+  ].join("\n"),
+  { title: "گزارش طعم‌های per-framework", description: "شش نشانی جدا برای شش طعم، وضعیت build و دروازه‌ها و بازبینی مستقل.", primary: true },
+);
+
+const result: WorkflowReport = {
+  conclusion: gatesGreen
+    ? "شش طعم فریمورک هرکدام با نشانی جدا شدند: /react (+/react/admin)، /vue، /svelte، /inertia تازه‌ساخته، /filament موجود و / همان Livewire؛ همهٔ دروازه‌های نشانی‌ها سبز و Dockerfile برای دیجپلوی آماده."
+    : "طعم‌ها ساخته/سیم‌کشی شدند اما حداقل یک دروازه قرمز مانده است؛ جزئیات در یافته‌ها.",
+  findings,
+  verified: [
+    "دروازهٔ node -e: هر هفت نشانی ۲۰۰ به‌همراه مارکرهای SPA (id=root/data-page/assets) و لود شدن حداقل یک asset هر طعم",
+    "php artisan view:cache بدون خطا",
+    "وجود سیم‌کشی روت‌ها و مسیرهای gitignore (چک درون همان دروازه)",
+  ],
+  notCovered: [
+    "بیلد ایمیج داکر محلی امکان‌پذیر نبود — استیج pnpm در Dockerfile فقط بازبینی متنی شده؛ اولین دیجپلوی Coolify آزمون واقعی آن است.",
+    "راستی‌آزمایی بصری مرورگری (کانسول/عکس) هر طعم پس از workflow توسط دستیار اصلی انجام می‌شود.",
+    "کاتالوگ کامل ۳۵ گروه فقط در طعم Blade موجود است؛ طعم‌های SPA زیرمجموعهٔ خودشان را نشان می‌دهند.",
+  ],
+};
+return result;

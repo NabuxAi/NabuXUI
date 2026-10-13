@@ -1,0 +1,66 @@
+<?php $attributes ??= new \Illuminate\View\ComponentAttributeBag;
+
+$__newAttributes = [];
+$__propNames = \Illuminate\View\ComponentAttributeBag::extractPropNames((['label' => null, 'hint' => null, 'error' => null, 'maxRows' => null, 'required' => false]));
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (in_array($__key, $__propNames)) {
+        $$__key = $$__key ?? $__value;
+    } else {
+        $__newAttributes[$__key] = $__value;
+    }
+}
+
+$attributes = new \Illuminate\View\ComponentAttributeBag($__newAttributes);
+
+unset($__propNames);
+unset($__newAttributes);
+
+foreach (array_filter((['label' => null, 'hint' => null, 'error' => null, 'maxRows' => null, 'required' => false]), 'is_string', ARRAY_FILTER_USE_KEY) as $__key => $__value) {
+    $$__key = $$__key ?? $__value;
+}
+
+$__defined_vars = get_defined_vars();
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (array_key_exists($__key, $__defined_vars)) unset($$__key);
+}
+
+unset($__defined_vars, $__key, $__value); ?>
+<?php
+    use NabuXUI\NabuXUI;
+    $id = $attributes->get('id') ?? NabuXUI::id('nx-textarea');
+    $error ??= NabuXUI::error(NabuXUI::fieldName($attributes));
+    $hintId = $hint ? "{$id}-hint" : null;
+    $errorId = $error ? "{$id}-error" : null;
+?>
+<?php if (isset($component)) { $__componentOriginal3b0bbde120221af9af9b2fafe37f06b7 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal3b0bbde120221af9af9b2fafe37f06b7 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::field','data' => ['label' => $label,'hint' => $hint,'error' => $error,'for' => $id,'required' => $required,'class' => $attributes->get('class')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::field'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['label' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($label),'hint' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($hint),'error' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($error),'for' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($id),'required' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($required),'class' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($attributes->get('class'))]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+    <textarea <?php echo e($attributes->except(['class', 'id'])->class('nx-textarea')->merge([
+        'id' => $id,
+        'aria-describedby' => trim(implode(' ', array_filter([$hintId, $errorId]))) ?: null,
+        'aria-invalid' => $error ? 'true' : null,
+        'required' => $required ?: null,
+        'style' => $maxRows ? "--nx-textarea-max: {$maxRows}lh" : null,
+    ])); ?> x-data x-nx-autogrow><?php echo e($slot); ?></textarea>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal3b0bbde120221af9af9b2fafe37f06b7)): ?>
+<?php $attributes = $__attributesOriginal3b0bbde120221af9af9b2fafe37f06b7; ?>
+<?php unset($__attributesOriginal3b0bbde120221af9af9b2fafe37f06b7); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal3b0bbde120221af9af9b2fafe37f06b7)): ?>
+<?php $component = $__componentOriginal3b0bbde120221af9af9b2fafe37f06b7; ?>
+<?php unset($__componentOriginal3b0bbde120221af9af9b2fafe37f06b7); ?>
+<?php endif; ?>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/packages/livewire/src/../resources/views/components/textarea.blade.php ENDPATH**/ ?>

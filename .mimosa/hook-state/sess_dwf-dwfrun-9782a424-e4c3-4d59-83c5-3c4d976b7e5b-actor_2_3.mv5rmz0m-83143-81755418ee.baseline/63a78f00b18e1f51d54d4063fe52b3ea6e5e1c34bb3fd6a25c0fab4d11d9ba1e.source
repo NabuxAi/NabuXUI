@@ -1,0 +1,48 @@
+
+<?php if (isset($component)) { $__componentOriginal4837f5b450f9d59421c88eb37fd388cd = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal4837f5b450f9d59421c88eb37fd388cd = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page','data' => ['active' => 'chat','title' => __('admin.chat_title'),'subtitle' => __('admin.chat_subtitle')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('admin.page'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['active' => 'chat','title' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.chat_title')),'subtitle' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.chat_subtitle'))]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+    <div class="ap-grid">
+        <?php if (isset($component)) { $__componentOriginalad1752d7f46682dd8e649277eed37ac6 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalad1752d7f46682dd8e649277eed37ac6 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::chat','data' => ['conversations' => $conversations,'active' => $active,'wire:model' => 'active','typing' => $typing,'sendAction' => 'sendMessage','height' => '34rem']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::chat'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['conversations' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($conversations),'active' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($active),'wire:model' => 'active','typing' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($typing),'send-action' => 'sendMessage','height' => '34rem']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalad1752d7f46682dd8e649277eed37ac6)): ?>
+<?php $attributes = $__attributesOriginalad1752d7f46682dd8e649277eed37ac6; ?>
+<?php unset($__attributesOriginalad1752d7f46682dd8e649277eed37ac6); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalad1752d7f46682dd8e649277eed37ac6)): ?>
+<?php $component = $__componentOriginalad1752d7f46682dd8e649277eed37ac6; ?>
+<?php unset($__componentOriginalad1752d7f46682dd8e649277eed37ac6); ?>
+<?php endif; ?>
+    </div>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal4837f5b450f9d59421c88eb37fd388cd)): ?>
+<?php $attributes = $__attributesOriginal4837f5b450f9d59421c88eb37fd388cd; ?>
+<?php unset($__attributesOriginal4837f5b450f9d59421c88eb37fd388cd); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal4837f5b450f9d59421c88eb37fd388cd)): ?>
+<?php $component = $__componentOriginal4837f5b450f9d59421c88eb37fd388cd; ?>
+<?php unset($__componentOriginal4837f5b450f9d59421c88eb37fd388cd); ?>
+<?php endif; ?>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/playground/resources/views/livewire/admin/chat.blade.php ENDPATH**/ ?>

@@ -33,6 +33,12 @@ import { ScrollBlocks } from './blocks/scroll';
 import { SectionsBlocks } from './blocks/sections';
 import { ShadersBlocks } from './blocks/shaders';
 import { TextFxBlocks } from './blocks/text-fx';
+import { AmbientBlocks } from './blocks/ambient';
+import { Depth3dBlocks } from './blocks/depth-3d';
+import { EntrancesBlocks } from './blocks/entrances';
+import { HoverFxBlocks } from './blocks/hover-fx';
+import { KineticBlocks } from './blocks/kinetic';
+import { MicroFxBlocks } from './blocks/micro-fx';
 
 const SECTIONS: Array<{ id: string; fa: string; en: string; icon: NonNullable<NavItem['children']>[number]['icon'] }> = [
   { id: 'text', fa: 'متن', en: 'Text', icon: 'edit' },
@@ -74,6 +80,12 @@ const BLOCK_GROUPS: Array<{ id: string; fa: string; en: string; icon: NonNullabl
   { id: 'sections-blocks', fa: 'بخش‌های لندینگ', en: 'Landing sections', icon: 'layers' },
   { id: 'shaders-blocks', fa: 'شیدرها', en: 'Shaders', icon: 'image' },
   { id: 'text-fx-blocks', fa: 'جادوی متن', en: 'Text FX', icon: 'wand' },
+  { id: 'ambient-blocks', fa: 'پس‌زمینه‌های محیطی', en: 'Ambient', icon: 'image' },
+  { id: 'depth-3d-blocks', fa: 'عمق سه‌بعدی', en: '3D depth', icon: 'layers' },
+  { id: 'entrances-blocks', fa: 'ورودها', en: 'Entrances', icon: 'play' },
+  { id: 'hover-fx-blocks', fa: 'هاورها', en: 'Hover FX', icon: 'zap' },
+  { id: 'kinetic-blocks', fa: 'تایپوگرافی جنبشی', en: 'Kinetic type', icon: 'wand' },
+  { id: 'micro-fx-blocks', fa: 'ریزتعامل‌ها', en: 'Micro FX', icon: 'heart' },
 ];
 
 function readLang(): Lang {
@@ -245,6 +257,12 @@ export function App() {
             <ShadersBlocks />
             <FlowsBlocks />
             <SectionsBlocks />
+            <AmbientBlocks />
+            <Depth3dBlocks />
+            <EntrancesBlocks />
+            <HoverFxBlocks />
+            <KineticBlocks />
+            <MicroFxBlocks />
           </main>
           <footer className="sc-footer">
             <div className="sc-container">

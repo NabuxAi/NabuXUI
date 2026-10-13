@@ -1,0 +1,499 @@
+/*
+ * Blocks: entrances — the ways a page's content can arrive.
+ *
+ *   Curtain reveal   the overture of a launch page: two curtain panels carry a
+ *                    wordmark and an eased 0–100 counter; at one hundred the
+ *                    panels part to either side and the content beneath enters
+ *                    item by item on a stepped delay (js/blocks/entrances.ts,
+ *                    curtainReveal + curtainReplay)
+ *   Stagger list     rows that arrive one after another from below — a rise, a
+ *                    soft blur and a hair of skew settling on the soft spring;
+ *                    the step retunes the cadence and replay sends the wave
+ *                    again (staggerList + staggerReplay)
+ *   Split flap       a Solari departure board: every character is a cell with
+ *                    a top and a bottom half plus two falling leaves — the top
+ *                    leaf swings down on its hinge, the bottom drops flat
+ *                    after it, 130ms + 105ms of pure mechanics
+ *                    (splitFlap + setSplitFlapValue)
+ *
+ * Direction: the curtain is logical (the start panel exits toward
+ * inline-start); the flap board is hardware, so it stays Latin and ltr in
+ * every language — Persian never letter-splits, the accessible text is a
+ * plain string beside the board.
+ */
+@layer nx.components {
+  /* ---- Curtain reveal ----------------------------------------------------------- *
+   *   <figure class="nx-curtain">                       (the replay button lives here)
+   *     <button class="nx-curtain-replay" data-nx-curtain-replay>Replay</button>
+   *     <div class="nx-curtain-stage">                  (curtainReveal writes data-open)
+   *       <nav class="nx-curtain-item" style="--nx-i: 0">…</nav>
+   *       <h2 class="nx-curtain-item" style="--nx-i: 1">…</h2>
+   *       …                                                                             (aria-hidden)
+   *       <div class="nx-curtain-mark"><svg class="nx-curtain-aperture"/><span class="nx-curtain-word"/>
+   *         <span class="nx-curtain-count">0</span></div>                               (aria-hidden)
+   *       <div class="nx-curtain-panel nx-curtain-panel-start"></div>                   (aria-hidden)
+   *       <div class="nx-curtain-panel nx-curtain-panel-end"></div>                     (aria-hidden)
+   *     </div>
+   *   </figure>
+   * ------------------------------------------------------------------------- */
+  .nx-curtain {
+    display: grid;
+    gap: var(--nx-space-4);
+  }
+
+  .nx-curtain-stage {
+    position: relative;
+    isolation: isolate;
+    overflow: clip;
+    display: grid;
+    align-content: center;
+    gap: var(--nx-space-4);
+    min-block-size: min(26rem, 60vh);
+    padding: clamp(var(--nx-space-5), 4.5%, var(--nx-space-9));
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-xl);
+    background: var(--nx-surface);
+  }
+
+  /* The overture only hides what it can play back: without JS everything is
+     already on stage, and the guard keeps the pre-hydration paint clean. */
+  :where(.nx-js) .nx-curtain-stage:not([data-open]) .nx-curtain-item {
+    opacity: 0;
+    translate: 0 calc(18px * var(--nx-motion));
+    filter: blur(calc(7px * var(--nx-motion)));
+  }
+
+  .nx-curtain-item {
+    transition:
+      opacity 550ms var(--nx-ease-out),
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      filter 550ms var(--nx-ease-out);
+  }
+
+  .nx-curtain-stage[data-open] .nx-curtain-item {
+    opacity: 1;
+    translate: 0 0;
+    filter: blur(0);
+    /* The curtains take 400ms to clear the wording; the wave follows them in. */
+    transition-delay: calc(400ms + var(--nx-i, 0) * 95ms);
+  }
+
+  /* The two panels: half the stage each, plus a hair of overlap so no seam
+     leaks while they stand closed. They part along the inline axis. */
+  .nx-curtain-panel {
+    position: absolute;
+    inset-block: 0;
+    z-index: 2;
+    inline-size: 50.5%;
+    background: linear-gradient(180deg, var(--nx-ink-900), var(--nx-ink-800));
+    translate: 0 0;
+    transition: translate 900ms var(--nx-spring-gentle);
+    pointer-events: none;
+  }
+
+  /* A whisper of vertical pleats, like cloth folded on a rail. */
+  .nx-curtain-panel::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(90deg, transparent 0 2.2rem, color-mix(in oklab, var(--nx-ink-50) 4%, transparent) 2.2rem 2.35rem);
+  }
+
+  .nx-curtain-panel-start {
+    inset-inline-start: 0;
+  }
+
+  .nx-curtain-stage[data-open] .nx-curtain-panel-start { translate: calc(-102% * var(--nx-dir)) 0; }
+
+  .nx-curtain-panel-end {
+    inset-inline-end: 0;
+  }
+
+  .nx-curtain-stage[data-open] .nx-curtain-panel-end { translate: calc(102% * var(--nx-dir)) 0; }
+
+  /* The wordmark, the aperture and the counter ride above the curtains. */
+  .nx-curtain-mark {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: var(--nx-space-3);
+    color: var(--nx-ink-50);
+    pointer-events: none;
+    transition: opacity 400ms var(--nx-ease-out), scale 400ms var(--nx-ease-out);
+  }
+
+  .nx-curtain-stage[data-open] .nx-curtain-mark {
+    opacity: 0;
+    scale: calc(0.92 + 0.08 * (1 - var(--nx-motion)));
+  }
+
+  .nx-curtain-aperture {
+    inline-size: 3.2rem;
+    block-size: 3.2rem;
+    color: var(--nx-gold);
+  }
+
+  .nx-curtain-word {
+    font-size: var(--nx-text-xs);
+    font-weight: 700;
+    letter-spacing: var(--nx-tracking-wider);
+    text-transform: uppercase;
+    color: var(--nx-text-muted);
+  }
+
+  .nx-curtain-mark .nx-curtain-word {
+    color: color-mix(in oklab, var(--nx-ink-50) 78%, transparent);
+  }
+
+  .nx-curtain-count {
+    font: 800 clamp(2rem, 6vw, 3rem) / 1 var(--nx-font-display);
+    font-variant-numeric: tabular-nums;
+
+    & small {
+      font-size: 0.45em;
+      font-weight: 700;
+      color: var(--nx-gold);
+    }
+  }
+
+  .nx-curtain-replay {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-2) var(--nx-space-4);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    font: 600 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    cursor: pointer;
+    transition-property: border-color, color, scale;
+    transition-duration: var(--nx-dur-fast), var(--nx-dur-fast), var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-ease-out), var(--nx-ease-out), var(--nx-spring-snappy);
+
+    &:hover { border-color: var(--nx-accent-border); color: var(--nx-accent-text); }
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+
+    & svg {
+      inline-size: 0.95rem;
+      block-size: 0.95rem;
+      transition: rotate var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy);
+    }
+  }
+
+  .nx-curtain-replay:active svg { rotate: calc(-360deg * var(--nx-motion)); }
+
+  /* ---- Stagger list --------------------------------------------------------------- *
+   *   <div class="nx-stagger-list">                    (staggerList writes data-in, --_step)
+   *     <article class="nx-stagger-item" style="--nx-i: 0">…</article>
+   *     <article class="nx-stagger-item" style="--nx-i: 1">…</article>
+   *     <button class="nx-stagger-replay" data-nx-stagger-replay>…</button>  (outside the list)
+   *   </div>
+   * The list is the grid; the replay button sits after it in .nx-stagger.
+   * ------------------------------------------------------------------------- */
+  .nx-stagger {
+    display: grid;
+    gap: var(--nx-space-4);
+  }
+
+  .nx-stagger-list {
+    display: grid;
+    gap: var(--nx-space-3);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    grid-template-columns: repeat(auto-fill, minmax(min(18rem, 100%), 1fr));
+  }
+
+  :where(.nx-js) .nx-stagger-list:not([data-in]) .nx-stagger-item {
+    opacity: 0;
+    translate: 0 calc(22px * var(--nx-motion));
+    filter: blur(calc(6px * var(--nx-motion)));
+    transform: skewY(calc(-2deg * var(--nx-motion)));
+  }
+
+  .nx-stagger-item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: start;
+    column-gap: var(--nx-space-3);
+    row-gap: var(--nx-space-1);
+    padding: var(--nx-space-4) var(--nx-space-5);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-surface);
+    transition:
+      opacity 700ms var(--nx-ease-out),
+      translate var(--nx-spring-soft-duration) var(--nx-spring-soft),
+      filter 700ms var(--nx-ease-out),
+      transform var(--nx-spring-soft-duration) var(--nx-spring-soft);
+  }
+
+  .nx-stagger-list[data-in] .nx-stagger-item {
+    opacity: 1;
+    translate: 0 0;
+    filter: blur(0);
+    transform: skewY(0);
+    transition-delay: calc(var(--nx-i, 0) * var(--_step, var(--nx-stagger)));
+  }
+
+  .nx-stagger-item-icon {
+    grid-row: 1 / span 2;
+    display: grid;
+    place-items: center;
+    inline-size: 2.3rem;
+    aspect-ratio: 1;
+    border-radius: var(--nx-radius-md);
+    background: var(--nx-accent-soft);
+    color: var(--nx-accent-text);
+
+    & .nx-icon { inline-size: 1.1rem; block-size: 1.1rem; }
+  }
+
+  .nx-stagger-item-title {
+    margin: 0;
+    font-size: var(--nx-text-md);
+    font-weight: 650;
+    line-height: 1.3;
+    color: var(--nx-text);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--nx-space-2);
+  }
+
+  .nx-stagger-item-tag {
+    padding: 0.15rem var(--nx-space-2);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    font: 600 var(--nx-text-xs) / 1.3 var(--nx-font-mono);
+    letter-spacing: var(--nx-tracking-wide);
+    color: var(--nx-text-muted);
+  }
+
+  .nx-stagger-item-note {
+    margin: 0;
+    font-size: var(--nx-text-sm);
+    line-height: 1.7;
+    color: var(--nx-text-muted);
+  }
+
+  .nx-stagger-replay {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-2) var(--nx-space-4);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    font: 600 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    cursor: pointer;
+    transition-property: border-color, color, scale;
+    transition-duration: var(--nx-dur-fast), var(--nx-dur-fast), var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-ease-out), var(--nx-ease-out), var(--nx-spring-snappy);
+
+    &:hover { border-color: var(--nx-accent-border); color: var(--nx-accent-text); }
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+
+    & svg {
+      inline-size: 0.95rem;
+      block-size: 0.95rem;
+      transition: rotate var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy);
+    }
+  }
+
+  .nx-stagger-replay:active svg { rotate: calc(-360deg * var(--nx-motion)); }
+
+  /* ---- Split flap ------------------------------------------------------------------- *
+   *   <div class="nx-split-flap" dir="ltr">            (the board is hardware: always ltr)
+   *     <div class="nx-split-flap-bar">…brand, rule, tag…</div>
+   *     <div class="nx-split-flap-row" aria-hidden="true">   (setSplitFlapValue flips these)
+   *       <span class="nx-split-flap-cell" data-ch="B">
+   *         <span class="nx-split-flap-half nx-split-flap-top-half"><span class="nx-split-flap-g">B</span></span>
+   *         <span class="nx-split-flap-half nx-split-flap-bot-half"><span class="nx-split-flap-g">B</span></span>
+   *         <span class="nx-split-flap-leaf nx-split-flap-leaf-t"><span class="nx-split-flap-g"></span></span>
+   *         <span class="nx-split-flap-leaf nx-split-flap-leaf-b"><span class="nx-split-flap-g"></span></span>
+   *       </span>…
+   *     </div>
+   *     <span class="nx-visually-hidden">BON VOYAGE</span>   (the real text, once)
+   *   </div>
+   * ------------------------------------------------------------------------- */
+  .nx-split-flap {
+    /* The board is hardware: dark in every theme, like the real thing. */
+    direction: ltr;
+    display: grid;
+    gap: var(--nx-space-4);
+    justify-items: start;
+    inline-size: fit-content;
+    max-inline-size: 100%;
+    padding: clamp(var(--nx-space-4), 3.5%, var(--nx-space-6));
+    border: 1px solid color-mix(in oklab, var(--nx-ink-900) 80%, var(--nx-gold) 6%);
+    border-radius: var(--nx-radius-xl);
+    background: linear-gradient(180deg, var(--nx-ink-900), var(--nx-ink-950) 70%);
+    box-shadow:
+      inset 0 1px 0 color-mix(in oklab, var(--nx-ink-50) 7%, transparent),
+      inset 0 -8px 24px color-mix(in oklab, var(--nx-ink-950) 55%, transparent),
+      var(--nx-shadow-lg);
+  }
+
+  .nx-split-flap-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-3);
+    inline-size: 100%;
+  }
+
+  .nx-split-flap-brand {
+    font-size: var(--nx-text-xs);
+    font-weight: 700;
+    letter-spacing: var(--nx-tracking-wider);
+    text-transform: uppercase;
+    color: var(--nx-gold);
+  }
+
+  .nx-split-flap-rule {
+    flex: 1;
+    block-size: 1px;
+    background: linear-gradient(90deg, color-mix(in oklab, var(--nx-gold) 24%, transparent), color-mix(in oklab, var(--nx-ink-50) 8%, transparent));
+  }
+
+  .nx-split-flap-tag {
+    font: 600 var(--nx-text-xs) / 1 var(--nx-font-mono);
+    letter-spacing: var(--nx-tracking-wider);
+    text-transform: uppercase;
+    color: color-mix(in oklab, var(--nx-ink-50) 46%, transparent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nx-split-flap-row {
+    display: flex;
+    gap: 0.22rem;
+    max-inline-size: 100%;
+  }
+
+  .nx-split-flap-cell {
+    position: relative;
+    flex: 1 1 0;
+    min-inline-size: 0;
+    max-inline-size: 1.5rem;
+    aspect-ratio: 1 / 1.72;
+    perspective: 300px;
+    container-type: inline-size;
+  }
+
+  .nx-split-flap-half,
+  .nx-split-flap-leaf {
+    position: absolute;
+    inset-inline: 0;
+    block-size: 50%;
+    overflow: clip;
+  }
+
+  .nx-split-flap-half.nx-split-flap-top-half,
+  .nx-split-flap-leaf.nx-split-flap-leaf-t {
+    inset-block-start: 0;
+    background: linear-gradient(180deg, color-mix(in oklab, var(--nx-ink-50) 16%, var(--nx-ink-800)), color-mix(in oklab, var(--nx-ink-50) 10%, var(--nx-ink-900)));
+  }
+
+  .nx-split-flap-half.nx-split-flap-bot-half,
+  .nx-split-flap-leaf.nx-split-flap-leaf-b {
+    inset-block-end: 0;
+    background: linear-gradient(180deg, var(--nx-ink-950), color-mix(in oklab, var(--nx-ink-50) 8%, var(--nx-ink-900)));
+  }
+
+  .nx-split-flap-leaf.nx-split-flap-leaf-t {
+    transform-origin: 50% 100%;
+    transform: rotateX(0deg);
+    z-index: 2;
+    display: none;
+    box-shadow: 0 1px 2px color-mix(in oklab, var(--nx-ink-950) 60%, transparent);
+  }
+
+  .nx-split-flap-leaf.nx-split-flap-leaf-b {
+    transform-origin: 50% 0%;
+    transform: rotateX(90deg);
+    z-index: 2;
+    display: none;
+    box-shadow: 0 1px 2px color-mix(in oklab, var(--nx-ink-950) 60%, transparent);
+  }
+
+  .nx-split-flap-g {
+    position: absolute;
+    inset-inline: 0;
+    block-size: 200%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font: 700 64cqw / 1 var(--nx-font-mono);
+    color: color-mix(in oklab, var(--nx-ink-50) 92%, var(--nx-gold));
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nx-split-flap-top-half .nx-split-flap-g,
+  .nx-split-flap-leaf-t .nx-split-flap-g { inset-block-start: 0; }
+
+  .nx-split-flap-bot-half .nx-split-flap-g,
+  .nx-split-flap-leaf-b .nx-split-flap-g { inset-block-start: -100%; }
+
+  /* The hinge line across the middle of every cell. */
+  .nx-split-flap-cell::after {
+    content: "";
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline: 0;
+    block-size: 1px;
+    background: color-mix(in oklab, var(--nx-ink-950) 65%, transparent);
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .nx-split-flap-row .nx-split-flap-cell:first-child {
+    border-start-start-radius: var(--nx-radius-sm);
+    border-end-start-radius: var(--nx-radius-sm);
+  }
+
+  .nx-split-flap-row .nx-split-flap-cell:last-child {
+    border-start-end-radius: var(--nx-radius-sm);
+    border-end-end-radius: var(--nx-radius-sm);
+  }
+
+  /* ---- Reduced motion ---------------------------------------------------------------- *
+   * The overture becomes a plain page: content stands visible, the counter
+   * lands at once, the curtains step aside without travel and the flaps drop
+   * straight onto their glyphs (the behaviour paints them instantly too).
+   * ------------------------------------------------------------------------- */
+  @media (prefers-reduced-motion: reduce) {
+    .nx-curtain-item,
+    .nx-curtain-panel,
+    .nx-curtain-mark,
+    .nx-curtain-replay,
+    .nx-stagger-item,
+    .nx-stagger-replay {
+      transition: none;
+    }
+
+    :where(.nx-js) .nx-curtain-stage:not([data-open]) .nx-curtain-item,
+    :where(.nx-js) .nx-stagger-list:not([data-in]) .nx-stagger-item {
+      opacity: 1;
+      translate: 0 0;
+      filter: none;
+      transform: none;
+    }
+
+    .nx-curtain-stage[data-open] .nx-curtain-item,
+    .nx-stagger-list[data-in] .nx-stagger-item {
+      transition-delay: 0ms;
+    }
+
+    .nx-curtain-replay:active svg,
+    .nx-stagger-replay:active svg { rotate: 0deg; }
+  }
+}

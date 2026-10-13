@@ -1,0 +1,175 @@
+interface PhaseResult {
+  /** فایل‌های ساخته‌شده */
+  files: string[];
+  ok: boolean;
+  /** یادداشت به فارسی */
+  notes: string;
+}
+interface VerifyFinding {
+  /** کجا و چه چیزی */
+  what: string;
+  /** شاهد */
+  evidence: string;
+  severity: "low" | "medium" | "high";
+}
+interface JudgeVerdict {
+  shot: string;
+  pass: boolean;
+  issues: string;
+}
+interface WorkflowReport {
+  conclusion: string;
+  findings: VerifyFinding[];
+  verified: string[];
+  notCovered: string[];
+}
+
+artifact.table("issues", {
+  title: "موارد باز ادمین",
+  description: "ایرادهای بازبینی مرورگری و داوری بصری — با رفع شدن جایگزین می‌شوند.",
+  columns: [
+    { field: "what", label: "مورد" },
+    { field: "evidence", label: "شاهد" },
+    { field: "severity", label: "شدت" },
+  ],
+  key: "what",
+});
+
+const RULES = [
+  "قواعد مشترک: فیلدهای nx از NabuXUI\\Filament\\Forms\\Components\\* می‌آیند (NxSegmented، NxChipFilter، NxSlider، NxRating، NxMultiSelect، NxTagInput، NxSelect، NxRadioGroup، NxCheckbox، NxNumberField، NxCombobox، NxTimePicker، NxOtp، NxToggle) — الگوی کاملشان در playground/app/Filament/Pages/NabuXuiPlayground.php است؛ آن را بخوان.",
+  "هر ریسورس: navigationGroup و navigationIcon فارسی‌پسند؛ جدول با ستون‌های badge دار (color/icon) و فیلتر status؛ فرم ایجاد/ویرایش با فیلدهای nx؛ inferTitleFromTitleOrNameWhenUsingCollapsibleFormattedContentLabels نزن — ساده نگه دار.",
+  "پس از هر فایل php -l بزن؛ صفحه‌ها را فقط در فاز بازبینی مرورگری می‌بینیم.",
+  "هیچ فایلی خارج از محدوده‌ات را تغییر نده؛ اگر چیزی لازم شد در notes بگو.",
+].join("\n");
+
+phase("مدل‌ها، مایگریشن و دادهٔ اولیه");
+const data = await agent("سازنده-دیتا", {
+  system: "تو مهندس Laravel این ریپو هستی (playground/، sqlite). مدل‌سازی تمیز، مایگریشن و سیدر واقعی می‌نویسی و تا اجرایشان سبز نشود دست نمی‌کشی.",
+}).ask<PhaseResult>(
+  [
+    "برای ادمین فیلامنت سه مدل تازه بساز (App\\Models\\User از قبل هست، دست نزن):",
+    "1) Product: name، description nullable، price decimal(10,2)، stock integer پیش‌فرض 0، status enum-like string (draft/active/archived)، category string. مایگریشن + فکتوری با ۱۲ رکورد معقول.",
+    "2) Order: number یکتا (مثل ORD-1001)، customer_name، product_id FK به products، status string (pending/paid/shipped/cancelled)، total decimal(10,2)، ordered_at timestamp. ۱۸ رکورد سید شده با productهای موجود.",
+    "3) Task: title، status string (todo/doing/done)، priority string (low/medium/high)، assignee_name nullable، due_at date nullable. ۲۴ رکورد.",
+    "سیدر: database/seeders/NabuxSeeder.php هر سه را می‌سازد (idempotent: اول delete). با «php artisan migrate --force» و «php artisan db:seed --class=NabuxSeeder» اجرا و خروجی‌شان را چک کن.",
+    "fillable/casts درست (price/total decimal، due_at date، ordered_at datetime). خروجی {files, ok, notes}.",
+  ].join("\n"),
+);
+if (!data.ok) log(`هشدار: سازندهٔ دیتا ok:false — ${data.notes}`);
+
+phase("چهار ریسورس موازی با فیلدهای nx");
+const RESOURCES = [
+  { id: "user", brief: "UserResource روی App\\Models\\User (مدل موجود). فرم: name (TextInput)، email (TextInput->email())، NxCheckbox برای فیلد بولی تازه «is_active» (مایگریشن نزن — فقط در فرم اگر ستون نیست صرف‌نظر کن و به‌جایش NxSegmented برای user_type مفروض نزن؛ درستش: فقط فیلدهای واقعی جدول users را بگذار). جدول: آواتار/نام/ایمیل + تاریخ عضویت." },
+  { id: "product", brief: "ProductResource. فرم: name، description (Textarea)، price (NxNumberField min 0 step 0.5)، stock (NxNumberField)، status (NxSegmented: draft/active/archived)، category (NxSelect: hardware/software/service). جدول: name، status badge (active=سبز، draft=خاکستری، archived=قرمز)، price money، stock با رنگ کم/زیاد. فیلتر status." },
+  { id: "order", brief: "OrderResource. فرم: number (TextInput، unique)، customer_name، product_id (NxCombobox با options از Product::pluck('name','id') در closure)، status (NxChipFilter: pending/paid/shipped/cancelled)، total (NxNumberField)، ordered_at (NxTimePicker). جدول: number، customer، product.name، status badge رنگی، total money، ordered_at تاریخ انسانی. فیلتر status + پیش‌فرض مرتب‌سازی newest." },
+  { id: "task", brief: "TaskResource. فرم: title، status (NxRadioGroup: todo/doing/done)، priority (NxSegmented: low/medium/high)، assignee_name، due_at (NxTimePicker). جدول: title، priority badge (high=قرمز، medium=نارنجی، low=خاکستری)، status icon، assignee، due_at. گروه ناوبری: Task و Order و Product در گروه «فروشگاه/کارگاه»، User بدون گروه یا «حساب‌ها»." },
+];
+const resources = await Promise.all(
+  RESOURCES.map((r) =>
+    agent(`سازنده-ریسورس-${r.id}`, {
+      system: "تو سازندهٔ ریسورس‌های Filament v5 در این ریپو هستی؛ الگوی فیلدهای nx را از playground/app/Filament/Pages/NabuXuiPlayground.php و کلاس‌های packages/filament/src/Forms/Components می‌خوانی؛ API را از vendor/filament (ground truth) چک می‌کنی، از حافظه حدس نمی‌زنی؛ php -l تا سبز نشود ول نمی‌کنی.",
+    }).ask<PhaseResult>(
+      `${RULES}\n\nوظیفهٔ تو: ${r.brief}\n` +
+        `فایل‌ها: playground/app/Filament/Resources/<Name>Resource.php (+ پوشهٔ صفحات اگر v5 لازم دارد — الگوی ریسورس استوک را از vendor/filament/filament/src/Resources یا resource generator ببین؛ می‌توانی «php artisan make:filament-resource X --generate --no-interaction» را هم اجرا کنی و بعد فرم/جدول را با فیلدهای nx بازنویسی کنی).\n` +
+        `بعد: php -l همه؛ «php artisan route:list» باید routeهای index/create/view/edit ریسورس تو را نشان بدهد (grep کن). خروجی {files, ok, notes}.`,
+    ),
+  ),
+);
+
+phase("داشبورد نابو با ویجت‌های nx");
+const dashboard = await agent("سازنده-داشبورد", {
+  system: "تو سازندهٔ صفحهٔ داشبورد فیلامنت هستی؛ قرارداد v5 (content(Schema)، ویجت‌ها) را از vendor چک می‌کنی و استایل نابو را از پلاگین packages/filament می‌گیری؛ از حافظه حدس نمی‌زنی.",
+}).ask<PhaseResult>(
+  `${RULES}\n\nداشبورد پیش‌فرض پنل (/filament) را با حال‌وهوای ادمین نابو جایگزین کن:\n` +
+    `1) کلاس App\\Filament\\Pages\\Dashboard که Filament\\Pages\\Dashboard راextends می‌کند و content(Schema) دارد؛ در app/Providers/Filament/AdminPanelProvider.php فقط ارجاع Dashboard::class را به همین کلاس ببر (چیز دیگری از provider را تغییر نده).\n` +
+    `2) بالای صفحه یک بخش هیرو به سبک ادمین نابو (گرادیان بنفش، سلام بر اساس ساعت روز، متن کوتاه) — HTML مستقیم در ویو یا Placeholder، مینیمال و تمیز.\n` +
+    `3) چهار کارت آمار با اعداد واقعی از دیتابیس: تعداد سفارش‌ها به تفکیک status، جمع total پرداخت‌شده، محصولات فعال، تسک‌های باز — با \\NabuXUI\\NabuXUI::sparkline برای نمودار کوچک و formatNumber برای اعداد (الگوی stat-strip پکیج را ببین). ویجت به‌شکل Filament Widget یا کامپوننت داخل content(Schema) — هرکدام که v5 تمیزتر است از vendor بفهم.\n` +
+    `4) php -l و «php artisan route:list | head» که باشگاه routeها سرپاست. خروجی {files, ok, notes}.`,
+);
+
+phase("بازبینی مرورگری ادمین");
+const browser = await agent("بازبین-مرورگر", {
+  system:
+    "تو راستی‌آزمای مرورگری هستی با playwright (در /tmp/nx-shooter آماده: node_modules/playwright نصب). ادعای چیزی که ندیده‌ای نمی‌کنی؛ هر ادعا با اسکرین‌شات یا متن DOM پشتوانه می‌شود.",
+}).ask<{ ok: boolean; findings: VerifyFinding[]; shots: string[] }>(
+  [
+    "ادمین فیلامنت نابو را سرِ زنده بازبینی کن (playwright): ورود با admin@nabux.test / nabux-demo روی http://127.0.0.1:8765/filament/login.",
+    "این‌ها را ببین و برای هرکدام اسکرین‌شات در /tmp/nx-admin-filament/ بگیر:",
+    "1) داشبورد: هیرو و کارت‌های آمار با اعداد واقعی رندر شده‌اند؟",
+    "2) هر چهار ریسورس (/filament/products و users و orders و tasks — اسلاگ واقعی را از نام کلاس حدس نزن؛ از ناوبری کلیک کن): جدول با دادهٔ سیدشده، بدون ۵۰۰، بدون خطای کنسول.",
+    "3) فرم Create یکی از ریسورس‌ها (مثلاً Product): فیلدهای nx رندر شده‌اند؟ یک محصول واقعی بساز (پر کردن فرم + submit) و ببین رکورد در جدول می‌آید.",
+    "4) تم تیره: localStorage nabu.theme=dark بگذار، reload، یک اسکرین‌شات — متن‌ها خوانا و سطوح تیره؟",
+    "خروجی {ok, findings:[{what, evidence, severity}], shots:[مسیرها]} به فارسی؛ findings فقط مشکلات واقعی.",
+  ].join("\n"),
+);
+
+phase("داوری بصری و گزارش");
+const judge = await agent("داور-نهایی", {
+  system:
+    "تو داور پذیرش بصری هستی و فقط از تصویر قضاوت می‌کنی. معیار: پذیرش کاربر — چیدمان شکسته، متن ناخوانا، همپوشانی، تم نشکسته، اعداد غیب = مردود؛ تفاوت سلیقه‌ای جزئی = قبول.",
+}).ask<{ verdicts: JudgeVerdict[] }>(
+  `این تصاویر را با Read ببین و حکم بده:\n${browser.shots.map((s) => `${s}`).join("\n")}\nخروجی فقط JSON: {verdicts:[{shot, pass, issues}]} به فارسی.`,
+);
+
+const failedShots = judge.verdicts.filter((v) => !v.pass);
+for (const f of browser.findings) {
+  report({ what: f.what, evidence: f.evidence, severity: f.severity }, "issues");
+}
+for (const v of failedShots) {
+  report({ what: `داوری تصویر ${v.shot}`, evidence: v.issues, severity: "medium" }, "issues");
+}
+
+await artifact.markdown(
+  "report",
+  [
+    "# ادمین کامل فیلامنت با نابو",
+    "",
+    `**وضعیت: ${data.ok && resources.every((r) => r.ok) && dashboard.ok && browser.ok && failedShots.length === 0 ? "سبز" : "با مورد باز"}** — ۴ ریسورس، داشبورد با آمار زنده، دیتای سیدشده، تم نابو.`,
+    "",
+    "## اجزا",
+    `- دیتا: ${data.ok ? "✅" : "❌"} ${data.notes}`,
+    ...resources.map((r, i) => `- ریسورس ${RESOURCES[i].id}: ${r.ok ? "✅" : "❌"} ${r.notes || "—"}`),
+    `- داشبورد: ${dashboard.ok ? "✅" : "❌"} ${dashboard.notes}`,
+    "",
+    "## بازبینی مرورگری",
+    ...browser.findings.map((f) => `- ${f.severity === "high" ? "🔴" : f.severity === "medium" ? "🟠" : "🟡"} ${f.what} — ${f.evidence}`),
+    ...(browser.findings.length === 0 ? ["- هیچ مشکلی پیدا نشد."] : []),
+    "",
+    "## داوری بصری",
+    ...judge.verdicts.map((v) => `- ${v.pass ? "✅" : "❌"} ${v.shot}${v.issues ? " — " + v.issues : ""}`),
+  ].join("\n"),
+  { title: "گزارش ادمین فیلامنت نابو", description: "ریسورس‌ها، داشبورد، دیتا و بازبینی مرورگری", primary: true },
+);
+
+const problems = [
+  ...(data.ok ? [] : ["ساخت دیتا ناتمام"]),
+  ...resources.filter((r) => !r.ok).map((r) => `ریسورس ناقص: ${r.files.join(",")}`),
+  ...(dashboard.ok ? [] : ["داشبورد ناتمام"]),
+  ...browser.findings.map((f) => f.what),
+  ...failedShots.map((v) => `داوری: ${v.shot}`),
+];
+
+return {
+  conclusion:
+    problems.length === 0
+      ? `ادمین کامل فیلامنت با نابو ساخته شد و سرِ زنده راستی‌آزمایی شد: داشبورد با هیرو و چهار کارت آمار زنده، چهار ریسورس CRUD (کاربران، محصولات، سفارش‌ها، تسک‌ها) با فیلدهای nx، دیتای سیدشده (۱۲ محصول، ۱۸ سفارش، ۲۴ تسک)، همه در تم نابو با تیرهٔ سالم.`
+      : `ادمین ساخته شد اما ${problems.length} مورد باز دارد: ${problems.slice(0, 4).join("؛ ")}.`,
+  findings: [
+    ...browser.findings,
+    ...failedShots.map((v) => ({ what: `داوری تصویر ${v.shot}`, evidence: v.issues, severity: "medium" as const })),
+    ...(data.ok ? [] : [{ what: "ساخت دیتا", evidence: data.notes, severity: "high" as const }]),
+    ...resources.filter((r) => !r.ok).map((r) => ({ what: "ریسورس ناقص", evidence: r.notes, severity: "high" as const })),
+    ...(dashboard.ok ? [] : [{ what: "داشبورد", evidence: dashboard.notes, severity: "high" as const }]),
+  ],
+  verified: [
+    "migrate + db:seed با کد خروج صفر (world.run)",
+    "php -l تک‌تک فایل‌های PHP توسط سازندهٔ هر فایل",
+    "route:list شامل routeهای هر چهار ریسورس",
+    "بازبینی مرورگری authed با playwright: داشبورد، ۴ جدول، فرم Create با ساخت واقعی رکورد، تم تیره + داوری بصری مستقل",
+  ],
+  notCovered: [
+    "سیاست‌های دسترسی (Policies) و احراز نقش — همه به ادمین دمو اجازهٔ کامل دارند",
+    "ویرایش/حذف تک‌تک رکوردها — فقط Create و indexها به‌طور سرِ زنده لمس شد",
+    "صفحات اضافی ادمین خودت (چت، ایمیل، کانبان کشویی) — این موج چهار ریسورس CRUD + داشبورد بود",
+  ],
+};

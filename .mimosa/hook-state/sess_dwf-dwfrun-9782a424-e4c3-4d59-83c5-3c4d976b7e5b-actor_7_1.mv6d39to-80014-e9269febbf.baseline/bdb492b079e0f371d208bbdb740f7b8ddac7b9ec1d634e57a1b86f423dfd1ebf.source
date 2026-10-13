@@ -1,0 +1,67 @@
+
+<?php $attributes ??= new \Illuminate\View\ComponentAttributeBag;
+
+$__newAttributes = [];
+$__propNames = \Illuminate\View\ComponentAttributeBag::extractPropNames((['label' => null, 'hint' => null, 'error' => null, 'size' => 'md', 'icon' => null, 'iconEnd' => null, 'prefix' => null, 'suffix' => null, 'required' => false]));
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (in_array($__key, $__propNames)) {
+        $$__key = $$__key ?? $__value;
+    } else {
+        $__newAttributes[$__key] = $__value;
+    }
+}
+
+$attributes = new \Illuminate\View\ComponentAttributeBag($__newAttributes);
+
+unset($__propNames);
+unset($__newAttributes);
+
+foreach (array_filter((['label' => null, 'hint' => null, 'error' => null, 'size' => 'md', 'icon' => null, 'iconEnd' => null, 'prefix' => null, 'suffix' => null, 'required' => false]), 'is_string', ARRAY_FILTER_USE_KEY) as $__key => $__value) {
+    $$__key = $$__key ?? $__value;
+}
+
+$__defined_vars = get_defined_vars();
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (array_key_exists($__key, $__defined_vars)) unset($$__key);
+}
+
+unset($__defined_vars, $__key, $__value); ?>
+<?php
+    use NabuXUI\NabuXUI;
+    $id = $attributes->get('id') ?? NabuXUI::id('nx-input');
+    $error ??= NabuXUI::error(NabuXUI::fieldName($attributes));
+    $hintId = $hint ? "{$id}-hint" : null;
+    $errorId = $error ? "{$id}-error" : null;
+    $described = trim(implode(' ', array_filter([$attributes->get('aria-describedby'), $hintId, $errorId]))) ?: null;
+    $start = $icon ? NabuXUI::icon($icon) : $prefix;
+    $end = $iconEnd ? NabuXUI::icon($iconEnd) : $suffix;
+    $wrapped = $label || $hint || $error;
+    $control = $attributes->except(['class', 'style', 'id', 'aria-describedby'])->merge([
+        'id' => $id,
+        'aria-describedby' => $described,
+        'aria-invalid' => $error ? 'true' : null,
+        'required' => $required ?: null,
+    ]);
+    $sizeAttr = $size === 'md' ? null : $size;
+?>
+<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($wrapped): ?>
+<div <?php echo e($attributes->only(['class', 'style'])->class('nx-field')->merge(['data-invalid' => $error ? '' : null])); ?>>
+    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($label): ?><label class="nx-label" for="<?php echo e($id); ?>"><?php echo e($label); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($required): ?><span class="nx-label-required" aria-hidden="true">*</span><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?></label><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($hint): ?><p class="nx-hint" id="<?php echo e($hintId); ?>"><?php echo e($hint); ?></p><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+<?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($start || $end): ?>
+    <div class="<?php echo \Illuminate\Support\Arr::toCssClasses(['nx-input-group', $wrapped ? null : $attributes->get('class')]); ?>" <?php if($sizeAttr): ?> data-size="<?php echo e($sizeAttr); ?>" <?php endif; ?>>
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($start): ?><span class="nx-input-addon"><?php echo e($start); ?></span><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+        <input <?php echo e($control->class('nx-input')); ?>>
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($end): ?><span class="nx-input-addon"><?php echo e($end); ?></span><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+    </div>
+<?php else: ?>
+    <input <?php echo e($control->class(['nx-input', $wrapped ? null : $attributes->get('class')])->merge(['data-size' => $sizeAttr, 'style' => $wrapped ? null : $attributes->get('style')])); ?>>
+<?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($wrapped): ?>
+    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($error): ?><p class="nx-error" id="<?php echo e($errorId); ?>"><?php echo e(NabuXUI::icon('alert-circle')); ?><?php echo e($error); ?></p><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+</div>
+<?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/packages/livewire/src/../resources/views/components/input.blade.php ENDPATH**/ ?>

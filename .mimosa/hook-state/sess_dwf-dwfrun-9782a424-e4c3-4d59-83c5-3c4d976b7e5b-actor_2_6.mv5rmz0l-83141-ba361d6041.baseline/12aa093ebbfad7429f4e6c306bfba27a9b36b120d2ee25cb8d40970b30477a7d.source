@@ -1,0 +1,154 @@
+
+<?php $attributes ??= new \Illuminate\View\ComponentAttributeBag;
+
+$__newAttributes = [];
+$__propNames = \Illuminate\View\ComponentAttributeBag::extractPropNames((['items' => [], 'title' => null, 'emptyText' => null, 'locale' => null]));
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (in_array($__key, $__propNames)) {
+        $$__key = $$__key ?? $__value;
+    } else {
+        $__newAttributes[$__key] = $__value;
+    }
+}
+
+$attributes = new \Illuminate\View\ComponentAttributeBag($__newAttributes);
+
+unset($__propNames);
+unset($__newAttributes);
+
+foreach (array_filter((['items' => [], 'title' => null, 'emptyText' => null, 'locale' => null]), 'is_string', ARRAY_FILTER_USE_KEY) as $__key => $__value) {
+    $$__key = $$__key ?? $__value;
+}
+
+$__defined_vars = get_defined_vars();
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (array_key_exists($__key, $__defined_vars)) unset($$__key);
+}
+
+unset($__defined_vars, $__key, $__value); ?>
+<?php
+    use Illuminate\Support\Carbon;
+    use NabuXUI\NabuXUI;
+    $id = NabuXUI::id('nx-activity');
+    $lang = substr($locale ?? app()->getLocale(), 0, 2);
+    $t = fn (string $en, string $fa, string $ar) => match ($lang) { 'fa' => $fa, 'ar' => $ar, default => $en };
+    $title ??= __('nabuxui::ui.notifications');
+    $unread = collect($items)->filter(fn ($item) => ! empty($item['unread']))->count();
+    $unreadWord = $t(':count unread', ':count خوانده‌نشده', ':count غير مقروءة');
+    $when = function ($time) use ($lang): array {
+        if ($time instanceof \DateTimeInterface) {
+            $date = Carbon::instance($time);
+        } elseif (is_int($time) || is_float($time)) {
+            $date = Carbon::createFromTimestampMs((int) $time);
+        } elseif (is_string($time) && preg_match('/\d{4}-\d{2}-\d{2}/', $time)) {
+            $date = Carbon::parse($time);
+        } else {
+            return [(string) $time, null];
+        }
+
+        // Carbon translates the words but leaves the counter in latin digits;
+        // map them through the locale's numbering system (identity for latin locales).
+        return [strtr($date->locale($lang)->diffForHumans(), array_combine(range(0, 9), NabuXUI::digits($lang))), $date->toIso8601String()];
+    };
+    // Listeners go on the wrapper: the panel's events bubble through it, not the trigger.
+    $listeners = $attributes->whereStartsWith(['x-on:', '@', 'wire:']);
+    $rest = $attributes->whereDoesntStartWith(['x-on:', '@', 'wire:']);
+?>
+<div style="display: contents" <?php echo e($listeners); ?> x-data="nxActivityDropdown(<?php echo \Illuminate\Support\Js::from($locale)->toHtml() ?>)">
+    <button type="button" <?php echo e($rest->class('nx-activity-dropdown-trigger')); ?> x-ref="trigger" popovertarget="<?php echo e($id); ?>" aria-controls="<?php echo e($id); ?>"
+        aria-expanded="false" x-bind:aria-expanded="open ? 'true' : 'false'"
+        aria-label="<?php echo e($unread ? $title.', '.str_replace(':count', (string) $unread, $unreadWord) : $title); ?>"
+        x-bind:aria-label="unread ? <?php echo \Illuminate\Support\Js::from($title)->toHtml() ?> + ', ' + <?php echo \Illuminate\Support\Js::from($unreadWord)->toHtml() ?>.replace(':count', new Intl.NumberFormat(<?php echo \Illuminate\Support\Js::from($lang)->toHtml() ?>).format(unread)) : <?php echo \Illuminate\Support\Js::from($title)->toHtml() ?>"
+        x-on:animationend="ringEnded($event)">
+        <?php echo e(NabuXUI::icon('bell')); ?>
+
+        <span class="nx-activity-dropdown-badge" x-ref="badge" aria-hidden="true" <?php if(! $unread): ?> data-empty <?php endif; ?>
+            x-bind:data-empty="unread ? null : ''" x-on:animationend.stop="$event.animationName === 'nx-pop' && $el.removeAttribute('data-pop')">
+            <?php if (isset($component)) { $__componentOriginal93ce6498ef66a4e04dee61d3b7d71c78 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal93ce6498ef66a4e04dee61d3b7d71c78 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::number','data' => ['xRef' => 'count','value' => $unread,'locale' => $locale,'reveal' => false,'wire:ignore' => true]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::number'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['x-ref' => 'count','value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($unread),'locale' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($locale),'reveal' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(false),'wire:ignore' => true]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal93ce6498ef66a4e04dee61d3b7d71c78)): ?>
+<?php $attributes = $__attributesOriginal93ce6498ef66a4e04dee61d3b7d71c78; ?>
+<?php unset($__attributesOriginal93ce6498ef66a4e04dee61d3b7d71c78); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal93ce6498ef66a4e04dee61d3b7d71c78)): ?>
+<?php $component = $__componentOriginal93ce6498ef66a4e04dee61d3b7d71c78; ?>
+<?php unset($__componentOriginal93ce6498ef66a4e04dee61d3b7d71c78); ?>
+<?php endif; ?>
+        </span>
+    </button>
+    <div class="nx-activity-dropdown" id="<?php echo e($id); ?>" x-ref="panel" popover="auto" wire:ignore.self role="dialog" aria-labelledby="<?php echo e($id); ?>-title">
+        <header class="nx-activity-dropdown-head">
+            <div>
+                <h2 class="nx-activity-dropdown-title" id="<?php echo e($id); ?>-title"><?php echo e($title); ?></h2>
+                <span class="nx-activity-dropdown-unread" x-show="unread" <?php if(! $unread): ?> style="display: none" <?php endif; ?>
+                    x-text="<?php echo \Illuminate\Support\Js::from($unreadWord)->toHtml() ?>.replace(':count', new Intl.NumberFormat(<?php echo \Illuminate\Support\Js::from($lang)->toHtml() ?>).format(unread))"><?php echo e(str_replace(':count', (string) $unread, $unreadWord)); ?></span>
+            </div>
+            <button type="button" class="nx-activity-dropdown-mark" <?php if(! $unread): echo 'disabled'; endif; ?> x-bind:disabled="! unread" x-on:click="markAll()"><?php echo e($t('Mark all as read', 'همه خوانده شد', 'تعليم الكل كمقروء')); ?></button>
+        </header>
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(count($items)): ?>
+            <ul class="nx-activity-dropdown-list">
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i => $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                    <?php
+                        $itemId = (string) $item['id'];
+                        $isUnread = ! empty($item['unread']);
+                        [$label, $iso] = $when($item['time'] ?? '');
+                    ?>
+                    <li class="nx-activity-dropdown-item" style="--nx-i: <?php echo e($i); ?>" data-id="<?php echo e($itemId); ?>" <?php if($isUnread): ?> data-server-unread data-unread <?php endif; ?>
+                        x-bind:data-unread="isUnread(<?php echo \Illuminate\Support\Js::from($itemId)->toHtml() ?>, <?php echo \Illuminate\Support\Js::from($isUnread)->toHtml() ?>) ? '' : null">
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(! empty($item['href'])): ?>
+                            <a class="nx-activity-dropdown-row" href="<?php echo e($item['href']); ?>" x-on:click="markRead(<?php echo \Illuminate\Support\Js::from($itemId)->toHtml() ?>)">
+                        <?php else: ?>
+                            <div class="nx-activity-dropdown-row">
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                            <?php if (isset($component)) { $__componentOriginal5df0f8ac1aa41529b23969e5b15d2269 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal5df0f8ac1aa41529b23969e5b15d2269 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::avatar','data' => ['name' => $item['actor']['name'],'src' => $item['actor']['avatar'] ?? null]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::avatar'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['name' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($item['actor']['name']),'src' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($item['actor']['avatar'] ?? null)]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal5df0f8ac1aa41529b23969e5b15d2269)): ?>
+<?php $attributes = $__attributesOriginal5df0f8ac1aa41529b23969e5b15d2269; ?>
+<?php unset($__attributesOriginal5df0f8ac1aa41529b23969e5b15d2269); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal5df0f8ac1aa41529b23969e5b15d2269)): ?>
+<?php $component = $__componentOriginal5df0f8ac1aa41529b23969e5b15d2269; ?>
+<?php unset($__componentOriginal5df0f8ac1aa41529b23969e5b15d2269); ?>
+<?php endif; ?>
+                            <p class="nx-activity-dropdown-text">
+                                <span><strong><?php echo e($item['actor']['name']); ?></strong> <?php echo e($item['text']); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(! empty($item['target'])): ?> <strong><?php echo e($item['target']); ?></strong><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?></span>
+                                <time class="nx-activity-dropdown-time" <?php if($iso): ?> datetime="<?php echo e($iso); ?>" <?php endif; ?>><?php echo e($label); ?></time>
+                            </p>
+                            <span class="nx-activity-dropdown-dot" aria-hidden="true"></span>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($isUnread): ?><span class="nx-visually-hidden" x-show="isUnread(<?php echo \Illuminate\Support\Js::from($itemId)->toHtml() ?>, true)"><?php echo e(trim(str_replace(':count', '', $unreadWord))); ?></span><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(! empty($item['href'])): ?></a><?php else: ?></div><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                    </li>
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+            </ul>
+        <?php else: ?>
+            <p class="nx-activity-dropdown-empty"><?php echo e(NabuXUI::icon('check-circle')); ?><?php echo e($emptyText ?? $t('You’re all caught up', 'چیز تازه‌ای نمانده', 'لا جديد لديك')); ?></p>
+        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+    </div>
+</div>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/packages/livewire/src/../resources/views/components/activity-dropdown.blade.php ENDPATH**/ ?>

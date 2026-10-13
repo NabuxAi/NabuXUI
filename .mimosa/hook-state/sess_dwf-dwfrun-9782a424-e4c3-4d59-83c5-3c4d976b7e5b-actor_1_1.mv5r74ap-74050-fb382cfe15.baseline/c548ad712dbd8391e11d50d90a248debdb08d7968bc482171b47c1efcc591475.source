@@ -1,0 +1,104 @@
+
+<?php if (isset($component)) { $__componentOriginal4837f5b450f9d59421c88eb37fd388cd = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal4837f5b450f9d59421c88eb37fd388cd = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page','data' => ['active' => 'errors','title' => __('admin.errors_index_title'),'subtitle' => __('admin.errors_index_subtitle')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('admin.page'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['active' => 'errors','title' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.errors_index_title')),'subtitle' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.errors_index_subtitle'))]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+    <style>
+        /* Errors-index pieces the shared blocks don't carry (tokens only, both themes). */
+        .er-note { margin: 0; max-inline-size: 52rem; color: var(--nx-text-muted); }
+        .er-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+            gap: var(--nx-space-6); align-items: start; }
+        .er-card { justify-items: start; }
+        .er-code { margin: 0; font: 800 var(--nx-text-display) / 1 var(--nx-font-display);
+            letter-spacing: var(--nx-tracking-tight); background: var(--nx-gradient-text);
+            -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .er-plate { display: grid; place-items: center; inline-size: var(--nx-text-display);
+            block-size: var(--nx-text-display); border-radius: var(--nx-radius-xl);
+            background: var(--nx-surface-2); color: var(--nx-text-muted); }
+        .er-plate .nx-icon { inline-size: 50%; block-size: 50%; }
+        .er-text { margin: 0; color: var(--nx-text-muted); }
+        .er-meta { display: flex; flex-wrap: wrap; gap: var(--nx-space-2); align-items: center; }
+        .er-path { font-family: var(--nx-font-mono); font-size: var(--nx-text-sm); color: var(--nx-text-muted); }
+    </style>
+    <div class="ap-grid">
+        <p class="er-note"><?php echo e(__('admin.errors_index_note')); ?></p>
+        <div class="er-grid" data-nx-reveal="group" x-nx-reveal.group>
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $flavours; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $flavour): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                <section class="ap-box er-card" <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'er-'.e($flavour['code']).''; ?>wire:key="er-<?php echo e($flavour['code']); ?>" data-nx-reveal x-nx-reveal>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($flavour['display']): ?>
+                        <p class="er-code" aria-hidden="true"><?php echo e($flavour['display']); ?></p>
+                    <?php else: ?>
+                        <p class="er-plate" aria-hidden="true"><?php echo e(NabuXUI\NabuXUI::icon($flavour['icon'])); ?></p>
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                    <h2 class="ap-box-title"><?php echo e($flavour['title']); ?></h2>
+                    <p class="er-text"><?php echo e($flavour['description']); ?></p>
+                    <div class="er-meta">
+                        <?php if (isset($component)) { $__componentOriginal88b19148b030a6c82e2be7bc3872e2be = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal88b19148b030a6c82e2be7bc3872e2be = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::badge','data' => ['tone' => $flavour['tone']]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::badge'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['tone' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($flavour['tone'])]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+HTTP <?php echo e($flavour['statusLabel']); ?> <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal88b19148b030a6c82e2be7bc3872e2be)): ?>
+<?php $attributes = $__attributesOriginal88b19148b030a6c82e2be7bc3872e2be; ?>
+<?php unset($__attributesOriginal88b19148b030a6c82e2be7bc3872e2be); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal88b19148b030a6c82e2be7bc3872e2be)): ?>
+<?php $component = $__componentOriginal88b19148b030a6c82e2be7bc3872e2be; ?>
+<?php unset($__componentOriginal88b19148b030a6c82e2be7bc3872e2be); ?>
+<?php endif; ?>
+                        <code class="er-path"><?php echo e($flavour['path']); ?></code>
+                    </div>
+                    <form action="<?php echo e($flavour['href']); ?>" method="get">
+                        <?php if (isset($component)) { $__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::button','data' => ['type' => 'submit','variant' => 'primary','icon' => $flavour['icon']]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::button'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['type' => 'submit','variant' => 'primary','icon' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($flavour['icon'])]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+<?php echo e(__('admin.errors_open')); ?> <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42)): ?>
+<?php $attributes = $__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42; ?>
+<?php unset($__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42)): ?>
+<?php $component = $__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42; ?>
+<?php unset($__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42); ?>
+<?php endif; ?>
+                    </form>
+                </section>
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+        </div>
+    </div>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal4837f5b450f9d59421c88eb37fd388cd)): ?>
+<?php $attributes = $__attributesOriginal4837f5b450f9d59421c88eb37fd388cd; ?>
+<?php unset($__attributesOriginal4837f5b450f9d59421c88eb37fd388cd); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal4837f5b450f9d59421c88eb37fd388cd)): ?>
+<?php $component = $__componentOriginal4837f5b450f9d59421c88eb37fd388cd; ?>
+<?php unset($__componentOriginal4837f5b450f9d59421c88eb37fd388cd); ?>
+<?php endif; ?>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/playground/resources/views/livewire/admin/errors.blade.php ENDPATH**/ ?>

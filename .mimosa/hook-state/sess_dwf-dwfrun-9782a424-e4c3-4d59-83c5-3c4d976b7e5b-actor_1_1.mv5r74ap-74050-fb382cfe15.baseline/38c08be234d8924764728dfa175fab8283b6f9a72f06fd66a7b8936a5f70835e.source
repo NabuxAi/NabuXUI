@@ -1,0 +1,216 @@
+
+<?php if (isset($component)) { $__componentOriginal4837f5b450f9d59421c88eb37fd388cd = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal4837f5b450f9d59421c88eb37fd388cd = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page','data' => ['active' => 'email','title' => __('admin.email_title'),'subtitle' => __('admin.email_subtitle')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('admin.page'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['active' => 'email','title' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.email_title')),'subtitle' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.email_subtitle'))]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+    <style>
+        /* Email-page pieces the shared block doesn't carry (tokens only, both themes). */
+        .ep-unread { display: inline-flex; align-items: center; gap: 0.5rem; font-size: var(--nx-text-sm); color: var(--nx-text-muted); }
+        .ep-unread-dot { inline-size: 0.5rem; block-size: 0.5rem; border-radius: var(--nx-radius-full); background: var(--nx-accent); }
+        .ep-compose { display: grid; gap: var(--nx-space-4); }
+    </style>
+    <div class="ap-grid">
+        <div class="ap-row" style="justify-content: space-between">
+            <span class="ep-unread"><i class="ep-unread-dot" aria-hidden="true"></i><?php echo e($unreadText); ?></span>
+            <?php if (isset($component)) { $__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::button','data' => ['variant' => 'primary','icon' => 'edit','wire:click' => '$set(\'composing\', true)']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::button'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['variant' => 'primary','icon' => 'edit','wire:click' => '$set(\'composing\', true)']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+<?php echo e(__('admin.email_compose')); ?> <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42)): ?>
+<?php $attributes = $__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42; ?>
+<?php unset($__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42)): ?>
+<?php $component = $__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42; ?>
+<?php unset($__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42); ?>
+<?php endif; ?>
+        </div>
+
+        <?php if (isset($component)) { $__componentOriginalc860910310d6412ba03aa48b2ef05081 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalc860910310d6412ba03aa48b2ef05081 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::email','data' => ['messages' => $messages,'replyAction' => 'sendReply','height' => '34rem']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::email'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['messages' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($messages),'reply-action' => 'sendReply','height' => '34rem']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalc860910310d6412ba03aa48b2ef05081)): ?>
+<?php $attributes = $__attributesOriginalc860910310d6412ba03aa48b2ef05081; ?>
+<?php unset($__attributesOriginalc860910310d6412ba03aa48b2ef05081); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalc860910310d6412ba03aa48b2ef05081)): ?>
+<?php $component = $__componentOriginalc860910310d6412ba03aa48b2ef05081; ?>
+<?php unset($__componentOriginalc860910310d6412ba03aa48b2ef05081); ?>
+<?php endif; ?>
+    </div>
+
+    <?php if (isset($component)) { $__componentOriginal84c9a9af56b57f8b497f42049e80e0ae = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal84c9a9af56b57f8b497f42049e80e0ae = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::dialog','data' => ['wire:model' => 'composing','title' => __('admin.email_compose_title'),'size' => 'md']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::dialog'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['wire:model' => 'composing','title' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.email_compose_title')),'size' => 'md']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+        <div class="ep-compose">
+            <?php if (isset($component)) { $__componentOriginal2fb3ed9d008db6d56137d7f687f87f19 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal2fb3ed9d008db6d56137d7f687f87f19 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::input','data' => ['label' => __('admin.email_compose_to'),'wire:model' => 'composeTo']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::input'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['label' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.email_compose_to')),'wire:model' => 'composeTo']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal2fb3ed9d008db6d56137d7f687f87f19)): ?>
+<?php $attributes = $__attributesOriginal2fb3ed9d008db6d56137d7f687f87f19; ?>
+<?php unset($__attributesOriginal2fb3ed9d008db6d56137d7f687f87f19); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal2fb3ed9d008db6d56137d7f687f87f19)): ?>
+<?php $component = $__componentOriginal2fb3ed9d008db6d56137d7f687f87f19; ?>
+<?php unset($__componentOriginal2fb3ed9d008db6d56137d7f687f87f19); ?>
+<?php endif; ?>
+            <?php if (isset($component)) { $__componentOriginal2fb3ed9d008db6d56137d7f687f87f19 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal2fb3ed9d008db6d56137d7f687f87f19 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::input','data' => ['label' => __('admin.email_compose_subject'),'wire:model' => 'composeSubject']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::input'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['label' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.email_compose_subject')),'wire:model' => 'composeSubject']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal2fb3ed9d008db6d56137d7f687f87f19)): ?>
+<?php $attributes = $__attributesOriginal2fb3ed9d008db6d56137d7f687f87f19; ?>
+<?php unset($__attributesOriginal2fb3ed9d008db6d56137d7f687f87f19); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal2fb3ed9d008db6d56137d7f687f87f19)): ?>
+<?php $component = $__componentOriginal2fb3ed9d008db6d56137d7f687f87f19; ?>
+<?php unset($__componentOriginal2fb3ed9d008db6d56137d7f687f87f19); ?>
+<?php endif; ?>
+            <?php if (isset($component)) { $__componentOriginald0254b6488f9c274c915d1f9fae8da60 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginald0254b6488f9c274c915d1f9fae8da60 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::textarea','data' => ['label' => __('admin.email_compose_body'),'placeholder' => __('admin.email_compose_placeholder'),'wire:model' => 'composeBody']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::textarea'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['label' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.email_compose_body')),'placeholder' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.email_compose_placeholder')),'wire:model' => 'composeBody']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginald0254b6488f9c274c915d1f9fae8da60)): ?>
+<?php $attributes = $__attributesOriginald0254b6488f9c274c915d1f9fae8da60; ?>
+<?php unset($__attributesOriginald0254b6488f9c274c915d1f9fae8da60); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginald0254b6488f9c274c915d1f9fae8da60)): ?>
+<?php $component = $__componentOriginald0254b6488f9c274c915d1f9fae8da60; ?>
+<?php unset($__componentOriginald0254b6488f9c274c915d1f9fae8da60); ?>
+<?php endif; ?>
+        </div>
+         <?php $__env->slot('footer', null, []); ?> 
+            <div class="ap-row" style="justify-content: space-between">
+                <?php if (isset($component)) { $__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::button','data' => ['variant' => 'ghost','icon' => 'file','wire:click' => 'saveDraft']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::button'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['variant' => 'ghost','icon' => 'file','wire:click' => 'saveDraft']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+<?php echo e(__('admin.email_folder_drafts')); ?> <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42)): ?>
+<?php $attributes = $__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42; ?>
+<?php unset($__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42)): ?>
+<?php $component = $__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42; ?>
+<?php unset($__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42); ?>
+<?php endif; ?>
+                <?php if (isset($component)) { $__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::button','data' => ['variant' => 'primary','icon' => 'arrow-right','wire:click' => 'send']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::button'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['variant' => 'primary','icon' => 'arrow-right','wire:click' => 'send']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+<?php echo e(__('admin.email_send')); ?> <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42)): ?>
+<?php $attributes = $__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42; ?>
+<?php unset($__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42)): ?>
+<?php $component = $__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42; ?>
+<?php unset($__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42); ?>
+<?php endif; ?>
+            </div>
+         <?php $__env->endSlot(); ?>
+     <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal84c9a9af56b57f8b497f42049e80e0ae)): ?>
+<?php $attributes = $__attributesOriginal84c9a9af56b57f8b497f42049e80e0ae; ?>
+<?php unset($__attributesOriginal84c9a9af56b57f8b497f42049e80e0ae); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal84c9a9af56b57f8b497f42049e80e0ae)): ?>
+<?php $component = $__componentOriginal84c9a9af56b57f8b497f42049e80e0ae; ?>
+<?php unset($__componentOriginal84c9a9af56b57f8b497f42049e80e0ae); ?>
+<?php endif; ?>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal4837f5b450f9d59421c88eb37fd388cd)): ?>
+<?php $attributes = $__attributesOriginal4837f5b450f9d59421c88eb37fd388cd; ?>
+<?php unset($__attributesOriginal4837f5b450f9d59421c88eb37fd388cd); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal4837f5b450f9d59421c88eb37fd388cd)): ?>
+<?php $component = $__componentOriginal4837f5b450f9d59421c88eb37fd388cd; ?>
+<?php unset($__componentOriginal4837f5b450f9d59421c88eb37fd388cd); ?>
+<?php endif; ?>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/playground/resources/views/livewire/admin/email.blade.php ENDPATH**/ ?>

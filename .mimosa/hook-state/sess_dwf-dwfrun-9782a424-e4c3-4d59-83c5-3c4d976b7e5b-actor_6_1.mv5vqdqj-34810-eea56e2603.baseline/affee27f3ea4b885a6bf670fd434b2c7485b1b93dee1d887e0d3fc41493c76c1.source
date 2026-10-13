@@ -1,0 +1,29 @@
+{
+    "name": "nabuxai/nabuxui-filament",
+    "description": "Filament plugin for NabuXUI: nx-powered form fields and panel assets on the shared NabuXUI core",
+    "type": "library",
+    "license": "proprietary",
+    "keywords": ["laravel", "filament", "livewire", "nabuxui", "design-system"],
+    "require": {
+        "php": "^8.3",
+        "filament/forms": "^5.0",
+        "filament/schemas": "^5.0",
+        "filament/support": "^5.0",
+        "illuminate/support": "^11.0|^12.0|^13.0",
+        "nabuxai/nabuxui": "@dev"
+    },
+    "autoload": {
+        "psr-4": {
+            "NabuXUI\\Filament\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "NabuXUI\\Filament\\NabuXuiFilamentServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

@@ -1,0 +1,354 @@
+interface PhaseResult {
+  /** فایل‌های ساخته/تغییریده‌شده، مسیر نسبت به ریشهٔ ریپو */
+  files: string[];
+  /** اسلاگ‌های ساخته‌شده، دقیقاً همان‌هایی که در مانیفست نشستند */
+  slugs: string[];
+  /** true فقط وقتی همهٔ دموها ۲۰۰ دادند */
+  ok: boolean;
+  /** یادداشت فارسی برای گزارش نهایی */
+  notes: string;
+}
+interface VerifyFinding {
+  /** یک جمله: چه چیزی مشکل است */
+  what: string;
+  /** شاهد: خروجی دستور، خطای کنسول یا مسیر عکس */
+  evidence: string;
+  severity: "low" | "medium" | "high";
+}
+interface BrowserReview {
+  ok: boolean;
+  findings: VerifyFinding[];
+  /** مسیر عکس‌های گرفته‌شده زیر /tmp/nx-iconmotion/ */
+  shots: string[];
+}
+interface JudgeVerdict {
+  /** مسیر عکسی که داور دید */
+  shot: string;
+  pass: boolean;
+  /** ایرادها به فارسی؛ خالی اگر قبول */
+  issues: string;
+}
+interface WorkflowReport {
+  conclusion: string;
+  findings: VerifyFinding[];
+  verified: string[];
+  notCovered: string[];
+}
+
+artifact.table("issues", {
+  title: "موارد باز موج آیکون‌های متحرک",
+  description: "خطاهای HTTP، لینت، نمونه‌های ایرانی و ایرادهای داوری بصری.",
+  columns: [
+    { field: "what", label: "مورد" },
+    { field: "evidence", label: "شاهد" },
+    { field: "severity", label: "شدت" },
+  ],
+  key: "what",
+});
+
+const BASE = "http://127.0.0.1:8765";
+const GROUP_ID = "icon-motion";
+const MANIFEST = "playground/app/Support/Demos/IconMotion.php";
+
+const ICONS =
+  "check, x, plus, minus, chevron-down, chevron-up, chevron-right, chevron-left, arrow-right, arrow-left, arrow-up, trend-up, trend-down, external-link, search, copy, heart, star, sun, moon, info, check-circle, alert-circle, alert-triangle, upload, file, paperclip, mic, stop, play, pause, menu, sparkles, globe, home, sliders, user, users, bell, trash, edit, grid, chart, zap, shield, layers, message, lock, mail, command, cpu, wand, settings, folder, music, image";
+
+const DEMOS = [
+  {
+    slug: "draw-entrance",
+    titleFa: "ورود ترسیمی",
+    titleEn: "Draw-in entrance",
+    docs: "https://lucide-animated.com",
+    spec: "مجموعهٔ آیکون‌های خطی (حداقل ۱۰ عدد به سبک لوسید: stroke یکنواخت، گوشه‌های گرد) که با ورود به دید، خط‌به‌خط خودشان را می‌کشند (stroke-dasharray/offset با تناوب پله‌ای)؛ هاور هر آیکون ری‌پلی می‌کند؛ سوییچ «همه را دوباره بکش».",
+  },
+  {
+    slug: "state-morph",
+    titleFa: "مورف حالت‌ها",
+    titleEn: "State morph icons",
+    docs: "https://lordicon.com",
+    spec: "آیکون‌های دکمه‌ای که با کلیک بین دو حالت مورف می‌شوند: قلب با انفجار ذره‌ها پر می‌شود، زنگ با تکان جانشاپرداز می‌لرزد و بج شمارنده می‌گیرد، پخش↔توقف در هم می‌لغزند، بوکمارک پر می‌شود و ذره می‌پاشد؛ حالت با aria-pressed سینک.",
+  },
+  {
+    slug: "loop-set",
+    titleFa: "حلقه‌های بی‌پایان",
+    titleEn: "Looping icons",
+    docs: "https://useanimations.com",
+    spec: "آیکون‌های درحال‌کارِ پیوسته در کنترل‌های واقعی: اسپینر نقطه‌ای/کمانی، جفت‌فلش همگام‌سازی چرخان، ذره‌بین نبض‌دار در فیلد جست‌وجو، آپلود با نوار پیشرفت داخل فلش، دانلود جهنده — هرکدام در یک کارت وضعیت با متن و متای زمان.",
+  },
+  {
+    slug: "micro-controls",
+    titleFa: "ریزکنترل‌های آیکونی",
+    titleEn: "Icon micro-controls",
+    docs: "https://useanimations.com",
+    spec: "کنترل‌های واقعی با آیکون متحرک: همبرگر↔ضربدر با چرخش خطوط، چک‌باکس با ترسیم تیک و پاپ، سوییچ خورشید↔ماه (چرخش + پرتوها جمع می‌شوند)، چشمِ رمز که پلک می‌زند، فلش آکاردئون — همه روی کنترل‌های بومی سوار و با کیبورد کار می‌کنند.",
+  },
+  {
+    slug: "self-draw",
+    titleFa: "تصویرسازی خودترسیم",
+    titleEn: "Self-drawing scene",
+    docs: "https://svgator.com",
+    spec: "صحنهٔ خطی SVG (مثلاً لپ‌تاپ + فنجان + گیاه + پنجره) که با اسکرول داخل استیج یا دکمهٔ «بکش»، مسیرها به‌ترتیب لایه‌لایه ترسیم می‌شوند و بعد رنگ‌ها می‌نشینند؛ دکمهٔ پاک‌کردن و ری‌پلی؛ شمارندهٔ مسیرهای ترسیم‌شده.",
+  },
+  {
+    slug: "icon-browser",
+    titleFa: "مرورگر آیکون",
+    titleEn: "Icon browser",
+    docs: "https://allsvgicons.com",
+    spec: "کتابخانهٔ آیکون داخل دمو: جست‌وجوی زندهٔ فارسی/انگلیسی روی نام‌ها، گرید آیکون‌ها (۲۴+ آیکون خطی inline)، کلیک = کپی SVG با تُست، کنترل اندازه/ضخامت خط/رنگ با اسلایدر و سواچ، شمار نتایج و حالت خالی جست‌وجو.",
+  },
+  {
+    slug: "icon-showcase",
+    titleFa: "صحنهٔ جمع‌بندی",
+    titleEn: "Icon showcase scene",
+    docs: "https://lordicon.com",
+    spec: "بخش محصول که همهٔ زبان موج را کنار هم می‌آورد: ردیف قابلیت با آیکون‌های ترسیمی ورودی، دکمه‌های CTA با آیکون حالت‌دار (قلب/بوکمارک)، کارت‌های آمار با اسپینر و آیکون جهنده، و سرتیتر با تصویرسازی خودترسیم پس‌زمینه.",
+  },
+] as const;
+
+const RULES = [
+  "قواعد سخت (تخلف = بازسازی):",
+  "- همهٔ آیکون‌ها SVG دست‌سازِ inline؛ هیچ لود خارجی (Lottie/فایل/فونت‌آیکون) ممنوع نیست فقط لازم نیست — همه‌چیز داخل خود پارشال.",
+  "- انیمیشن با CSS (@keyframes، stroke-dasharray/offset، transform) و حالت‌ها با Alpine؛ برای «در دید» از IntersectionObserver داخلی استفاده کن (پاک‌سازی در destroy).",
+  "- prefers-reduced-motion: همهٔ انیمیشن‌ها به حالت نهایی/ثابت فرو بروند.",
+  "- id های SVG (گرادیان/فیلتر/mask) با پیشوند یکتای دمو (مثل .imd- برای icon-motion/draw-entrance).",
+  "- دوزبانه با الگوی $say؛ اعداد فارسی در رشته‌های fa؛ بدون lorem ipsum؛ متن محصولی واقعی با نام‌های جهانی.",
+  "- هرگز نام ایران/تهران یا نمونهٔ ایرانی؛ مثال‌ها جهانی.",
+  "- استایل اسکوپ با همان پیشوند یکتا؛ آینهٔ تیره دو بار: html[data-theme=dark] و @media (prefers-color-scheme: dark) با html:not([data-theme=light]).",
+  "- بدون position:fixed (sticky مجاز)؛ بدون wire:؛ هرگز data-nx-reveal؛ هرگز {{ داخل <style> (@media و @keyframes مجاز).",
+  "- ویژگی‌های منطقی برای RTL؛ در 375px سرریز افقی نده.",
+  "- اگر قاعده‌ای با واقعیت ریپو ناسازگار بود، در notes صادقانه بگو — دور نزن.",
+].join("\n");
+
+const DEMO_LINES = DEMOS.map((d) => "- " + d.slug + " — " + d.titleFa + " / " + d.titleEn + " (docs: " + d.docs + "): " + d.spec).join("\n");
+
+phase("شمارش پیش از ساخت و ساخت گروه آیکون‌های متحرک");
+const before = await world.run("php", [
+  "playground/artisan",
+  "tinker",
+  "--execute=echo count(App\\Support\\DemoCatalog::flat()).' '.count(App\\Support\\DemoCatalog::groups());",
+]);
+const beforeCount = (before.stdout.trim().split("\n").pop() ?? "").split(" ");
+log("شمارش پیش از موج: " + beforeCount.join(" ") + " — گروه icon-motion با " + DEMOS.length + " دمو ساخته می‌شود");
+const builder = await agent("سازنده-icon-motion", {
+  system:
+    "تو سازندهٔ گروه‌های دموی کتابخانهٔ NabuXUI هستی (الگوی موج‌های قبلی: android، ios، کربن، هیروها). سرور dev از قبل روی " + BASE + " بالاست؛ ری‌استارت نکن. فایل‌ها را یک‌به‌یک و افزایشی بساز؛ هرگز کل مانیفست را دوباره بازنویسی نکن. اگر قاعده‌ای ناسازگار با واقعیت ریپو بود اسکیلیت کن، دور نزن.",
+}).ask<PhaseResult>(
+  [
+    "گروه «آیکون‌های متحرک» برای کاتالوگ /components با " + DEMOS.length + " دموی تازه.",
+    "",
+    "فایل مانیفست تازه: " + MANIFEST + " — نام فایل تعیین‌کنندهٔ id گروه «" + GROUP_ID + "» است و __group برچسب گروه: fa «آیکون‌های متحرک» / en \"Animated icons\".",
+    "",
+    "دموها (دقیقاً همین اسلاگ‌ها، همین ترتیب) — docs هر مدخل لینک گالری الهام همان دمو است:",
+    DEMO_LINES,
+    "",
+    "پیش از نوشتن، الگوها را بخوان:",
+    "- مانیفست: playground/app/Support/Demos/Android.php (شکل مدخل) و playground/app/Support/Demos/Carbon.php (شکل نقشهٔ کد پنج‌فریم‌ورکی — این موج دقیقاً همین شکل را می‌خواهد).",
+    "- پارشال: playground/resources/views/demos/components/text/text-hero.blade.php و playground/resources/views/demos/components/effects/typewriter.blade.php (الگوی رفتار Alpine با پاک‌سازی).",
+    "",
+    "هر دمو = یک مدخل کامل در مانیفست + پارشال playground/resources/views/demos/components/" + GROUP_ID + "/{slug}.blade.php:",
+    "- title / oneLiner دوزبانه با لحن فروشندهٔ موج‌های قبلی؛ icon فقط از فهرست مجاز؛ js درست/غلط؛ props سه تا پنج ردیف واقعی با note دوزبانه.",
+    "- code باید نقشهٔ کامل پنج‌کلیدی مثل کربن باشد: livewire (جفت fa/en) + inertia + react + vue + svelte — هر قطعه همان سناریوی اصلی دمو را در آن فریم‌ورک می‌سازد (خودکفا با استایل داخل خودش؛ برای Vue/Svelte همان CSS داخل کامپوننت).",
+    "",
+    "راهنمای اختصاصی: آیکون‌ها ستون فقرات‌اند نه تزئین — هر دمو باید «قابلیت گالری الهامش» را واقعاً ارائه کند: ترسیم ورود (lucide-animated)، مورف حالت با تعامل (lordicon)، حلقهٔ پیوسته در کنترل واقعی (useanimations)، خودترسیم سکانس (svgator)، مرور/جست‌وجوی آیکون (allsvgicons).",
+    "",
+    RULES,
+    "",
+    "آیکن‌های مجاز کاتالوگ: " + ICONS + ".",
+    "",
+    "بعد از هر دمو این دو را بزن تا سبز شود و بعد بروی بعدی:",
+    "- php -l " + MANIFEST,
+    "- curl -s -o /dev/null -w '%{http_code}' " + BASE + "/components/" + GROUP_ID + "/{slug} باید ۲۰۰ باشد (۵۰۰ یعنی Blade خراب — درستش کن؛ ۴۰۴ یعنی مدخل/پارشال جا نیفتاده).",
+    "",
+    "خروجی فقط JSON {files, slugs, ok, notes} — slugs دقیقاً همین اسلاگ‌ها؛ notes فارسی و کوتاه.",
+  ].join("\n"),
+);
+
+phase("دروازه‌های قطعی: لینت مانیفست و شمارش دموها");
+let gateProblems: string[] = [];
+const lint = await world.run("php", ["-l", MANIFEST]);
+if (lint.exitCode !== 0) {
+  gateProblems.push(MANIFEST);
+  report({ what: "لینت PHP خراب: " + MANIFEST, evidence: lint.stdout.trim().split("\n").slice(-2).join(" "), severity: "high" }, "issues");
+}
+const expectedDemos = Number(beforeCount[0] ?? "0") + DEMOS.length;
+const expectedGroups = Number(beforeCount[1] ?? "0") + 1;
+let counted = "";
+for (let round = 1; round <= 2; round++) {
+  const t = await world.run("php", [
+    "playground/artisan",
+    "tinker",
+    "--execute=echo count(App\\Support\\DemoCatalog::flat()).' '.count(App\\Support\\DemoCatalog::groups());",
+  ]);
+  counted = t.stdout.trim().split("\n").pop() ?? "";
+  if (counted === expectedDemos + " " + expectedGroups) break;
+  report({ what: "شمارش دموها ناهماهنگ: " + counted, evidence: "انتظار: " + expectedDemos + " " + expectedGroups, severity: "high" }, "issues");
+  await agent("اصلاح‌گر-شمارش-" + round, {
+    system: "تو تعمیرکار مانیفست‌های دمو در این ریپو هستی.",
+  }).ask(
+    "شمارش کاتالوگ " + counted + " شد ولی انتظار " + expectedDemos + " دمو در " + expectedGroups + " گروه است. مانیفست " + MANIFEST +
+      " را وارسی کن: مدخل جاافتاده، کلید تکراری یا id خراب را درست کن (نام فایل = id گروه «icon-motion»؛ اسلاگ‌ها دقیقاً: " +
+      DEMOS.map((d) => d.slug).join("، ") + ").",
+  );
+}
+log("شمارش کاتالوگ: " + counted + " (انتظار " + expectedDemos + " " + expectedGroups + ")");
+
+phase("زلزدن هر نمونهٔ ایرانی از فایل‌های تازه");
+const iranTargets = ["playground/resources/views/demos/components/" + GROUP_ID, MANIFEST];
+const iran = await world.run("grep", ["-rEni", "ایران|تهران|Iran|Tehran", ...iranTargets]);
+if (iran.exitCode === 0) {
+  report({ what: "نمونهٔ ایرانی در فایل‌های تازه", evidence: iran.stdout.trim().split("\n").slice(0, 4).join(" | "), severity: "high" }, "issues");
+  await agent("پاک‌ساز-ایران", {
+    system: "تو ویراستار محتوای دموهای این ریپو هستی؛ سیاست: صفر ارجاع به ایران/تهران در دموها — مثال‌ها جهانی.",
+  }).ask("در فایل‌های گروه icon-motion الگوی ایران/تهران/Iran/Tehran پیدا شده (خودت grep کن). همه را با معادل جهانی عوض کن؛ معنا و وزن جمله حفظ شود.");
+  const recheck = await world.run("grep", ["-rEni", "ایران|تهران|Iran|Tehran", ...iranTargets]);
+  if (recheck.exitCode === 0) {
+    report({ what: "پاک‌سازی ایرانی ناتمام", evidence: recheck.stdout.trim().split("\n").slice(0, 3).join(" | "), severity: "medium" }, "issues");
+  }
+} else {
+  log("پویش بدون-ایران پاک بود");
+}
+
+phase("پویش HTTP هر صفحهٔ تازه و اصلاح تا ۲۰۰");
+let broken: { slug: string; code: string }[] = [];
+for (const d of DEMOS) {
+  const r = await world.run("curl", ["-s", "-o", "/dev/null", "-w", "%{http_code}", BASE + "/components/" + GROUP_ID + "/" + d.slug]);
+  const code = r.stdout.trim();
+  if (code !== "200") {
+    broken.push({ slug: d.slug, code });
+    report({ what: GROUP_ID + "/" + d.slug + " کد " + code, evidence: "curl → " + code, severity: "high" }, "issues");
+  }
+}
+log("پویش اول: " + (DEMOS.length - broken.length) + "/" + DEMOS.length + " صفحه ۲۰۰");
+for (let round = 1; round <= 2 && broken.length > 0; round++) {
+  const still: typeof broken = [];
+  for (const b of broken) {
+    await agent("اصلاح‌گر-" + b.slug + "-" + round, {
+      system:
+        "تو تعمیرکار Blade این ریپو هستی؛ فقط دموی تعیین‌شده را درست کن. الگوها: مانیفست " + MANIFEST + " و پارشال‌های هم‌گروه. اگر مدخل یا پارشال جا افتاده، همان را با سبک هم‌گروه بساز (شکل مدخل و نقشهٔ کد پنج‌فریم‌ورکی را از Carbon.php بگیر).",
+    }).ask(
+      "صفحهٔ " + BASE + "/components/" + GROUP_ID + "/" + b.slug + " کد " + b.code + " می‌دهد. مدخل مانیفست و پارشال playground/resources/views/demos/components/" +
+        GROUP_ID + "/" + b.slug + ".blade.php را وارسی و اصلاح کن تا ۲۰۰ بدهد؛ قواعد موج (دوزبانه، بدون fixed، بدون data-nx-reveal، بدون {{ داخل style، آینهٔ تیرهٔ دوبار) را نگه دار. اگر نشد صادقانه بگو.",
+    );
+    const r = await world.run("curl", ["-s", "-o", "/dev/null", "-w", "%{http_code}", BASE + "/components/" + GROUP_ID + "/" + b.slug]);
+    if (r.stdout.trim() !== "200") still.push(b);
+  }
+  broken = still;
+}
+log("پس از اصلاح: " + (DEMOS.length - broken.length) + "/" + DEMOS.length + " صفحه ۲۰۰");
+
+phase("بازبینی مرورگری: عکاسی روشن، تیره، موبایل و انگلیسی");
+const browser = await agent("بازبین-مرورگر", {
+  system:
+    "تو راستی‌آزمای مرورگری با playwright هستی. در /tmp/nx-shooter همه‌چیز آماده است: با node /tmp/nx-shooter/shoot.mjs <url> <outBase> از هر نشانی سه عکس light/dark/mobile (fullPage با اسکرول پیش از عکس) می‌گیری. ادعا بدون تصویر ممنوع؛ چیزی را که ندیدی گزارش نکن.",
+}).ask<BrowserReview>(
+  [
+    "پوشهٔ /tmp/nx-iconmotion را بساز (mkdir -p).",
+    "",
+    "۱) هر ۷ دمو را با shoot.mjs کامل عکاسی کن (۲۱ عکس):",
+    ...DEMOS.map((d) => "   node /tmp/nx-shooter/shoot.mjs " + BASE + "/components/" + GROUP_ID + "/" + d.slug + " /tmp/nx-iconmotion/" + d.slug),
+    "۲) انگلیسی: دموی اول و icon-browser را با ?lang=en باز کن و یک عکس روشن بگیر (فایل *-en.png؛ مستقیم با playwright) — متن باید کامل انگلیسی و LTR باشد؛ فقط بخش‌های عمدیِ نمایش RTL مجازند فارسی باشند.",
+    "۳) انیمیشن‌ها: در چند صفحه صبر کن و مطمئن شو حلقه‌ها می‌چرخند و ترسیم ورود واقعاً اجرا می‌شود (شات دوم بعد از چند ثانیه اگر لازم شد)؛ اگر آیکونی بی‌حرکت ماند ثبت کن.",
+    "۴) خطاهای کنسول: با یک اسکریپت کوچک pageerror و console.error همهٔ نشانی‌ها را جمع کن و فقط خطاهای واقعی را گزارش کن.",
+    "۵) خودت هم عکس‌ها را ببین: چیدمان شکسته، سرریز افقی در موبایل، تم تیرهٔ خراب، متن رونده. هر ایراد با مسیر عکس شاهد.",
+    "",
+    "نام‌گذاری: /tmp/nx-iconmotion/{slug}-light.png و -dark.png و -mobile.png؛ عکس‌های EN هم *-en.png.",
+    "خروجی فقط JSON {ok, findings:[{what, evidence, severity}], shots:[همهٔ مسیرها]} — findings فارسی.",
+  ].join("\n"),
+);
+
+phase("اصلاح ایرادهای بصری و بازتأیید HTTP");
+const actionable = (browser.findings ?? []).filter((f) => f.severity !== "low").slice(0, 8);
+if (actionable.length > 0) {
+  for (const [i, f] of actionable.entries()) {
+    const target = f.evidence.match(/\/tmp\/nx-iconmotion\/([a-z0-9-]+)-[a-z]+\.png/);
+    const slug = target?.[1] ?? "";
+    await agent("اصلاح‌گر-بصری-" + i, {
+      system: "تو تعمیرکار بصری دموهای این ریپو هستی؛ فقط دموی اشاره‌شده را اصلاح کن و قواعد موج (دوزبانه، آینهٔ تیرهٔ دوبار، بدون fixed، بدون data-nx-reveal) را نگه دار.",
+    }).ask(
+      "ایراد بصری در دمو" + (slug ? " " + GROUP_ID + "/" + slug : "") + ": " + f.what + " — شاهد: " + f.evidence +
+        ". فایل پارشال مربوطه را در playground/resources/views/demos/components/" + GROUP_ID + "/ پیدا و درست کن؛ برای اطمینان دوباره با node /tmp/nx-shooter/shoot.mjs عکس بگیر و ببین. نتیجه را کوتاه بگو.",
+    );
+    if (slug) {
+      const r = await world.run("curl", ["-s", "-o", "/dev/null", "-w", "%{http_code}", BASE + "/components/" + GROUP_ID + "/" + slug]);
+      if (r.stdout.trim() !== "200") {
+        report({ what: "بعد از اصلاح بصری " + GROUP_ID + "/" + slug + " صفحه ۲۰۰ نیست", evidence: "curl → " + r.stdout.trim(), severity: "high" }, "issues");
+      }
+    }
+  }
+} else {
+  log("ایراد بصری با شدت بالا/متوسط پیدا نشد — اصلاح لازم نبود");
+}
+
+phase("داوری بصری مستقل");
+const judgeShots = (browser.shots ?? [])
+  .filter((s) => s.startsWith("/tmp/nx-iconmotion/") && !s.includes("-mobile"))
+  .slice(0, 18);
+let verdicts: JudgeVerdict[] = [];
+if (judgeShots.length > 0) {
+  const judge = await agent("داور-بصری", {
+    system: "تو داور پذیرش بصری هستی و فقط از تصویر قضاوت می‌کنی؛ ادعای ندیده ممنوع. چیدمان شکسته/ناخوانا/تم تیرهٔ خراب/سرریز = مردود؛ سلیقهٔ جزئی = قبول. آیکون‌ها باید خوانا و هم‌خانواده باشند.",
+  }).ask<{ verdicts: JudgeVerdict[] }>(
+    "این عکس‌ها را با Read یکی‌یکی ببین و دربارهٔ هرکدام حکم بده:\n" + judgeShots.join("\n") +
+      "\nخروجی فقط JSON: {verdicts:[{shot, pass, issues}]} — issues فارسی.",
+  );
+  verdicts = judge.verdicts ?? [];
+  for (const v of verdicts.filter((v) => !v.pass)) {
+    report({ what: "داوری بصری مردود: " + v.shot, evidence: v.issues, severity: "medium" }, "issues");
+  }
+} else {
+  report({ what: "عکسی برای داوری نماند", evidence: "بازبین مرورگر شاتی برنگرداند", severity: "high" }, "issues");
+}
+
+const problems = [
+  ...broken.map((b) => GROUP_ID + "/" + b.slug + " کد " + b.code),
+  ...(builder.ok ? [] : ["سازندهٔ ناقص: " + builder.notes]),
+  ...(browser.findings ?? []).filter((f) => f.severity !== "low").map((f) => f.what),
+  ...verdicts.filter((v) => !v.pass).map((v) => "داوری: " + v.shot),
+];
+
+await artifact.markdown(
+  "report",
+  [
+    "# موج آیکون‌های متحرک",
+    "",
+    "**" + DEMOS.length + " دموی تازه در گروه icon-motion**: ورود ترسیمی (lucide-animated)، مورف حالت‌ها و صحنهٔ جمع‌بندی (lordicon)، حلقه‌های بی‌پایان و ریزکنترل‌ها (useanimations)، خودترسیم سکانس (svgator)، مرورگر آیکون (allsvgicons). هر کدام با تکه‌کد پنج‌فریم‌ورکی (livewire/inertia/react/vue/svelte).",
+    "",
+    "پویش HTTP: " + (DEMOS.length - broken.length) + "/" + DEMOS.length + " صفحه ۲۰۰ — شمارش کاتالوگ " + counted + " (دمو/گروه؛ پیش از موج: " + beforeCount.join(" ") + ").",
+    "",
+    "## سازنده",
+    "- " + (builder.ok ? "✅" : "❌") + " **آیکون‌های متحرک** (" + DEMOS.length + " دمو): " + DEMOS.map((d) => d.titleFa).join("، ") + (builder.ok ? "" : " — " + builder.notes),
+    "",
+    "## بازبینی مرورگری",
+    ...((browser.findings ?? []).length === 0 ? ["- مشکلی پیدا نشد."] : (browser.findings ?? []).map((f) => "- " + (f.severity === "high" ? "🔴" : f.severity === "medium" ? "🟠" : "🟡") + " " + f.what + " — " + f.evidence)),
+    "",
+    "## داوری بصری مستقل (" + verdicts.length + " عکس)",
+    ...verdicts.map((v) => "- " + (v.pass ? "✅" : "❌") + " " + v.shot + (v.issues ? " — " + v.issues : "")),
+  ].join("\n"),
+  { title: "گزارش موج آیکون‌های متحرک", description: "۷ دموی icon-motion از شش گالری آیکون متحرک — از ساخت تا داوری بصری", primary: true },
+);
+
+const report_: WorkflowReport = {
+  conclusion:
+    problems.length === 0
+      ? "موج آیکون‌های متحرک کامل شد: " + DEMOS.length + " دموی تازه در گروه icon-motion (ترسیم ورود، مورف حالت، حلقه، ریزکنترل، خودترسیم، مرورگر آیکون، صحنهٔ جمع‌بندی) با تکه‌کد پنج‌فریم‌ورکی؛ لینت، شمارش، پویش HTTP، سیاست بدون-ایران، بازبینی مرورگر و داوری بصری همه سبز."
+      : "موج انجام شد (" + (DEMOS.length - broken.length) + "/" + DEMOS.length + " صفحه ۲۰۰) اما " + problems.length + " مورد باز دارد: " + problems.slice(0, 5).join("؛ ") + ".",
+  findings: [
+    ...broken.map((b) => ({ what: GROUP_ID + "/" + b.slug + " کد " + b.code, evidence: "curl", severity: "high" as const })),
+    ...(builder.ok ? [] : [{ what: "سازندهٔ ناقص", evidence: builder.notes, severity: "high" as const }]),
+    ...(browser.findings ?? []),
+    ...verdicts.filter((v) => !v.pass).map((v) => ({ what: "داوری تصویر " + v.shot, evidence: v.issues, severity: "medium" as const })),
+  ],
+  verified: [
+    "php -l روی مانیفست IconMotion.php",
+    "شمارش قطعی کاتالوگ با tinker قبل و بعد ساخت (انتظار " + expectedDemos + "/" + expectedGroups + " — دیدیم: " + counted + ")",
+    "curl تک‌تک " + DEMOS.length + " صفحهٔ تازه (world.run) + حلقهٔ اصلاح تا ۲ دور",
+    "گrep بدون-ایران روی پارشال‌ها و مانیفست",
+    "عکاسی مرورگری روشن/تیره/موبایل هر ۷ دمو + صفحات EN با ?lang=en + بررسی اجرای انیمیشن‌ها + خطاهای کنسول",
+    "داوری بصری مستقل داور تازه روی " + verdicts.length + " عکس",
+  ],
+  notCovered: [
+    "انیمیشن‌های پیوسته در عکسِ ثابت فقط یک فریم‌اند — بازبین با شات دوم و مشاهدهٔ زنده سنجید",
+    "پورت این دموها به پکیج‌های React/Vue هنوز منتقل نشده — فعلاً دموی پلی‌گراوندند (تکه‌کد پنج‌فریم‌ورکی در هر دمو هست)",
+  ],
+};
+return report_;

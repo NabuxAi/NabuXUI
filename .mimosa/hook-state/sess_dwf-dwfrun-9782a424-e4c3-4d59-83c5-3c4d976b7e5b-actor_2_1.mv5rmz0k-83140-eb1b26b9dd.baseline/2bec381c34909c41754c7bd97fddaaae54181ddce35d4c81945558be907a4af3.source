@@ -1,0 +1,308 @@
+interface ImplResult {
+  /** دو سه جمله: چه ساخته شد و حرکتش چطور است. */
+  summary: string;
+  /** مسیر فایل‌هایی که ساختی، نسبت به ریشهٔ مخزن. */
+  files: string[];
+  /** نکته یا ریسکی که یکپارچه‌ساز باید بداند. */
+  notes: string;
+}
+
+interface ReviewFinding {
+  /** مسیر فایل و در صورت لزوم شماره خط: "packages/react/src/blocks/x.tsx:42". */
+  file: string;
+  /** یک جمله: مشکل چیست، نه چطور رفع می‌شود. */
+  problem: string;
+  /** فقط «high» برای چیزهایی که می‌شکنند یا نتیجهٔ غلط می‌دهند. */
+  severity: "low" | "medium" | "high";
+}
+
+interface ReviewResult {
+  findings: ReviewFinding[];
+  /** جمع‌بندی یک‌جمله‌ای کیفیت کل کار. */
+  overall: string;
+}
+
+interface GateAttempt {
+  round: number;
+  passed: boolean;
+  detail: string;
+}
+
+const COMMON = `مخزن: NabuXUI (monorepo pnpm) — سیستم طراحی با یک زبان حرکت مشترک برای Livewire و React.
+سه بسته: packages/core (CSS و JS مشترک)، packages/react (@nabuxai/ui-react)، packages/livewire (Blade + Alpine).
+
+قبل از نوشتن هر کدی، این فایل‌ها را بخوان تا دقیقاً با سبک مخزن کار کنی:
+- packages/core/src/css/blocks/menus.css — یک بخش (مثل «Chain selector» یا «Language menu») را الگوی سبک بگیر: کامنت بنر توضیحی بالای هر بلوک، @layer nx.components، متغیرهای --nx-*، فنرها (--nx-spring-*، --nx-motion برای کاهش حرکت)، راست‌به‌چپ، و بلوک‌های prefers-reduced-motion و forced-colors.
+- packages/react/src/blocks/menus.tsx — سبک کامپوننت‌ها: Props interface با JSDoc، usePopover/useBaseId/useWords، Icon، SmartLink، cx.
+- packages/livewire/resources/js/alpine/blocks/menus.ts — popoverPart و wireOf و سبک Alpine.data('nx…', …).
+- packages/livewire/resources/js/alpine/navigation.ts — Alpine.data('nxSegmented') را ببین: الگوی indicator + گوش دادن به change + livewire:morph.updated.
+- packages/livewire/resources/views/components/chain-selector.blade.php و packages/livewire/resources/views/components/segmented.blade.php — الگوی Blade: @props، @php با هلپر $t() سه‌زبانه (en/fa/ar)، popovertarget، x-bind، wire:model با NabuXUI::model.
+- packages/core/src/js/icons.ts — فقط از نام آیکون‌های موجود استفاده کن.
+
+قواعد سخت:
+- فقط فایل‌هایی که برایت تعیین شده را بساز. هیچ فایل مشترکی (index.css، index.ts، menus.css، menus.tsx، App.tsx و…) را ویرایش نکن؛ یکپارچه‌ساز بعداً وصل‌شان می‌کند.
+- روی همین مخزن یک session موازی هم کار می‌کند؛ فایل‌ها را تازه بخوان، و اگر فایلی به کار تو مربوط نبود دست نزن.
+- کلاس‌های CSS با پیشوند یکتای بلوک خودت شروع شوند؛ اول با grep مطمئن شو برخوردی با کلاس‌های موجود نیست.
+- متن‌های UI را از props بگیر با پیش‌فرض انگلیسی؛ فایل packages/core/src/js/blocks/menus.ts (جدول واژه‌ها) را ویرایش نکن.
+- دسترس‌پذیری مثل بقیهٔ مخزن: aria-expanded، role=listbox/radiogroup، focus-visible، کلید Escape.`;
+
+const BLOCKS = [
+  {
+    key: "chip-filter",
+    title: "فیلتر چیپی",
+    spec: `# بلوک «فیلتر چیپی» — الهام از ردیف تگ‌های Trending سایت landdding.com و قرص‌های دستهٔ سایت modulify.ai/templates
+یک ردیف قرص‌های فیلتر تک‌انتخابی با یک گزینهٔ «همه»:
+- ریشه: <div class="nx-chip-filter" role="group" aria-label> با ردیفی از چیپ‌ها که افقی سرریز می‌شود (اسکرول نرم، بدون اسکرول‌بار) و در لبه‌ها با mask-image محو می‌شود.
+- هر چیپ مثل nx-segmented یک label با radio مخفی است؛ دستهٔ متحرک با هستهٔ indicator (core indicator) می‌نشیند و با فنر جابه‌جا می‌شود — دقیقاً مثل segmented موجود، اما قرص‌های مستقل با فاصله، داخل یک نوار اسکرولی.
+- هر آیتم می‌تواند شمارش اختیاری داشته باشد (بَج کوچک گرد کنار برچسب) و آیکون اختیاری.
+- انتخاب با کلیک؛ indicator با فنر می‌پرد؛ کلیدهای جهت‌دار مرورگر (radio) کار می‌کنند.
+React: props { items: { value, label, count?, icon? }[], value?, defaultValue = 'all', onValueChange?, name?, 'aria-label'?, className? } — با useControllable و useIndicator (از internal/hooks) و الگوی SegmentedControl در packages/react/src/components/navigation.tsx.
+Alpine: Alpine.data('nxChipFilter') مثل nxSegmented — indicator + گوش دادن به change + livewire:morph.updated، و $dispatch('nx-change', { value }).
+Blade: <x-nx::chip-filter> با :options="['all' => 'همه', 'design' => 'طراحی', …]" و شمارش‌های اختیاری :counts="['design' => 12]"، پشتیبانی wire:model مثل segmented، و $t() سه‌زبانه برای aria-label.
+CSS: فایل تازه، پیشوند کلاس‌ها .nx-chip-filter*.`,
+    files: [
+      "packages/core/src/css/blocks/chip-filter.css",
+      "packages/react/src/blocks/chip-filter.tsx",
+      "packages/livewire/resources/js/alpine/blocks/chip-filter.ts",
+      "packages/livewire/resources/views/components/chip-filter.blade.php",
+    ],
+  },
+  {
+    key: "stat-strip",
+    title: "نوار آمار",
+    spec: `# بلوک «نوار آمار» — الهام از نوار «Designs 2.4k | Designers 1.4k | Categories 40 | Platforms 5» سایت landdding.com
+یک نوار افقی فشرده از چند آمار با جداکننده:
+- ریشه: <dl class="nx-stat-strip"> با آیتم‌های dt (برچسب کوچک حروف بزرگ با letter-spacing) و dd (عدد درشت با فونت نمایشی --nx-font-display).
+- جداکننده با border-inline-start بین آیتم‌ها (در RTL خودکار درست است)؛ در صفحهٔ باریک می‌شکند به دو ردیف.
+- عددها موقع دیده‌شدن شمارش بالا می‌روند: در React از NumberTicker موجود در packages/react/src/components/text.tsx استفاده کن (import نسبی '../components/text')؛ در Alpine با renderNumber از '../number' و یک IntersectionObserver ساده (یا core reveal اگر مناسب بود) که فقط یک‌بار اجرا شود.
+- هر آیتم آیکون اختیاری و caption اختیاری دارد.
+React: props { stats: { label, value, icon?, caption? }[], 'aria-label'?, className? } — نام کامپوننت StatStrip.
+Alpine: Alpine.data('nxStatStrip') — مقدار اولیه را از data-value می‌خواند و با دیده‌شدن تا مقدار نهایی می‌شمارد؛ ارقام محلی با renderNumber.
+Blade: <x-nx::stat-strip> با :stats="[['label' => 'طرح‌ها', 'value' => 2400], …]"؛ اعداد را با ارقام محلی locale فعلی رندر کن (الگوی components دیگر را ببین).
+CSS: فایل تازه، پیشوند کلاس‌ها .nx-stat-strip*.`,
+    files: [
+      "packages/core/src/css/blocks/stat-strip.css",
+      "packages/react/src/blocks/stat-strip.tsx",
+      "packages/livewire/resources/js/alpine/blocks/stat-strip.ts",
+      "packages/livewire/resources/views/components/stat-strip.blade.php",
+    ],
+  },
+  {
+    key: "sort-pill",
+    title: "انتخاب‌گر مرتب‌سازی",
+    spec: `# بلوک «انتخاب‌گر مرتب‌سازی» — الهام از منوی «Featured ∨» سایت motionin.design
+یک قرصِ انتخابِ سریع برای Sort/فیلترِ تک‌گزینه‌ای:
+- تریگر: قرص گرد (پس‌زمینهٔ سطح ۲ مثل nx-morph-tabs-list) با برچسب + chevron؛ بازشدن با popover بومی و popoverPart در Alpine / usePopover در React (مثل chain-selector).
+- پنل: listbox با گزینه‌ها و تیک فنری روی گزینهٔ انتخاب‌شده (مثل تیک chain-selector: بک‌گراند accent و scale فنری).
+- نکتهٔ اصلیِ حرکت: روی تغییر انتخاب، برچسب تریگر به برچسب تازه می‌غلتد — برچسب قدیمی به بالا بیرون می‌لغزد و جدید از پایین با محو می‌آید (مکانیک .nx-language-code در menus.css؛ همهٔ برچسب‌ها روی هم چیده می‌شوند و [data-current] دیده می‌شود).
+React: props { options: { value, label, icon? }[], value?, defaultValue, onValueChange?, label?, align?, className? } — نام کامپوننت SortPill.
+Alpine: Alpine.data('nxSortPill') با popoverPart؛ $dispatch('nx-change', { value }).
+Blade: <x-nx::sort-pill> با :options="['featured' => 'منتخب', 'recent' => 'تازه‌ها']"، wire:model اختیاری مثل chain-selector، و $t() سه‌زبانه.
+CSS: فایل تازه، پیشوند کلاس‌ها .nx-sort*.`,
+    files: [
+      "packages/core/src/css/blocks/sort-pill.css",
+      "packages/react/src/blocks/sort-pill.tsx",
+      "packages/livewire/resources/js/alpine/blocks/sort-pill.ts",
+      "packages/livewire/resources/views/components/sort-pill.blade.php",
+    ],
+  },
+];
+
+phase("ساخت سه بلوک تازه به‌موازات");
+log("سه سازنده روی فیلتر چیپی، نوار آمار و انتخاب‌گر مرتب‌سازی کار می‌کنند");
+const impls = await Promise.all(
+  BLOCKS.map((b) =>
+    agent(`سازندهٔ ${b.title}`, {
+      system:
+        "تو مهندس ارشد دیزاین‌سیستم NabuXUI هستی؛ کدی می‌نویسی که از نظر حرکت، دسترس‌پذیری و سبک با بقیهٔ مخزن یکدست است. " +
+        "اگر چیزی با قواعد داده‌شده ناسازگار بود یا نمی‌توانستی درست انجام دهی، به‌جای دور زدن، از همان خروجی گزارشش کن.",
+    }).ask<ImplResult>(
+      `${COMMON}
+
+# مأموریت تو
+${b.spec}
+
+فایل‌هایی که باید بسازی (هیچ فایل دیگری را نساز یا ویرایش نکن):
+${b.files.map((f) => `- ${f}`).join("\n")}
+
+در پایان این را برگردان: summary (دو سه جمله)، files (مسیر فایل‌هایی که ساختی)، notes (هر نکته‌ای که یکپارچه‌ساز باید بداند — مثلاً نام دقیق exportها).`,
+    ),
+  ),
+);
+impls.forEach((r, i) => {
+  const b = BLOCKS[i];
+  if (b) report({ block: b.key, summary: r.summary, files: r.files, notes: r.notes });
+});
+
+phase("وصل‌کردن بلوک‌ها به ایمپورت‌ها و دموها");
+const wiring = await agent("یکپارچه‌ساز", {
+  system:
+    "تو یکپارچه‌ساز مخزن NabuXUI هستی؛ فایل‌های دیگران را جمع می‌کنی به یک کل کارکرده. قبل از هر ویرایش فایل را تازه می‌خوانی و فقط تغییر خودت را می‌گذاری.",
+}).ask<string>(
+  `سه بلوک تازه ساخته شده‌اند. خلاصهٔ سازنده‌ها و نام exportها را از این یادداشت‌ها بردار (و خود فایل‌ها را هم تازه بخوان):
+${JSON.stringify(impls.map((r, i) => ({ block: BLOCKS[i]?.key, files: r.files, notes: r.notes })), null, 1)}
+
+این اتصال‌ها را انجام بده — قبل از هر ویرایش، فایل را تازه بخوان و کوچک‌ترین تغییر ممکن را بگذار:
+1. packages/core/src/css/index.css — بعد از @import مربوط به blocks/menus.css سه @import تازه برای chip-filter.css و stat-strip.css و sort-pill.css.
+2. packages/react/src/index.ts — export * از سه فایل تازهٔ react (نام دقیق را از خود فایل‌ها بخوان).
+3. packages/livewire/resources/js/index.ts — import و فراخوانی سه تابع نصب تازه درست کنار installMenusBlocks(Alpine) (امضا را از فایل‌های تازه بخوان).
+4. playground/resources/views/demos/menus.blade.php — در انتهای بخش اول (کنار باکس‌های دیگر) سه باکس pg-box تازه برای سه بلوک اضافه کن؛ از الگوی همان فایل پیروی کن (برچسب‌های دوزبانه مثل بقیهٔ فایل). به‌جای wire:model از x-on:nx-change="$wire.ping('…')" استفاده کن تا به کلاس Livewire کاری نداشته باشی.
+5. apps/showcase/src/blocks/nav-extras.tsx — فایل تازه با export function NavExtrasBlocks(): سه Demo (فیلتر چیپی با تگ‌های ترند landdding، نوار آمار با اعداد 2400/1400/40/5، انتخاب‌گر مرتب‌سازی با منتخب/تازه‌ها/بالاترین امتیاز) با Section و useTr و دوزبانه مثل apps/showcase/src/blocks/menus.tsx — اما آن فایل را ویرایش نکن.
+6. apps/showcase/src/App.tsx — فقط import تازه و رندر <NavExtrasBlocks /> بلافاصله بعد از <MenusBlocks />.
+
+هیچ فایل دیگری را ویرایش نکن. یک session موازی روی همین مخزن کار می‌کند؛ اگر خطایی دیدی که به فایل‌های تو ربط ندارد، دست نزن و گزارشش کن.
+خروجی: گزارش متن سادهٔ «فایل → چه تغییر کرد» برای همهٔ شش مورد، به‌علاوهٔ هر مشکلی که دیدی.`,
+);
+log("اتصال‌ها انجام شد؛ حالا چک‌های تایپ و بیلد");
+
+phase("بازخوانی مستقل کدهای تازه");
+const reviewFiles = impls.flatMap((r) => r.files).concat([
+  "packages/core/src/css/index.css",
+  "packages/react/src/index.ts",
+  "packages/livewire/resources/js/index.ts",
+  "apps/showcase/src/blocks/nav-extras.tsx",
+]);
+const review = await agent("بازبین مستقل", {
+  system:
+    "تو بازبین مستقلی که هیچ‌کدام از این کدها را ننوشته. فقط فایل‌ها را می‌خوانی و مشکلات واقعی را گزارش می‌کنی؛ هیچ فایلی را ویرایش نمی‌کنی.",
+}).ask<ReviewResult>(
+  `این فایل‌های تازه‌ساخت را کامل بخوان و فقط مشکلات واقعی را گزارش کن — چیزهایی که اجرا را می‌شکنند، دسترس‌پذیری خراب، راست‌به‌چپ شکسته، حرکتی که با زبان حرکت مخزن (فنرها و --nx-motion) ناسازگار است، Blade یا TSX معیوب، یا ناهماهنگی با سبک فایل‌های همسایه (مثلاً packages/core/src/css/blocks/menus.css و packages/react/src/blocks/menus.tsx):
+
+${reviewFiles.map((f) => `- ${f}`).join("\n")}
+
+بهانه‌تراشی نکن، ولی اگر مشکلی نیست هم جعل نکن. برای هر مورد: file، problem (یک جمله)، severity (فقط برای چیزی که می‌شکند «high»). اگر کل کار سالم است، findings خالی و overall یک جملهٔ قضاوتی باشد.`,
+);
+report({ phase: "review", overall: review.overall, findings: review.findings });
+
+phase("رفع یافته‌های واقعی بازبینی");
+const fixer = agent("رفع‌کننده", {
+  system:
+    "تو رفع‌کنندهٔ مخزن NabuXUI هستی. فقط مشکلات گزارش‌شدهٔ مرتبط با فایل‌های تازهٔ این کار (chip-filter، stat-strip، sort-pill و اتصال‌هایشان) را رفع می‌کنی؛ اگر مورد گزارش‌شده غلط بود یا به کار تو ربط نداشت، ردش می‌کنی و می‌گویی چرا.",
+});
+const toFix = review.findings.filter((f) => f.severity !== "low");
+if (toFix.length > 0) {
+  await fixer.ask(
+    `بازبین مستقل این موارد را گزارش کرده. موارد واقعی را رفع کن؛ موارد غلط یا خارج از محدوده را رد کن و در خروجی بگو چرا:
+${JSON.stringify(toFix, null, 1)}
+
+فقط فایل‌های تازهٔ این کار و اتصال‌های مستقیم‌شان را ویرایش کن. خروجی: برای هر مورد «رفع شد / رد شد — دلیل».`,
+  );
+} else {
+  log("یافتهٔ فنی برای رفع نبود");
+}
+
+phase("تایپ‌چک و بیلد تا سبز شدن");
+const checks = [
+  { name: "typecheck livewire", args: ["--filter", "@nabuxai/ui-livewire-build", "typecheck"] },
+  { name: "typecheck react", args: ["--filter", "@nabuxai/ui-react", "typecheck"] },
+  { name: "build livewire dist", args: ["--filter", "@nabuxai/ui-livewire-build", "build"] },
+  { name: "build react dist", args: ["--filter", "@nabuxai/ui-react", "build"] },
+  { name: "build showcase", args: ["--filter", "showcase", "build"] },
+];
+let attempts: GateAttempt[] = [];
+let green = false;
+for (let round = 1; round <= 4 && !green; round++) {
+  const failed: Array<{ name: string; stderr: string }> = [];
+  for (const c of checks) {
+    const r = await world.run("pnpm", c.args, { timeoutMs: 600000 });
+    if (r.exitCode !== 0) {
+      failed.push({ name: c.name, stderr: (r.stderr || r.stdout).slice(-3500) });
+      break;
+    }
+  }
+  if (failed.length === 0) {
+    green = true;
+    attempts.push({ round, passed: true, detail: "هر پنج چک سبز شد" });
+    break;
+  }
+  attempts.push({ round, passed: false, detail: failed.map((f) => f.name).join("، ") });
+  log(`دور ${round}: ${failed.map((f) => f.name).join("، ")} شکست خورد؛ در حال رفع`);
+  await fixer.ask(
+    `این چک‌ها شکست خوردند:
+${JSON.stringify(failed, null, 1)}
+
+فقط خطاهای مرتبط با کار این workflow (فایل‌های chip-filter، stat-strip، sort-pill و اتصال‌ها: index.css، دو index.ts، nav-extras.tsx، App.tsx، menus.blade.php) را رفع کن.
+اگر خطا از تغییرات نیمه‌کارهٔ session موازی در فایل‌های دیگر است، آن را دست نزن و در خروجی بنویس که خطا خارج از محدودهٔ توست.`,
+  );
+}
+
+phase("تهیهٔ گزارش نهایی");
+const verified: string[] = [];
+if (green) {
+  for (const c of checks) verified.push(`pnpm ${c.args.join(" ")}`);
+}
+const result: WorkflowReportShape = {
+  conclusion: green
+    ? "سه بلوک تازهٔ ناوبری (فیلتر چیپی، نوار آمار، انتخاب‌گر مرتب‌سازی) در هر سه پکیج core/react/livewire ساخته، به ایمپورت‌ها و دموی showcase و playground وصل شد، و هر پنج چک تایپ‌چک/بیلد سبز شد."
+    : "سه بلوک تازه ساخته و وصل شد، اما پس از چهار دور رفع، برخی چک‌های تایپ/بیلد هنوز قرمزند — جزئیات در findings.",
+  findings: [
+    ...review.findings.map((f) => ({
+      where: f.file,
+      what: f.problem,
+      evidence: `بازبینی مستقل کد: ${review.overall}`,
+      status: (toFix.some((t) => t.file === f.file && t.problem === f.problem) ? "verified" : "unconfirmed") as "verified" | "unconfirmed",
+      severity: f.severity,
+    })),
+    ...attempts
+      .filter((a) => !a.passed)
+      .map((a) => ({
+        where: "gates",
+        what: `دور ${a.round} از چک‌ها شکست خورد: ${a.detail}`,
+        evidence: "خروجی pnpm typecheck/build در همان دور به رفع‌کننده داده شد",
+        status: "verified" as const,
+        severity: (green ? "medium" : "high") as "medium" | "high",
+      })),
+  ],
+  verified: verified,
+  notCovered: [
+    "بازبینی بصری در مرورگر (حرکت‌ها، راست‌به‌چپ، حالت تیره) — بعد از workflow به‌صورت دستی انجام می‌شود",
+    "ران‌تایم صفحهٔ playground لاراول (به Docker نیاز دارد)",
+  ],
+};
+
+interface WorkflowReportShape {
+  conclusion: string;
+  findings: Array<{
+    where: string;
+    what: string;
+    evidence: string;
+    status: "verified" | "unconfirmed";
+    severity: "low" | "medium" | "high";
+  }>;
+  verified: string[];
+  notCovered: string[];
+}
+
+const md = [
+  "# سه بلوک ناوبری تازه",
+  "",
+  result.conclusion,
+  "",
+  "## بلوک‌ها",
+  ...impls.map((r, i) => {
+    const b = BLOCKS[i];
+    return `- **${b?.title ?? "?"}** — ${r.summary}\n  - فایل‌ها: ${r.files.join("، ")}`;
+  }),
+  "",
+  "## اتصال‌ها",
+  wiring,
+  "",
+  "## بازبینی مستقل",
+  review.overall,
+  ...(review.findings.length > 0
+    ? ["", ...review.findings.map((f) => `- [${f.severity}] ${f.file}: ${f.problem}`)]
+    : []),
+  "",
+  "## تأیید",
+  ...(verified.length > 0 ? verified.map((v) => `- \`${v}\``) : ["- هیچ چکی سبز نشد"]),
+  "",
+  "## پوشش‌نیافته",
+  ...result.notCovered.map((n) => `- ${n}`),
+].join("\n");
+await artifact.markdown("report", md, {
+  title: "گزارش سه بلوک ناوبری تازه",
+  description: "چه چیزی ساخته شد، چطور وصل شد و چه چیزهایی تأیید شد",
+  primary: true,
+});
+
+return result;

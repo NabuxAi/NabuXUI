@@ -1,0 +1,69 @@
+
+<?php $attributes ??= new \Illuminate\View\ComponentAttributeBag;
+
+$__newAttributes = [];
+$__propNames = \Illuminate\View\ComponentAttributeBag::extractPropNames(([
+    'value' => null,
+    'name' => null,
+    'label' => null,
+    'locale' => null,
+]));
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (in_array($__key, $__propNames)) {
+        $$__key = $$__key ?? $__value;
+    } else {
+        $__newAttributes[$__key] = $__value;
+    }
+}
+
+$attributes = new \Illuminate\View\ComponentAttributeBag($__newAttributes);
+
+unset($__propNames);
+unset($__newAttributes);
+
+foreach (array_filter(([
+    'value' => null,
+    'name' => null,
+    'label' => null,
+    'locale' => null,
+]), 'is_string', ARRAY_FILTER_USE_KEY) as $__key => $__value) {
+    $$__key = $$__key ?? $__value;
+}
+
+$__defined_vars = get_defined_vars();
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (array_key_exists($__key, $__defined_vars)) unset($$__key);
+}
+
+unset($__defined_vars, $__key, $__value); ?>
+<?php
+    $lang = substr($locale ?? app()->getLocale(), 0, 2);
+    $t = fn (string $en, string $fa, string $ar) => match ($lang) { 'fa' => $fa, 'ar' => $ar, default => $en };
+    $label ??= $t('Theme', 'پوسته', 'المظهر');
+    $names = [
+        'light' => $t('Light', 'روشن', 'فاتح'),
+        'system' => $t('System', 'سیستم', 'النظام'),
+        'dark' => $t('Dark', 'تیره', 'داكن'),
+    ];
+?>
+<div <?php echo e($attributes->class('nx-theme-switch')); ?> role="radiogroup" aria-label="<?php echo e($label); ?>" x-data="nxThemeSwitch(<?php echo \Illuminate\Support\Js::from($value)->toHtml() ?>)">
+    <span class="nx-indicator" aria-hidden="true"></span>
+    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $names; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $choice => $text): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+        <label class="nx-theme-switch-option" aria-label="<?php echo e($text); ?>">
+            <input class="nx-theme-switch-input" type="radio" name="<?php echo e($name ?? 'nx-theme'); ?>" value="<?php echo e($choice); ?>"
+                <?php if(($value ?? 'system') === $choice): echo 'checked'; endif; ?> x-on:change="choose(<?php echo \Illuminate\Support\Js::from($choice)->toHtml() ?>)">
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($choice === 'light'): ?>
+                <?php echo e(NabuXUI::icon('sun')); ?>
+
+            <?php elseif($choice === 'dark'): ?>
+                <?php echo e(NabuXUI::icon('moon')); ?>
+
+            <?php else: ?>
+                <span class="nx-theme-switch-half" aria-hidden="true"></span>
+            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+        </label>
+    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+</div>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/packages/livewire/src/../resources/views/components/theme-switch.blade.php ENDPATH**/ ?>

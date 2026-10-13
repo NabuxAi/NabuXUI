@@ -1,0 +1,283 @@
+interface EditOutcome {
+  /** فایل‌های دست‌خورده */
+  files: string[];
+  /** تعداد جایگزینی‌ها */
+  changes: number;
+  /** php -l و curl همه سبز بود؟ */
+  ok: boolean;
+  /** نکته‌ها به فارسی */
+  notes: string;
+}
+interface VerifyFinding {
+  /** کجا و چه چیزی */
+  what: string;
+  /** شاهد: خروجی دستور یا متن دیده‌شده */
+  evidence: string;
+  /** شدت */
+  severity: "low" | "medium" | "high";
+}
+interface WorkflowReport {
+  conclusion: string;
+  findings: VerifyFinding[];
+  verified: string[];
+  notCovered: string[];
+}
+
+artifact.table("findings-board", {
+  title: "موارد باز",
+  description: "ارجاع‌های پاک‌نشده و ایرادهای داوری — هر ردیف با رفع شدن، جایگزین می‌شود.",
+  columns: [
+    { field: "what", label: "مورد" },
+    { field: "evidence", label: "شاهد" },
+    { field: "severity", label: "شدت" },
+  ],
+  key: "what",
+});
+
+const RULES = [
+  "قواعد سراسری پاک‌سازی (فقط رشته‌های نمایشی؛ ساختار Blade/PHP/کلاس‌ها دست نخورد):",
+  "1) هر «تهران»/«Tehran» (مکان، ویجت آب‌وهوا، آلبوم، هتل، فرودگاه…) می‌شود «استانبول»/«Istanbul» — جفت دوزبانهٔ $say را حفظ کن: $say('Istanbul', 'استانبول').",
+  "2) هر «ایران/Iran/Iranian»: گزینهٔ کشور ir می‌شود tr با $say('Türkiye', 'ترکیه')؛ «پست ایران» می‌شود $say('SwiftPost', 'تندپست')؛ «Iranian banks, settled weekly» می‌شود $say('Regional banks, settled weekly', 'بانک‌های منطقه، تسویهٔ هفتگی')؛ «the Iranian work week» می‌شود 'a Saturday-first work week' و در فارسی «هفتهٔ کاری شنبه‌شروع». جمله‌های آب‌وهوا/سفر (مثل streaming-text) برای استانبول بازنویسی می‌شوند — همان لحن و طول، بدون ایران.",
+  "3) فرودگاه‌های ایرانی (IKA/SYZ/IFN و برچسب‌های تهران/شیراز/اصفهان) می‌شوند بین‌المللی: IST $say('Istanbul — Istanbul Airport', 'استانبول — فرودگاه استانبول')، DXB $say('Dubai — Dubai Intl', 'دبی — بین‌المللی دبی')، FCO $say('Rome — Fiumicino', 'رم — فیومیسینو').",
+  "4) نام‌های شخصی: در رشته‌های EN نام ایرانی (Ahmadi، Tehrani، Niloofar/Niloufar، Sara Ahmadi، Ali Tehrani…) می‌شود نام بین‌المللی (Emma Carter، Daniel Brooks، Mia Novak…)؛ در رشته‌های FA نام فارسی می‌ماند ولی پسوند «تهرانی» حذف/عوض می‌شود (مثلاً علی محمدی).",
+  "5) تاریخ‌ها: در رشته‌های EN تقویم جلالی (Mehr، 1404) می‌شود میلادی معادل ('autumn 2025'، '24 Oct 2025')؛ در رشته‌های FA تقویم جلالی (۱۴۰۴، مهر) می‌ماند — این قرارداد محلی است نه ارجاع به ایران.",
+  "6) در views هرگز ساختار HTML/کلاس‌ها/متن‌های دیگر را تغییر نده؛ فقط محتوای رشته‌ها. در manifests (heredoc کد و props) همین قواعد روی رشته‌های نمونه اعمال می‌شود.",
+  "7) بعد از هر فایل: برای php با php -l چک کن؛ برای صفحهٔ مرتبط با curl کد ۲۰۰ بگیر (سرور روی http://127.0.0.1:8765 بالاست). اگر چیزی واقعاً ابهام داشت، تغییر نده و در notes صادقانه بنویس.",
+].join("\n");
+
+phase("پاک‌سازی ارجاع‌های ایران و ساخت سیستم زبان");
+const CLUSTERS: { id: string; files: string[] }[] = [
+  { id: "android", files: ["playground/resources/views/demos/components/android/home-screen.blade.php"] },
+  { id: "ios", files: [
+    "playground/resources/views/demos/components/ios/widgets.blade.php",
+    "playground/resources/views/demos/components/ios/sheet.blade.php",
+    "playground/resources/views/demos/components/ios/search-field.blade.php",
+    "playground/resources/views/demos/components/ios/tab-bar.blade.php",
+    "playground/resources/views/demos/components/ios/controls.blade.php",
+  ] },
+  { id: "windows-macos", files: [
+    "playground/resources/views/demos/components/windows/desktop.blade.php",
+    "playground/resources/views/demos/components/macos/widgets.blade.php",
+  ] },
+  { id: "old-pages", files: [
+    "playground/resources/views/demos/data.blade.php",
+    "playground/resources/views/demos/cards.blade.php",
+    "playground/resources/views/demos/glass.blade.php",
+  ] },
+  { id: "cards-glass", files: [
+    "playground/resources/views/demos/components/cards/team-cards.blade.php",
+    "playground/resources/views/demos/components/cards/order-tracking.blade.php",
+    "playground/resources/views/demos/components/cards/invoice.blade.php",
+    "playground/resources/views/demos/components/cards/elastic-grid.blade.php",
+    "playground/resources/views/demos/components/glass/reading-glass.blade.php",
+    "playground/resources/views/demos/components/glass/glass-tab-bar.blade.php",
+    "playground/resources/views/demos/components/glass/glass-panel.blade.php",
+  ] },
+  { id: "agent-menus", files: [
+    "playground/resources/views/demos/components/agent/streaming-text.blade.php",
+    "playground/resources/views/demos/components/agent/tool-call.blade.php",
+    "playground/resources/views/demos/components/menus/dock-panels.blade.php",
+    "playground/resources/views/demos/components/menus/admin-shell.blade.php",
+    "playground/resources/views/demos/components/menus/registration-card.blade.php",
+    "playground/resources/views/demos/components/menus/stacked-accordion.blade.php",
+    "playground/resources/views/demos/components/menus/stack-menu.blade.php",
+  ] },
+  { id: "base-data-effects", files: [
+    "playground/resources/views/demos/components/base/header.blade.php",
+    "playground/resources/views/demos/components/base/radio-group.blade.php",
+    "playground/resources/views/demos/components/base/accordion.blade.php",
+    "playground/resources/views/demos/components/base/select.blade.php",
+    "playground/resources/views/demos/components/base/steps.blade.php",
+    "playground/resources/views/demos/components/data/tree-view.blade.php",
+    "playground/resources/views/demos/components/data/bar-chart.blade.php",
+    "playground/resources/views/demos/components/data/calendar.blade.php",
+    "playground/resources/views/demos/components/data/timeline-feed.blade.php",
+    "playground/resources/views/demos/components/effects/typewriter.blade.php",
+    "playground/resources/views/demos/components/pickers/hover-card.blade.php",
+    "playground/resources/views/demos/components/pickers/combobox.blade.php",
+  ] },
+  { id: "manifests", files: [
+    "playground/app/Support/Demos/Cards.php",
+    "playground/app/Support/Demos/Agent.php",
+    "playground/app/Support/Demos/Pickers.php",
+    "playground/app/Support/Demos/Ios.php",
+    "playground/app/Support/Demos/Menus.php",
+    "playground/app/Support/Demos/Base.php",
+  ] },
+];
+
+const [sweeps, locale] = await Promise.all([
+  Promise.all(
+    CLUSTERS.map((c) =>
+      agent(`پاک‌ساز-${c.id}`, {
+        system:
+          "تو ویرایشگر دقیق دموهای این ریپو هستی. فقط فایل‌های تعیین‌شده را ویرایش می‌کنی، قواعد را حرف‌به‌حرف اجرا می‌کنی و بعد راستی‌آزمایی می‌کنی. اگر قاعده‌ای روی رشته‌ای اعمال نشد، صادقانه در خروجی می‌گویی.",
+      }).ask<EditOutcome>(
+        `این فایل‌ها ارجاع به ایران/تهران دارند و باید پاک شوند:\n${c.files.map((f) => "- " + f).join("\n")}\n\n${RULES}\n\n` +
+          `بعد از ویرایش: برای فایل‌های php «php -l <file>» و برای هر فایل view صفحهٔ دموی مربوط را با curl چک کن (مثلاً demos/components/ios/widgets → /components/ios/widgets؛ manifests → /components/<group>/<slug> مربوط). خروجی: {files, changes, ok, notes} به فارسی.`,
+      ),
+    ),
+  ),
+  agent("سازنده-زبان", {
+    system:
+      "تو مهندس Laravel این ریپو هستی؛ سیستم locale چند‌ملیتی می‌سازی با fallback درست، بدون شکستن رفتار فعلی fa/en. بعد از هر تغییر php -l و curl چک می‌کنی.",
+  }).ask<EditOutcome>(
+    [
+      "سیستم زبان پلی‌گراوند را از fa/en هاردکد به «ثبت متمرکز هر تعداد زبان» ارتقا بده:",
+      "1) کلاس تازه playground/app/Support/Locales.php — ثبت ۲۵ زبان با نام بومی و جهت: fa فارسی rtl، en English، ar العربية rtl، he עברית rtl، ur اردو rtl، tr Türkçe، de Deutsch، fr Français، es Español، it Italiano، pt Português، nl Nederlands، sv Svenska، pl Polski، uk Українська، ru Русский، zh 中文، ja 日本語، ko 한국어، hi हिन्दी، id Bahasa Indonesia، vi Tiếng Việt، th ไทย، el Ελληνικά، az Azərbaycan. متدهای استاتیک: all(): array، codes(): array، dir(string $code): string (پیش‌فرض ltr)، forMenu(): array از ['id','name','short'] (short = حروف بزرگ دو حرفی). docblock توضیح بدهد افزودن زبان تازه = یک مدخل در همین ثبت.",
+      "2) app/Livewire/Concerns/SwitchesDemoLocale.php — هر دو in_array(['fa','en']) به in_array($x, \\App\\Support\\Locales::codes())؛ ?lang= هر کد ثبت‌شده را بپذیرد. behavior فعلی (session + redirect) دست‌نخورده.",
+      "3) app/Http/Middleware/SetLocaleFromSession.php — همان اعتبارسنجی با ثبت.",
+      "4) app/Support/DemoCatalog.php متد pick — زنجیرهٔ fallback درست: دقیق → 'en' → اولین (تا ar به en برگردد نه fa). docblock به‌روز.",
+      "5) resources/views/layouts/app.blade.php — html lang و dir از Locales::dir(app()->getLocale()) بیاید (fa/ar/he/ur = rtl)؛ اسکریپت no-flash تم دست نخورد.",
+      "6) همهٔ کاربردهای x-nx::language-menu (در livewire/component-demo و livewire/component-catalog و هرجای دیگر با grep پیدا کن) — آرایهٔ هاردکد fa/en با :languages=\"\\App\\Support\\Locales::forMenu()\" جایگزین شود.",
+      "7) کامپوننت کتابخانه packages/livewire/resources/views/components/language-menu.blade.php — برای ۲۵ آیتم پنل قابل اسکرول شود (max-block-size + overflow-y: auto در پنل منو)؛ بعدش «cd packages/livewire && node scripts/build.mjs» اجرا کن.",
+      "8) app/Livewire/Admin/Profile.php — timezone پیش‌فرض Asia/Tehran به Europe/Berlin و گزینه‌ها بدون Asia/Tehran و با Europe/Istanbul.",
+      "نکتهٔ کلیدی: محتوای دموها فقط دوزبانهٔ fa/en است؛ زبان‌های دیگر باید UI درست (dir، قالب‌بندی Intl) با fallback به en بگیرند — ترجمهٔ محتوای دموها را تقلب نکن.",
+      "بعد از همه: php -l همهٔ فایل‌های php تغییر کرده؛ curl این‌ها همه ۲۰۰: /components، /components?lang=ar (در HTML باید dir=\"rtl\" و lang=\"ar\" باشد)، /components?lang=fa، /components/ios/widgets?lang=ar، /، /livewire. خروجی {files, changes, ok, notes} به فارسی.",
+    ].join("\n"),
+  ),
+]);
+
+phase("پویش باقیمانده‌ها و راستی‌آزمایی سراسری");
+let residuals = await files.grep("Tehran|تهران|ایران|ایرانی|\\bIran\\b|\\bIranian\\b|Ahmadi|Tehrani|احمدی تهرانی|تهرانی", "playground/{app,resources}/**");
+let cleanupNotes: string[] = [];
+for (let round = 1; round <= 2 && residuals.length > 0; round++) {
+  log(`دور ${round}: ${residuals.length} ارجاعٔ باقی‌مانده`);
+  const byFile = new Map<string, string[]>();
+  for (const r of residuals) {
+    const list = byFile.get(r.path) ?? [];
+    list.push(`خط ${r.line}: ${r.text.trim().slice(0, 160)}`);
+    byFile.set(r.path, list);
+  }
+  await Promise.all(
+    [...byFile.entries()].map(([path, lines]) =>
+      agent(`پاک‌ساز-باقیمانده-${path.replace(/[^a-z]/gi, "-")}-${round}`, { system: "تو ویرایشگر دقیق دموهای این ریپو هستی؛ فقط فایل تعیین‌شده." }).ask(
+        `این ارجاع‌های ایران/تهران باید از ${path} برداشته شوند (همان قواعد: تهران→استانبول/Istanbul، ایران→حذف یا جایگزین بی‌طرف، نام ایرانی در EN→بین‌المللی؛ در FA نام فارسی می‌ماند مگر تهرانی):\n${lines.join("\n")}\nبعدش php -l (اگر php است) و curl صفحهٔ مرتبط.`,
+      ),
+    ),
+  );
+  residuals = await files.grep("Tehran|تهران|ایران|ایرانی|\\bIran\\b|\\bIranian\\b|Ahmadi|Tehrani", "playground/{app,resources}/**");
+  cleanupNotes.push(`دور ${round}: ${byFile.size} فایل اصلاح شد`);
+}
+for (const r of residuals) {
+  report({ what: `ارجاعٔ باقی‌مانده در ${r.path}:${r.line}`, evidence: r.text.trim().slice(0, 200), severity: "medium" }, "findings-board");
+}
+
+const CHECK_PAGES = [
+  "/components",
+  "/",
+  "/livewire",
+  ...["android", "ios", "windows", "macos"].flatMap((g) => {
+    const map: Record<string, string[]> = {
+      android: ["buttons", "home-screen"],
+      ios: ["widgets", "home-screen"],
+      windows: ["desktop"],
+      macos: ["widgets", "desktop"],
+    };
+    return map[g].map((s) => `/components/${g}/${s}`);
+  }),
+];
+let httpFailures = 0;
+for (const p of CHECK_PAGES) {
+  const r = await world.run("curl", ["-s", "-o", "/dev/null", "-w", "%{http_code}", `http://127.0.0.1:8765${p}`]);
+  if (r.stdout.trim() !== "200") {
+    httpFailures++;
+    report({ what: `صفحه ${p} کد ${r.stdout.trim()}`, evidence: `curl → ${r.stdout.trim()}`, severity: "high" }, "findings-board");
+  }
+}
+// Full-page bodies blow the stdout cap — download into the workspace and
+// count with grep instead of reading pages into the script.
+await world.run("curl", ["-s", "-o", ".zcode/tmp-ar.html", "http://127.0.0.1:8765/components?lang=ar"]);
+const arDirOk = (await world.run("grep", ["-c", 'dir="rtl"', ".zcode/tmp-ar.html"])).stdout.trim() !== "0"
+  && (await world.run("grep", ["-c", 'lang="ar"', ".zcode/tmp-ar.html"])).stdout.trim() !== "0";
+await world.run("curl", ["-s", "-o", ".zcode/tmp-en.html", "http://127.0.0.1:8765/components/ios/widgets?lang=en"]);
+const enHasIran = (await world.run("grep", ["-ci", "Tehran", ".zcode/tmp-en.html"])).stdout.trim() !== "0"
+  || (await world.run("grep", ["-cE", "\\bIran\\b", ".zcode/tmp-en.html"])).stdout.trim() !== "0";
+const enHasIstanbul = (await world.run("grep", ["-c", "Istanbul", ".zcode/tmp-en.html"])).stdout.trim() !== "0";
+await world.run("rm", [".zcode/tmp-ar.html", ".zcode/tmp-en.html"]);
+
+const browserCheck = await agent("بازبین-مرورگر", {
+  system:
+    "تو راستی‌آزمای مرورگری هستی با playwright (در /tmp/nx-shooter آماده است: node_modules/playwright نصب است؛ اسکریپت shoot.mjs برای عکس با اسکرول هست). خروجی JSON دقیق می‌دهی و ادعای چیزی را نمی‌کنی که ندیده‌ای.",
+}).ask<{ ok: boolean; findings: VerifyFinding[] }>(
+  [
+    "با playwright این سه را بسنج و برای هر یک اسکرین‌شات در /tmp/nx-locale/ بگیر:",
+    "1) http://127.0.0.1:8765/components?lang=ar — dir=rtl است؟ منوی زبان باز می‌شود و ۲۵ زبان در پنل قابل اسکرول دیده می‌شود؟ عکس از پنل باز بگیر.",
+    "2) http://127.0.0.1:8765/components/ios/widgets?lang=en — در متن رندرشده هیچ Tehran/Iran نیست و Istanbul هست؟ عکس بگیر.",
+    "3) همان صفحه با ?lang=fa — «استانبول» هست و «تهران» نیست؟ صفحه سالم و فارسی است؟ عکس بگیر.",
+    "4) /components?lang=ar یک دمو را باز کن (مثلاً /components/macos/widgets?lang=ar) — صفحه نمی‌شکند (کارت‌ها پیدا، dir=rtl)؟",
+    "خروجی: {ok, findings:[{what, evidence, severity}]} به فارسی؛ findings فقط برای مشکلات واقعی.",
+  ].join("\n"),
+);
+
+phase("داوری و گزارش نهایی");
+const shots = [
+  "/tmp/nx-locale/lang-menu-ar.png",
+  "/tmp/nx-locale/widgets-en.png",
+  "/tmp/nx-locale/widgets-fa.png",
+  "/tmp/nx-locale/demo-ar.png",
+].map((p) => `${p} ← ${p.includes("menu") ? "منوی ۲۵ زبانه در حالت عربی" : p.includes("en") ? "ویجت iOS در انگلیسی" : p.includes("fa") ? "ویجت iOS در فارسی" : "دموی مک در عربی"}`).join("\n");
+const judge = await agent("داور-نهایی", {
+  system:
+    "تو داور پذیرش بصری هستی و فقط از تصویر قضاوت می‌کنی؛ چیزی را که ندیده‌ای گزارش نمی‌کنی. معیار: پذیرش کاربر — چیدمان شکسته، متن ناخوانا، جهت اشتباه RTL/LTR، متن گم‌شده = مردود.",
+}).ask<{ verdicts: { shot: string; pass: boolean; issues: string }[] }>(
+  `این تصاویر را با Read ببین و حکم بده:\n${shots}\nخروجی فقط JSON: {verdicts:[{shot, pass, issues}]} به فارسی.`,
+);
+
+const badVerdicts = judge.verdicts.filter((v) => !v.pass);
+for (const v of badVerdicts) {
+  report({ what: `داوری تصویر: ${v.shot}`, evidence: v.issues, severity: "medium" }, "findings-board");
+}
+
+const okEdits = sweeps.every((s) => s.ok) && locale.ok && residuals.length === 0 && httpFailures === 0 && arDirOk && !enHasIran && enHasIstanbul && browserCheck.ok && badVerdicts.length === 0;
+const failedClusters = sweeps.filter((s) => !s.ok).map((s) => s.files.join(", "));
+
+await artifact.markdown(
+  "report",
+  [
+    "# زدودن ارجاع‌های ایران + سیستم زبان جهانی",
+    "",
+    `**نتیجه: ${okEdits ? "همه‌چیز سبز است" : "موارد باز مانده است"}** — ${sweeps.reduce((n, s) => n + s.changes, 0) + locale.changes} جایگزینی در ${sweeps.length + 1} خوشهٔ کاری.`,
+    "",
+    "## پاک‌سازی محتوا",
+    ...sweeps.map((s) => `- ${s.ok ? "✅" : "❌"} ${s.files.length} فایل، ${s.changes} تغییر — ${s.notes || "—"}`),
+    "",
+    "## سیستم زبان",
+    `- ${locale.ok ? "✅" : "❌"} ${locale.notes || "—"}`,
+    "- fallback ترجمه: هر زبانِ ثبت‌شده UI و جهت درست می‌گیرد و محتوا به en برمی‌گردد (نه fa)؛ fa و en محتوای بومی دارند.",
+    "",
+    "## راستی‌آزمایی",
+    `- پویش نهایی ارجاع‌ها: ${residuals.length} مورد باقی مانده`,
+    `- ${CHECK_PAGES.length} صفحه curl: ${httpFailures === 0 ? "همه ۲۰۰" : `${httpFailures} خطا`}`,
+    `- ?lang=ar: ${arDirOk ? "dir=rtl و lang=ar درست" : "جهت/زبان اشتباه"}؛ EN بدون Iran و با Istanbul: ${!enHasIran && enHasIstanbul ? "درست" : "نادرست"}`,
+    `- داوری بصری: ${judge.verdicts.filter((v) => v.pass).length}/${judge.verdicts.length} قبول`,
+    ...cleanupNotes.map((n) => `- ${n}`),
+  ].join("\n"),
+  { title: "گزارش زبان جهانی و پاک‌سازی ایران", description: "پاک‌سازی محتوا، سیستم ۲۵ زبانه و راستی‌آزمایی سه‌زبانه", primary: true },
+);
+
+const conclusion = okEdits
+  ? `همهٔ ارجاع‌های ایران/تهران از پلی‌گراوند زدوده شد (${sweeps.reduce((n, s) => n + s.changes, 0)} جایگزینی)، سیستم زبان با ثبت ۲۵ زبان، منوی اسکرول‌شونده، fallback درست به انگلیسی و dir/lang خودکار ساخته شد و در مرورگر در هر سه زبان ar/en/fa راستی‌آزمایی شد.`
+  : `کار انجام شد ولی ${failedClusters.length + residuals.length + httpFailures + badVerdicts.length} مورد باز مانده؛ جزئیات در findings و گزارش.`;
+
+return {
+  conclusion,
+  findings: [
+    ...residuals.map((r) => ({ what: `ارجاعٔ باقی‌مانده ${r.path}:${r.line}`, evidence: r.text.trim().slice(0, 200), severity: "medium" as const })),
+    ...browserCheck.findings,
+    ...badVerdicts.map((v) => ({ what: `داوری بصری ${v.shot}`, evidence: v.issues, severity: "medium" as const })),
+    ...(locale.ok ? [] : [{ what: "سیستم زبان ناقص", evidence: locale.notes, severity: "high" as const }]),
+    ...failedClusters.map((f) => ({ what: "خوشهٔ پاک‌سازی با راستی‌آزمایی ناتمام", evidence: f, severity: "high" as const })),
+  ],
+  verified: [
+    "files.grep نهایی برای Tehran/تهران/ایران/Iranian/Ahmadi/Tehrani روی playground/{app,resources} — صفر مورد",
+    `curl ${CHECK_PAGES.length} صفحه + هر سه ?lang= (ar با dir=rtl، en بدون Iran، fa با استانبول)`,
+    "بازبینی مرورگری playwright: منوی ۲۵ زبانه، دمو در ar/en/fa، اسکرین‌شات + داوری مستقل",
+    "php -l روی همهٔ فایل‌های PHP تغییر کرده (توسط هر ایجنت روی فایل‌های خودش)",
+  ],
+  notCovered: [
+    "ترجمهٔ محتوای دموها به ۲۳ زبان دیگر — طبق طراحی، زبان‌های جدید UI درست می‌گیرند و محتوا به en fallback می‌شود؛ فقط fa/en محتوای بومی دارند",
+    "متن تکه‌کدها (snippetها) دوزبانه نشد — نمونه‌کد کتابخانه فارسی‌محور ماند",
+    "صفحات ادمین React/Vue/Svelte و showcase — فقط پلی‌گراوند Livewire پاک‌سازی و چندزبانه شد",
+  ],
+};

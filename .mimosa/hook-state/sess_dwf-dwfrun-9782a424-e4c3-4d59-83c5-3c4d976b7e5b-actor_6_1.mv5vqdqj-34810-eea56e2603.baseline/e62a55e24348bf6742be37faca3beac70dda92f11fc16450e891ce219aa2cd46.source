@@ -1,0 +1,131 @@
+
+<?php if (isset($component)) { $__componentOriginal4837f5b450f9d59421c88eb37fd388cd = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal4837f5b450f9d59421c88eb37fd388cd = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page','data' => ['active' => 'files','title' => __('admin.files_title'),'subtitle' => __('admin.files_subtitle')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('admin.page'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['active' => 'files','title' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.files_title')),'subtitle' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.files_subtitle'))]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+    <style>
+        /* Files-page pieces the shared blocks don't carry (tokens only, both themes). */
+        .fp-count { font-size: var(--nx-text-sm); color: var(--nx-text-muted); }
+        .fp-side { justify-items: center; text-align: center; }
+        .fp-side-more { margin: 0; font-size: var(--nx-text-xs); color: var(--nx-text-subtle); }
+    </style>
+    <div class="ap-grid">
+        <div class="ap-row" style="justify-content: space-between">
+            <span class="fp-count"><?php echo e($countText); ?></span>
+            <?php if (isset($component)) { $__componentOriginal6a71c49d1a08ebecfe7a6986a59dba78 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal6a71c49d1a08ebecfe7a6986a59dba78 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::chip-filter','data' => ['options' => $chips,'counts' => $counts,'label' => __('admin.files_filter_type'),'wire:model.live' => 'type']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::chip-filter'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['options' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($chips),'counts' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($counts),'label' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.files_filter_type')),'wire:model.live' => 'type']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal6a71c49d1a08ebecfe7a6986a59dba78)): ?>
+<?php $attributes = $__attributesOriginal6a71c49d1a08ebecfe7a6986a59dba78; ?>
+<?php unset($__attributesOriginal6a71c49d1a08ebecfe7a6986a59dba78); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal6a71c49d1a08ebecfe7a6986a59dba78)): ?>
+<?php $component = $__componentOriginal6a71c49d1a08ebecfe7a6986a59dba78; ?>
+<?php unset($__componentOriginal6a71c49d1a08ebecfe7a6986a59dba78); ?>
+<?php endif; ?>
+        </div>
+
+        <div class="ap-duo">
+            <div class="ap-grid">
+                <?php if (isset($component)) { $__componentOriginal55a1f3c0d2b02957f51f05e09dfdccaa = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal55a1f3c0d2b02957f51f05e09dfdccaa = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::file-manager','data' => ['items' => $items,'wire:model' => 'uploads','height' => '30rem']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::file-manager'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['items' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($items),'wire:model' => 'uploads','height' => '30rem']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal55a1f3c0d2b02957f51f05e09dfdccaa)): ?>
+<?php $attributes = $__attributesOriginal55a1f3c0d2b02957f51f05e09dfdccaa; ?>
+<?php unset($__attributesOriginal55a1f3c0d2b02957f51f05e09dfdccaa); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal55a1f3c0d2b02957f51f05e09dfdccaa)): ?>
+<?php $component = $__componentOriginal55a1f3c0d2b02957f51f05e09dfdccaa; ?>
+<?php unset($__componentOriginal55a1f3c0d2b02957f51f05e09dfdccaa); ?>
+<?php endif; ?>
+                <?php if (isset($component)) { $__componentOriginalfdd32ad08ed0cbb58f28ca9ef5289894 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalfdd32ad08ed0cbb58f28ca9ef5289894 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::file-drop','data' => ['wire:model' => 'uploads','multiple' => true,'title' => __('admin.files_drop_hint')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::file-drop'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['wire:model' => 'uploads','multiple' => true,'title' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.files_drop_hint'))]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalfdd32ad08ed0cbb58f28ca9ef5289894)): ?>
+<?php $attributes = $__attributesOriginalfdd32ad08ed0cbb58f28ca9ef5289894; ?>
+<?php unset($__attributesOriginalfdd32ad08ed0cbb58f28ca9ef5289894); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalfdd32ad08ed0cbb58f28ca9ef5289894)): ?>
+<?php $component = $__componentOriginalfdd32ad08ed0cbb58f28ca9ef5289894; ?>
+<?php unset($__componentOriginalfdd32ad08ed0cbb58f28ca9ef5289894); ?>
+<?php endif; ?>
+            </div>
+
+            <aside class="ap-box fp-side">
+                <?php if (isset($component)) { $__componentOriginal20037d3a95203856986cc6774f12997d = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal20037d3a95203856986cc6774f12997d = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::gauge','data' => ['value' => 6.4,'max' => 10,'unit' => 'GB','decimals' => 1,'title' => __('admin.files_storage'),'subtitle' => __('admin.files_storage_note')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::gauge'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['value' => 6.4,'max' => 10,'unit' => 'GB','decimals' => 1,'title' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.files_storage')),'subtitle' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.files_storage_note'))]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal20037d3a95203856986cc6774f12997d)): ?>
+<?php $attributes = $__attributesOriginal20037d3a95203856986cc6774f12997d; ?>
+<?php unset($__attributesOriginal20037d3a95203856986cc6774f12997d); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal20037d3a95203856986cc6774f12997d)): ?>
+<?php $component = $__componentOriginal20037d3a95203856986cc6774f12997d; ?>
+<?php unset($__componentOriginal20037d3a95203856986cc6774f12997d); ?>
+<?php endif; ?>
+            </aside>
+        </div>
+    </div>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal4837f5b450f9d59421c88eb37fd388cd)): ?>
+<?php $attributes = $__attributesOriginal4837f5b450f9d59421c88eb37fd388cd; ?>
+<?php unset($__attributesOriginal4837f5b450f9d59421c88eb37fd388cd); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal4837f5b450f9d59421c88eb37fd388cd)): ?>
+<?php $component = $__componentOriginal4837f5b450f9d59421c88eb37fd388cd; ?>
+<?php unset($__componentOriginal4837f5b450f9d59421c88eb37fd388cd); ?>
+<?php endif; ?>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/playground/resources/views/livewire/admin/files.blade.php ENDPATH**/ ?>

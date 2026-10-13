@@ -1,0 +1,658 @@
+/*
+ * Blocks: 3D depth — scenes built from perspective + preserve-3d, no WebGL.
+ *
+ *   Product room   a multi-layer product staged along the scene's Z axis; drag
+ *                  orbits the room with soft inertia and an idle drift, the
+ *                  exploded view lifts the layers apart and pins a label to
+ *                  each one that counter-rotates so it always faces the camera
+ *   Flip cube      six selling points folded into one true cube; drag spins
+ *                  and tilts it, the release snaps onto the nearest 90° face,
+ *                  and the buttons, dots and arrow keys walk face by face
+ *   Open box       the gift box as the hero: a hover swings the lid off its
+ *                  back hinge on an overshooting spring while the goods leap
+ *                  above the rim; a click pins the open state
+ *
+ * Behaviour: js/blocks/depth-3d.ts (dragRotate, pauseWhileOffscreen) writes
+ * --nx-spin / --nx-tilt on the stage and data-dragging while a drag runs; the
+ * open box reuses the shared core `tilt` for its pointer lean. Everything
+ * moves on transform/opacity only; the loops park off screen and under
+ * reduced motion.
+ */
+@layer nx.components {
+  /* ---- The chrome every 3D scene shares ------------------------------------ *
+   *   <div class="nx-<block>">                        (the block root)
+   *     <div class="nx-3d-stage nx-<block>-stage"      (dragRotate lives here)
+   *          tabindex="0" role="img|group|button" aria-label="…">
+   *       <span class="nx-3d-cap">Drag to orbit</span>
+   *       …the scene…
+   *     </div>
+   *     <div class="nx-3d-dock">
+   *       <button class="nx-3d-btn" aria-pressed="…">…</button>
+   *       <span class="nx-3d-status" role="status">…</span>
+   *     </div>
+   *     <p class="nx-3d-hint">…</p>
+   *   </div>
+   * ------------------------------------------------------------------------- */
+  .nx-3d-stage {
+    position: relative;
+    display: grid;
+    place-items: center;
+    inline-size: 100%;
+    aspect-ratio: 4 / 3;
+    max-inline-size: 30rem;
+    margin-inline: auto;
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-2xl);
+    /* A soft ceiling light over a floor — works on either theme. */
+    background: radial-gradient(120% 100% at 50% 0%, var(--nx-surface-2), color-mix(in oklab, var(--nx-surface-3) 55%, var(--nx-bg)) 72%);
+    perspective: 1000px;
+    overflow: clip;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+
+    &:active { cursor: grabbing; }
+    &:focus-visible {
+      outline: 2px solid var(--nx-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  .nx-3d-cap {
+    position: absolute;
+    inset-block-start: var(--nx-space-3);
+    inset-inline-start: var(--nx-space-3);
+    z-index: 2;
+    padding: 0.3rem var(--nx-space-3);
+    border: 1px solid var(--nx-glass-border);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-glass);
+    color: var(--nx-text-muted);
+    font: 500 var(--nx-text-xs) / 1.3 var(--nx-font-sans);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    pointer-events: none;
+  }
+
+  .nx-3d-dock {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-space-2) var(--nx-space-3);
+    max-inline-size: 30rem;
+    margin-inline: auto;
+  }
+
+  .nx-3d-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-2) var(--nx-space-4);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    font: 600 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    cursor: pointer;
+    transition-property: border-color, color, scale;
+    transition-duration: var(--nx-dur-fast), var(--nx-dur-fast), var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-ease-out), var(--nx-ease-out), var(--nx-spring-snappy);
+
+    &:hover { border-color: var(--nx-accent-border); color: var(--nx-accent-text); }
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+
+    /* The state the button reports is echoed in colour, never motion alone. */
+    &:is([aria-pressed="true"], [aria-expanded="true"]) {
+      border-color: var(--nx-accent-border);
+      color: var(--nx-accent-text);
+    }
+
+    & .nx-icon { inline-size: 0.95rem; block-size: 0.95rem; }
+  }
+
+  .nx-3d-status {
+    font: 500 var(--nx-text-xs) / 1.4 var(--nx-font-mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--nx-text-muted);
+    white-space: nowrap;
+  }
+
+  .nx-3d-hint {
+    margin: 0;
+    text-align: center;
+    font-size: var(--nx-text-xs);
+    color: var(--nx-text-muted);
+  }
+
+  /* ---- Product room --------------------------------------------------------- *
+   *   <div class="nx-product-room" data-exploded>          (--nx-lift drives the spread)
+   *     <div class="nx-3d-stage nx-product-room-stage" …>   (dragRotate: --nx-spin/--nx-tilt)
+   *       <div class="nx-product-room-world" style="--nx-n: 5">
+   *         <div class="nx-product-room-slab" data-tone="pedestal" style="--nx-i: 0">
+   *           <span class="nx-product-room-pin">
+   *             <span class="nx-product-room-tag" style="--nx-i: 0">…label…</span>
+   *           </span>
+   *         </div>…
+   *       </div>
+   *     </div>
+   *   </div>
+   * ------------------------------------------------------------------------- */
+  .nx-product-room {
+    --nx-lift: 13px;
+    display: grid;
+    gap: var(--nx-space-4);
+  }
+
+  .nx-product-room[data-exploded] { --nx-lift: 42px; }
+
+  .nx-product-room-stage { perspective: 1100px; }
+
+  .nx-product-room-world {
+    --nx-d: min(36vw, 11rem);
+    position: relative;
+    inline-size: var(--nx-d);
+    aspect-ratio: 1;
+    transform-style: preserve-3d;
+    /* dragRotate writes the angles; the turntable spins around Z under an X tilt. */
+    transform: rotateX(var(--nx-tilt, 62deg)) rotateZ(var(--nx-spin, -28deg));
+  }
+
+  .nx-product-room-slab {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    transform-style: preserve-3d;
+    /* The stack's geometry: layer i of n, centred on the scene's midpoint. */
+    transform: translateZ(calc((var(--nx-i, 0) - (var(--nx-n, 5) - 1) / 2) * var(--nx-lift)));
+    transition: transform var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+  }
+
+  /* The shipped materials — every one a token mix, so both themes read. */
+  .nx-product-room-slab[data-tone="pedestal"] {
+    background: linear-gradient(220deg, var(--nx-ink-600), var(--nx-ink-850));
+    box-shadow: 0 0 0 1px color-mix(in oklab, var(--nx-ink-950) 18%, transparent);
+  }
+
+  .nx-product-room-slab[data-tone="mesh"] {
+    background:
+      radial-gradient(color-mix(in oklab, var(--nx-text) 16%, transparent) 1.1px, transparent 1.5px) 0 0 / 10px 10px,
+      var(--nx-surface);
+    box-shadow: inset 0 0 0 2px var(--nx-border);
+  }
+
+  .nx-product-room-slab[data-tone="driver"] {
+    background: repeating-radial-gradient(circle, var(--nx-ink-600) 0 6px, var(--nx-ink-400) 6px 12px);
+  }
+
+  .nx-product-room-slab[data-tone="ring"] {
+    background: transparent;
+    border: calc(var(--nx-d) * 0.055) solid var(--nx-accent);
+  }
+
+  .nx-product-room-slab[data-tone="dome"] {
+    background: radial-gradient(circle, var(--nx-lapis-200) 0 30%, var(--nx-accent-soft) 70%);
+  }
+
+  .nx-product-room-pin {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: 68%;
+  }
+
+  .nx-product-room-tag {
+    position: absolute;
+    display: block;
+    white-space: nowrap;
+    text-align: start;
+    padding: var(--nx-space-1) var(--nx-space-2);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-sm);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    font: 600 var(--nx-text-xs) / 1.35 var(--nx-font-sans);
+    /* Billboard: counter-rotate the world so the label always faces the camera. */
+    transform: rotateZ(calc(var(--nx-spin, -28deg) * -1)) rotateX(calc(var(--nx-tilt, 62deg) * -1));
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity var(--nx-dur-slow) var(--nx-ease-out) calc(var(--nx-i, 0) * var(--nx-stagger)),
+      visibility 0s ease calc(var(--nx-i, 0) * var(--nx-stagger) + var(--nx-dur-slow));
+  }
+
+  .nx-product-room[data-exploded] .nx-product-room-tag {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .nx-product-room-tag-spec {
+    display: block;
+    font-weight: 400;
+    color: var(--nx-text-muted);
+  }
+
+  /* ---- Flip cube -------------------------------------------------------------- *
+   *   <div class="nx-flip-cube">
+   *     <div class="nx-3d-stage nx-flip-cube-stage" …>        (dragRotate, data-dragging)
+   *       <div class="nx-flip-cube-cube">                      (the snap transition lives here)
+   *         <div class="nx-flip-cube-face" data-on style="--ft: rotateY(90deg)">…</div> ×6
+   *       </div>
+   *     </div>
+   *     <div class="nx-3d-dock">
+   *       <button class="nx-3d-btn">…prev…</button>
+   *       <span class="nx-flip-cube-dots"><button class="nx-flip-cube-dot" aria-current="…">…</button> ×6</span>
+   *       <button class="nx-3d-btn">…next…</button>
+   *     </div>
+   *   </div>
+   * ------------------------------------------------------------------------- */
+  .nx-flip-cube {
+    display: grid;
+    gap: var(--nx-space-4);
+  }
+
+  .nx-flip-cube-stage { perspective: 1000px; }
+
+  .nx-flip-cube-cube {
+    --nx-s: clamp(7.5rem, 40vw, 9.5rem);
+    position: relative;
+    inline-size: var(--nx-s);
+    block-size: var(--nx-s);
+    transform-style: preserve-3d;
+    transform: rotateX(var(--nx-tilt, 0deg)) rotateY(var(--nx-spin, -24deg));
+    /* The release snaps onto a face on this spring; a drag bypasses it. */
+    transition: transform var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+  }
+
+  .nx-flip-cube-stage[data-dragging] .nx-flip-cube-cube { transition: none; }
+
+  .nx-flip-cube-face {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-3);
+    text-align: center;
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-surface);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform: var(--ft) translateZ(calc(var(--nx-s) / 2));
+    transition:
+      border-color var(--nx-dur-base) var(--nx-ease-out),
+      box-shadow var(--nx-dur-base) var(--nx-ease-out);
+
+    & .nx-icon {
+      inline-size: 1.6rem;
+      block-size: 1.6rem;
+      color: var(--nx-text-muted);
+      transition: color var(--nx-dur-base) var(--nx-ease-out);
+    }
+  }
+
+  /* The face toward the camera lights up — colour and ring, not just motion. */
+  .nx-flip-cube-face[data-on] {
+    border-color: var(--nx-accent-border);
+    box-shadow:
+      0 0 0 2px var(--nx-accent-soft),
+      0 18px 40px -24px color-mix(in oklab, var(--nx-accent) 55%, transparent);
+
+    & .nx-icon { color: var(--nx-accent-text); }
+  }
+
+  .nx-flip-cube-title {
+    font-size: clamp(var(--nx-text-xs), 3.2vw, var(--nx-text-sm));
+    font-weight: 650;
+    line-height: 1.4;
+  }
+
+  .nx-flip-cube-note {
+    font-size: var(--nx-text-xs);
+    line-height: 1.5;
+    color: var(--nx-text-muted);
+  }
+
+  .nx-flip-cube-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+  }
+
+  .nx-flip-cube-dot {
+    inline-size: 0.58rem;
+    block-size: 0.58rem;
+    padding: 0;
+    border: 1px solid var(--nx-text-subtle);
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+    transition-property: background-color, border-color, scale;
+    transition-duration: var(--nx-dur-fast), var(--nx-dur-fast), var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-ease-out), var(--nx-ease-out), var(--nx-spring-snappy);
+
+    &:hover { border-color: var(--nx-accent); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+    &[aria-current="true"] {
+      background: var(--nx-accent);
+      border-color: var(--nx-accent);
+      scale: 1.25;
+    }
+  }
+
+  /* ---- Open box ------------------------------------------------------------------ *
+   *   <div class="nx-open-box" data-open data-paused>       (hover or pin opens; off screen parks)
+   *     <div class="nx-3d-stage nx-open-box-stage" role="button" tabindex="0" aria-expanded="…">
+   *       <span class="nx-open-box-shadow"/>
+   *       <div class="nx-open-box-tilt">                     (leans on the core tilt's --nx-rx/--nx-ry)
+   *         <div class="nx-open-box-box">
+   *           <div class="nx-open-box-face nx-open-box-front">…title…</div>
+   *           <div class="nx-open-box-face nx-open-box-back"/> …left/right/floor…
+   *           <div class="nx-open-box-goods">…buds + case + name…</div>
+   *           <div class="nx-open-box-lid"/>
+   *         </div>
+   *       </div>
+   *       <div class="nx-open-box-tagwrap"><div class="nx-open-box-tag">…price ×2 faces…</div></div>
+   *     </div>
+   *   </div>
+   * ------------------------------------------------------------------------- */
+  .nx-open-box {
+    display: grid;
+    gap: var(--nx-space-4);
+  }
+
+  .nx-open-box-stage {
+    perspective: 950px;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .nx-open-box-shadow {
+    position: absolute;
+    inset-block-end: 14%;
+    inline-size: 60%;
+    block-size: 12%;
+    background: radial-gradient(50% 50% at 50% 50%, rgb(0 0 0 / 0.22), transparent 70%);
+    filter: blur(6px);
+    pointer-events: none;
+  }
+
+  .nx-open-box-tilt {
+    /* The pointer lean rides on the shared tilt behaviour's variables. */
+    transform: rotateX(calc(-14deg + var(--nx-rx, 0deg) * 0.72)) rotateY(calc(32deg + var(--nx-ry, 0deg)));
+    transform-style: preserve-3d;
+    transition: transform var(--nx-dur-slow) var(--nx-ease-out);
+  }
+
+  .nx-open-box-box {
+    --nx-w: clamp(8.5rem, 46vw, 10rem);
+    --nx-h: calc(var(--nx-w) * 0.78);
+    --nx-d: calc(var(--nx-w) * 0.52);
+    position: relative;
+    inline-size: var(--nx-w);
+    block-size: var(--nx-h);
+    transform-style: preserve-3d;
+  }
+
+  .nx-open-box-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+
+  .nx-open-box-front {
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: var(--nx-space-1);
+    border-radius: var(--nx-radius-sm);
+    background:
+      radial-gradient(60% 46% at 50% 34%, rgb(255 255 255 / 0.16), transparent 68%),
+      linear-gradient(200deg, var(--nx-accent), color-mix(in oklab, var(--nx-accent) 76%, black));
+    color: var(--nx-accent-text);
+    text-align: center;
+    transform: translateZ(calc(var(--nx-d) / 2));
+  }
+
+  .nx-open-box-mark {
+    inline-size: 34%;
+    aspect-ratio: 1;
+    margin-block-end: var(--nx-space-1);
+    border: 1px solid color-mix(in oklab, currentColor 40%, transparent);
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 34%, color-mix(in oklab, currentColor 50%, transparent), transparent 42%);
+  }
+
+  .nx-open-box-brand {
+    font: 800 clamp(1.05rem, 5vw, 1.5rem) / 1.1 var(--nx-font-display);
+    letter-spacing: var(--nx-tracking-wider);
+    padding-inline-start: var(--nx-tracking-wider);
+  }
+
+  .nx-open-box-sub {
+    font-size: 0.58rem;
+    letter-spacing: 0.42em;
+    padding-inline-start: 0.42em;
+    opacity: 0.82;
+  }
+
+  .nx-open-box-back {
+    border-radius: var(--nx-radius-sm);
+    background: color-mix(in oklab, var(--nx-accent) 60%, black);
+    transform: rotateY(180deg) translateZ(calc(var(--nx-d) / 2));
+  }
+
+  .nx-open-box-left,
+  .nx-open-box-right {
+    inline-size: var(--nx-d);
+    inset-inline-start: calc(50% - var(--nx-d) / 2);
+    background: linear-gradient(180deg, color-mix(in oklab, var(--nx-accent) 88%, white), var(--nx-accent));
+  }
+
+  .nx-open-box-left { transform: translateX(calc(var(--nx-w) / -2)) rotateY(-90deg); }
+  .nx-open-box-right { transform: translateX(calc(var(--nx-w) / 2)) rotateY(90deg); }
+
+  .nx-open-box-floor {
+    position: absolute;
+    inline-size: var(--nx-w);
+    block-size: var(--nx-d);
+    inset-inline: 0;
+    inset-block-start: calc(50% - var(--nx-d) / 2);
+    background: radial-gradient(60% 60% at 50% 40%, color-mix(in oklab, var(--nx-accent) 55%, black), color-mix(in oklab, var(--nx-ink-950) 80%, var(--nx-accent)));
+    backface-visibility: visible;
+    -webkit-backface-visibility: visible;
+    transform: translateY(calc(var(--nx-h) / 2)) rotateX(90deg);
+  }
+
+  .nx-open-box-lid {
+    position: absolute;
+    inline-size: var(--nx-w);
+    block-size: var(--nx-d);
+    inset-inline: 0;
+    inset-block-start: 0;
+    transform-origin: 50% 0;
+    border-radius: var(--nx-radius-sm) var(--nx-radius-sm) 0 0;
+    background:
+      radial-gradient(42% 60% at 50% 0%, rgb(255 255 255 / 0.14), transparent 70%),
+      linear-gradient(180deg, color-mix(in oklab, var(--nx-accent) 88%, white), var(--nx-accent));
+    box-shadow: inset 0 -14px 22px -16px rgb(0 0 0 / 0.55);
+    transform: translateZ(calc(var(--nx-d) / -2)) rotateX(90deg);
+    /* The hinge: a 110° swing on an overshooting spring. */
+    transition: transform var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy);
+  }
+
+  .nx-open-box[data-open] .nx-open-box-lid {
+    transform: translateZ(calc(var(--nx-d) / -2)) rotateX(200deg);
+  }
+
+  .nx-open-box-goods {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: var(--nx-space-2);
+    transform: translateY(6%) scale(0.96);
+    transition: transform var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy);
+  }
+
+  .nx-open-box[data-open] .nx-open-box-goods {
+    transform: translateY(-62%) scale(1);
+  }
+
+  .nx-open-box-budsrow {
+    display: flex;
+    gap: var(--nx-space-2);
+  }
+
+  .nx-open-box-bud {
+    inline-size: 1.35rem;
+    aspect-ratio: 1;
+    border-radius: 50% 50% 50% 30%;
+    background: linear-gradient(160deg, var(--nx-ink-50), var(--nx-ink-200));
+    box-shadow:
+      inset 0 -3px 5px rgb(0 0 0 / 0.18),
+      0 6px 12px -6px rgb(0 0 0 / 0.4);
+    rotate: -18deg;
+  }
+
+  .nx-open-box-bud:last-child {
+    border-radius: 50% 50% 30% 50%;
+    rotate: 18deg;
+  }
+
+  .nx-open-box-case {
+    display: grid;
+    place-items: center;
+    inline-size: 4.1rem;
+    block-size: 1.75rem;
+    border-radius: var(--nx-radius-full);
+    background: linear-gradient(180deg, var(--nx-ink-50) 62%, var(--nx-ink-200) 62%);
+    box-shadow:
+      inset 0 2px 4px rgb(255 255 255 / 0.8),
+      0 10px 18px -8px rgb(0 0 0 / 0.45);
+
+    &::after {
+      content: "";
+      inline-size: 0.3rem;
+      block-size: 0.3rem;
+      border-radius: 50%;
+      background: var(--nx-accent);
+      box-shadow: 0 0 6px var(--nx-accent);
+    }
+  }
+
+  .nx-open-box-goods-name {
+    padding: 0.18rem var(--nx-space-2);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface);
+    color: var(--nx-text-muted);
+    font-size: 0.58rem;
+    letter-spacing: 0.18em;
+  }
+
+  /* The two-sided price tag: it spins on its own axis until parked. */
+  .nx-open-box-tagwrap {
+    position: absolute;
+    inset-inline-end: 8%;
+    inset-block-end: 13%;
+    perspective: 420px;
+    pointer-events: none;
+  }
+
+  .nx-open-box-tag {
+    position: relative;
+    inline-size: 5rem;
+    block-size: 3.1rem;
+    transform-style: preserve-3d;
+    animation: nx-open-box-tag-turn 7s linear infinite;
+  }
+
+  .nx-open-box[data-paused] .nx-open-box-tag { animation-play-state: paused; }
+
+  @keyframes nx-open-box-tag-turn {
+    to { transform: rotateY(360deg); }
+  }
+
+  .nx-open-box-tface {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: 0.1rem;
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-sm);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    box-shadow: 0 12px 22px -14px rgb(0 0 0 / 0.5);
+
+    /* The tag's punch hole. */
+    &::before {
+      content: "";
+      position: absolute;
+      inset-block-start: 0.3rem;
+      inset-inline: 0;
+      margin-inline: auto;
+      inline-size: 0.32rem;
+      block-size: 0.32rem;
+      border-radius: 50%;
+      box-shadow: inset 0 0 0 1.5px var(--nx-border);
+    }
+
+    &:last-child { transform: rotateY(180deg); }
+  }
+
+  .nx-open-box-price {
+    font-size: var(--nx-text-lg);
+    font-weight: 700;
+  }
+
+  .nx-open-box-price-note {
+    font-size: 0.5rem;
+    letter-spacing: 0.12em;
+    color: var(--nx-text-muted);
+  }
+
+  /* ---- Small screens ----------------------------------------------------------- */
+  @media (max-width: 30rem) {
+    .nx-product-room-world { --nx-d: min(38vw, 8.5rem); }
+    .nx-flip-cube-cube { --nx-s: clamp(7rem, 42vw, 8.75rem); }
+    .nx-open-box-box { --nx-w: clamp(8.5rem, 50vw, 8.75rem); }
+    .nx-open-box-tagwrap {
+      inset-inline-end: 5%;
+      inset-block-end: 10%;
+    }
+    .nx-open-box-tag {
+      inline-size: 4.3rem;
+      block-size: 2.8rem;
+    }
+  }
+
+  /* ---- Reduced motion -------------------------------------------------------------
+   * The drag still answers (the angles follow the pointer directly), but the
+   * coast, the drift and every settle snap instantly, and the tag stands still. */
+  @media (prefers-reduced-motion: reduce) {
+    .nx-3d-btn,
+    .nx-product-room-slab,
+    .nx-product-room-tag,
+    .nx-flip-cube-cube,
+    .nx-flip-cube-face,
+    .nx-flip-cube-dot,
+    .nx-open-box-tilt,
+    .nx-open-box-lid,
+    .nx-open-box-goods {
+      transition: none;
+    }
+
+    .nx-open-box-tag { animation: none; }
+    .nx-open-box-stage { cursor: pointer; }
+  }
+}

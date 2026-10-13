@@ -1,0 +1,563 @@
+/*
+ * Blocks: micro-interactions.
+ *
+ *   Confetti button   a success button whose win throws a particle confetti
+ *                     burst from a 2D canvas that bleeds outward past the
+ *                     button, with gravity, drag, spin and the theme palette;
+ *                     the label and the icon both flip to the done state
+ *   Ripple surface    any surface — button, card, tab — ripples from the exact
+ *                     point of the press; the ink is currentColor, so a filled
+ *                     button ripples light and a ghost one in its own colour
+ *   Drag spring       a draggable card on one semi-implicit Euler spring: it
+ *                     trails the pointer while held, then either wobbles onto
+ *                     the drop target or back home; the slot grips inside its
+ *                     capture radius and confirms with a check
+ *   Reaction bar      single-select reactions whose pick throws a small tinted
+ *                     burst; each counter is a rolling odometer that glides
+ *                     between numbers instead of snapping
+ *   Live ticker       a watchlist strip whose prices roll on per-digit
+ *                     columns while a coloured arrow carries the session sign;
+ *                     quotes are bidi-isolated so they read in RTL and LTR
+ *
+ * Behaviour: js/blocks/micro-fx.ts (confetti, rippleSurface, dragSpring). The
+ * rolling digits themselves are the shared .nx-number odometer
+ * (components/text.css); this file only dresses the bars around them.
+ */
+@layer nx.components {
+  /* ---- Confetti canvas ---------------------------------------------------------- *
+   * One canvas class for every cannon host: absolutely stretched over the host,
+   * pointer-transparent, above the content. Hosts that want the party to bleed
+   * outward (the confetti button) stretch it past their own box with a negative
+   * inset; hosts that want it contained (the reaction bar) keep inset: 0.
+   * ------------------------------------------------------------------------- */
+  .nx-confetti-canvas {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 3;
+  }
+
+  /* ---- Confetti button ----------------------------------------------------------- *
+   *   <span class="nx-confetti-button-host">                     (position: relative)
+   *     <canvas class="nx-confetti-canvas" aria-hidden="true">   (from the behaviour)
+   *     <button class="nx-confetti-button" data-state="idle|done">
+   *       <span class="nx-confetti-button-icons">                (both icons, crossfading)
+   *         <Icon name="mail" /> <Icon name="check-circle" />
+   *       </span>
+   *       <span class="nx-confetti-button-label">Join the beta</span>
+   *     </button>
+   *   </span>
+   * ------------------------------------------------------------------------- */
+  .nx-confetti-button-host {
+    position: relative;
+    display: inline-grid;
+    isolation: isolate;
+  }
+
+  /* The cannon bleeds outward: pieces fly over the neighbours without any
+     layout footprint, and the host never scrolls its own party away. */
+  .nx-confetti-button-host > .nx-confetti-canvas {
+    inset: calc(-1 * var(--nx-space-13)) calc(-1 * var(--nx-space-12));
+    z-index: 4;
+  }
+
+  .nx-confetti-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-space-2);
+    min-block-size: 2.75rem;
+    padding-inline: var(--nx-space-5);
+    border: 1px solid transparent;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-accent);
+    color: var(--nx-accent-contrast);
+    font: 600 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    cursor: pointer;
+    transition-property: background-color, border-color, color, scale;
+    transition-duration: var(--nx-dur-base), var(--nx-dur-base), var(--nx-dur-base), var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-ease-out), var(--nx-ease-out), var(--nx-ease-out), var(--nx-spring-snappy);
+
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible {
+      outline: 2px solid var(--nx-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  /* Motion is never the only cue: the win also repaints the button. */
+  .nx-confetti-button[data-state="done"] {
+    background: var(--nx-success);
+    border-color: var(--nx-success);
+    color: var(--nx-accent-contrast);
+  }
+
+  .nx-confetti-button-icons {
+    display: inline-grid;
+    place-items: center;
+
+    /* The one allowed scale-in: a contextual icon swap, both icons in the DOM. */
+    & > * {
+      grid-area: 1 / 1;
+      transition: opacity 300ms cubic-bezier(0.2, 0, 0, 1), scale 300ms cubic-bezier(0.2, 0, 0, 1), filter 300ms cubic-bezier(0.2, 0, 0, 1);
+    }
+
+    & > :not(:first-child) {
+      opacity: 0;
+      scale: 0.25;
+      filter: blur(4px);
+    }
+  }
+
+  .nx-confetti-button[data-state="done"] .nx-confetti-button-icons > :first-child {
+    opacity: 0;
+    scale: 0.25;
+    filter: blur(4px);
+  }
+
+  .nx-confetti-button[data-state="done"] .nx-confetti-button-icons > :not(:first-child) {
+    opacity: 1;
+    scale: 1;
+    filter: none;
+  }
+
+  /* ---- Ripple surface ------------------------------------------------------------- *
+   *   <button class="nx-ripple-surface" data-nx-ripple data-variant="filled|outline|plain">
+   *     …content; the behaviour appends <span class="nx-ripple-ink"> children…
+   *   </button>
+   * The ink is born at the pointer (or the centre for Enter/Space) and sized to
+   * sweep the whole surface; currentColor paints it per surface.
+   * ------------------------------------------------------------------------- */
+  .nx-ripple-surface {
+    position: relative;
+    overflow: clip;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .nx-ripple-ink {
+    position: absolute;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.22;
+    translate: -50% -50%;
+    scale: 0;
+    pointer-events: none;
+    animation: nx-ripple-ink-grow 550ms var(--nx-ease-out) forwards;
+  }
+
+  @keyframes nx-ripple-ink-grow {
+    to {
+      scale: 1;
+      opacity: 0;
+    }
+  }
+
+  /* Filled: the accent pill; its ripple is the ink's light on a dark field. */
+  .nx-ripple-surface[data-variant="filled"] {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    min-block-size: 2.5rem;
+    padding-inline: var(--nx-space-5);
+    border: 1px solid transparent;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-accent);
+    color: var(--nx-accent-contrast);
+    font: 600 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    cursor: pointer;
+    transition-property: filter, scale;
+    transition-duration: var(--nx-dur-fast), var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-ease-out), var(--nx-spring-snappy);
+
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible {
+      outline: 2px solid var(--nx-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  /* Outline: the ghost pill, rippling in its own colour. */
+  .nx-ripple-surface[data-variant="outline"] {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    min-block-size: 2.5rem;
+    padding-inline: var(--nx-space-5);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    font: 600 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    cursor: pointer;
+    transition-property: border-color, color, scale;
+    transition-duration: var(--nx-dur-fast), var(--nx-dur-fast), var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-ease-out), var(--nx-ease-out), var(--nx-spring-snappy);
+
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:hover { border-color: var(--nx-accent-border); color: var(--nx-accent-text); }
+    &:focus-visible {
+      outline: 2px solid var(--nx-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  /* Plain: no chrome at all — cards and tab rows that only want the wave.
+     Colour and press feedback stay the consumer's own. */
+  .nx-ripple-surface[data-variant="plain"] {
+    color: inherit;
+    font: inherit;
+    background: none;
+    border: none;
+    padding: 0;
+  }
+
+  /* ---- Drag spring ------------------------------------------------------------------ *
+   *   <div class="nx-drag-wrap">
+   *     <div class="nx-drag-board">
+   *       <div class="nx-drag-pad nx-drag-home">              (the tray: label + chip)
+   *         <span class="nx-drag-label">Skills tray</span>
+   *         <button class="nx-drag-chip" data-dragging data-locked>…the card…</button>
+   *       </div>
+   *       <div class="nx-drag-pad nx-drag-slot" data-near data-held data-settled>
+   *         <span class="nx-drag-label">Core skills</span>
+   *         <span class="nx-drag-note">drop here</span>
+   *         <span class="nx-drag-check"><Icon name="check" /></span>
+   *       </div>
+   *     </div>
+   *     <p class="nx-drag-status" role="status">…</p>
+   *   </div>
+   * The behaviour writes `translate` on the chip and those states on it and the
+   * slot; everything visual — the sticky chase, the wobble, the grip — is the
+   * same physics wearing this coat.
+   * ------------------------------------------------------------------------- */
+  .nx-drag-wrap {
+    display: grid;
+    gap: var(--nx-space-3);
+    justify-items: start;
+  }
+
+  .nx-drag-board {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    justify-content: center;
+    gap: var(--nx-space-5) var(--nx-space-8);
+    padding: var(--nx-space-6) var(--nx-space-5);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-xl);
+    background: var(--nx-surface-2);
+    overflow: clip;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .nx-drag-pad {
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: var(--nx-space-2);
+    min-block-size: 10rem;
+    min-inline-size: min(100%, 11rem);
+    padding: var(--nx-space-4);
+    border: 1.5px dashed color-mix(in oklab, var(--nx-border) 80%, var(--nx-text));
+    border-radius: var(--nx-radius-lg);
+    transition-property: border-color, background-color, box-shadow;
+    transition-duration: var(--nx-dur-fast);
+    transition-timing-function: var(--nx-ease-out);
+  }
+
+  .nx-drag-label {
+    font: 700 var(--nx-text-xs) / 1 var(--nx-font-sans);
+    letter-spacing: var(--nx-tracking-wider);
+    text-transform: uppercase;
+    color: var(--nx-text-muted);
+  }
+
+  .nx-drag-note {
+    font-size: var(--nx-text-xs);
+    color: var(--nx-text-subtle);
+  }
+
+  .nx-drag-status {
+    margin: 0;
+    min-block-size: 1.4em;
+    font-size: var(--nx-text-sm);
+    color: var(--nx-text-muted);
+  }
+
+  .nx-drag-chip {
+    position: relative;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-3) var(--nx-space-5);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    font: 600 var(--nx-text-sm) / 1.2 var(--nx-font-sans);
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    box-shadow: var(--nx-shadow-md);
+    will-change: translate;
+    transition-property: border-color, scale;
+    transition-duration: var(--nx-dur-fast), var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-ease-out), var(--nx-spring-snappy);
+
+    &:hover { border-color: var(--nx-accent-border); }
+    &:focus-visible {
+      outline: 2px solid var(--nx-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  /* The chase is written every frame; transitions only dress the states. */
+  .nx-drag-chip[data-dragging] {
+    cursor: grabbing;
+    scale: 1.05;
+    box-shadow: var(--nx-shadow-lg);
+    transition: none;
+  }
+
+  .nx-drag-chip[data-locked] {
+    scale: 0.97;
+    border-color: var(--nx-accent-border);
+  }
+
+  .nx-drag-slot {
+    /* Near: the slot arms without claiming anything yet. */
+    &[data-near] {
+      border-color: var(--nx-accent);
+      box-shadow: 0 0 0 4px var(--nx-accent-soft);
+    }
+
+    /* Held: the decision is made; colour says so before the spring lands. */
+    &[data-held] {
+      border-style: solid;
+      border-color: var(--nx-accent);
+      background: var(--nx-accent-soft);
+    }
+
+    /* Settled: the spring has landed — one small grip, then quiet. */
+    &[data-settled] {
+      animation: nx-drag-grip 400ms var(--nx-spring-bouncy);
+    }
+  }
+
+  @keyframes nx-drag-grip {
+    40% { scale: 1.04; }
+  }
+
+  .nx-drag-check {
+    color: var(--nx-success-text);
+    animation: nx-drag-check-pop 350ms var(--nx-spring-bouncy);
+
+    & > .nx-icon,
+    &.nx-icon {
+      inline-size: 1.7rem;
+      block-size: 1.7rem;
+      stroke-width: 2.4;
+    }
+  }
+
+  @keyframes nx-drag-check-pop {
+    from {
+      scale: 0.25;
+      opacity: 0;
+    }
+  }
+
+  /* ---- Reaction bar ------------------------------------------------------------------- *
+   *   <div class="nx-reaction-bar">                          (position: relative — the canvas host)
+   *     <canvas class="nx-confetti-canvas" aria-hidden="true">
+   *     <button class="nx-reaction-btn" style="--_tint: var(--nx-danger)" aria-pressed="true">
+   *       <Icon name="heart" /> <NumberTicker class="nx-reaction-count" value={128} />
+   *     </button>
+   *   </div>
+   * One pick at a time, toggleable off; the burst carries the pick's own tint.
+   * ------------------------------------------------------------------------- */
+  .nx-reaction-bar {
+    position: relative;
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: var(--nx-space-2);
+    overflow: clip;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .nx-reaction-btn {
+    --_tint: var(--nx-accent);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-2) var(--nx-space-3);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    background: color-mix(in oklab, var(--nx-surface-2) 62%, var(--nx-surface));
+    color: var(--nx-text-muted);
+    font: 600 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    cursor: pointer;
+    transition-property: border-color, color, background-color, box-shadow, scale;
+    transition-duration: var(--nx-dur-fast), var(--nx-dur-fast), var(--nx-dur-fast), var(--nx-dur-fast), var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-ease-out), var(--nx-ease-out), var(--nx-ease-out), var(--nx-ease-out), var(--nx-spring-snappy);
+
+    &:hover {
+      border-color: color-mix(in oklab, var(--_tint) 55%, var(--nx-border));
+      color: var(--_tint);
+    }
+
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+
+    &:focus-visible {
+      outline: 2px solid var(--nx-ring);
+      outline-offset: 2px;
+    }
+
+    /* Picked: colour first, the thump only decorates the same fact. */
+    &[aria-pressed="true"] {
+      border-color: var(--_tint);
+      color: var(--_tint);
+      background: color-mix(in oklab, var(--_tint) 12%, var(--nx-surface));
+      box-shadow: 0 0 0 3px color-mix(in oklab, var(--_tint) 16%, transparent);
+
+      & .nx-icon { animation: nx-reaction-thump 400ms var(--nx-spring-bouncy); }
+    }
+  }
+
+  @keyframes nx-reaction-thump {
+    45% { scale: 1.35; }
+  }
+
+  .nx-reaction-count {
+    min-inline-size: 2ch;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    font-size: var(--nx-text-xs);
+  }
+
+  /* ---- Live ticker ---------------------------------------------------------------------- *
+   *   <div class="nx-live-ticker" data-held>
+   *     <div class="nx-ticker-cell" data-dir="up|down">
+   *       <span class="nx-ticker-sym"><b>AUR</b> <span>Aurum</span></span>
+   *       <span class="nx-ticker-quote">                    (bidi-isolated, digits roll)
+   *         <NumberTicker class="nx-ticker-price" value={1284.52} />
+   *         <span class="nx-ticker-chg"><Icon name="trend-up" /> <NumberTicker …/>%</span>
+   *       </span>
+   *     </div>
+   *   </div>
+   * ------------------------------------------------------------------------- */
+  .nx-live-ticker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-3);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-xl);
+    background: var(--nx-surface-2);
+  }
+
+  .nx-ticker-cell {
+    display: grid;
+    gap: var(--nx-space-1);
+    align-content: center;
+    flex: 1 1 9rem;
+    max-inline-size: 100%;
+    min-inline-size: min(9rem, 100%);
+    padding: var(--nx-space-3) var(--nx-space-4);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-surface);
+    transition-property: border-color;
+    transition-duration: var(--nx-dur-base);
+    transition-timing-function: var(--nx-ease-out);
+  }
+
+  /* The sign is never motion-only: the border says it while the arrow shows it. */
+  .nx-ticker-cell[data-dir="up"] { border-color: color-mix(in oklab, var(--nx-success) 38%, var(--nx-border)); }
+  .nx-ticker-cell[data-dir="down"] { border-color: color-mix(in oklab, var(--nx-danger) 38%, var(--nx-border)); }
+
+  .nx-ticker-sym {
+    display: flex;
+    align-items: baseline;
+    gap: var(--nx-space-2);
+
+    & b {
+      font-size: var(--nx-text-sm);
+      font-weight: 700;
+      letter-spacing: var(--nx-tracking-wide);
+    }
+
+    & span {
+      font-size: var(--nx-text-xs);
+      color: var(--nx-text-muted);
+    }
+  }
+
+  .nx-ticker-quote {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--nx-space-2);
+    /* Prices and signs read the same in both directions. */
+    direction: ltr;
+    unicode-bidi: isolate;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.25;
+  }
+
+  .nx-ticker-price {
+    font-size: var(--nx-text-md);
+    font-weight: 700;
+  }
+
+  .nx-ticker-chg {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: var(--nx-text-xs);
+    font-weight: 700;
+
+    & .nx-icon {
+      inline-size: 0.95rem;
+      block-size: 0.95rem;
+    }
+  }
+
+  .nx-ticker-cell[data-dir="up"] .nx-ticker-chg { color: var(--nx-success-text); }
+  .nx-ticker-cell[data-dir="down"] .nx-ticker-chg { color: var(--nx-danger-text); }
+
+  /* ---- Reduced motion ------------------------------------------------------------------
+     Loops stop, rolls snap, teleports replace wobbles; every state still has
+     its colour, icon or label. ------------------------------------------------------------------------- */
+  @media (prefers-reduced-motion: reduce) {
+    .nx-confetti-button,
+    .nx-ripple-surface[data-variant="filled"],
+    .nx-ripple-surface[data-variant="outline"],
+    .nx-reaction-btn {
+      transition-property: background-color, border-color, color, box-shadow;
+      transition-duration: var(--nx-dur-fast);
+    }
+
+    .nx-confetti-button:active,
+    .nx-ripple-surface[data-variant="filled"]:active,
+    .nx-ripple-surface[data-variant="outline"]:active,
+    .nx-reaction-btn:active { scale: 1; }
+
+    /* No cannon, no ink: the state change is the whole event. */
+    .nx-confetti-canvas,
+    .nx-ripple-ink { display: none; }
+
+    .nx-confetti-button-icons > * { transition-duration: 1ms; }
+
+    .nx-drag-pad,
+    .nx-drag-chip { transition: none; }
+
+    .nx-drag-chip[data-dragging] { scale: 1; }
+
+    .nx-drag-slot[data-settled],
+    .nx-drag-check,
+    .nx-reaction-btn[aria-pressed="true"] .nx-icon { animation: none; }
+  }
+}

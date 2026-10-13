@@ -1,0 +1,125 @@
+{
+  "schema_version": "mimosa-task-review/v2",
+  "run_id": "20261012T211817411Z-74311-5b7d4a4969d7",
+  "run_status": "completed",
+  "errors": [],
+  "coverage": {
+    "schema_version": "mimosa-hook-coverage/v1",
+    "status": "complete",
+    "scope": "hook_observed_diff",
+    "baseline": {
+      "complete": true,
+      "captured_files": 1290,
+      "candidate_limit": 5000,
+      "truncated": false,
+      "enumeration_error_count": 0,
+      "snapshot_error_count": 0,
+      "compensated_target_count": 1
+    },
+    "change_tracking": {
+      "touched_observed": 1,
+      "touched_retained": 1,
+      "truncated": false,
+      "bash_mutation": false,
+      "bash_discovered": 0,
+      "bash_discovery_limit": 80,
+      "bash_discovery_truncated": false
+    },
+    "candidates": {
+      "eligible_files": 1,
+      "selected_files": 1,
+      "limit": 20,
+      "truncated": false
+    },
+    "scanning": {
+      "required_files": 1,
+      "scanned_files": 1,
+      "skipped_files": 0,
+      "failed_files": 0,
+      "project_checks_required": 0,
+      "project_checks_completed": 0
+    },
+    "notification": {
+      "eligible_findings": 0,
+      "detailed_findings": 0,
+      "detail_limit": 3,
+      "truncated": false
+    },
+    "reason_counts": {},
+    "reasons": [],
+    "reasons_truncated": false
+  },
+  "generated_at": "2026-10-12T21:18:17.411Z",
+  "session_id": "sess_e1f87e74-4ecb-4ce5-af78-375e004c6ede",
+  "target": ".",
+  "revision": "c7f549cdf8fb1ca6b9ae528bc3708da30f66ca98",
+  "rules_version": "unavailable",
+  "diff_hash": "92b58df1ceca303e131472d6b42add3d664f068b1f1497346d35d0b5c06c8c69",
+  "diff": {
+    "algorithm": "sha256",
+    "changed_file_count": 1,
+    "changed_files": [
+      {
+        "file": ".zcode/workflow-drafts/موج-پورت-انیمیشنها-به-پکیجها.dwf.ts",
+        "ranges": [
+          {
+            "start": 1,
+            "end": 304
+          }
+        ],
+        "before_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "after_hash": "1b7627bc1c747eec5b214aea8a62ca13b137ad740844efc62c7f829a61185611"
+      }
+    ]
+  },
+  "timing": {
+    "started_at": "2026-10-12T21:18:15.925Z",
+    "completed_at": "2026-10-12T21:18:17.411Z",
+    "duration_ms": 1486,
+    "measurement": "hook_wall_clock"
+  },
+  "tokens": {
+    "input": 0,
+    "output": 0,
+    "total": 0,
+    "model_calls": 0,
+    "measurement": "known-zero"
+  },
+  "telemetry": {
+    "schemaVersion": "mimosa-gate-telemetry/v1",
+    "profile": "gate",
+    "operation": "Stop",
+    "outcome": "complete",
+    "latencyMs": 1486,
+    "peakMemoryBytes": 176521216,
+    "memoryMeasurement": "max-observed-process-rss",
+    "scannedFiles": 1,
+    "cache": {
+      "hits": 0,
+      "misses": 0,
+      "measurement": "not-applicable"
+    },
+    "denyCount": 0,
+    "tokens": {
+      "input": 0,
+      "output": 0,
+      "total": 0,
+      "modelCalls": 0,
+      "measurement": "known-zero"
+    }
+  },
+  "finding_count": 0,
+  "rewake_finding_count": 0,
+  "evidence_boundary": {
+    "scan": "candidate",
+    "static_fix_verification": "observed_static_only",
+    "runtime_verification": "not_performed"
+  },
+  "finding_events": [],
+  "findings": [],
+  "artifacts": {
+    "immutable_report": ".mimosa/reports/task-review-sess_e1f87e74-4ecb-4ce5-af78-375e004c6ede-20261012T211817411Z-74311-5b7d4a4969d7.json",
+    "latest_report": ".mimosa/reports/task-review-sess_e1f87e74-4ecb-4ce5-af78-375e004c6ede.json",
+    "history_summary": ".mimosa/history/run-20261012T211817411Z-74311-5b7d4a4969d7.json"
+  }
+}

@@ -1,0 +1,37 @@
+
+<?php $attributes ??= new \Illuminate\View\ComponentAttributeBag;
+
+$__newAttributes = [];
+$__propNames = \Illuminate\View\ComponentAttributeBag::extractPropNames((['text', 'side' => 'top', 'delay' => 350]));
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (in_array($__key, $__propNames)) {
+        $$__key = $$__key ?? $__value;
+    } else {
+        $__newAttributes[$__key] = $__value;
+    }
+}
+
+$attributes = new \Illuminate\View\ComponentAttributeBag($__newAttributes);
+
+unset($__propNames);
+unset($__newAttributes);
+
+foreach (array_filter((['text', 'side' => 'top', 'delay' => 350]), 'is_string', ARRAY_FILTER_USE_KEY) as $__key => $__value) {
+    $$__key = $$__key ?? $__value;
+}
+
+$__defined_vars = get_defined_vars();
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (array_key_exists($__key, $__defined_vars)) unset($$__key);
+}
+
+unset($__defined_vars, $__key, $__value); ?>
+<?php $id = \NabuXUI\NabuXUI::id('nx-tip'); ?>
+<span style="display: contents" x-data="nxTooltip(<?php echo \Illuminate\Support\Js::from($side)->toHtml() ?>, <?php echo e((int) $delay); ?>)">
+    <?php echo e($slot); ?>
+
+    <div x-ref="tip" id="<?php echo e($id); ?>" role="tooltip" popover="manual" <?php echo e($attributes->class('nx-tooltip')); ?>><?php echo e($text); ?></div>
+</span>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/packages/livewire/src/../resources/views/components/tooltip.blade.php ENDPATH**/ ?>

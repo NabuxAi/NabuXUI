@@ -1,0 +1,115 @@
+
+<?php $attributes ??= new \Illuminate\View\ComponentAttributeBag;
+
+$__newAttributes = [];
+$__propNames = \Illuminate\View\ComponentAttributeBag::extractPropNames((['title' => null, 'periods' => [], 'active' => null, 'format' => null, 'invertDelta' => false]));
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (in_array($__key, $__propNames)) {
+        $$__key = $$__key ?? $__value;
+    } else {
+        $__newAttributes[$__key] = $__value;
+    }
+}
+
+$attributes = new \Illuminate\View\ComponentAttributeBag($__newAttributes);
+
+unset($__propNames);
+unset($__newAttributes);
+
+foreach (array_filter((['title' => null, 'periods' => [], 'active' => null, 'format' => null, 'invertDelta' => false]), 'is_string', ARRAY_FILTER_USE_KEY) as $__key => $__value) {
+    $$__key = $$__key ?? $__value;
+}
+
+$__defined_vars = get_defined_vars();
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (array_key_exists($__key, $__defined_vars)) unset($$__key);
+}
+
+unset($__defined_vars, $__key, $__value); ?>
+<?php
+    use NabuXUI\NabuXUI;
+    $locale = str_replace('_', '-', app()->getLocale());
+    $periods = array_values(array_map(fn ($p) => [
+        'id' => (string) $p['id'],
+        'label' => (string) ($p['label'] ?? $p['id']),
+        'value' => (float) ($p['value'] ?? 0),
+        'delta' => isset($p['delta']) ? (float) $p['delta'] : null,
+        'values' => array_map('floatval', array_values($p['values'] ?? [])),
+        'labels' => isset($p['labels']) ? array_values(array_map('strval', $p['labels'])) : null,
+        'caption' => $p['caption'] ?? null,
+    ], $periods));
+    $active = (string) ($active ?? ($periods[0]['id'] ?? ''));
+    $period = collect($periods)->firstWhere('id', $active) ?? ($periods[0] ?? ['id' => '', 'label' => '', 'value' => 0, 'delta' => null, 'values' => [], 'labels' => null, 'caption' => null]);
+    $slots = max(array_map(fn ($p) => count($p['values']), $periods) ?: [0]);
+    $count = count($period['values']);
+    $max = max($period['values'] ?: [0]) ?: 1;
+    $nameOf = fn (array $p, int $i) => $p['labels'][$i] ?? (string) ($i + 1);
+    $digits = (int) ($format['maximumFractionDigits'] ?? 0);
+    $number = fn ($v) => NabuXUI::formatNumber($v, $digits, $locale);
+    $good = $period['delta'] === null ? true : ($invertDelta ? $period['delta'] <= 0 : $period['delta'] >= 0);
+    $config = ['periods' => $periods, 'active' => $active, 'locale' => $locale, 'format' => $format, 'invertDelta' => (bool) $invertDelta, 'title' => is_string($title) ? $title : null];
+?>
+<article <?php echo e($attributes->class('nx-analytics-card')->merge(['data-nx-reveal' => ''])); ?> x-data="nxAnalyticsCard(<?php echo \Illuminate\Support\Js::from($config)->toHtml() ?>)">
+    <header class="nx-analytics-card-head">
+        <p class="nx-analytics-card-title"><?php echo e($title); ?></p>
+        <?php if (isset($component)) { $__componentOriginalaab7c1b8236b1fe6a1edb92492e4db27 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalaab7c1b8236b1fe6a1edb92492e4db27 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::segmented','data' => ['size' => 'sm','label' => is_string($title) ? $title : null,'value' => $active,'options' => collect($periods)->mapWithKeys(fn ($p) => [$p['id'] => $p['label']])->all(),'xOn:change' => 'current = $event.target.value']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::segmented'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['size' => 'sm','label' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(is_string($title) ? $title : null),'value' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($active),'options' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(collect($periods)->mapWithKeys(fn ($p) => [$p['id'] => $p['label']])->all()),'x-on:change' => 'current = $event.target.value']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalaab7c1b8236b1fe6a1edb92492e4db27)): ?>
+<?php $attributes = $__attributesOriginalaab7c1b8236b1fe6a1edb92492e4db27; ?>
+<?php unset($__attributesOriginalaab7c1b8236b1fe6a1edb92492e4db27); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalaab7c1b8236b1fe6a1edb92492e4db27)): ?>
+<?php $component = $__componentOriginalaab7c1b8236b1fe6a1edb92492e4db27; ?>
+<?php unset($__componentOriginalaab7c1b8236b1fe6a1edb92492e4db27); ?>
+<?php endif; ?>
+    </header>
+    <div class="nx-analytics-card-kpi" wire:ignore>
+        <span class="nx-analytics-card-value">
+            <span class="nx-number" x-ref="value"><span class="nx-visually-hidden"><?php echo e($number($period['value'])); ?></span><span class="nx-number-roll" aria-hidden="true"><?php echo e($number($period['value'])); ?></span></span>
+        </span>
+        <span class="nx-delta" x-ref="delta" <?php if($period['delta'] === null): ?> hidden <?php else: ?> data-trend="<?php echo e($good ? 'up' : 'down'); ?>" <?php endif; ?>>
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($period['delta'] !== null): ?><?php echo e(NabuXUI::icon($period['delta'] >= 0 ? 'trend-up' : 'trend-down')); ?><?php echo e(($period['delta'] > 0 ? '+' : '').NabuXUI::formatNumber($period['delta'], 1, $locale)); ?>%<?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+        </span>
+    </div>
+    <p class="nx-analytics-card-caption" x-text="period.caption ?? ''"><?php echo e($period['caption']); ?></p>
+    <div class="nx-analytics-card-frame" x-ref="frame">
+        <div class="nx-analytics-card-bars" x-ref="bars" tabindex="0" aria-label="<?php echo e(is_string($title) ? $title.'. ' : ''); ?><?php echo e(__('nabuxui::ui.chartHint')); ?>"
+            x-on:pointerover="pick($event)" x-on:pointerleave="hover = null" x-on:keydown="key($event)" x-on:blur="hover = null">
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php for($i = 0; $i < $slots; $i++): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                <span class="nx-analytics-card-slot" data-index="<?php echo e($i); ?>" data-state="<?php echo e($i < $count ? 'on' : 'off'); ?>" <?php if($i === $count - 1): ?> data-current <?php endif; ?>
+                    style="--nx-i: <?php echo e($i); ?>; --nx-v: <?php echo e($i < $count ? max(0.02, round($period['values'][$i] / $max, 4)) : 0); ?>"
+                    x-bind:data-state="<?php echo e($i); ?> < period.values.length ? 'on' : 'off'" x-bind:data-current="<?php echo e($i); ?> === period.values.length - 1 ? '' : null" x-bind:style="slotStyle(<?php echo e($i); ?>)">
+                    <span class="nx-analytics-card-bar"><span class="nx-analytics-card-fill"></span></span>
+                </span>
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endfor; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+        </div>
+        <div class="nx-chart-tooltip" x-ref="tip" aria-hidden="true" wire:ignore></div>
+    </div>
+    <div class="nx-analytics-card-axis" aria-hidden="true" x-show="period.values.length > 1">
+        <span x-text="nameOf(0)"><?php echo e($count ? $nameOf($period, 0) : ''); ?></span>
+        <span x-text="nameOf(period.values.length - 1)"><?php echo e($count ? $nameOf($period, $count - 1) : ''); ?></span>
+    </div>
+    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $periods; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $p): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+        <table class="nx-visually-hidden" <?php if($p['id'] !== $active): ?> hidden <?php endif; ?> x-bind:hidden="current !== <?php echo \Illuminate\Support\Js::from($p['id'])->toHtml() ?>">
+            <caption><?php echo e(is_string($title) ? $title.' · ' : ''); ?><?php echo e($p['label']); ?></caption>
+            <tbody>
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $p['values']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i => $v): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?><tr><th scope="row"><?php echo e($nameOf($p, $i)); ?></th><td><?php echo e($number($v)); ?></td></tr><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+            </tbody>
+        </table>
+    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+</article>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/packages/livewire/src/../resources/views/components/analytics-card.blade.php ENDPATH**/ ?>

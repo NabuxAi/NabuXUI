@@ -74,6 +74,12 @@ export * from './blocks/scroll';
 export * from './blocks/sections';
 export * from './blocks/shaders';
 export * from './blocks/text-fx';
+export * from './blocks/ambient';
+export * from './blocks/depth-3d';
+export * from './blocks/entrances';
+export * from './blocks/hover-fx';
+export * from './blocks/kinetic';
+export * from './blocks/micro-fx';
 
 // The framework-agnostic helpers, for pages that need them directly.
 export { theme, transition, toasts, type ToastInput, type ToastTone } from '@nabuxai/ui-core';

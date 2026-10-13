@@ -1,0 +1,18 @@
+{
+  "name": "@nabuxai/ui-livewire-build",
+  "private": true,
+  "type": "module",
+  "description": "Builds the Livewire package's dist/ (Alpine plugin + core bundle, CSS, icons, lang files)",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "echo 'PHP tests: composer test (repo root)'"
+  },
+  "dependencies": {
+    "@nabuxai/ui-core": "workspace:*"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "typescript": "^5.9.0"
+  }
+}

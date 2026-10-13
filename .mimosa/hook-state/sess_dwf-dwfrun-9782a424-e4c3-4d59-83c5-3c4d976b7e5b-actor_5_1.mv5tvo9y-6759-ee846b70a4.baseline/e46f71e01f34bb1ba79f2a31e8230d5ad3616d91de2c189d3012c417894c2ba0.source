@@ -1,0 +1,62 @@
+
+<?php $attributes ??= new \Illuminate\View\ComponentAttributeBag;
+
+$__newAttributes = [];
+$__propNames = \Illuminate\View\ComponentAttributeBag::extractPropNames((['title' => null, 'hint' => null]));
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (in_array($__key, $__propNames)) {
+        $$__key = $$__key ?? $__value;
+    } else {
+        $__newAttributes[$__key] = $__value;
+    }
+}
+
+$attributes = new \Illuminate\View\ComponentAttributeBag($__newAttributes);
+
+unset($__propNames);
+unset($__newAttributes);
+
+foreach (array_filter((['title' => null, 'hint' => null]), 'is_string', ARRAY_FILTER_USE_KEY) as $__key => $__value) {
+    $$__key = $$__key ?? $__value;
+}
+
+$__defined_vars = get_defined_vars();
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (array_key_exists($__key, $__defined_vars)) unset($$__key);
+}
+
+unset($__defined_vars, $__key, $__value); ?>
+<div x-data="nxFileDrop()" <?php echo e($attributes->only(['class', 'style'])); ?>>
+    <label class="nx-filedrop" x-bind:data-dragging="dragging ? '' : null" @dragenter="enter($event)" @dragover.prevent @dragleave="leave()" @drop="drop($event)">
+        <input type="file" x-ref="input" <?php echo e($attributes->except(['class', 'style'])->class('nx-visually-hidden')); ?>>
+        <span class="nx-filedrop-icon" aria-hidden="true"><?php echo e(\NabuXUI\NabuXUI::icon('upload')); ?></span>
+        <span class="nx-filedrop-title">
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($title): ?><?php echo e($title); ?><?php else: ?>
+                <?php [$before, $after] = array_pad(explode(':browse', __('nabuxui::ui.dropFiles')), 2, ''); ?>
+                <?php echo e($before); ?><u><?php echo e(__('nabuxui::ui.browse')); ?></u><?php echo e($after); ?>
+
+            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+        </span>
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($hint): ?><span class="nx-filedrop-hint"><?php echo e($hint); ?></span><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+    </label>
+    <ul class="nx-file-list" x-show="files.length" x-cloak>
+        <template x-for="(file, i) in files" :key="file.name + i">
+            <li class="nx-file" x-bind:data-status="file.status" x-bind:style="`--nx-i: ${i}`">
+                <?php echo e(\NabuXUI\NabuXUI::icon('file')); ?>
+
+                <span class="nx-file-name" x-text="file.name"></span>
+                <span class="nx-file-state">
+                    <template x-if="file.status === 'done'"><span><?php echo e(\NabuXUI\NabuXUI::icon('check-circle', '', __('nabuxui::ui.uploaded'))); ?></span></template>
+                    <template x-if="file.status === 'error'"><span><?php echo e(\NabuXUI\NabuXUI::icon('alert-circle', '', __('nabuxui::ui.failed'))); ?></span></template>
+                </span>
+                <span class="nx-file-meta" x-text="size(file.size)"></span>
+                <template x-if="file.status === 'uploading'">
+                    <progress class="nx-progress" max="100" x-bind:value="file.progress" x-bind:style="`--nx-value: ${file.progress}`" aria-label="<?php echo e(__('nabuxui::ui.uploading')); ?>"></progress>
+                </template>
+            </li>
+        </template>
+    </ul>
+</div>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/packages/livewire/src/../resources/views/components/file-drop.blade.php ENDPATH**/ ?>

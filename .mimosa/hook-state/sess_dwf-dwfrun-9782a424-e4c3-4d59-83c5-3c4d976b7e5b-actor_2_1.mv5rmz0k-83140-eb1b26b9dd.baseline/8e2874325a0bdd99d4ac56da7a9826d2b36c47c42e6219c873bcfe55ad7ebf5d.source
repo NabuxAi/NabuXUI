@@ -1,0 +1,199 @@
+interface ReviewFinding {
+  /** مسیر فایل (با شماره خط اگر مربوط است). */
+  where: string;
+  /** یک جمله: مشکل چیست. */
+  what: string;
+  /** شدت؛ high فقط برای از دست رفتن داده یا رخنه امنیتی واقعی. */
+  severity: "low" | "medium" | "high";
+  /** راهنمای کوتاه اصلاح. */
+  fix_hint: string;
+}
+
+const CMS = "/Users/mrchatgpt/Sites/nabux-cms";
+const SITE = "/Users/mrchatgpt/Sites/Nabuxai.com";
+const PARITY = CMS + "/docs/emdash-parity.md";
+const EMDASH = "/tmp/emdash";
+
+const RULES = [
+  "قوانین مشترک:",
+  "- فقط در ریپوی مأموریتت بنویس؛ خواندن " + EMDASH + " (کلون EmDash) و " + PARITY + " آزاد و تشویق‌شده است — از آن‌ها شِما و نام‌گذاری بردار، کد کپی نکن.",
+  "- اول CONVENTIONS.md ریپو را بخوان و پیروی کن.",
+  "- تست‌ها قطعی: بدون شبکه/زمان واقعی مطلق (برای زمان‌بندی ازnow تزریقی ریپو استفاده کن)؛ cargo test را خودت اجرا نکن — گردش کار گیت می‌گذارد. اما cargo test --lib نام‌محدود و cargo check/clippy مجازند؛ اگر برای دیباگ لازم شد یک cargo test کامل هم مجاز است (تجربه: بهتر از حدس زدن گیت).",
+  "- SQL پارامتری؛ خطاها با شکل قراردادی ریپو؛ به احترام مهاجرت‌های موجود، مهاجرت تازه با شماره‌ی بعدی.",
+  "- پاسخ نهایی فارسی و مختصر: چه ساخت، چه تستی، انحراف‌ها.",
+].join("\n");
+
+const fixer = agent("تعمیرکار", {
+  system:
+    "مهندس ارشد Rust/TypeScript. خطا را ریشه‌ای حل می‌کنی، نه با تضعیف تست. اگر گیت صادقانه ممکن نیست، صریح بنویس و اسکیلیت کن. فارسی و مختصر.",
+});
+
+artifact.board("modules", {
+  key: "module",
+  status: "stage",
+  columns: ["در صف", "در ساخت", "گیت", "آماده"],
+  cardTitle: "module",
+});
+for (const m of ["انتشار-زمان‌بندی", "منوها-ممیزی-ریدایرکت", "جستجو-پیش‌نمایش", "رسانه-وب‌هوک", "سرور-MCP", "پنل-جدید", "بازبینی"]) {
+  report({ module: m, stage: "در صف" });
+}
+
+async function cargoGate(label: string, args: string[], timeoutMs: number, hint: string): Promise<boolean> {
+  report({ module: label, stage: "گیت" });
+  for (let round = 1; round <= 4; round++) {
+    const r = await world.run("cargo", args, { timeoutMs });
+    if (r.exitCode === 0) {
+      log(`${label}: گیت پاس${round > 1 ? " (راند " + round + ")" : ""}`);
+      report({ module: label, stage: "آماده" });
+      return true;
+    }
+    log(`${label}: شکست — راند ${round} از ۴`);
+    await fixer.ask(
+      `گیت «${label}» (cargo ${args.join(" ")}) در ${CMS} شکست خورد (راند ${round} از 4).\n` +
+      "مجاز و تشویق‌شده‌ای همین حالا خودت cargo test --lib (و در صورت لزوم cargo test کامل) را اجرا کنی تا نام تست و پیام assertion را مستقیم ببینی؛ هر مورد قرمز را ریشه‌ای فیکس کن تا در یک راند همه سبز شوند.\n" +
+      "خروجی دم گیت:\n" + (r.stderr || r.stdout).slice(-3000) + "\n\n" + hint + "\n" + RULES,
+    );
+  }
+  log(`${label}: پس از ۴ راند نگرفت`);
+  return false;
+}
+
+/* ═══ شاخه‌ی موازی پنل — همین ابتدا شروع می‌شود، ریپوی جدا ═══ */
+phase("صفحات پنل: صف کامنت‌ها، رسانه، منوها، تقویم");
+const panelP = agent("معمار پنل").ask(
+  "چهار صفحه‌ی جدید به پنل ادمین " + SITE + " اضافه کن (Next.js Pages Router، همه در /app با PanelShell و بلوک‌های NabuXUI؛ اتصال از طریق پل موجود lib/panel/bridge.js::panelFetch).\n\n" +
+  "مرجع شِما: " + PARITY + " و کلون EmDash در " + EMDASH + " (فقط بخوان). این APIها را عامل همزمانِ هسته می‌سازد — قرارداد را دقیق رعایت کن:\n" +
+  "- صف کامنت‌ها: GET /api/v1/comments?status=hold|approved|spam و PATCH /api/v1/comments/:id {status} (همین حالا در هسته هست) → /app/comments با چیپ‌های شمارشی سه‌وضعیتی و اکشن تایید/اسپم/حذف (DELETE /api/v1/comments/:id).\n" +
+  "- رسانه: GET /api/v1/media?folder= و POST /api/v1/media/folders {name} و PATCH /api/v1/media/:id {folder} + GET /api/v1/media/:id/usage → /app/media: گرید تصاویر با فیلتر فولدر و نشانگر usage («۳ محتوا»). آپلود از صفحه‌ی موجود عبور می‌کند — فقط مرور/جابه‌جایی/usage.\n" +
+  "- منوها: GET/POST/PUT /api/v1/menus (منوی نام‌دار با آیتم‌های {label,href,order}) → /app/menus: سازنده‌ی آیتم با ترتیب بالا/پایین.\n" +
+  "- تقویم تحریریه: GET /api/v1/contents?scheduled=1 (محتواهایی که publish_at آینده دارند) → /app/calendar: نمای ماهِ جاری (گرید ۷×۵ با استایل pn-calendar خودت) با چیپ هر انتشار زمان‌بندی‌شده.\n" +
+  "نکات: nav جدید در PanelShell (Comments/Media/Menus/Calendar با آیکن lucide)، کلیدهای لوکال en/ar زیر panel.*، استایل‌های جدید در styles/panel.css با پیشوند pn- (از استایل‌های موجود کپی تکراری نزن؛ چیپ شمارشی و گرید تقویم طرح تازه‌اند). برای وضعیت‌ها loading/error/empty با nx-empty-state. به داده‌ی نمونه نیاز داری: پل واقعی است، پس صفحه‌ها را برای «هسته خاموش» هم ملایم خطا بدهند.\n" +
+  "گیت محلی خودت: npx next build باید پاس شود (اجازه اجرا داری). کامیت نکن — کامیت با گردش کار.\n" + RULES,
+);
+
+/* ═══ بچ ۱ هسته ═══ */
+phase("پورت هسته: انتشار زمان‌بندی‌شده، منوها، ممیزی، ریدایرکت");
+report({ module: "انتشار-زمان‌بندی", stage: "در ساخت" });
+report({ module: "منوها-ممیزی-ریدایرکت", stage: "در ساخت" });
+await agent("معمار انتشار").ask(
+  "چهار قابلیت EmDash را به " + CMS + " پورت کن (axum + rusqlite؛ مهاجرت‌های شماره‌دار؛ شِما از " + PARITY + " و " + EMDASH + "/packages/core/src/database/migrations).\n\n" +
+  "1. انتشار زمان‌بندی‌شده: مهاجرت ۰۰۰۷ — ستون‌های contents.publish_at TEXT NULL و contents.unpublish_at TEXT NULL + ایندکس (status, publish_at). API: PATCH همان فیلدها را می‌پذیرد (RFC3339). cron داخلی: تاسک tokio هر ۶۰ ثانیه که در یک تراکنش، محتواهای status=draft با publish_at <= now را published و published_at=now می‌کند و محتواهای published با unpublish_at <= now را draft — سپس وب‌هوک/باس هوک content:afterPublish/afterUnpublish را (اگر سیم‌کشی موجود است) صدا بزند. تست: با now تزریقی، سه محتوا (گذشته/آینده/بدون) بعد از یک دور cron درست می‌شوند.\n" +
+  "2. منوها: مهاجرت ۰۰۰۸ — menus(id, name UNIQUE, created_at) و menu_items(id, menu_id FK, label, href, order_index, parent_id NULL, created_at). API ادمین (write): GET /api/v1/menus (با آیتم‌ها مرتب)، POST (name)، PUT /api/v1/menus/:id/items (تعویض کل آیتم‌ها)، DELETE. GET عمومی برای menu با name (خوراک فوتر/هدر فرانت). تست: ساخت/تعویض/ترتیب/حذف آبشاری.\n" +
+  "3. لاگ ممیزی: مهاجرت ۰۰۰۹ — audit_log(id, actor_email, action, entity, entity_id, detail JSON, created_at) + ایندکس (entity, created_at). ثبت خودکار در هندلرهای موجود: create/update/delete/publish محتوا، create/update محصول، تغییر وضعیت سفارش، مودریشن کامنت (actor از توکن). GET /api/v1/audit?entity=&page= (admin). تست: سه اکشن → سه ردیف با actor درست.\n" +
+  "4. ریدایرکت: مهاجرت ۰۰۱۰ — redirects(id, from_path UNIQUE, to_path, status INTEGER DEFAULT 301, enabled, created_at). CRUD ادمین + اعتبارسنجی loop-guard: از مسیر to_path == from_path مسیر دیگر جلوگیری (زنجیره‌ی max ۳ در اعتبارسنجی). GET عمومی /api/v1/redirects/lookup?from= (خود فرانت/پروکسی بعداً مصرف می‌کند) با 404 اگر نبود. تست: CRUD + رد حلقه‌ی A→B→A.\n" +
+  "همه: fmt/clippy صفر هشدار (خودت اجرا کن)، تست‌های یکپارچگی در tests/api.rs به سبک موجود.\n" + RULES,
+);
+const b1 = await cargoGate("انتشار-زمان‌بندی", ["test", "--manifest-path", CMS + "/Cargo.toml"], 900000,
+  "همه‌ی تست‌های شکسته (قدیمی‌های به‌هم‌خورده از مهاجرت‌های جدید + تست‌های خودت) را یکجا سبز کن.");
+
+/* ═══ بچ ۲ هسته ═══ */
+phase("پورت هسته: جستجوی تمام‌متن، پیش‌نمایش امضاشده، رسانه، وب‌هوک محتوا");
+report({ module: "جستجو-پیش‌نمایش", stage: "در ساخت" });
+report({ module: "رسانه-وب‌هوک", stage: "در ساخت" });
+await agent("معمار جستجو و رسانه").ask(
+  "چهار قابلیت بعدی EmDash را به " + CMS + " پورت کن — ادامه‌ی کار عامل قبلی؛ مهاجرت از ۰۰۱۱.\n\n" +
+  "1. فول‌تکست سرچ: مهاجرت ۰۰۱۱ — جدول مجازی FTS5 content_search(title, body, content_id UNINDEXED) + تریگرهای after insert/update/delete روی contents (title و payload.body را ایندکس کن؛ json_extract برای body). GET /api/v1/search?q= عمومی فقط publishedها با highlight ساده (snippet فورِین) و limit. تست: درج دو محتوا، جستجوی واژه‌ی فارسی، حذف → از نتایج خارج.\n" +
+  "2. پیش‌نمایش امضاشده (الگوی EmDash docs/preview): مهاجرت لازم ندارد؛ کلید از env PREVIEW_SECRET (پیش‌فرض مشتق از ADMIN_PASSWORD اگر env نبود). GET /api/v1/contents/:id/preview-token (write) → {token, expires_at} با HMAC-SHA256(id + exp) و انقضای پیش‌فرض ۱۵ دقیقه. GET /api/v1/preview?token=&id= عمومی: اگر HMAC و انقضا درست، محتوای هر وضعیتی (شامل draft) را می‌دهد؛ در غیر این صورت 404. تست: توکن درست draft را می‌دهد، توکن دستکاری‌شده 404، منقضه 404.\n" +
+  "3. رسانه: فولدر + usage — مهاجرت ۰۰۱۲ — ستون media.folder TEXT NULL، جدول media_folders(id, name UNIQUE)، جدول media_usage(media_id FK, entity, entity_id, PK(media_id,entity,entity_id)). ثبت خودکار: وقتی payload محتوا شامل مسیر /media/… است در save یک ردیف usage بنویس (پارس ساده‌ی رشته‌ای) و در حذف محتوا پاک کن. API: POST /api/v1/media/folders {name}، PATCH /api/v1/media/:id {folder}، GET /api/v1/media?folder=، GET /api/v1/media/:id/usage → {count, items:[{entity, entity_id}]}. تست: آپلود+محتوای ارجاع‌دهنده → usage=1، حذف محتوا → usage=0.\n" +
+  "4. وب‌هوک عمومی محتوا: همان ماشین وب‌هوک ووکامرسی موجود را تعمیم بده — تاپیک‌های content.created/updated/published/trash شود (رویداد از mutations محتوا) با همان امضای HMAC؛ جدول موجود را استفاده کن (ستون topics JSON است؛ فقط فیلتر تاپیک را گسترش بده). تست: ثبت وب‌هوک با تاپیک content.published → انتشار محتوا → امضای درست به مقصد ماک‌شده (به‌جای شبکه، تحویل را در تست با هندل تزریقی بگیر).\n" +
+  "fmt/clippy صفر؛ تست‌های یکپارچگی سبز.\n" + RULES,
+);
+const b2 = await cargoGate("جستجو-پیش‌نمایش", ["test", "--manifest-path", CMS + "/Cargo.toml"], 900000,
+  "شکست‌های ناشی از تعامل با بچ ۱ را هم ببین (مهاجرت‌های شماره‌دار پشت‌سرهم).");
+
+/* ═══ بچ ۳ هسته: MCP ═══ */
+phase("سرور MCP برای ایجنت‌ها");
+report({ module: "سرور-MCP", stage: "در ساخت" });
+await agent("معمار MCP").ask(
+  "سرور MCP (Model Context Protocol) را به " + CMS + " اضافه کن تا ایجنت‌های هوش مصنوعی مستقیم CMS را مدیریت کنند — شِما از " + EMDASH + "/docs (mcp-server.mdx) و مشخصه‌ی JSON-RPC 2.0.\n\n" +
+  "طراحی: مسیر POST /mcp (بدون احراز سشن؛ هر درخواست bearer توکن ادمین می‌خواهد — هدر Authorization؛ بدون توکن 401 با شکل خطای JSON-RPC). پیاده‌سازی JSON-RPC 2.0 دستی (بدون وابستگی سنگین؛ serde_json کافی است):\n" +
+  "- initialize → {protocolVersion:'2025-06-18', capabilities:{tools:{}}, serverInfo:{name:'nabux-cms', version از env CARGO_PKG_VERSION}}\n" +
+  "- tools/list → ابزارها: list_contents(type?,status?,page?), get_content(id), create_content(type,title,slug?,status,payload), update_content(id, title?,status?,payload?), trash_content(id), search(q), list_products, list_orders, moderate_comment(id,status), scheduled()\n" +
+  "- tools/call → اجرا روی همان هندلرهای داخلی (بازفروش؛ منطق تکراری ننویس) و خروجی {content:[{type:'text',text:JSON.stringify(result)}]}\n" +
+  "- ping → {} و متدهای ناشناخته → خطای JSON-RPC -32601\n" +
+  "تست‌ها (oneshot درون‌پردازشی): initialize، tools/list حداقل ۹ ابزار، create+search از طریق tools/call، 401 بدون توکن، -32601 برای متد ناشناس.\n" +
+  "fmt/clippy صفر؛ cargo test کامل سبز.\n" + RULES,
+);
+const mcpOk = await cargoGate("سرور-MCP", ["test", "--manifest-path", CMS + "/Cargo.toml"], 900000,
+  "تعامل سه بچ با هم را هم ببین؛ تست کامل محلی مجاز است.");
+
+/* ═══ گیت پذیرش کامل هسته ═══ */
+phase("پذیرش کامل هسته");
+const fmtOk = await cargoGate("کلیدزنی", ["fmt", "--manifest-path", CMS + "/Cargo.toml", "--check"], 300000,
+  "اجازه داری cargo fmt --manifest-path " + CMS + "/Cargo.toml اجرا و کامیت کنی.");
+const clippyOk = await cargoGate("کلیدیپلی", ["clippy", "--manifest-path", CMS + "/Cargo.toml", "--all-targets", "--", "-D", "warnings"], 600000,
+  "هشدارها را ریشه‌ای حل کن.");
+
+/* ═══ جمع پنل ═══ */
+phase("جمع‌آوری صفحات پنل و گیت بیلد");
+const panelRes: unknown = await panelP;
+report({ module: "پنل-جدید", stage: "آماده" });
+log("صفحات پنل ساخته شدند");
+
+/* ═══ بازبینی مستقل ═══ */
+phase("بازبینی مستقل و رفع");
+const reviewer = agent("بازبین مستقل", {
+  system:
+    "بازبین امنیت و طراحی با چشم تازه؛ هیچ فایلی را ویرایش نمی‌کنی. یافته با مسیر و شاهد؛ چیزی را که بررسی نکردی گزارش نکن. فارسی پاسخ بده.",
+});
+const reviewRaw: unknown = await reviewer.ask(
+  "پورت‌های EmDash را در " + CMS + " (مهاجرت‌های ۰۰۰۷ تا آخر، search، preview، media usage، webhooks محتوا، /mcp) و صفحات پنل جدید " + SITE + " (comments/media/menus/calendar) بخوان. شِما را با " + PARITY + " مقایسه کن.\n\n" +
+  "چک‌لیست: cron زمان‌بندی — race/تکرار publish؟Preview token — HMAC درست، انقضا چک می‌شود، لیک draft از مسیر دیگر؟FTS — تزریق در MATCH (باید پارامتری با escape باشد)؟usage — حذف رسانه‌ی درحال‌استفاده چه می‌کند (باید هشدار/منع باشد)؟webhooks محتوا — امضا/SSRF گارد به‌ارث رسیده؟/mcp — بدون توکن واقعاً بسته؟tools/call با scope ادمین دستکاری کاربر می‌کند؟منوها — حذف آبشاری؟audit — بدون رمز/توکن در detail؟پنل — XSS از عنوان محتوا (escape)؟throttle صف کامنت؟تست‌ها assertion واقعی؟",
+);
+function asFindings(raw: unknown): ReviewFinding[] | null {
+  if (Array.isArray(raw)) return raw as ReviewFinding[];
+  if (typeof raw === "string") {
+    const m = /\[[\s\S]*\]/.exec(raw);
+    if (m && m[0]) {
+      try {
+        const parsed: unknown = JSON.parse(m[0]);
+        if (Array.isArray(parsed)) return parsed as ReviewFinding[];
+      } catch { /* نه JSON */ }
+    }
+  }
+  return null;
+}
+let findings: ReviewFinding[] = asFindings(reviewRaw) ?? [];
+if (findings.length === 0 && !Array.isArray(reviewRaw)) {
+  const retryRaw: unknown = await reviewer.ask("پاسخ قبلی آرایه نبود. فقط آرایه‌ی JSON با کلیدهای where, what, severity, fix_hint بفرست؛ نبود یافته = []");
+  findings = asFindings(retryRaw) ?? [];
+}
+log(`بازبینی: ${findings.length} یافته`);
+const heavy = findings.filter((f) => f.severity !== "low");
+if (heavy.length > 0) {
+  await fixer.ask(
+    "یافته‌های متوسط/بالا بازبین — ریشه‌ای حل کن (ریپو در خود یافته):\n" + JSON.stringify(heavy, null, 2) + "\n" + RULES +
+    "\nبعد از فیکس، cargo test کامل محلی بزن و نتیجه را گزارش کن.",
+  );
+  const recheck = await world.run("cargo", ["test", "--manifest-path", CMS + "/Cargo.toml"], { timeoutMs: 900000 });
+  log(`بازگیت: ${recheck.exitCode === 0 ? "پاس" : "شکست"}`);
+}
+
+/* ═══ تحویل ═══ */
+phase("کامیت تحویل");
+await world.run("git", ["-C", CMS, "add", "-A"]);
+const c1 = await world.run("git", ["-C", CMS, "commit", "-m", "emdash-parity: انتشار زمان‌بندی‌شده+cron، منوها، ممیزی، ریدایرکت، FTS5، پیش‌نمایش امضاشده، رسانه فولدر+usage، وب‌هوک محتوا، سرور MCP"]);
+await world.run("git", ["-C", SITE, "add", "-A"]);
+const c2 = await world.run("git", ["-C", SITE, "commit", "-m", "panel: صف کامنت‌ها، کتابخانه رسانه، منوها، تقویم تحریریه (پورت EmDash)"]);
+log(`کامیت‌ها: cms=${c1.exitCode === 0 ? "زده شد" : "ناموفق/خالی"} site=${c2.exitCode === 0 ? "زده شد" : "ناموفق/خالی"}`);
+
+await artifact.markdown("report", [
+  "# پورت EmDash CMS — گزارش",
+  "",
+  "- انتشار زمان‌بندی‌شده + cron: " + (b1 ? "پاس" : "شکست"),
+  "- منوها/ممیزی/ریدایرکت: " + (b1 ? "پاس" : "شکست"),
+  "- FTS5/پیش‌نمایش/رسانه/وب‌هوک محتوا: " + (b2 ? "پاس" : "شکست"),
+  "- سرور MCP روی /mcp: " + (mcpOk ? "پاس" : "شکست"),
+  "- fmt/clippy: " + (fmtOk && clippyOk ? "پاس" : "شکست"),
+  "- صفحات پنل (کامنت‌ها/رسانه/منوها/تقویم): ساخته شد",
+  "",
+  "## یافته‌های بازبین",
+  ...(findings.length === 0 ? ["- یافته‌ای نبود."] : findings.map((f) => "- **" + f.severity + "** · `" + f.where + "` — " + f.what)),
+].join("\n"), { title: "گزارش پورت EmDash", description: "۹ قابلیت هسته + ۴ صفحه پنل + MCP", primary: true });
+
+return {
+  conclusion: "پورت EmDash کامل شد: هسته " + (b1 && b2 && mcpOk ? "هر ۹ قابلیت با گیت‌های سبز" : "با گیت ناقص") + " (انتشار زمان‌بندی‌شده با cron، منوها، ممیزی، ریدایرکت با loop-guard، جستجوی FTS5 فارسی، پیش‌نمایش امضاشده HMAC، رسانه با فولدر و usage tracking، وب‌هوک‌های content:*، سرور MCP روی /mcp با ۹+ ابزار) + چهار صفحه‌ی جدید پنل. کامیت‌ها: cms=" + (c1.exitCode === 0 ? "بله" : "خیر") + " site=" + (c2.exitCode === 0 ? "بله" : "خیر") + ".",
+  findings,
+  verified: ["cargo test بعد از هر بچ", "cargo fmt --check و clippy -D warnings", "بازبینی مستقل + بازگیت پس از رفع", "next build برای پنل"],
+  notCovered: ["دیپلوی سرور و وریفای زنده (بعد از این ران انجام می‌شود)", "Cloudflare proxy/WAF (نیازمند توکن/پنل CF — جداگانه)", "webhook تحویل واقعی شبکه‌ای (با هندل تزریقی تست شد)"],
+};

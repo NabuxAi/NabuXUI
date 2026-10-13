@@ -1,0 +1,280 @@
+{{--
+    magnetic-set's real scenario: the quick-action dock of a deployment
+    console — a pill button, an icon button and a toggle switch, all
+    magnetic: while the pointer is inside the field radius each control is
+    drawn toward the hand with distance falloff, and on release a spring
+    (stiffness/damping integration in a RAF loop) carries it home with a
+    little overshoot. Two dials tune the pull live — strength and radius —
+    and the row of adjacent chips reacts with a shallower pull so the whole
+    dock feels like one field. Keyboard focus pulls the focused control
+    into a small posed offset, a tap yanks it toward the touch point, the
+    loop parks off screen, and under reduced motion the field is off.
+--}}
+@php
+    $fa = app()->getLocale() === 'fa';
+    $say = fn (string $en, string $faText) => $fa ? $faText : $en;
+    $num = fn (string $s): string => $fa
+        ? strtr($s, ['0' => '۰', '1' => '۱', '2' => '۲', '3' => '۳', '4' => '۴', '5' => '۵', '6' => '۶', '7' => '۷', '8' => '۸', '9' => '۹'])
+        : $s;
+@endphp
+
+<style>
+    .mgs-root {
+        --mgs-fg: #1c1917; --mgs-muted: #78716c; --mgs-border: #e7e5e4;
+        --mgs-bg: #ffffff; --mgs-accent: #4f46e5; --mgs-accent-ink: #ffffff;
+        --mgs-font: 'Inter', 'Vazirmatn', ui-sans-serif, sans-serif;
+        display: grid; gap: 1rem; font-family: var(--mgs-font); color: var(--mgs-fg);
+    }
+    html[data-theme="dark"] .mgs-root {
+        --mgs-fg: #fafaf9; --mgs-muted: #a8a29e; --mgs-border: #292524;
+        --mgs-bg: #1c1917; --mgs-accent: #a5b4fc; --mgs-accent-ink: #1e1b4b;
+    }
+    @media (prefers-color-scheme: dark) {
+        html:not([data-theme="light"]) .mgs-root {
+            --mgs-fg: #fafaf9; --mgs-muted: #a8a29e; --mgs-border: #292524;
+            --mgs-bg: #1c1917; --mgs-accent: #a5b4fc; --mgs-accent-ink: #1e1b4b;
+        }
+    }
+    .mgs-field {
+        position: relative; display: grid; gap: 1.9rem; justify-items: center;
+        align-content: center; min-block-size: 15.5rem; padding: 1.4rem 1rem;
+        border: 1px dashed var(--mgs-border); border-radius: 1.25rem;
+        background:
+            radial-gradient(1px 1px at 30% 40%, color-mix(in oklab, var(--mgs-fg) 20%, transparent) 50%, transparent 51%),
+            radial-gradient(1px 1px at 68% 62%, color-mix(in oklab, var(--mgs-fg) 20%, transparent) 50%, transparent 51%);
+        touch-action: manipulation; overflow: clip;
+    }
+    .mgs-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 1.6rem; }
+    .mgs-item { will-change: transform; }
+    .mgs-pill {
+        display: inline-flex; align-items: center; gap: .55rem;
+        padding: .78rem 1.5rem; border-radius: 999px; border: 0; cursor: pointer;
+        background: var(--mgs-accent); color: var(--mgs-accent-ink);
+        font: 650 .95rem var(--mgs-font); outline: none;
+        transition: filter .15s ease;
+    }
+    .mgs-pill:hover { filter: brightness(1.08); }
+    .mgs-pill:focus-visible { outline: 2px solid var(--mgs-accent); outline-offset: 3px; }
+    .mgs-pill svg { inline-size: 1rem; block-size: 1rem; stroke: currentColor; stroke-width: 2;
+                    fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .mgs-ico {
+        display: grid; place-items: center; inline-size: 2.9rem; aspect-ratio: 1;
+        border-radius: 50%; border: 1px solid var(--mgs-border); cursor: pointer;
+        background: var(--mgs-bg); color: var(--mgs-fg); outline: none;
+        transition: color .15s ease, border-color .15s ease;
+    }
+    .mgs-ico:hover, .mgs-ico:focus-visible { color: #e0245e; border-color: #e0245e; }
+    .mgs-ico:focus-visible { outline: 2px solid #e0245e; outline-offset: 3px; }
+    .mgs-ico svg { inline-size: 1.15rem; block-size: 1.15rem; stroke: currentColor; stroke-width: 2;
+                   fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .mgs-ico[aria-pressed="true"] svg { fill: #e0245e; stroke: #e0245e; }
+    .mgs-sw {
+        display: inline-flex; align-items: center; gap: .65rem; cursor: pointer;
+        font: 600 .85rem var(--mgs-font); color: var(--mgs-fg); outline: none;
+    }
+    .mgs-sw input { position: absolute; opacity: 0; inline-size: 1px; block-size: 1px; }
+    .mgs-track {
+        inline-size: 3.1rem; block-size: 1.7rem; border-radius: 999px; padding: .2rem;
+        background: var(--mgs-border); transition: background-color .2s ease;
+    }
+    .mgs-sw input:checked + .mgs-track { background: var(--mgs-accent); }
+    .mgs-sw input:focus-visible + .mgs-track { outline: 2px solid var(--mgs-accent); outline-offset: 3px; }
+    .mgs-knob {
+        display: block; inline-size: 1.3rem; aspect-ratio: 1; border-radius: 50%;
+        background: #ffffff; box-shadow: 0 1px 3px rgba(0, 0, 0, .3);
+        transition: translate .22s cubic-bezier(.3, 1.4, .5, 1);
+    }
+    .mgs-sw input:checked + .mgs-track .mgs-knob { translate: 1.4rem 0; }
+    html[dir="rtl"] .mgs-sw input:checked + .mgs-track .mgs-knob { translate: -1.4rem 0; }
+    .mgs-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: .8rem; }
+    .mgs-chip {
+        padding: .5rem 1rem; border-radius: 999px; border: 1px solid var(--mgs-border);
+        background: var(--mgs-bg); color: var(--mgs-muted); cursor: pointer; outline: none;
+        font: 600 .78rem var(--mgs-font);
+        transition: border-color .15s ease, color .15s ease;
+    }
+    .mgs-chip:hover, .mgs-chip:focus-visible { border-color: var(--mgs-accent); color: var(--mgs-accent); }
+    .mgs-chip:focus-visible { outline: 2px solid var(--mgs-accent); outline-offset: 3px; }
+    .mgs-dials {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+        gap: .8rem 1.4rem; padding: .9rem 1.1rem; border: 1px solid var(--mgs-border);
+        border-radius: 1rem; background: var(--mgs-bg);
+    }
+    .mgs-dial { display: grid; gap: .3rem; }
+    .mgs-dial label { display: flex; justify-content: space-between; font-size: .78rem;
+                      font-weight: 600; color: var(--mgs-muted); }
+    .mgs-dial output { font-variant-numeric: tabular-nums; color: var(--mgs-accent); }
+    .mgs-dial input[type="range"] {
+        inline-size: 100%; accent-color: var(--mgs-accent); cursor: grab; margin: 0;
+    }
+    .mgs-dial input[type="range"]:active { cursor: grabbing; }
+    .mgs-dial input[type="range"]:focus-visible { outline: 2px solid var(--mgs-accent); outline-offset: 3px; }
+    .mgs-hint { margin: 0; font-size: .74rem; color: var(--mgs-muted); text-align: center; }
+    @media (prefers-reduced-motion: reduce) {
+        .mgs-item { transition: none; }
+        .mgs-knob { transition: none; }
+    }
+</style>
+
+<section class="pg-box mgs-root" style="gap: 1rem"
+    x-data="{
+        raf: 0, io: null, mq: null, visible: true, live: false,
+        px: -9999, py: -9999, strength: .5, radius: 130,
+        items: [], liked: false,
+        init() {
+            this.mq = matchMedia('(prefers-reduced-motion: reduce)');
+            this.items = Array.from(this.$refs.field.querySelectorAll('.mgs-item')).map((el) => ({
+                el: el, x: 0, y: 0, vx: 0, vy: 0, max: parseFloat(el.dataset.max || '26'),
+                pose: el.dataset.pose || '0 -10',
+            }));
+            this.io = new IntersectionObserver((entries) => {
+                this.visible = entries[0].isIntersecting;
+                if (!this.visible) { this.live = false; cancelAnimationFrame(this.raf); }
+            }, { threshold: 0.05 });
+            this.io.observe(this.$refs.field);
+        },
+        toField(e) {
+            const r = this.$refs.field.getBoundingClientRect();
+            this.px = e.clientX - r.left; this.py = e.clientY - r.top;
+        },
+        move(e) {
+            if (this.mq.matches) return;
+            this.toField(e);
+            this.live = true; this.run();
+        },
+        press(e) {
+            if (this.mq.matches) return;
+            this.toField(e);
+            this.live = true; this.run();
+        },
+        leave() { this.px = -9999; this.py = -9999; this.live = false; this.run(); },
+        target(it) {
+            const r = it.el.getBoundingClientRect();
+            const f = this.$refs.field.getBoundingClientRect();
+            const cx = r.left + r.width / 2 - f.left;
+            const cy = r.top + r.height / 2 - f.top;
+            const dx = this.px - cx, dy = this.py - cy;
+            const dist = Math.hypot(dx, dy);
+            if (dist > this.radius) return [0, 0];
+            const fall = 1 - dist / this.radius;
+            const pull = Math.min(it.max, dist * this.strength * .9) * fall;
+            return dist === 0 ? [0, 0] : [(dx / dist) * pull, (dy / dist) * pull];
+        },
+        focusIn(el) {
+            if (this.mq.matches) return;
+            this.items.forEach((it) => { if (it.el === el) it.poseTarget = it.pose; });
+            this.run();
+        },
+        focusOut(el) {
+            this.items.forEach((it) => { if (it.el === el) it.poseTarget = null; });
+            this.run();
+        },
+        run() {
+            cancelAnimationFrame(this.raf);
+            if (!this.visible) return;
+            const loop = () => {
+                let energy = 0;
+                for (const it of this.items) {
+                    let tx = 0, ty = 0;
+                    if (it.poseTarget) {
+                        const p = it.poseTarget.split(' ');
+                        tx = parseFloat(p[0]); ty = parseFloat(p[1]);
+                    } else {
+                        const t = this.target(it); tx = t[0]; ty = t[1];
+                    }
+                    it.vx = (it.vx + (tx - it.x) * .13) * .8;
+                    it.vy = (it.vy + (ty - it.y) * .13) * .8;
+                    it.x += it.vx; it.y += it.vy;
+                    energy += Math.abs(it.vx) + Math.abs(it.vy) + Math.abs(tx - it.x) + Math.abs(ty - it.y);
+                    it.el.style.transform = 'translate3d(' + it.x.toFixed(2) + 'px,' + it.y.toFixed(2) + 'px,0)';
+                }
+                if (!this.live && energy < .35) return;
+                this.raf = requestAnimationFrame(loop);
+            };
+            this.raf = requestAnimationFrame(loop);
+        },
+        get strengthLabel() {
+            const v = (this.strength * 100).toFixed(0);
+            return this.strength < .2 ? this.tr(v) + ' — ' + this.w('feather', 'پر')
+                : this.strength > .75 ? this.tr(v) + ' — ' + this.w('firm', 'محرک')
+                : this.tr(v) + ' — ' + this.w('balanced', 'متعادل');
+        },
+        get radiusLabel() { return this.tr(Math.round(this.radius) + 'px'); },
+        tr(v) {
+            const fa = @js($fa);
+            return fa ? String(v).replace(/[0-9]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[d]) : String(v);
+        },
+        w(en, faText) { return @js($fa) ? faText : en; },
+        destroy() {
+            cancelAnimationFrame(this.raf);
+            if (this.io) this.io.disconnect();
+        },
+    }">
+    <div>
+        <h3 class="pg-title" style="font-size: var(--nx-text-xl)">{{ $say('Controls that lean toward the hand', 'کنترل‌هایی که به سمت دست متمایل می‌شوند') }}</h3>
+        <p style="margin: .25rem 0 0; color: var(--nx-text-muted)">
+            {{ $say('The pill, the heart and the switch are one magnetic field: each is pulled toward the pointer with distance falloff while it is inside the dialled radius, and when the hand leaves, a stiffness/damping spring carries it home with a little overshoot. The chip row leans in with a shallower pull; focus poses the focused control; a tap yanks it toward the touch point and lets the spring answer.', 'دکمه، قلب و سوییچ یک میدان مغناطیسی‌اند: هرکدام تا وقتی نشانگر داخل شعاع تنظیم‌شده است با میرایی فاصله‌ای به سمت آن کشیده می‌شود و وقتی دست می‌رود، فنرِ سختی/میرایی آن را با کمی بیش‌پرش به خانه برمی‌گرداند. ردیف چیپ‌ها با کشش کمتری متمایل می‌شوند؛ فوکوس کنترل را در ژست می‌نشیند؛ یک تپ آن را به سمت نقطهٔ لمس می‌کشد و اجازه می‌دهد فنر جواب بدهد.') }}
+        </p>
+    </div>
+
+    <div class="mgs-field" x-ref="field"
+        x-on:pointermove="move($event)"
+        x-on:pointerdown="press($event)"
+        x-on:pointerleave="leave()">
+        <div class="mgs-row">
+            <button type="button" class="mgs-pill mgs-item" data-max="30" data-pose="0 -12"
+                x-on:focus="focusIn($el)" x-on:blur="focusOut($el)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09Z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+                {{ $say('Deploy to edge', 'استقرار روی اج') }}
+            </button>
+
+            <button type="button" class="mgs-ico mgs-item" data-max="22" data-pose="0 -10"
+                x-bind:aria-pressed="liked ? 'true' : 'false'"
+                x-bind:aria-label="liked ? @js($say('Unlike release note', 'برداشتن پسند یادداشت انتشار')) : @js($say('Like release note', 'پسندیدن یادداشت انتشار'))"
+                x-on:click="liked = !liked"
+                x-on:focus="focusIn($el)" x-on:blur="focusOut($el)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+            </button>
+
+            <label class="mgs-sw mgs-item" data-max="16" data-pose="0 -8">
+                <span class="mgs-txt">{{ $say('Autodeploy', 'استقرار خودکار') }}</span>
+                <input type="checkbox" x-on:focus="focusIn($el.closest('.mgs-item'))" x-on:blur="focusOut($el.closest('.mgs-item'))">
+                <span class="mgs-track" aria-hidden="true"><span class="mgs-knob"></span></span>
+            </label>
+        </div>
+
+        <div class="mgs-chips">
+            <button type="button" class="mgs-chip mgs-item" data-max="11" data-pose="0 -6"
+                x-on:focus="focusIn($el)" x-on:blur="focusOut($el)">{{ $say('Logs', 'لاگ‌ها') }}</button>
+            <button type="button" class="mgs-chip mgs-item" data-max="11" data-pose="0 -6"
+                x-on:focus="focusIn($el)" x-on:blur="focusOut($el)">{{ $say('Metrics', 'متریک‌ها') }}</button>
+            <button type="button" class="mgs-chip mgs-item" data-max="11" data-pose="0 -6"
+                x-on:focus="focusIn($el)" x-on:blur="focusOut($el)">{{ $say('Rollback', 'بازگشت نسخه') }}</button>
+            <button type="button" class="mgs-chip mgs-item" data-max="11" data-pose="0 -6"
+                x-on:focus="focusIn($el)" x-on:blur="focusOut($el)">{{ $say('Env vars', 'متغیرهای محیط') }}</button>
+        </div>
+    </div>
+
+    <div class="mgs-dials">
+        <div class="mgs-dial">
+            <label for="mgs-strength">
+                <span>{{ $say('Pull strength', 'شدت کشش') }}</span>
+                <output x-text="strengthLabel">{{ $num('50') }}</output>
+            </label>
+            <input id="mgs-strength" type="range" min="0.1" max="0.95" step="0.05" value="0.5"
+                x-model.number="strength" x-on:input="run()">
+        </div>
+        <div class="mgs-dial">
+            <label for="mgs-radius">
+                <span>{{ $say('Field radius', 'شعاع میدان') }}</span>
+                <output x-text="radiusLabel">{{ $num('130px') }}</output>
+            </label>
+            <input id="mgs-radius" type="range" min="60" max="220" step="10" value="130"
+                x-model.number="radius" x-on:input="run()">
+        </div>
+    </div>
+
+    <p class="mgs-hint">
+        {{ $say('spring k .13 · damping .8 · pull caps 30/22/16/11px · focus poses · loop parks off screen · field off under reduced motion', 'فنر k=۰٫۱۳ · میرایی ۰٫۸ · سقف کشش ۳۰/۲۲/۱۶/۱۱px · فوکوس ژست می‌دهد · حلقه خارج از دید پارک می‌شود · میدان در حرکت کاهش‌یافته خاموش') }}
+    </p>
+</section>

@@ -1,0 +1,170 @@
+
+<?php
+    $fa = app()->getLocale() === 'fa';
+    $say = fn (string $en, string $faText) => $fa ? $faText : $en;
+
+    $items = [
+        ['icon' => 'users',    'tag' => 'new',       'en' => ['Realtime cursors', 'See every teammate’s pointer, name and selection — live, at 60fps.'],       'fa' => ['نشانگرهای لحظه‌ای', 'نشانگر، نام و انتخاب هر هم‌تیمی را زنده و با ۶۰ فریم ببینید.']],
+        ['icon' => 'file',     'tag' => 'improved',  'en' => ['Offline drafts', 'Keep writing on the plane; edits merge cleanly when you land.'],             'fa' => ['پیش‌نویس آفلاین', 'در پرواز هم بنویسید؛ فرود که آمدید، ویرایش‌ها تمیز ادغام می‌شوند.']],
+        ['icon' => 'command',  'tag' => 'new',       'en' => ['Command palette v2', 'Fuzzy search across actions, pages and recent files — under 40ms.'],       'fa' => ['پالت فرمان ۲', 'جست‌وجوی فازی در اکشن‌ها، صفحه‌ها و فایل‌های اخیر — زیر ۴۰ms.']],
+        ['icon' => 'layers',   'tag' => 'improved',  'en' => ['Version timeline', 'Scrub any frame back through its history and restore a range.'],              'fa' => ['خط زمان نسخه‌ها', 'هر فریم را در تاریخش بکشید و یک بازه را بازگردانید.']],
+        ['icon' => 'zap',      'tag' => 'new',       'en' => ['Focus mode', 'One click hides every panel and mutes notifications for 50 minutes.'],        'fa' => ['حالت تمرکز', 'با یک کلیک همهٔ پنل‌ها قایم و اعلان‌ها ۵۰ دقیقه ساکت می‌شوند.']],
+        ['icon' => 'grid',     'tag' => 'improved',  'en' => ['Shared components', 'Library edits now propagate to all 120+ templates in seconds.'],          'fa' => ['کامپوننت‌های مشترک', 'ویرایش کتابخانه حالا در چند ثانیه به بیش از ۱۲۰ قالب می‌رسد.']],
+        ['icon' => 'shield',   'tag' => 'fixed',     'en' => ['Audit log export', 'SOC-2 friendly CSV export of every workspace event.'],                    'fa' => ['خروجی لاگ ممیزی', 'خروجی CSV سازگار با SOC-2 از همهٔ رویدادهای فضای کاری.']],
+        ['icon' => 'sun',      'tag' => 'fixed',     'en' => ['Theme sync', 'Light and dark themes follow the OS again, frame-accurate.'],                   'fa' => ['همگام‌سازی پوسته', 'پوستهٔ روشن و تیره دوباره سیستم را دنبال می‌کنند، بدون پرش.']],
+    ];
+
+    $tagLabel = [
+        'new' => ['fa' => 'تازه', 'en' => 'New'],
+        'improved' => ['fa' => 'بهبود', 'en' => 'Improved'],
+        'fixed' => ['fa' => 'رفع اشکال', 'en' => 'Fixed'],
+    ];
+
+    // Lucide-style paths for the eight feature icons (24×24, stroke 2).
+    $paths = [
+        'users' => 'M22 21a6 6 0 0 0-12 0M9 3.5a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM16 3.1a4 4 0 0 1 0 7.8M22 21a6 6 0 0 0-6-6',
+        'file' => 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8ZM14 2v6h6M9 13h6M9 17h4',
+        'command' => 'M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3',
+        'layers' => 'm12 2 9 4.5-9 4.5L3 6.5 12 2ZM3 12l9 4.5L21 12M3 17l9 4.5L21 17',
+        'zap' => 'M13 2 3 14h9l-1 8 10-12h-9l1-8Z',
+        'grid' => 'M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z',
+        'shield' => 'M12 22s8-3.5 8-9.5V5l-8-3-8 3v7.5C4 18.5 12 22 12 22ZM9 12l2 2 4-4',
+        'sun' => 'M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41',
+    ];
+?>
+
+<style>
+    .enst-wrap {
+        --enst-fg: #1c1917; --enst-muted: #78716c; --enst-border: #e7e5e4;
+        --enst-bg: #ffffff; --enst-accent: #0f766e; --enst-soft: #f0fdfa; --enst-chip: #fff7ed;
+        display: grid; gap: 1rem;
+        font-family: 'Inter', 'Vazirmatn', ui-sans-serif, sans-serif;
+        color: var(--enst-fg);
+    }
+    html[data-theme="dark"] .enst-wrap {
+        --enst-fg: #fafaf9; --enst-muted: #a8a29e; --enst-border: #292524;
+        --enst-bg: #1c1917; --enst-accent: #5eead4; --enst-soft: #0d2b28; --enst-chip: #2a2118;
+    }
+    @media (prefers-color-scheme: dark) {
+        html:not([data-theme="light"]) .enst-wrap {
+            --enst-fg: #fafaf9; --enst-muted: #a8a29e; --enst-border: #292524;
+            --enst-bg: #1c1917; --enst-accent: #5eead4; --enst-soft: #0d2b28; --enst-chip: #2a2118;
+        }
+    }
+    .enst-list { display: grid; gap: .6rem; margin: 0; padding: 0; list-style: none;
+                 grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    @media (max-width: 640px) { .enst-list { grid-template-columns: 1fr; } }
+    .enst-item {
+        display: grid; grid-template-columns: auto 1fr; gap: .3rem .8rem; align-items: start;
+        padding: .95rem 1rem; border: 1px solid var(--enst-border); border-radius: .95rem;
+        background: var(--enst-bg);
+        opacity: 0; translate: 0 22px; filter: blur(6px); transform: skewY(-2deg);
+        transition: opacity .7s var(--nx-spring-soft), translate .7s var(--nx-spring-soft),
+                    filter .7s var(--nx-spring-soft), transform .7s var(--nx-spring-soft);
+    }
+    .enst-list[data-in="true"] .enst-item {
+        opacity: 1; translate: 0 0; filter: blur(0); transform: skewY(0);
+        transition-delay: calc(var(--i, 0) * var(--enst-step, 80ms));
+    }
+    .enst-ico { grid-row: 1 / span 2; display: grid; place-items: center; inline-size: 2.3rem;
+                aspect-ratio: 1; border-radius: .65rem; background: var(--enst-soft); }
+    .enst-ico svg { inline-size: 1.1rem; block-size: 1.1rem; stroke: var(--enst-accent); fill: none;
+                    stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .enst-item b { font-size: .88rem; font-weight: 700; }
+    .enst-item p { margin: 0; grid-column: 2; font-size: .78rem; line-height: 1.7; color: var(--enst-muted); }
+    .enst-tag { justify-self: start; padding: .12rem .55rem; border-radius: 999px;
+                font-size: .64rem; font-weight: 800; letter-spacing: .04em; background: var(--enst-chip); }
+    .enst-tag[data-tag="new"] { color: #b45309; }
+    .enst-tag[data-tag="improved"] { color: #0f766e; }
+    .enst-tag[data-tag="fixed"] { color: #78716c; }
+    html[data-theme="dark"] .enst-tag[data-tag="new"] { color: #fbbf24; }
+    html[data-theme="dark"] .enst-tag[data-tag="improved"] { color: #5eead4; }
+    html[data-theme="dark"] .enst-tag[data-tag="fixed"] { color: #a8a29e; }
+    @media (prefers-color-scheme: dark) {
+        html:not([data-theme="light"]) .enst-tag[data-tag="new"] { color: #fbbf24; }
+        html:not([data-theme="light"]) .enst-tag[data-tag="improved"] { color: #5eead4; }
+        html:not([data-theme="light"]) .enst-tag[data-tag="fixed"] { color: #a8a29e; }
+    }
+    .enst-ctl { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1.4rem; }
+    .enst-again { display: inline-flex; align-items: center; gap: .45rem; padding: .55rem 1.1rem;
+        border-radius: 999px; border: 1px solid var(--enst-border); background: var(--enst-bg);
+        color: inherit; font: 700 .8rem/1 inherit; cursor: pointer;
+        transition: border-color .15s ease, color .15s ease; }
+    .enst-again:hover { border-color: var(--enst-accent); color: var(--enst-accent); }
+    .enst-again:focus-visible { outline: 2px solid var(--enst-accent); outline-offset: 2px; }
+    .enst-again svg { inline-size: .9rem; block-size: .9rem; stroke: currentColor; stroke-width: 2;
+                      fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .enst-step { display: inline-flex; align-items: center; gap: .55rem; font-size: .78rem;
+                 font-weight: 700; color: var(--enst-muted); }
+    .enst-step input { inline-size: 8.5rem; accent-color: var(--enst-accent); }
+    .enst-step output { min-inline-size: 3.4em; font-family: ui-monospace, monospace;
+                        color: var(--enst-fg); text-align: end; }
+    .enst-hint { margin: 0; font-size: .74rem; color: var(--enst-muted); }
+    @media (prefers-reduced-motion: reduce) {
+        .enst-item { opacity: 1; translate: 0 0; filter: none; transform: none; transition: none; }
+        .enst-again { transition: none; }
+    }
+</style>
+
+<section class="pg-box" style="gap: 1.25rem"
+    x-data="{
+        step: 80, on: false, io: null,
+        fa: <?php echo \Illuminate\Support\Js::from($fa)->toHtml() ?>,
+        init() {
+            this.io = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting) { this.enter(); this.io.disconnect(); }
+            }, { threshold: 0.2 });
+            this.io.observe(this.$refs.list);
+        },
+        destroy() { if (this.io) this.io.disconnect(); },
+        enter() {
+            if (matchMedia('(prefers-reduced-motion: reduce)').matches) { this.on = true; return; }
+            this.on = false;
+            requestAnimationFrame(() => requestAnimationFrame(() => (this.on = true)));
+        },
+        get stepLabel() {
+            const s = this.step + 'ms';
+            return this.fa ? s.replace(/\d/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[d]) : s;
+        },
+    }">
+    <div>
+        <h3 class="pg-title" style="font-size: var(--nx-text-xl)"><?php echo e($say('Release notes that arrive in waves', 'یادداشت‌های انتشار که موج‌وار می‌رسند')); ?></h3>
+        <p style="margin: .25rem 0 0; color: var(--nx-text-muted)">
+            <?php echo e($say('Meridian 2.4’s eight features enter one after another from below — a 22px rise, a soft blur and a two-degree skew settling on the repo’s soft spring. The step slider retunes the cadence live; replay sends the whole wave again. The stagger lives on the item, so joined Persian never breaks.', 'هشت ویژگیِ مریدین ۲٫۴ یکی‌یکی از پایین می‌رسند — ۲۲ پیکسل بالا آمدن، بلور نرم و کجی دو درجه که روی فنر soft ریپو جا می‌افتد. اسلایدر گام، ضرب‌آهنگ را زنده تنظیم می‌کند؛ دکمهٔ ری‌پلی کل موج را دوباره می‌فرستد. پله روی خودِ آیتم است، پس فارسیِ پیوسته هرگز نمی‌شکند.')); ?>
+
+        </p>
+    </div>
+
+    <div class="enst-wrap">
+        <ul class="enst-list" x-ref="list" x-bind:data-in="on ? 'true' : 'false'"
+            x-bind:style="'--enst-step: ' + step + 'ms'"
+            x-bind:aria-label="<?php echo \Illuminate\Support\Js::from($say('Meridian 2.4 release notes', 'یادداشت‌های انتشار مریدین ۲٫۴'))->toHtml() ?>">
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i => $it): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                <?php
+                    [$title, $desc] = $fa ? $it['fa'] : $it['en'];
+                ?>
+                <li class="enst-item" style="--i: <?php echo e($i); ?>">
+                    <span class="enst-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="<?php echo e($paths[$it['icon']]); ?>"/></svg></span>
+                    <b><?php echo e($title); ?></b>
+                    <span class="enst-tag" data-tag="<?php echo e($it['tag']); ?>"><?php echo e($say($tagLabel[$it['tag']]['en'], $tagLabel[$it['tag']]['fa'])); ?></span>
+                    <p><?php echo e($desc); ?></p>
+                </li>
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+        </ul>
+
+        <div class="enst-ctl">
+            <button type="button" class="enst-again" x-on:click="enter()">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+                <?php echo e($say('Send the wave again', 'موج را دوباره بفرست')); ?>
+
+            </button>
+            <label class="enst-step">
+                <span><?php echo e($say('Step between items', 'فاصلهٔ پله')); ?></span>
+                <input type="range" min="30" max="220" step="5" x-model.number="step">
+                <output x-text="stepLabel"></output>
+            </label>
+            <p class="enst-hint"><?php echo e($say('rise 22px · blur 6px · skewY -2° · --nx-spring-soft · once per view', '۲۲px بالا · بلور ۶px · skewY −۲° · --nx-spring-soft · یک‌بار در هر دید')); ?></p>
+        </div>
+    </div>
+</section>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/playground/resources/views/demos/components/entrances/stagger-list.blade.php ENDPATH**/ ?>

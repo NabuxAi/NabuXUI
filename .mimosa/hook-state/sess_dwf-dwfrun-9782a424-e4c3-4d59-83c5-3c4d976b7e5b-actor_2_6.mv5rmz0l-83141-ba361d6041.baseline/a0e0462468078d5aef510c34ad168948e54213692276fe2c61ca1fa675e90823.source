@@ -1,0 +1,272 @@
+
+<?php if (isset($component)) { $__componentOriginal4837f5b450f9d59421c88eb37fd388cd = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal4837f5b450f9d59421c88eb37fd388cd = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.admin.page','data' => ['active' => 'orders','title' => __('admin.orders_title'),'subtitle' => __('admin.orders_subtitle')]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('admin.page'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['active' => 'orders','title' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.orders_title')),'subtitle' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.orders_subtitle'))]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+    <style>
+        /* Orders-page pieces the shared blocks don't carry (tokens only, both themes). */
+        .op-count { font-size: var(--nx-text-sm); color: var(--nx-text-muted); }
+        .op-number { font-family: var(--nx-font-mono); font-size: var(--nx-text-sm); color: var(--nx-text); }
+        .op-items { color: var(--nx-text-muted); }
+        .op-total-cur { font-size: var(--nx-text-xs); color: var(--nx-text-subtle); }
+        .op-track { inline-size: 1%; white-space: nowrap; text-align: end; }
+        .op-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr)); gap: var(--nx-space-3); margin: 0 0 var(--nx-space-4); padding: var(--nx-space-3) var(--nx-space-4); border: 1px solid var(--nx-border); border-radius: var(--nx-radius-xl); background: var(--nx-surface-2); }
+        .op-fact { display: grid; gap: 0.15rem; }
+        .op-fact dt { font-size: var(--nx-text-xs); color: var(--nx-text-subtle); }
+        .op-fact dd { margin: 0; font-size: var(--nx-text-sm); color: var(--nx-text); font-weight: 600; }
+    </style>
+    <div class="ap-grid">
+        <section class="ap-box">
+            <div class="ap-row" style="justify-content: space-between">
+                <?php if (isset($component)) { $__componentOriginal2fb3ed9d008db6d56137d7f687f87f19 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal2fb3ed9d008db6d56137d7f687f87f19 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::input','data' => ['label' => __('admin.orders_search_label'),'placeholder' => __('admin.orders_search_placeholder'),'icon' => 'search','wire:model.live.debounce.300ms' => 'search','style' => 'max-inline-size: 20rem']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::input'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['label' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.orders_search_label')),'placeholder' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.orders_search_placeholder')),'icon' => 'search','wire:model.live.debounce.300ms' => 'search','style' => 'max-inline-size: 20rem']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal2fb3ed9d008db6d56137d7f687f87f19)): ?>
+<?php $attributes = $__attributesOriginal2fb3ed9d008db6d56137d7f687f87f19; ?>
+<?php unset($__attributesOriginal2fb3ed9d008db6d56137d7f687f87f19); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal2fb3ed9d008db6d56137d7f687f87f19)): ?>
+<?php $component = $__componentOriginal2fb3ed9d008db6d56137d7f687f87f19; ?>
+<?php unset($__componentOriginal2fb3ed9d008db6d56137d7f687f87f19); ?>
+<?php endif; ?>
+                <div class="ap-row">
+                    <span class="op-count"><?php echo e($countText); ?></span>
+                    <?php if (isset($component)) { $__componentOriginal6a71c49d1a08ebecfe7a6986a59dba78 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal6a71c49d1a08ebecfe7a6986a59dba78 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::chip-filter','data' => ['options' => $chips,'counts' => $counts,'label' => __('admin.orders_filter_status'),'wire:model.live' => 'status']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::chip-filter'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['options' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($chips),'counts' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($counts),'label' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute(__('admin.orders_filter_status')),'wire:model.live' => 'status']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal6a71c49d1a08ebecfe7a6986a59dba78)): ?>
+<?php $attributes = $__attributesOriginal6a71c49d1a08ebecfe7a6986a59dba78; ?>
+<?php unset($__attributesOriginal6a71c49d1a08ebecfe7a6986a59dba78); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal6a71c49d1a08ebecfe7a6986a59dba78)): ?>
+<?php $component = $__componentOriginal6a71c49d1a08ebecfe7a6986a59dba78; ?>
+<?php unset($__componentOriginal6a71c49d1a08ebecfe7a6986a59dba78); ?>
+<?php endif; ?>
+                </div>
+            </div>
+
+            <div class="nx-data-table op-table" data-nx-reveal style="--nx-table-max: 26rem"
+                x-data="nxDataTable(<?php echo \Illuminate\Support\Js::from(['sort' => $sort, 'action' => 'sortBy', 'locale' => $locale])->toHtml() ?>)">
+                <table>
+                    <caption class="nx-visually-hidden"><?php echo e(__('admin.orders_title')); ?></caption>
+                    <thead>
+                        <tr>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $columns; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $column): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                                <?php
+                                    $align = $column['align'] ?? 'start';
+                                    $direction = $sort['key'] === $column['key'] ? $sort['direction'] : null;
+                                ?>
+                                <th scope="col" data-key="<?php echo e($column['key']); ?>" <?php if($align !== 'start'): ?> data-align="<?php echo e($align); ?>" <?php endif; ?> <?php if($direction): ?> aria-sort="<?php echo e($direction); ?>" <?php endif; ?>>
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(! empty($column['sortable'])): ?>
+                                        <button type="button" class="nx-data-table-sort" <?php if($direction): ?> data-direction="<?php echo e($direction); ?>" <?php endif; ?> x-on:click="press(<?php echo \Illuminate\Support\Js::from($column['key'])->toHtml() ?>)">
+                                            <span><?php echo e($column['label']); ?></span>
+                                            <svg class="nx-data-table-sort-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+                                        </button>
+                                    <?php else: ?>
+                                        <?php echo e($column['label']); ?>
+
+                                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                </th>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                            <th scope="col" class="op-track"><span class="nx-visually-hidden"><?php echo e(__('admin.orders_track')); ?></span></th>
+                        </tr>
+                    </thead>
+                    <tbody x-ref="body">
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $rows; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                            <tr data-key="<?php echo e($row['id']); ?>" <?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::$currentLoop['key'] = 'o'.e($row['id']).''; ?>wire:key="o<?php echo e($row['id']); ?>" style="--nx-i: <?php echo e($row['index']); ?>">
+                                <td data-sort="<?php echo e($row['numberSort']); ?>"><span class="op-number"><?php echo e($row['number']); ?></span></td>
+                                <td data-sort="<?php echo e(mb_strtolower($row['customer'])); ?>"><?php echo e($row['customer']); ?></td>
+                                <td data-sort="<?php echo e($row['itemsCount']); ?>"><span class="op-items"><?php echo e($row['items']); ?></span></td>
+                                <td data-sort="<?php echo e($row['totalSort']); ?>" data-align="end" data-numeric>
+                                    <?php echo e($row['total']); ?> <span class="op-total-cur"><?php echo e(__('admin.invoice_currency')); ?></span>
+                                </td>
+                                <td data-sort="<?php echo e($row['statusSort']); ?>">
+                                    <?php if (isset($component)) { $__componentOriginal88b19148b030a6c82e2be7bc3872e2be = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal88b19148b030a6c82e2be7bc3872e2be = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::badge','data' => ['tone' => $row['statusTone'],'dataSize' => 'sm','dot' => true]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::badge'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['tone' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($row['statusTone']),'data-size' => 'sm','dot' => true]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+<?php echo e($row['status']); ?> <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal88b19148b030a6c82e2be7bc3872e2be)): ?>
+<?php $attributes = $__attributesOriginal88b19148b030a6c82e2be7bc3872e2be; ?>
+<?php unset($__attributesOriginal88b19148b030a6c82e2be7bc3872e2be); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal88b19148b030a6c82e2be7bc3872e2be)): ?>
+<?php $component = $__componentOriginal88b19148b030a6c82e2be7bc3872e2be; ?>
+<?php unset($__componentOriginal88b19148b030a6c82e2be7bc3872e2be); ?>
+<?php endif; ?>
+                                </td>
+                                <td data-sort="<?php echo e($row['dateSort']); ?>"><?php echo e($row['date']); ?></td>
+                                <td class="op-track">
+                                    <?php if (isset($component)) { $__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::button','data' => ['size' => 'sm','variant' => 'ghost','icon' => 'zap','wire:click' => 'track(\''.e($row['id']).'\')']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::button'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['size' => 'sm','variant' => 'ghost','icon' => 'zap','wire:click' => 'track(\''.e($row['id']).'\')']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+<?php echo e(__('admin.orders_track')); ?> <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42)): ?>
+<?php $attributes = $__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42; ?>
+<?php unset($__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42)): ?>
+<?php $component = $__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42; ?>
+<?php unset($__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42); ?>
+<?php endif; ?>
+                                </td>
+                            </tr>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                            <tr><td class="nx-data-table-empty" colspan="<?php echo e(count($columns) + 1); ?>"><?php echo e(__('nabuxui::ui.noResults')); ?></td></tr>
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($track): ?>
+        <?php if (isset($component)) { $__componentOriginal84c9a9af56b57f8b497f42049e80e0ae = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal84c9a9af56b57f8b497f42049e80e0ae = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::dialog','data' => ['wire:model' => 'trackingOpen','title' => $track['title'],'size' => 'lg']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::dialog'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['wire:model' => 'trackingOpen','title' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($track['title']),'size' => 'lg']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+            <dl class="op-facts">
+                <div class="op-fact">
+                    <dt><?php echo e($track['itemsLabel']); ?></dt>
+                    <dd><?php echo e($track['itemsText']); ?></dd>
+                </div>
+                <div class="op-fact">
+                    <dt><?php echo e(__('admin.orders_track_recipient')); ?></dt>
+                    <dd><?php echo e($track['recipient']); ?></dd>
+                </div>
+                <div class="op-fact">
+                    <dt><?php echo e(__('admin.orders_track_placed')); ?></dt>
+                    <dd><?php echo e($track['placed']); ?></dd>
+                </div>
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($track['eta']): ?>
+                    <div class="op-fact">
+                        <dt><?php echo e(__('admin.orders_track_eta')); ?></dt>
+                        <dd><?php echo e($track['eta']); ?></dd>
+                    </div>
+                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+            </dl>
+
+            <?php if (isset($component)) { $__componentOriginald370895d1a29e20df20bb37d766ffbaa = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginald370895d1a29e20df20bb37d766ffbaa = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::order-tracking','data' => ['number' => $track['number'],'status' => $track['badge'],'statusLabel' => $track['statusLabel'],'steps' => $track['steps'],'events' => $track['events']]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::order-tracking'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['number' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($track['number']),'status' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($track['badge']),'status-label' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($track['statusLabel']),'steps' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($track['steps']),'events' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($track['events'])]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginald370895d1a29e20df20bb37d766ffbaa)): ?>
+<?php $attributes = $__attributesOriginald370895d1a29e20df20bb37d766ffbaa; ?>
+<?php unset($__attributesOriginald370895d1a29e20df20bb37d766ffbaa); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginald370895d1a29e20df20bb37d766ffbaa)): ?>
+<?php $component = $__componentOriginald370895d1a29e20df20bb37d766ffbaa; ?>
+<?php unset($__componentOriginald370895d1a29e20df20bb37d766ffbaa); ?>
+<?php endif; ?>
+             <?php $__env->slot('footer', null, []); ?> 
+                <div class="ap-row" style="justify-content: flex-end">
+                    <?php if (isset($component)) { $__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::button','data' => ['variant' => 'ghost','wire:click' => '$set(\'trackingOpen\', false)']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::button'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['variant' => 'ghost','wire:click' => '$set(\'trackingOpen\', false)']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+<?php echo e(__('admin.orders_close')); ?> <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42)): ?>
+<?php $attributes = $__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42; ?>
+<?php unset($__attributesOriginalb78e1d46d6c4f35d53b66ac0a0323c42); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42)): ?>
+<?php $component = $__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42; ?>
+<?php unset($__componentOriginalb78e1d46d6c4f35d53b66ac0a0323c42); ?>
+<?php endif; ?>
+                </div>
+             <?php $__env->endSlot(); ?>
+         <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal84c9a9af56b57f8b497f42049e80e0ae)): ?>
+<?php $attributes = $__attributesOriginal84c9a9af56b57f8b497f42049e80e0ae; ?>
+<?php unset($__attributesOriginal84c9a9af56b57f8b497f42049e80e0ae); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal84c9a9af56b57f8b497f42049e80e0ae)): ?>
+<?php $component = $__componentOriginal84c9a9af56b57f8b497f42049e80e0ae; ?>
+<?php unset($__componentOriginal84c9a9af56b57f8b497f42049e80e0ae); ?>
+<?php endif; ?>
+    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal4837f5b450f9d59421c88eb37fd388cd)): ?>
+<?php $attributes = $__attributesOriginal4837f5b450f9d59421c88eb37fd388cd; ?>
+<?php unset($__attributesOriginal4837f5b450f9d59421c88eb37fd388cd); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal4837f5b450f9d59421c88eb37fd388cd)): ?>
+<?php $component = $__componentOriginal4837f5b450f9d59421c88eb37fd388cd; ?>
+<?php unset($__componentOriginal4837f5b450f9d59421c88eb37fd388cd); ?>
+<?php endif; ?>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/playground/resources/views/livewire/admin/orders.blade.php ENDPATH**/ ?>

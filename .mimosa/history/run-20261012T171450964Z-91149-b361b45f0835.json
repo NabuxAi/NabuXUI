@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "mimosa-finding-history/v1",
+  "runId": "20261012T171450964Z-91149-b361b45f0835",
+  "runStatus": "inconclusive",
+  "errors": [
+    "scan:packages/react/src/blocks/heroes.tsx: scanner_failed: spawnSync /opt/homebrew/Cellar/node/26.8.2/bin/node ETIMEDOUT",
+    "scan:packages/react/src/blocks/navbars.tsx: scanner_failed: spawnSync /opt/homebrew/Cellar/node/26.8.2/bin/node ETIMEDOUT",
+    "scan:apps/showcase/src/blocks/navbars.tsx: scanner_failed: spawnSync /opt/homebrew/Cellar/node/26.8.2/bin/node ETIMEDOUT"
+  ],
+  "target": ".",
+  "revision": "0f708e82d233ff3589cee8ba77c4a57f1731b169",
+  "diffHash": "fa10b39403a91e79149727a388171b63c8e1c832ea0ebbca4213344c17c47624",
+  "rulesVersion": "unavailable",
+  "recordedAt": "2026-10-12T17:14:50.964Z",
+  "timing": {
+    "startedAt": "2026-10-12T17:14:40.985Z",
+    "completedAt": "2026-10-12T17:14:50.964Z",
+    "durationMs": 9979
+  },
+  "tokens": {
+    "input": 0,
+    "output": 0,
+    "total": 0,
+    "modelCalls": 0,
+    "measurement": "known-zero"
+  },
+  "findings": {
+    "total": 0,
+    "bySeverity": {},
+    "byStatus": {}
+  },
+  "coverage": {
+    "status": "partial",
+    "reasonCounts": {
+      "scanner_failed": 3,
+      "project_check_failed": 3
+    }
+  },
+  "evidenceBoundary": "static_only",
+  "immutableReport": ".mimosa/reports/task-review-sess_f111a688-36d5-43e7-9b5e-80b01c01f6c3-20261012T171450964Z-91149-b361b45f0835.json"
+}

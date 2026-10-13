@@ -1,0 +1,36 @@
+<?php $attributes ??= new \Illuminate\View\ComponentAttributeBag;
+
+$__newAttributes = [];
+$__propNames = \Illuminate\View\ComponentAttributeBag::extractPropNames((['data' => [], 'trend' => null, 'area' => true]));
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (in_array($__key, $__propNames)) {
+        $$__key = $$__key ?? $__value;
+    } else {
+        $__newAttributes[$__key] = $__value;
+    }
+}
+
+$attributes = new \Illuminate\View\ComponentAttributeBag($__newAttributes);
+
+unset($__propNames);
+unset($__newAttributes);
+
+foreach (array_filter((['data' => [], 'trend' => null, 'area' => true]), 'is_string', ARRAY_FILTER_USE_KEY) as $__key => $__value) {
+    $$__key = $$__key ?? $__value;
+}
+
+$__defined_vars = get_defined_vars();
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (array_key_exists($__key, $__defined_vars)) unset($$__key);
+}
+
+unset($__defined_vars, $__key, $__value); ?>
+<?php $paths = \NabuXUI\NabuXUI::sparkline(array_values($data)); ?>
+<svg <?php echo e($attributes->class('nx-sparkline nx-chart')->merge(['data-trend' => $trend, 'data-nx-reveal' => ''])); ?> x-data x-nx-reveal viewBox="0 0 120 40" preserveAspectRatio="none" aria-hidden="true">
+    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($area): ?><path class="nx-chart-area" d="<?php echo e($paths['area']); ?>"/><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+    <path class="nx-chart-line" d="<?php echo e($paths['line']); ?>" pathLength="1"/>
+    <circle class="nx-chart-point" cx="<?php echo e($paths['end'][0]); ?>" cy="<?php echo e($paths['end'][1]); ?>" r="3" data-end/>
+</svg>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/packages/livewire/src/../resources/views/components/sparkline.blade.php ENDPATH**/ ?>

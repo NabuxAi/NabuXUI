@@ -1,0 +1,77 @@
+
+<?php $attributes ??= new \Illuminate\View\ComponentAttributeBag;
+
+$__newAttributes = [];
+$__propNames = \Illuminate\View\ComponentAttributeBag::extractPropNames((['items' => [], 'label' => null, 'locale' => null]));
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (in_array($__key, $__propNames)) {
+        $$__key = $$__key ?? $__value;
+    } else {
+        $__newAttributes[$__key] = $__value;
+    }
+}
+
+$attributes = new \Illuminate\View\ComponentAttributeBag($__newAttributes);
+
+unset($__propNames);
+unset($__newAttributes);
+
+foreach (array_filter((['items' => [], 'label' => null, 'locale' => null]), 'is_string', ARRAY_FILTER_USE_KEY) as $__key => $__value) {
+    $$__key = $$__key ?? $__value;
+}
+
+$__defined_vars = get_defined_vars();
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (array_key_exists($__key, $__defined_vars)) unset($$__key);
+}
+
+unset($__defined_vars, $__key, $__value); ?>
+<?php
+    use Illuminate\Support\Carbon;
+    $lang = substr($locale ?? app()->getLocale(), 0, 2);
+    $defaultIcon = ['success' => 'check-circle', 'warning' => 'alert-triangle', 'info' => 'info', 'danger' => 'alert-circle'];
+    $when = function ($time) use ($lang): array {
+        if ($time instanceof \DateTimeInterface) {
+            $date = Carbon::instance($time);
+        } elseif (is_int($time) || is_float($time)) {
+            $date = Carbon::createFromTimestampMs((int) $time);
+        } elseif (is_string($time) && preg_match('/\d{4}-\d{2}-\d{2}/', $time)) {
+            $date = Carbon::parse($time);
+        } else {
+            return [(string) $time, null];
+        }
+
+        return [$date->locale($lang)->diffForHumans(), $date->toIso8601String()];
+    };
+?>
+<div <?php echo e($attributes->class('nx-timeline-feed')); ?>>
+    <ol class="nx-timeline-feed-list" data-nx-reveal="group" x-nx-reveal.group <?php if($label): ?> aria-label="<?php echo e($label); ?>" <?php endif; ?>>
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $items; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i => $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+            <?php
+                [$label_, $iso] = $when($item['time'] ?? '');
+                $tone = in_array($item['tone'] ?? '', ['success', 'warning', 'info', 'danger'], true) ? $item['tone'] : 'neutral';
+            ?>
+            <li class="nx-timeline-feed-item" data-tone="<?php echo e($tone); ?>" style="--nx-i: <?php echo e($loop->index); ?>">
+                <span class="nx-timeline-feed-node" aria-hidden="true"><?php echo e(\NabuXUI\NabuXUI::icon($item['icon'] ?? ($defaultIcon[$tone] ?? 'zap'))); ?></span>
+                <div class="nx-timeline-feed-body">
+                    <p class="nx-timeline-feed-text">
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(! empty($item['actor'])): ?><strong><?php echo e($item['actor']); ?></strong> <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                        <?php echo e($item['text'] ?? ''); ?>
+
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(! empty($item['target'])): ?>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(! empty($item['href'])): ?>
+                                <a href="<?php echo e($item['href']); ?>"><strong><?php echo e($item['target']); ?></strong></a>
+                            <?php else: ?>
+                                <strong><?php echo e($item['target']); ?></strong>
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                    </p>
+                    <time class="nx-timeline-feed-time" <?php if($iso): ?> datetime="<?php echo e($iso); ?>" <?php endif; ?>><?php echo e($label_); ?></time>
+                </div>
+            </li>
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+    </ol>
+</div>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/packages/livewire/src/../resources/views/components/timeline-feed.blade.php ENDPATH**/ ?>

@@ -1,0 +1,45 @@
+<?php $attributes ??= new \Illuminate\View\ComponentAttributeBag;
+
+$__newAttributes = [];
+$__propNames = \Illuminate\View\ComponentAttributeBag::extractPropNames((['name', 'src' => null, 'size' => null, 'status' => null, 'shape' => null]));
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (in_array($__key, $__propNames)) {
+        $$__key = $$__key ?? $__value;
+    } else {
+        $__newAttributes[$__key] = $__value;
+    }
+}
+
+$attributes = new \Illuminate\View\ComponentAttributeBag($__newAttributes);
+
+unset($__propNames);
+unset($__newAttributes);
+
+foreach (array_filter((['name', 'src' => null, 'size' => null, 'status' => null, 'shape' => null]), 'is_string', ARRAY_FILTER_USE_KEY) as $__key => $__value) {
+    $$__key = $$__key ?? $__value;
+}
+
+$__defined_vars = get_defined_vars();
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (array_key_exists($__key, $__defined_vars)) unset($$__key);
+}
+
+unset($__defined_vars, $__key, $__value); ?>
+<?php $initials = mb_strtoupper(implode('', array_map(fn ($p) => mb_substr($p, 0, 1), array_slice(preg_split('/\s+/u', trim($name)), 0, 2)))); ?>
+<span <?php echo e($attributes->class('nx-avatar')->merge([
+    'data-size' => $size && $size !== 'md' ? $size : null,
+    'data-status' => $status,
+    'data-shape' => $shape === 'square' ? 'square' : null,
+    'role' => 'img',
+    'aria-label' => $status ? "{$name} ({$status})" : $name,
+])); ?> <?php if($src): ?> x-data="{ failed: false }" <?php endif; ?>>
+    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($src): ?>
+        <img class="nx-avatar-image" src="<?php echo e($src); ?>" alt="" x-show="! failed" x-on:error="failed = true">
+        <span aria-hidden="true" x-show="failed" x-cloak><?php echo e($initials); ?></span>
+    <?php else: ?>
+        <span aria-hidden="true"><?php echo e($initials); ?></span>
+    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+</span>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/packages/livewire/src/../resources/views/components/avatar.blade.php ENDPATH**/ ?>

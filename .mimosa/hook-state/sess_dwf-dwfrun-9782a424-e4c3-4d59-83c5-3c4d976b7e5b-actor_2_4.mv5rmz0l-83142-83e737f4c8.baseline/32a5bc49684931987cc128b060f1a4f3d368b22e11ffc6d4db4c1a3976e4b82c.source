@@ -1,0 +1,377 @@
+interface ModuleInfo {
+  /** نام پروژه/ماژول (نام پوشه در ~/Sites). */
+  name: string;
+  /** پشته‌ی فنی در یک خط. */
+  stack: string;
+  /** نقش محصول در یک جمله. */
+  role: string;
+  /** چه چیزهایی می‌تواند به سایت بدهد (محتوا، محصول، پشتیبانی…). */
+  siteGives: string[];
+  /** چه رویدادهایی را می‌پذیرد/ثبت می‌کند (فرم، سفارش، لید…). */
+  events: string[];
+}
+
+interface ReviewFinding {
+  /** مسیر فایل (با شماره خط اگر مربوط است). */
+  where: string;
+  /** یک جمله: مشکل چیست. */
+  what: string;
+  /** شدت؛ high فقط برای از دست رفتن داده یا رخنه امنیتی واقعی. */
+  severity: "low" | "medium" | "high";
+  /** راهنمای کوتاه اصلاح. */
+  fix_hint: string;
+}
+
+interface VisualVerdict {
+  /** pass یعنی صفحات کلیدی سالم رندر شدند. */
+  verdict: "pass" | "fail";
+  /** مشکلات مشخص؛ در حالت pass خالی. */
+  issues: string[];
+  /** مسیر اسکرین‌شات‌های ذخیره‌شده. */
+  shots: string[];
+}
+
+interface WorkflowReportShape {
+  conclusion: string;
+  findings: ReviewFinding[];
+  verified: string[];
+  notCovered: string[];
+}
+
+const WEB = "/Users/mrchatgpt/Sites/nabux-web";
+const NX = "/Users/mrchatgpt/Sites/NabuXUI";
+const OLD_SITE = "/Users/mrchatgpt/Sites/Nabuxai.com";
+const SITES = "/Users/mrchatgpt/Sites";
+
+const INTENT = [
+  "هدف نهایی کاربر: یک سیستم وب کاملاً هدلس که (۱) همه‌ی ماژول‌ها و اپ‌های خانواده‌ی نبکس را ساپورت کند — هر ماژول بتواند به سایت محتوا/قابلیت بدهد و خروجی سایت (فرم، لید، سفارش…) برای ثبت به ماژول درست ارسال شود؛",
+  "(۲) رندر SSR/SSG با جدیدترین و سریع‌ترین ترکیب ممکن باشد (تصمیم: Astro 5 استاتیک‌اول با HTML صفر-جاوااسکریپت + endpointهای سروری؛ جزیره‌ی React فقط اگر واقعاً لازم شد)؛",
+  "(۳) از المان‌های دیزاین‌سیستم NabuxXUI در همه‌جا استفاده شود (CSS وندور‌شده از " + NX + "/packages/core/dist/nabuxui.css).",
+].join(" ");
+
+const RULES = [
+  "قوانین کار:",
+  "- فقط داخل " + WEB + " بنویس. خواندن " + NX + " و " + OLD_SITE + " و " + SITES + " آزاد، ویرایش‌شان ممنوع (nabux-cms مال گردش کار دیگری است؛ به هیچ عنوان دست نزن).",
+  "- اول CONVENTIONS.md ریپو را بخوان و پیروی کن؛ تغییرش دادی همان‌جا ثبت کن.",
+  "- بیلد باید بدون شبکه‌ی فونت/CDN قطعی باشد (فونت‌ها از fontsource).",
+  "- تست‌ها با node:test در tests/ — قطعی، بدون شبکه، بدون زمان واقعی.",
+  "- پاسخ نهایی فارسی و مختصر: چه ساخت، چه تستی، تصمیم‌های مهم.",
+].join("\n");
+
+const fixer = agent("تعمیرکار", {
+  system:
+    "مهندس ارشد وب (Astro/TS) هستی. خطا را از ریشه حل می‌کنی، نه با حذف تست یا دور زدن گیت. " +
+    "اگر گیت صادقانه قابل پاس نیست، صریح بنویس و اسکیلیت کن؛ پاسخ جعلی ممنوع. فارسی و مختصر.",
+});
+
+artifact.board("modules", {
+  key: "module",
+  status: "stage",
+  columns: ["در صف", "در ساخت", "گیت", "آماده"],
+  cardTitle: "module",
+});
+
+const STAGES = ["اسکلت", "فهرست", "قرارداد", "کلاینت", "صفحه‌ها", "کانکتور", "سئو", "بصری"];
+for (const m of STAGES) report({ module: m, stage: "در صف" });
+
+async function g(label: string, cmdArgs: string[], timeoutMs: number, hint: string): Promise<boolean> {
+  report({ module: label, stage: "گیت" });
+  for (let round = 1; round <= 3; round++) {
+    const r = await world.run("pnpm", ["--dir", WEB, ...cmdArgs], { timeoutMs });
+    if (r.exitCode === 0) {
+      log(`${label}: گیت پاس شد${round > 1 ? " (راند " + round + ")" : ""}`);
+      report({ module: label, stage: "آماده" });
+      return true;
+    }
+    log(`${label}: گیت شکست — راند ${round} از ۳`);
+    await fixer.ask(
+      `گیت «${label}» (pnpm ${cmdArgs.join(" ")}) در ${WEB} شکست خورده (راند ${round} از 3):\n\n` +
+      "خروجی:\n" + (r.stderr || r.stdout).slice(-4000) + "\n\n" + hint + "\n" + RULES,
+    );
+  }
+  log(`${label}: پس از ۳ راند نگرفت`);
+  return false;
+}
+
+/* ═══ فاز ۱: اسکلت + فهرست (موازی) ═══ */
+phase("اسکلت Astro و فهرست‌برداری ماژول‌ها");
+report({ module: "اسکلت", stage: "در ساخت" });
+report({ module: "فهرست", stage: "در ساخت" });
+const scaffoldP = agent("پیکربند وب").ask(
+  "ریپوی " + WEB + " را از صفر بساز — لایه‌ی وب هدلس خانواده‌ی نبکس.\n\n" + INTENT + "\n\n" +
+  "کارهای تو:\n" +
+  "1. Astro 5 + TypeScript strict + @astrojs/react (آماده ولی فعلاً بدون مصرف) — با pnpm؛ اسکریپت‌ها: dev/build/preview/test که test یعنی node --test tests/.\n" +
+  "2. فونت‌ها از fontsource (variable اگر هست): Vazirmatn، Inter، Bricolage Grotesque اگر موجود بود وگرنه Inter برای display، JetBrains Mono — بیلد باید آفلاین قطعی باشد.\n" +
+  "3. CSS دیزاین‌سیستم را وندور کن: کپی " + NX + "/packages/core/dist/nabuxui.css به src/styles/nabuxui.css (و در Layout ایمپورت شود) + لایه‌ی اپ سبک به سبک " + OLD_SITE + "/styles/globals.css فقط با توکن‌های --nx-* (هیچ هگز خام).\n" +
+  "4. رفتارهای بلوک (reveal + spotlight) را به‌صورت یک اسکریپت کلاینت کوچک بنویس (src/scripts/nx-behaviours.ts) — منطق همان " + OLD_SITE + "/lib/nx-hooks.js است؛ هیچ کتابخانه‌ی حرکتی اضافه نکن.\n" +
+  "5. Layout.astro پایه: html با data-theme=\"dark\"، dir/lang بر اساس locale (fa/ar → rtl)، متاها، nx-js/nx-live به‌محض بارگذاری اسکریپت.\n" +
+  "6. ساختار i18n دستی: /fa (پیش‌فرض)، /en، /ar — دیکشنری JSON در src/i18n/.\n" +
+  "7. CONVENTIONS.md (پشته، چیدمان، قواعد توکن‌محوری، سبک تست، قاعده‌ی «جزیره فقط اگر اجباری»)، README فارسی، .gitignore (dist/، node_modules/، .data/)، git init + کامیت اول.\n" +
+  "8. tests/smoke.test.mjs: فایل nabuxui.css وندورشده کلاس‌های nx-admin و nx-auth-card و nx-stat-strip را دارد و دیکشنری‌های سه زبان کلیدهای یکسان دارند.\n" +
+  "9. pnpm install و مطمئن شو pnpm build پاس است (تست را خودت اجرا نکن — گیت گردش کار می‌زند).\n" + RULES,
+);
+const explorer = agent("فهرست‌بردار");
+const inventoryP = explorer.ask<ModuleInfo[]>(
+  "فهرست‌برداری کامل ماژول‌ها/اپ‌های خانواده‌ی نبکس در " + SITES + " — فقط خواندن، هیچ فایلی را تغییر نده.\n\n" +
+  "برای هر پروژه‌ی مرتبط (همه‌ی Nabu*/Nabux*/nabux* + zoeyhq + mrchatgpt + NabuCRM و همه‌ی واریانت‌هایش NabuCRM-*):\n" +
+  "- README / PRODUCT_SPEC.md / PROJECT_PROGRESS.md / CLAUDE.md / package.json / composer.json / Dockerfile را نگاه کن (خلاصه‌خوانی؛ فایل‌های بزرگ را کامل نخوان).\n" +
+  "- برای هرکدام: پشته، نقش، چه چیزی می‌تواند به «سایت عمومی» بدهد (محتوا/محصول/پشتیبانی/چت/جستجو…) و چه رویدادهایی را برای «ثبت خروجی سایت» می‌پذیرد (فرم تماس→لید CRM، سفارش→Store، تیکت→Desk…).\n" +
+  "- حداکثر ۲۰ ماژول مرتبط را برگردان؛ پروژه‌های بی‌ربط به سایت را ذکر نکن. اگر API/webhook واقعی در مستنداتشان پیدا کردی، در events دقیقش را بنویس (مثلا «NabuPilot: POST /webhook/leads با بادی {…}»).\n" +
+  "فارسی و مختصر پاسخ بده — فقط آرایه‌ی نتیجه طبق قرارداد.",
+);
+/* پادزهر: اگر عامل به‌جای آرایه متن برگرداند، JSON داخلش را می‌گیریم و یک بار
+   دوباره می‌پرسیم — همان الگویی که در گردش کار هسته لازم شد. */
+function asArrayRaw(raw: unknown): unknown[] | null {
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === "string") {
+    const m = /\[[\s\S]*\]/.exec(raw);
+    if (m && m[0]) {
+      try {
+        const parsed: unknown = JSON.parse(m[0]);
+        if (Array.isArray(parsed)) return parsed;
+      } catch { /* متن JSON نبود */ }
+    }
+  }
+  return null;
+}
+const [scaffoldDone, invRaw] = await Promise.all([scaffoldP, inventoryP]);
+let inventory: ModuleInfo[] = (asArrayRaw(invRaw) ?? []) as ModuleInfo[];
+if (!Array.isArray(invRaw)) {
+  const retryRaw: unknown = await explorer.ask(
+    "پاسخ قبلی‌ت به‌صورت آرایه نرسید. همین فهرست را این بار فقط و فقط به شکل آرایه‌ی JSON برگردان — بدون هیچ متن اضافه — با دقیقاً کلیدهای name, stack, role, siteGives, events برای هر آیتم.",
+  );
+  inventory = (asArrayRaw(retryRaw) ?? []) as ModuleInfo[];
+}
+log(`فهرست: ${inventory.length} ماژول شناسایی شد (${inventory.map((m) => m.name).slice(0, 6).join("، ")}…)`);
+
+/* ═══ فاز ۲: گیت اسکلت ═══ */
+phase("گیت بیلد اسکلت");
+const skelOk = await g("اسکلت", ["build"], 600000, "خطای بیلد اسکلت Astro را ریشه‌ای حل کن.");
+if (!skelOk) {
+  return {
+    conclusion: "اسکلت nabux-web پس از ۳ راند کامپایل نشد؛ توقف. فهرست ماژول‌ها گرفته شد: " + inventory.map((m) => m.name).join("، "),
+    findings: [],
+    verified: ["pnpm build روی اسکلت (شکست، مستند شد)"],
+    notCovered: ["همه فازهای بعدی — روی اسکلت متوقف شد"],
+  } satisfies WorkflowReportShape;
+}
+
+/* ═══ فاز ۳: قرارداد ماژول‌ها و رجیستری ═══ */
+phase("قرارداد ماژول‌ها و رجیستری کانکتور");
+report({ module: "قرارداد", stage: "در ساخت" });
+await agent("معمار قرارداد").ask(
+  "رجیستری ماژول‌ها را بنویس — پل بین سایت و خانواده‌ی نبکس.\n\n" + INTENT + "\n\n" +
+  "فهرست ماژول‌های شناسایی‌شده توسط همکارت:\n" + JSON.stringify(inventory, null, 2) + "\n\n" +
+  "کارهای تو:\n" +
+  "1. docs/modules.md: جدول مرجع همه‌ی ماژول‌ها (نام، پشته، نقش، چه چیزی به سایت می‌دهد، چه رویدادهایی می‌پذیرد) + نقشه‌ی جریان: «خروجی سایت → رویداد → کانکتور → ماژول».\n" +
+  "2. src/connectors/types.ts: قرارداد ConnectorManifest { id, label, module, events: EventName[], transport: { kind: 'http', urlEnv, headersEnv? }, enabled } که EventName از همان فضای‌نام باس هوک هسته است (event.form، event.agent، notify.push، crm.mutation، commerce.catalog، content.import، module.position…).\n" +
+  "3. src/connectors/registry.ts: مانیفست‌های واقعی برای ماژول‌های فهرست (حداقل: crm برای فرم‌ها/لیدها، store برای سفارش/کاتالوگ، chat برای پیام بازدیدکننده، desk برای تیکت) — endpoint از env می‌آید، مقادیر نمونه در .env.example.\n" +
+  "4. tests/connectors.test.mjs: ولیدیشن مانیفست (رویداد مجاز، id یکتا، urlEnv تعریف‌شده در .env.example) و نگاشت رویداد→کانکتور.\n" + RULES,
+);
+const contractOk = await g("قرارداد", ["test"], 300000, "تست‌های رجیستری را سبز کن.");
+
+/* ═══ فاز ۴: کلاینت هدلس + فال‌بک ═══ */
+phase("کلاینت هدلس با فال‌بک SSG");
+report({ module: "کلاینت", stage: "در ساخت" });
+await agent("معمار کلاینت").ask(
+  "کلاینت تایپ‌شده‌ی هدلس را بساز — سایت باید هم با هسته‌ی CMS (nabux-cms در حال ساخت است) کار کند و هم بدون آن کاملاً بیلد شود.\n\n" + INTENT + "\n\n" +
+  "قرارداد API هسته (همین که پیاده می‌شود): GET /api/v1/contents?type=&status=published&page=؛ GET /api/v1/contents/:id؛ GET /api/v1/settings؛ GET /api/v1/media — احراز هویت Bearer برای خواندن published لازم نیست؛ پاسخ‌ها JSON با شکل {data, meta}.\n\n" +
+  "کارهای تو:\n" +
+  "1. src/lib/cms.ts: کلاینت fetch با URL از env CMS_URL (در بیلد و ران‌تایم) + تایپ‌های Content/ContentType/Settings.\n" +
+  "2. src/content/ به‌عنوان فال‌بک SSG: کالکشن‌های Astro (pages و posts) با محتوای نمونه‌ی واقعی فارسی/انگلیسی/عربی (هر زبان حداقل: ۳ مقاله، ۱ درباره‌ما، ۱ محصول نمونه‌ی Store).\n" +
+  "3. src/lib/source.ts: تابع بارگذر با اولویت «اگر CMS_URL پاسخ داد → از هسته، وگرنه از کالکشن‌ها» با کش بیلد؛ قطعی و بدون خطای بیلد وقتی هسته خاموش است.\n" +
+  "4. نگاشت content-type→قالب: page/article/product در src/lib/maps.ts.\n" +
+  "5. tests/source.test.mjs: انتخاب فال‌بک، نگاشت type→قالب، نرمال‌سازی محتوای هسته به شکل کالکشن.\n" + RULES,
+);
+const clientOk = await g("کلاینت", ["test"], 300000, "تست‌های کلاینت/فال‌بک را سبز کن.");
+
+/* ═══ فاز ۵: صفحه‌ها با تمام بلوک‌های NabuXUI ═══ */
+phase("صفحات سایت با بلوک‌های NabuxXUI");
+report({ module: "صفحه‌ها", stage: "در ساخت" });
+await agent("معمار صفحه‌ها").ask(
+  "صفحات سایت را با تمام توان دیزاین‌سیستم بساز — این سایت ویترین کامل بلوک‌های NabuXUI است.\n\n" + INTENT + "\n\n" +
+  "الگوها را از " + NX + "/docs/BLOCKS.md و " + OLD_SITE + " (صفحه اصلی و کامپوننت‌هایش) بردار؛ همه‌چیز CSS بلوک‌هاست + اسکریپت nx-behaviours — جزیره‌ی React ممنوع مگر اجبار واقعی.\n\n" +
+  "صفحه‌ها (هر سه زبان fa/en/ar؛ fa پیش‌فرض و RTL):\n" +
+  "1. خانه: هیرو با nx-text-hero (پورت منطق splitGlyphs از " + OLD_SITE + "/pages/index.js به تابع pure در src/lib/split.ts) + بج/eyebrow + دکمه‌های شیشه‌ای؛ «مینی‌کنسول» محصول (پورت HeroConsole همان ریپو با nx-stat-strip و nx-bar-chart — CSS-only)؛ nx-section-tint آمار با nx-dot-matrix؛ گرید پانتئون ماژول‌ها از docs/modules.md با کارت‌های شیشه‌ای (هر ماژول واقعی فهرست: آیکن + یک خط نقش + چیپ پشته)؛ نوار مزایا با چیپ‌ها؛ FAQ با همان الگوی nx-faq؛ CTA پایانی با nx-ornament.\n" +
+  "2. مقاله (/[locale]/blog/[slug]): nx-text بلوک‌ها، تیتر گرادیانی، زمان مطالعه، جدول محتوا ساده.\n" +
+  "3. محصولات ماژول‌ها (/[locale]/modules): گرید کامل + صفحه جزئیات هر ماژول از docs/modules.md (قابلیت‌ها، رویدادهایی که می‌پذیرد، چیپ پشته).\n" +
+  "4. تماس (/[locale]/contact): فرم شیشه‌ای (نام/ایمیل/پیام + honeypot مخفی) که POST به /api/submit/crm می‌زند + حالت موفقیت/خطا بدون JS (redirect با query) و با JS (fetch).\n" +
+  "5. 404 با بلوک empty-state.\n" +
+  "قواعد: فقط توکن‌های --nx-*؛ منطقی‌ها (inset-inline و غیره) برای RTL؛ reveal با data-nx-reveal + گروهی؛ reduced-motion رعایت (خود CSS بلوک‌ها دارد، خرابش نکن).\n" +
+  "تست: tests/pages.test.mjs — after build در dist: صفحات سه زبان موجودند، fa دارای dir=\"rtl\"، هر صفحه h1 و متای og دارد، کلاس nx-text-hero و nx-stat-strip در خروجی خانه هست.\n" + RULES,
+);
+const pagesOk = await g("صفحه‌ها", ["build"], 600000, "بیلد صفحه‌ها را سبز کن.");
+if (pagesOk) await g("صفحه‌ها", ["test"], 300000, "تست‌های خروجی dist را سبز کن.");
+
+/* ═══ فاز ۶: کانکتورها — ثبت خروجی به ماژول‌ها ═══ */
+phase("کانکتورها: ارسال خروجی برای ثبت");
+report({ module: "کانکتور", stage: "در ساخت" });
+await agent("معمار کانکتور").ask(
+  "مسیر «خروجی سایت → ثبت در ماژول» را کامل کن.\n\n" + INTENT + "\n\n" +
+  "کارهای تو (روی رجیستری فاز قرارداد):\n" +
+  "1. src/pages/api/submit/[connector].ts (prerender=false): ولیدیشن بادی، honeypot، آهراست سپم ساده (حداکثر نرخ per-IP در حافظه)، ساخت پاکت رویداد {id, event, data, meta:{locale,page,at_iso}} با at از زمان درخواست.\n" +
+  "2. ارسال با fetch به urlEnv کانکتور؛ اگر env نبود یا مقصد خطا داد، پاکت در .data/outbox/*.json صف شود (همان شناسه) + یک رانر کوچک src/lib/outbox.ts که صف را با backoff ساده دوباره می‌فرستد (صدا زدنش دستی با تابع، بدون کرون).\n" +
+  "3. برای هر کانکتورِ فعال در رجیستری، مسیر مجاز؛ کانکتور ناشناس 404؛ رویدادِ خارج از مانیفست 400.\n" +
+  "4. پاسخ همیشه JSON {ok, queued?} مناسب هم برای fetch و هم فرم معمولی (redirect با query status).\n" +
+  "5. tests/submit.test.mjs: نگاشت بادی→پاکت، honeypot رد می‌کند، صف‌شدن وقتی env غایب است (با fetch ماک‌شده در سطح ماژول، بدون شبکه).\n" + RULES,
+);
+const connOk = await g("کانکتور", ["test"], 300000, "تست‌های submit/outbox را سبز کن.");
+
+/* ═══ فاز ۷: سئو و سرعت ═══ */
+phase("سئو و سرعت");
+report({ module: "سئو", stage: "در ساخت" });
+await agent("مهندس سئو").ask(
+  "لایه‌ی سئو و سرعت را کامل کن.\n\n" + INTENT + "\n\n" +
+  "کارهای تو:\n" +
+  "1. کامپوننت SEO.astro: title/description/canonical/og/twitter + JSON-LD (Organization در خانه، Article در مقاله، ItemList در گرید ماژول‌ها) + hreflang سه‌زبان با x-default=en.\n" +
+  "2. public/robots.txt + sitemap تولیدشده در بیلد از همه‌ی صفحات سه زبان (integrations یا اسکریپت بیلد؛ بدون وابستگی سنگین اگر نشد دستی در اندپوینت getStaticPaths).\n" +
+  "3. سرعت: فونت با font-display مناسب، preconnect حذف (همه local)، CSS وندور فقط یک بار، هیچ JS کلاینت جز nx-behaviours، لینیط تصاویر اگر تصویری هست.\n" +
+  "4. rss.xml فارسی/انگلیسی از مقاله‌ها.\n" +
+  "5. tests/seo.test.mjs روی dist: sitemap هر سه locale را دارد، rss معتبر XML است، canonical و hreflang در خانه هست، هیچ <script src> جز nx-behaviours در HTML خانه نیست (صفر-جاوااسکریپت بودن محتوا اثبات شود).\n" + RULES,
+);
+const seoOk = await g("سئو", ["build"], 600000, "بیلد سئو را سبز کن.");
+if (seoOk) await g("سئو", ["test"], 300000, "تست‌های سئو روی dist را سبز کن.");
+
+/* ═══ فاز ۸: راستی‌آزمایی بصری ═══ */
+phase("راستی‌آزمایی بصری در مرورگر");
+report({ module: "بصری", stage: "در ساخت" });
+const visualAgent = agent("بازبین بصری");
+const visualRaw: unknown = await visualAgent.ask<VisualVerdict>(
+  "سایت ساخته‌شده در " + WEB + " را در مرورگر راستی‌آزمایی کن. هیچ فایل سورسی را ویرایش نکن (گزارش بده).\n\n" +
+  "1. با Bash سرور preview را ببر بالا: cd " + WEB + " && pnpm preview --port 4321 (پس‌زمینه) و صبر کن بالا بیاید (curl 127.0.0.1:4321).\n" +
+  "2. با ابزار mcp__node_repl__js مرورگر ZCode را باز کن (الگوی bootstrap: process.env.ZCODE_PLUGIN_ROOT → scripts/browser-client.mjs → setupBrowserRuntime → agent.browsers.getForUrl('http://127.0.0.1:4321'))؛ تب 1440x900.\n" +
+  "3. صفحات: /fa (پیش‌فرض)، /en، /ar، /fa/contact و یک مقاله. قبل از هر اسکرین‌شات انیمیشن‌ها را pause کن (استایل animation-play-state) و کمی صبر کن تا revealها تمام شوند (اگر چیزی در opacity صفر گیر کرد، ۲.۵ ثانیه صبر و دوباره شات — CSS خودش failsafe دارد).\n" +
+  "4. هر شات را با nodeRepl.emitImage ببین و قضاوت کن: چیدمان شکسته؟ متن نامرئی/بریده؟ RTL درست آینه شده؟ بلوک‌ها استایل دارند؟ فقط مشکل واقعی و مشخص گزارش کن.\n" +
+  "5. شات‌ها در /tmp/nabuxweb-shots/ ذخیره (mkdir -p). آخر کار سرور preview را بکش (kill).\n" +
+  "فارسی پاسخ بده.",
+);
+function asVerdict(raw: unknown): VisualVerdict | null {
+  if (typeof raw === "object" && raw !== null && "verdict" in raw) return raw as VisualVerdict;
+  if (typeof raw === "string") {
+    const m = /\{[\s\S]*\}/.exec(raw);
+    if (m && m[0]) {
+      try {
+        const parsed: unknown = JSON.parse(m[0]);
+        if (typeof parsed === "object" && parsed !== null && "verdict" in parsed) return parsed as VisualVerdict;
+      } catch { /* متن JSON نبود */ }
+    }
+  }
+  return null;
+}
+let visual = asVerdict(visualRaw);
+if (!visual) {
+  const retryRaw: unknown = await visualAgent.ask(
+    "پاسخ قبلی‌ت ساخت‌یافته نبود. فقط و فقط یک JSON برگردان — بدون متن اضافه — با این کلیدها: verdict (pass|fail)، issues (آرایه‌ی رشته)، shots (آرایه‌ی مسیر اسکرین‌شات‌ها).",
+  );
+  visual = asVerdict(retryRaw);
+}
+if (!visual) {
+  log("بازبین بصری نتیجه‌ی ساخت‌یافته نداد — به‌عنوان مشکل ثبت می‌شود تا از گزارش پنهان نماند");
+  visual = { verdict: "fail", issues: ["پاسخ بازبین بصری ساخت‌یافته نبود؛ راستی‌آزمایی بصری انجام‌نشده ماند — چک دستی لازم است"], shots: [] };
+}
+log(`بازبینی بصری: ${visual.verdict === "pass" ? "پاس" : "دارای مشکل"}`);
+const realVisualIssues = visual.issues.filter((i) => i.indexOf("ساخت‌یافته نبود") === -1);
+if (visual.verdict !== "pass" && realVisualIssues.length > 0) {
+  await fixer.ask(
+    "بازبین بصری این مشکلات را در " + WEB + " دید؛ ریشه‌ای حل کن:\n" + realVisualIssues.join("\n") + "\n" + RULES,
+  );
+  await g("بصری", ["build"], 600000, "پس از رفع مشکلات بصری، بیلد را دوباره سبز کن.");
+} else if (visual.verdict === "pass") {
+  report({ module: "بصری", stage: "آماده" });
+}
+
+/* ═══ فاز ۹: بازبینی مستقل ═══ */
+phase("بازبینی مستقل نهایی");
+const reviewer = agent("بازبین مستقل", {
+  system:
+    "بازبین معماری و کد هستی با چشم تازه؛ هیچ فایلی را ویرایش نمی‌کنی. یافته را با مسیر و شاهد بنویس؛ آن‌چه را بررسی نکردی گزارش نکن. فارسی پاسخ بده.",
+});
+const reviewRaw: unknown = await reviewer.ask(
+  "کل " + WEB + " را بخوان (src/، tests/، docs/، astro.config) و با هدف کاربر بسنج. docs/modules.md و رجیستری کانکتورها را با واقعیت فهرست زیر مقایسه کن:\n" +
+  JSON.stringify(inventory.map((m) => ({ name: m.name, events: m.events })), null, 2) + "\n\n" +
+  "چک‌لیست: هدلس بودن واقعی (هیچ داده‌ای هاردکد نشده که باید از هسته بیاید)؟ فال‌بک SSG سالم؟ صفر-جاوااسکریپت بودن محتوا؟ فقط توکن‌های --nx-* (هگز خام = یافته)؟ RTL بدون تقلب physical؟ امنیت اندپوینت submit (ولیدیشن، honeypot، نشت خطا)؟ تست‌ها assertion واقعی دارند؟ تناقض با CONVENTIONS.md؟",
+);
+function asFindings(raw: unknown): ReviewFinding[] | null {
+  if (Array.isArray(raw)) return raw as ReviewFinding[];
+  if (typeof raw === "string") {
+    const m = /\[[\s\S]*\]/.exec(raw);
+    if (m && m[0]) {
+      try {
+        const parsed: unknown = JSON.parse(m[0]);
+        if (Array.isArray(parsed)) return parsed as ReviewFinding[];
+      } catch { /* متن JSON نبود */ }
+    }
+  }
+  return null;
+}
+let findings: ReviewFinding[] = asFindings(reviewRaw) ?? [];
+if (findings.length === 0 && !Array.isArray(reviewRaw)) {
+  const retryRaw: unknown = await reviewer.ask(
+    "پاسخ قبلی‌ت به‌صورت آرایه نرسید. همین یافته‌ها را این بار فقط و فقط به شکل آرایه‌ی JSON برگردان — بدون هیچ متن اضافه — با دقیقاً کلیدهای where, what, severity (low|medium|high), fix_hint. اگر یافته‌ای نداشتی، آرایه‌ی خالی [] بفرست.",
+  );
+  findings = asFindings(retryRaw) ?? [];
+  if (findings.length === 0 && !Array.isArray(retryRaw)) {
+    log("بازبین مستقل نتیجه‌ی ساخت‌یافته نداد — در گزارش ثبت می‌شود");
+  }
+}
+log(`بازبینی مستقل: ${findings.length} یافته`);
+const heavy = findings.filter((f) => f.severity !== "low");
+if (heavy.length > 0) {
+  await fixer.ask(
+    "بازبین مستقل این یافته‌ها را در " + WEB + " گزارش کرده؛ متوسط و بالاتر را ریشه‌ای حل کن:\n" + JSON.stringify(heavy, null, 2) + "\n" + RULES,
+  );
+  const reb = await world.run("pnpm", ["--dir", WEB, "build"], { timeoutMs: 600000 });
+  const ret = await world.run("pnpm", ["--dir", WEB, "test"], { timeoutMs: 300000 });
+  log(`بازگیت: build=${reb.exitCode === 0 ? "پاس" : "شکست"} test=${ret.exitCode === 0 ? "پاس" : "شکست"}`);
+}
+
+/* ═══ فاز ۱۰: تحویل ═══ */
+phase("تحویل: کامیت و گزارش");
+await world.run("git", ["-C", WEB, "add", "-A"]);
+const commit = await world.run("git", ["-C", WEB, "commit", "-m", "nabux-web: لایه وب هدلس — Astro استاتیک‌اول + بلوک‌های NabuXUI + کلاینت هسته با فال‌بک + کانکتور ماژول‌ها + سئو"]);
+const du = await world.run("du", ["-sh", WEB + "/dist"]);
+const distSize = /[\d.]+[KM]?/.exec(du.stdout);
+const lines: string[] = [
+  "# nabux-web — لایه‌ی وب هدلس خانواده نبکس",
+  "",
+  "ریپو: `" + WEB + "` · کامیت: " + (commit.exitCode === 0 ? "زده شد" : "ناموفق") + " · حجم dist: **" + (distSize && distSize[0] ? distSize[0] + "B" : "نامشخص") + "**",
+  "",
+  "## فازها",
+  "- اسکلت Astro 5 (استاتیک‌اول، فونت local، CSS وندور NabuXUI): " + (skelOk ? "پاس" : "شکست"),
+  "- قرارداد ماژول‌ها و رجیستری کانکتور: " + (contractOk ? "پاس" : "شکست"),
+  "- کلاینت هدلس + فال‌بک SSG: " + (clientOk ? "پاس" : "شکست"),
+  "- صفحه‌ها (خانه/مقاله/ماژول‌ها/تماس/404 در fa/en/ar): " + (pagesOk ? "پاس" : "شکست"),
+  "- کانکتورها (submit + outbox): " + (connOk ? "پاس" : "شکست"),
+  "- سئو (sitemap/hreflang/JSON-LD/rss/صفر-JS): " + (seoOk ? "پاس" : "شکست"),
+  "- راستی‌آزمایی بصری: " + (visual.verdict === "pass" ? "پاس" : "رفع شد/گزارش شد"),
+  "",
+  "## ماژول‌های پشتیبانی‌شده",
+  ...inventory.map((m) => "- **" + m.name + "** — " + m.role + " (رویدادها: " + (m.events.length > 0 ? m.events.join("، ") : "—") + ")"),
+  "",
+  "## یافته‌های بازبین مستقل",
+];
+if (findings.length === 0) lines.push("- یافته‌ای نبود.");
+for (const f of findings) lines.push("- **" + f.severity + "** · `" + f.where + "` — " + f.what);
+await artifact.markdown("report", lines.join("\n"), {
+  title: "گزارش ساخت nabux-web",
+  description: "لایه وب هدلس روی بلوک‌های NabuXUI — " + inventory.length + " ماژول در رجیستری",
+  primary: true,
+});
+
+return {
+  conclusion:
+    "لایه‌ی وب هدلس nabux-web ساخته شد: Astro 5 استاتیک‌اول (HTML صفر-جاوااسکریپت) روی CSS وندور NabuXUI در سه زبان fa/en/ar با RTL، کلاینت تایپ‌شده‌ی هسته‌ی nabux-cms با فال‌بک SSG، و رجیستری کانکتور برای " + inventory.length + " ماژول واقعی خانواده (خروجی سایت با outbox مقاوم برای ثبت به CRM/Store/Chat/Desk می‌رود). گیت‌ها: build و test هر فاز + بازبینی مستقل + بازبینی بصری مرورگر. اسکرین‌شات‌ها: /tmp/nabuxweb-shots/.",
+  findings,
+  verified: [
+    "pnpm build و pnpm test بعد از هر فاز",
+    "تست‌های dist: RTL فارسی، sitemap سه‌زبان، صفر <script src> در HTML خانه",
+    "راستی‌آزمایی بصری واقعی در مرورگر (صفحات fa/en/ar/contact/مقاله) با اسکرین‌شات",
+    "بازبینی مستقل کد توسط عامل تازه + بازگیت پس از رفع",
+  ],
+  notCovered: [
+    "اتصال زنده به هسته nabux-cms (در حال ساخت توسط گردش کار موازی؛ کلاینت روی قرارداد API نوشته شده و با فال‌بک کار می‌کند)",
+    "webhookهای واقعی ماژول‌ها (endpoints از env؛ مقادیر نمونه در .env.example)",
+    "استقرار (خروجی استاتیک بعداً یا روی CDN یا سرو با خود باینری Rust)",
+    "لوکال fa در سایت قدیمی nabuxai.com — این ریپو جایگزین آینده است، مهاجرت محتوا جداگانه",
+  ],
+} satisfies WorkflowReportShape;

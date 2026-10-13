@@ -1,0 +1,108 @@
+/**
+ * NabuXUI for Livewire: the core behaviours plus an Alpine plugin.
+ *
+ * Loaded as a module in <head> (@nabuxuiScripts), so it runs before Livewire
+ * starts Alpine and registers everything on alpine:init.
+ */
+import * as core from '@nabuxai/ui-core';
+import { installBehaviors } from './alpine/behaviors';
+import { installDisplay } from './alpine/display';
+import { installForms } from './alpine/forms';
+import { installNavigation } from './alpine/navigation';
+import { installOverlays } from './alpine/overlays';
+import type { AlpineLike } from './alpine/types';
+import { installTextBlocks } from './alpine/blocks/text';
+import { installActionsBlocks } from './alpine/blocks/actions';
+import { installCardsBlocks } from './alpine/blocks/cards';
+import { installDataBlocks } from './alpine/blocks/data';
+import { installMenusBlocks } from './alpine/blocks/menus';
+import { installChipFilterBlocks } from './alpine/blocks/chip-filter';
+import { installStatStripBlocks } from './alpine/blocks/stat-strip';
+import { installSortPillBlocks } from './alpine/blocks/sort-pill';
+import { installGlassBlocks } from './alpine/blocks/glass';
+import { installAdminShellBlocks } from './alpine/blocks/admin-shell';
+import { installAuthCardBlocks } from './alpine/blocks/auth-card';
+import { installCalendarBlocks } from './alpine/blocks/calendar';
+import { installChatBlocks } from './alpine/blocks/chat';
+import { installKanbanBlocks } from './alpine/blocks/kanban';
+import { installEmailBlocks } from './alpine/blocks/email';
+import { installFileManagerBlocks } from './alpine/blocks/file-manager';
+import { installTodoBlocks } from './alpine/blocks/todo';
+import { installProductCardBlocks } from './alpine/blocks/product-card';
+import { installOrderTrackingBlocks } from './alpine/blocks/order-tracking';
+import { installTreeViewBlocks } from './alpine/blocks/tree-view';
+import { installGanttBlocks } from './alpine/blocks/gantt';
+import { installWizardBlocks } from './alpine/blocks/wizard';
+import { installProfileCardBlocks } from './alpine/blocks/profile-card';
+import { installPickersBlocks } from './alpine/blocks/pickers';
+import { installAgentBlocks } from './alpine/blocks/agent';
+import { installInteractBlocks } from './alpine/blocks/interact';
+import { installChartsPlusBlocks } from './alpine/blocks/charts-plus';
+import { installEffectsBlocks } from './alpine/blocks/effects';
+
+
+declare global {
+  interface Window {
+    Alpine?: AlpineLike;
+    NabuXUI?: typeof core;
+  }
+}
+
+window.NabuXUI = core;
+core.markScripted();
+core.theme.watch();
+
+let installed = false;
+function install(Alpine: AlpineLike | undefined) {
+  if (!Alpine || installed) return;
+  installed = true;
+  installBehaviors(Alpine);
+  installOverlays(Alpine);
+  installNavigation(Alpine);
+  installForms(Alpine);
+  installDisplay(Alpine);
+  installTextBlocks(Alpine);
+  installActionsBlocks(Alpine);
+  installCardsBlocks(Alpine);
+  installDataBlocks(Alpine);
+  installMenusBlocks(Alpine);
+  installChipFilterBlocks(Alpine);
+  installStatStripBlocks(Alpine);
+  installSortPillBlocks(Alpine);
+  installGlassBlocks(Alpine);
+  installAdminShellBlocks(Alpine);
+  installAuthCardBlocks(Alpine);
+  installCalendarBlocks(Alpine);
+  installChatBlocks(Alpine);
+  installKanbanBlocks(Alpine);
+  installEmailBlocks(Alpine);
+  installFileManagerBlocks(Alpine);
+  installTodoBlocks(Alpine);
+  installProductCardBlocks(Alpine);
+  installOrderTrackingBlocks(Alpine);
+  installTreeViewBlocks(Alpine);
+  installGanttBlocks(Alpine);
+  installWizardBlocks(Alpine);
+  installProfileCardBlocks(Alpine);
+  installPickersBlocks(Alpine);
+  installAgentBlocks(Alpine);
+  installInteractBlocks(Alpine);
+  installChartsPlusBlocks(Alpine);
+  installEffectsBlocks(Alpine);
+}
+
+if (window.Alpine) install(window.Alpine);
+document.addEventListener('alpine:init', () => install(window.Alpine));
+
+/*
+ * wire:navigate. Livewire 4 runs page swaps inside a View Transition when the
+ * page marks its content with wire:transition.navigate="nx-page". Livewire 3
+ * swaps instantly, so there the new page's .nx-page rises in instead.
+ */
+document.addEventListener('livewire:navigated', () => {
+  const page = document.querySelector<HTMLElement>('.nx-page');
+  const viewTransitions = typeof document.startViewTransition === 'function' && document.querySelector('[wire\\:transition\\.navigate]');
+  if (!page || viewTransitions) return;
+  page.setAttribute('data-nx-entering', '');
+  page.addEventListener('animationend', () => page.removeAttribute('data-nx-entering'), { once: true });
+});

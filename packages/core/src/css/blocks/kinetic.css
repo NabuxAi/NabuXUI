@@ -1,0 +1,537 @@
+/*
+ * Blocks: kinetic type.
+ *
+ *   Word fill scroll   a reading pane whose words each carry a --lit share of
+ *                      the pane's own scroll progress, so colour climbs the
+ *                      paragraph exactly as fast as the reader; a sticky rail
+ *                      keeps the percentage and a hairline track honest
+ *   Word cycle 3d      the keyword of a headline flips on the X axis through a
+ *                      word loop, while a hidden same-font span measures each
+ *                      incoming word so the slot's width eases instead of
+ *                      jolting the line
+ *   Velocity band      oversized text bands whose speed is the reader's own
+ *                      scroll velocity — one runs with the flick, one against
+ *                      it, and a pause lets the damping pull them back to a
+ *                      calm drift
+ *   Elastic letters    a wordmark whose units are small damped springs: hover
+ *                      pulls one into a stretched shape, release wobbles it
+ *                      back (Latin letters, joining scripts whole words)
+ *
+ * Behaviour: js/blocks/kinetic.ts (scrollVelocity, velocityBands,
+ * wordFillScroll, elasticLetters).
+ */
+@layer nx.components {
+  /* ---- Word fill scroll ------------------------------------------------------- *
+   *   <div class="nx-wordfill">                    (wordFillScroll writes --nx-scroll, data-started/-complete)
+   *     <div class="nx-wordfill-layout">
+   *       <aside class="nx-wordfill-rail" aria-hidden="true">
+   *         <b class="nx-wordfill-pct">42%</b>
+   *         <i class="nx-wordfill-track"><b class="nx-wordfill-fill"></b></i>
+   *       </aside>
+   *       <div class="nx-wordfill-pane" tabindex="0" role="region" aria-label="…">
+   *         <p class="nx-wordfill-text" dir="auto">
+   *           <span class="nx-wordfill-word">Every</span> …  (each carries --lit, 0–1)
+   *         </p>
+   *       </div>
+   *     </div>
+   *     <div class="nx-wordfill-foot"><button class="nx-wordfill-reset">…</button></div>
+   *   </div>
+   * ------------------------------------------------------------------------- */
+  .nx-wordfill {
+    display: grid;
+    gap: var(--nx-space-4);
+  }
+
+  .nx-wordfill-layout {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--nx-space-4);
+    align-items: start;
+  }
+
+  .nx-wordfill-rail {
+    position: sticky;
+    inset-block-start: var(--nx-space-2);
+    display: grid;
+    gap: var(--nx-space-2);
+    justify-items: center;
+    inline-size: 3rem;
+    padding-block: var(--nx-space-1);
+  }
+
+  .nx-wordfill-pct {
+    font-size: var(--nx-text-sm);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--nx-text);
+  }
+
+  .nx-wordfill-track {
+    display: block;
+    inline-size: 3px;
+    block-size: 8rem;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-border);
+    overflow: clip;
+  }
+
+  .nx-wordfill-fill {
+    display: block;
+    /* --nx-scroll (0–1) is written on the root and inherits down. */
+    block-size: calc(var(--nx-scroll, 0) * 100%);
+    border-radius: inherit;
+    background: linear-gradient(180deg, var(--nx-accent), color-mix(in oklab, var(--nx-accent) 60%, var(--nx-text)));
+    transition: block-size var(--nx-dur-fast) linear;
+  }
+
+  .nx-wordfill-pane {
+    block-size: var(--_pane, 18rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--nx-space-5);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-surface);
+    scrollbar-width: thin;
+    scrollbar-color: var(--nx-border) transparent;
+
+    &:focus-visible {
+      outline: 2px solid var(--nx-ring);
+      outline-offset: 2px;
+    }
+  }
+
+  .nx-wordfill-text {
+    margin: 0;
+    max-inline-size: 58ch;
+    font-size: var(--nx-text-md);
+    font-weight: 500;
+    line-height: 2.1;
+    color: var(--nx-text);
+  }
+
+  /* Dim ahead of the reader, full ink behind them: each word's --lit share of
+     the pane's progress mixes the two. The transition is the smoothing the
+     rAF pass does not do; linear so it stays position-mapped. */
+  .nx-wordfill-word {
+    color: color-mix(in oklab, var(--nx-text) calc(var(--lit, 0) * 100%), var(--nx-text-subtle));
+    transition: color var(--nx-dur-base) linear;
+  }
+
+  .nx-wordfill-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--nx-space-3) var(--nx-space-5);
+  }
+
+  .nx-wordfill-reset {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-2) var(--nx-space-4);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    font: 600 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    cursor: pointer;
+    transition-property: border-color, color, scale;
+    transition-duration: var(--nx-dur-fast), var(--nx-dur-fast), var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-ease-out), var(--nx-ease-out), var(--nx-spring-snappy);
+
+    &:hover { border-color: var(--nx-accent-border); color: var(--nx-accent-text); }
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+  }
+
+  /* The rail parks beside the pane on wide screens and lies under it, as a
+     row, where the pane takes the whole width. */
+  @media (max-width: 30rem) {
+    .nx-wordfill-layout { grid-template-columns: minmax(0, 1fr); }
+
+    .nx-wordfill-rail {
+      position: static;
+      grid-auto-flow: column;
+      grid-template-columns: auto var(--nx-space-24);
+      justify-content: start;
+      align-items: center;
+      inline-size: auto;
+    }
+
+    .nx-wordfill-track {
+      block-size: 3px;
+      inline-size: 6rem;
+    }
+
+    .nx-wordfill-fill {
+      block-size: auto;
+      inline-size: calc(var(--nx-scroll, 0) * 100%);
+      transition: inline-size var(--nx-dur-fast) linear, block-size var(--nx-dur-fast) linear;
+    }
+  }
+
+  /* ---- Word cycle 3d ----------------------------------------------------------- *
+   *   <section class="nx-wordcycle">               (hover/focus holds the loop)
+   *     <p class="nx-wordcycle-kicker">…</p>
+   *     <h3 class="nx-wordcycle-line">
+   *       Ship your design system
+   *       <span class="nx-wordcycle-stage" style="--_slot: 6.4rem">  (fitted by JS)
+   *         <span class="nx-wordcycle-word" data-state="show|out|in">faster</span>
+   *       </span> — than ever.
+   *       <span class="nx-wordcycle-ghost" aria-hidden="true">together</span>  (inside the line, so it inherits its font)
+   *     </h3>
+   *     <div class="nx-wordcycle-foot">
+   *       <div class="nx-wordcycle-dots"><button class="nx-wordcycle-dot" aria-current="true">…</button></div>
+   *       <button class="nx-wordcycle-again">…</button>
+   *     </div>
+   *   </section>
+   * ------------------------------------------------------------------------- */
+  .nx-wordcycle {
+    position: relative;
+    display: grid;
+    gap: var(--nx-space-5);
+    justify-items: center;
+    text-align: center;
+    padding: clamp(var(--nx-space-6), 4vw, var(--nx-space-10)) var(--nx-space-5);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-xl);
+    background: radial-gradient(120% 100% at 50% 0%, var(--nx-accent-soft), transparent 60%), var(--nx-surface);
+    overflow: clip;
+  }
+
+  .nx-wordcycle-kicker {
+    margin: 0;
+    font-size: var(--nx-text-xs);
+    font-weight: 700;
+    letter-spacing: var(--nx-tracking-wider);
+    text-transform: uppercase;
+    color: var(--nx-text-muted);
+  }
+
+  .nx-wordcycle-line {
+    position: relative;
+    margin: 0;
+    max-inline-size: 24ch;
+    font-weight: 800;
+    font-size: var(--nx-text-4xl);
+    line-height: 1.6;
+    text-wrap: balance;
+    color: var(--nx-text);
+  }
+
+  /* The slot the word flips in: its width is measured per word (the ghost
+     below) and eased to the next — a layout transition, kept to one small
+     inline size so the line never jolts. */
+  .nx-wordcycle-stage {
+    display: inline-block;
+    perspective: 600px;
+    white-space: nowrap;
+    vertical-align: bottom;
+    text-align: start;
+    inline-size: var(--_slot, max-content);
+    transition: inline-size var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+  }
+
+  .nx-wordcycle-word {
+    display: inline-block;
+    transform-origin: 50% 100%;
+    backface-visibility: hidden;
+    color: var(--nx-accent-text);
+    transition-property: transform, opacity;
+    transition-duration: var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-spring-snappy);
+  }
+
+  .nx-wordcycle-word[data-state="out"] {
+    transform: rotateX(90deg);
+    opacity: 0;
+  }
+
+  /* The incoming word starts under the fold with no transition, so it only
+     ever swings one way: in. */
+  .nx-wordcycle-word[data-state="in"] {
+    transform: rotateX(-90deg);
+    opacity: 0;
+    transition: none;
+  }
+
+  /* The hidden tape measure: same font, same weight, invisible. */
+  .nx-wordcycle-ghost {
+    position: absolute;
+    visibility: hidden;
+    white-space: nowrap;
+    pointer-events: none;
+    font: inherit;
+  }
+
+  .nx-wordcycle-hint {
+    margin: 0;
+    font-size: var(--nx-text-xs);
+    color: var(--nx-text-muted);
+  }
+
+  .nx-wordcycle-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--nx-space-3) var(--nx-space-5);
+    justify-content: space-between;
+    inline-size: 100%;
+  }
+
+  .nx-wordcycle-dots {
+    display: inline-flex;
+    gap: var(--nx-space-2);
+  }
+
+  .nx-wordcycle-dot {
+    inline-size: 0.55rem;
+    aspect-ratio: 1;
+    padding: 0;
+    border: 1px solid var(--nx-text-muted);
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+    transition-property: background-color, border-color, scale;
+    transition-duration: var(--nx-dur-base), var(--nx-dur-base), var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-ease-out), var(--nx-ease-out), var(--nx-spring-snappy);
+
+    /* Not motion alone: the current word's dot also fills and colours. */
+    &[aria-current="true"] {
+      background: var(--nx-accent);
+      border-color: var(--nx-accent);
+      scale: 1.25;
+    }
+
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+  }
+
+  .nx-wordcycle-again {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding: var(--nx-space-2) var(--nx-space-4);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface-2);
+    color: var(--nx-text);
+    font: 600 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    cursor: pointer;
+    transition-property: border-color, color, scale;
+    transition-duration: var(--nx-dur-fast), var(--nx-dur-fast), var(--nx-spring-snappy-duration);
+    transition-timing-function: var(--nx-ease-out), var(--nx-ease-out), var(--nx-spring-snappy);
+
+    &:hover { border-color: var(--nx-accent-border); color: var(--nx-accent-text); }
+    &:active { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+  }
+
+  /* ---- Velocity band ------------------------------------------------------------ *
+   *   <section class="nx-velocity" data-reversing> (velocityBands drives the tracks)
+   *     <div class="nx-velocity-pane" tabindex="0" role="region" aria-label="…">…the log…</div>
+   *     <div class="nx-velocity-band" aria-hidden="true"><div class="nx-velocity-track"><span>…</span><span>…</span></div></div>
+   *     <div class="nx-velocity-band" data-reverse aria-hidden="true"><div class="nx-velocity-track" data-reverse>…</div></div>
+   *     <p class="nx-velocity-meter"><span class="nx-velocity-dir"><svg…/></span> <b class="nx-velocity-value">12.4</b> px/frame</p>
+   *   </section>
+   * The behaviour carries each track by physical `translate`; the wrap is a
+   * modulo on half the track, so the drift reads the same in either direction.
+   * ------------------------------------------------------------------------- */
+  /* minmax(0,1fr), not the implicit auto track: the bands' nowrap text is
+     max-content wide, and an auto column would size itself to it and drag the
+     pane and meter out of the card with it. */
+  .nx-velocity {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--nx-space-4);
+  }
+
+  .nx-velocity-pane {
+    block-size: var(--_pane, 11rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--nx-space-5);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-surface);
+    color: var(--nx-text);
+    scrollbar-width: thin;
+    scrollbar-color: var(--nx-border) transparent;
+
+    &:focus-visible {
+      outline: 2px solid var(--nx-ring);
+      outline-offset: 2px;
+    }
+
+    & :first-child { margin-block-start: 0; }
+    & :last-child { margin-block-end: 0; }
+  }
+
+  .nx-velocity-band {
+    /* overflow:clip is not a scroll container, so it must not rely on the
+       grid item's automatic minimum size being zeroed — pin it here and let
+       the clip window, not the layout, carry the oversized track. */
+    min-inline-size: 0;
+    overflow: clip;
+    /* The behaviour wraps each track by a modulo on half its width, which is
+       only seamless when the track anchors its left edge here and overflows
+       right. In an RTL page a block child anchors its right edge instead, so
+       the wrap spent most of the cycle showing an empty window. Anchoring the
+       band's box LTR makes the drift read the same in either page direction;
+       the spans below keep Persian shaped and ordered exactly as written. */
+    direction: ltr;
+    border-block: 1px solid var(--nx-border);
+    padding-block: var(--nx-space-2);
+    user-select: none;
+    color: var(--nx-text);
+    font-weight: 800;
+    font-size: clamp(1.45rem, 5vw, 2.7rem);
+    line-height: 1.25;
+    letter-spacing: var(--nx-tracking-wide);
+    white-space: nowrap;
+  }
+
+  /* Not motion alone: the counter-running band is also the gold one. */
+  .nx-velocity-band[data-reverse] { color: var(--nx-gold-text); }
+
+  .nx-velocity-track {
+    display: flex;
+    align-items: center;
+    inline-size: max-content;
+    will-change: translate;
+
+    & > span { padding-inline: 0.18em; unicode-bidi: plaintext; }
+  }
+
+  .nx-velocity-meter {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--nx-space-2) var(--nx-space-4);
+    margin: 0;
+    padding: var(--nx-space-2) var(--nx-space-5);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-surface);
+    font: 600 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    color: var(--nx-text-muted);
+  }
+
+  .nx-velocity-value {
+    min-inline-size: 6ch;
+    text-align: center;
+    color: var(--nx-accent-text);
+    font-family: var(--nx-font-mono);
+    font-variant-numeric: tabular-nums;
+    direction: ltr;
+  }
+
+  .nx-velocity-dir .nx-icon {
+    transition: rotate var(--nx-dur-fast) var(--nx-ease-out);
+    color: var(--nx-accent-text);
+  }
+
+  /* Scrolling up drives the bands the other way: the arrow says so. */
+  .nx-velocity[data-reversing] .nx-velocity-dir .nx-icon { rotate: 180deg; }
+
+  /* ---- Elastic letters ----------------------------------------------------------- *
+   *   <section class="nx-elastic">                 (elasticLetters springs each unit)
+   *     <p class="nx-elastic-kicker">…</p>
+   *     <h3 class="nx-elastic-title" dir="auto" aria-label="SPRINGTYPE">
+   *       <span class="nx-elastic-unit" data-nx-unit aria-hidden="true">S</span>…
+   *     </h3>
+   *     <p class="nx-elastic-sub">…</p>
+   *   </section>
+   * The behaviour writes `scale: x y` per unit (1 1 → 1.5 .76 at full pull);
+   * joining scripts keep whole words as units, so nothing ever breaks a join.
+   * ------------------------------------------------------------------------- */
+  .nx-elastic {
+    display: grid;
+    gap: var(--nx-space-5);
+    justify-items: center;
+    padding: clamp(var(--nx-space-6), 5vw, var(--nx-space-10)) var(--nx-space-5) var(--nx-space-6);
+    border: 1px solid var(--nx-border);
+    border-radius: var(--nx-radius-xl);
+    background: radial-gradient(120% 80% at 50% -10%, color-mix(in oklab, var(--nx-accent) 7%, transparent), transparent 60%), var(--nx-surface);
+    overflow: clip;
+  }
+
+  .nx-elastic-kicker {
+    margin: 0;
+    font-size: var(--nx-text-xs);
+    font-weight: 700;
+    letter-spacing: var(--nx-tracking-wider);
+    text-transform: uppercase;
+    color: var(--nx-text-muted);
+    text-align: center;
+  }
+
+  .nx-elastic-title {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0 0.05em;
+    max-inline-size: 100%;
+    font-weight: 800;
+    font-size: clamp(2rem, 9vw, 4.2rem);
+    line-height: 1.3;
+    letter-spacing: var(--nx-tracking-wide);
+    color: var(--nx-text);
+    cursor: default;
+    touch-action: manipulation;
+  }
+
+  /* Word gaps read wider than letter gaps. */
+  [dir="rtl"] .nx-elastic-title { gap: 0 0.35em; }
+
+  /* The space a trimmed-out piece leaves behind. */
+  .nx-elastic-gap { inline-size: 0.4em; }
+
+  .nx-elastic-unit {
+    position: relative;
+    display: inline-block;
+    white-space: pre;
+    will-change: scale;
+    transition: color var(--nx-dur-fast) var(--nx-ease-out);
+
+    &:hover { z-index: 1; color: var(--nx-accent-text); }
+  }
+
+  .nx-elastic-sub {
+    margin: 0;
+    font-size: var(--nx-text-sm);
+    color: var(--nx-text-muted);
+    text-align: center;
+  }
+
+  /* ---- Reduced motion ------------------------------------------------------------ *
+   * The word lighting stays (it is strictly position-mapped, with no
+   * transition left to smooth it); the flips, bands and springs stand still.
+   * ------------------------------------------------------------------------- */
+  @media (prefers-reduced-motion: reduce) {
+    .nx-wordfill-word,
+    .nx-wordfill-fill,
+    .nx-wordfill-reset,
+    .nx-wordcycle-stage,
+    .nx-wordcycle-word,
+    .nx-wordcycle-dot,
+    .nx-wordcycle-again,
+    .nx-velocity-dir .nx-icon,
+    .nx-elastic-unit { transition: none; }
+
+    /* No flip: the swap is instant, and both hidden states show their word. */
+    .nx-wordcycle-word[data-state="out"],
+    .nx-wordcycle-word[data-state="in"] {
+      transform: none;
+      opacity: 1;
+    }
+
+    /* The bands stand still whatever the behaviour last wrote. */
+    .nx-velocity-track { translate: none !important; }
+
+    .nx-elastic-unit { scale: none !important; }
+  }
+}

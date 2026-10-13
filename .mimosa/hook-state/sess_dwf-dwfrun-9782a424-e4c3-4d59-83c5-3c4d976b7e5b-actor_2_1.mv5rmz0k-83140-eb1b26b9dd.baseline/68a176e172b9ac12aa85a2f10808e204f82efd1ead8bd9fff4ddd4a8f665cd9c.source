@@ -1,0 +1,118 @@
+
+<?php $attributes ??= new \Illuminate\View\ComponentAttributeBag;
+
+$__newAttributes = [];
+$__propNames = \Illuminate\View\ComponentAttributeBag::extractPropNames(([
+    'variant' => 'secondary',
+    'size' => 'md',
+    'shape' => null,
+    'status' => null,
+    'effect' => null,
+    'magnetic' => false,
+    'ripple' => false,
+    'icon' => null,
+    'iconEnd' => null,
+    'iconOnly' => false,
+    'block' => false,
+    'href' => null,
+    'type' => 'button',
+    'target' => null,
+]));
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (in_array($__key, $__propNames)) {
+        $$__key = $$__key ?? $__value;
+    } else {
+        $__newAttributes[$__key] = $__value;
+    }
+}
+
+$attributes = new \Illuminate\View\ComponentAttributeBag($__newAttributes);
+
+unset($__propNames);
+unset($__newAttributes);
+
+foreach (array_filter(([
+    'variant' => 'secondary',
+    'size' => 'md',
+    'shape' => null,
+    'status' => null,
+    'effect' => null,
+    'magnetic' => false,
+    'ripple' => false,
+    'icon' => null,
+    'iconEnd' => null,
+    'iconOnly' => false,
+    'block' => false,
+    'href' => null,
+    'type' => 'button',
+    'target' => null,
+]), 'is_string', ARRAY_FILTER_USE_KEY) as $__key => $__value) {
+    $$__key = $$__key ?? $__value;
+}
+
+$__defined_vars = get_defined_vars();
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (array_key_exists($__key, $__defined_vars)) unset($$__key);
+}
+
+unset($__defined_vars, $__key, $__value); ?>
+<?php
+    $clickTarget = $target ?? (($click = $attributes->get('wire:click')) ? preg_replace('/\(.*$/s', '', $click) : null);
+    $text = trim((string) $slot);
+    $renderIcon = fn ($i) => is_string($i) && \NabuXUI\NabuXUI::hasIcon($i) ? \NabuXUI\NabuXUI::icon($i) : $i;
+    $data = [
+        'data-variant' => $variant,
+        'data-size' => $size === 'md' ? null : $size,
+        'data-shape' => $shape && $shape !== 'rounded' ? $shape : null,
+        'data-status' => $status && $status !== 'idle' ? $status : null,
+        'data-effect' => $effect,
+        'data-icon-only' => $iconOnly ? '' : null,
+        'data-block' => $block ? '' : null,
+        'aria-busy' => $status === 'loading' ? 'true' : null,
+    ];
+?>
+<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($href): ?>
+<a href="<?php echo e($href); ?>" <?php echo e($attributes->class('nx-button')->merge($data)); ?> <?php if($magnetic || $ripple): ?> x-data <?php endif; ?> <?php if($magnetic): ?> x-nx-magnetic <?php endif; ?> <?php if($ripple): ?> x-nx-ripple <?php endif; ?>>
+<?php else: ?>
+<button type="<?php echo e($type); ?>" <?php echo e($attributes->class('nx-button')->merge($data)); ?>
+
+    <?php if($clickTarget): ?> wire:loading.attr="aria-busy" wire:target="<?php echo e($clickTarget); ?>" <?php endif; ?>
+    <?php if($magnetic || $ripple): ?> x-data <?php endif; ?> <?php if($magnetic): ?> x-nx-magnetic <?php endif; ?> <?php if($ripple): ?> x-nx-ripple <?php endif; ?>>
+<?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+    <span class="nx-button-label" <?php if($effect === 'slide'): ?> data-text="<?php echo e($text); ?>" <?php endif; ?>>
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($icon): ?><?php echo e($renderIcon($icon)); ?><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($text !== ''): ?>
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($iconOnly): ?><span class="nx-visually-hidden"><?php echo e($slot); ?></span><?php else: ?><span class="nx-button-text"><?php echo e($slot); ?></span><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($iconEnd): ?><?php echo e($renderIcon($iconEnd)); ?><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+    </span>
+    <?php if (isset($component)) { $__componentOriginal7ec7aecfdd38d0dd921e6568f7735a71 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal7ec7aecfdd38d0dd921e6568f7735a71 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => '87a64a06a12054c4da479415c9220f52::button-status','data' => []] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('nx::button-status'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal7ec7aecfdd38d0dd921e6568f7735a71)): ?>
+<?php $attributes = $__attributesOriginal7ec7aecfdd38d0dd921e6568f7735a71; ?>
+<?php unset($__attributesOriginal7ec7aecfdd38d0dd921e6568f7735a71); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal7ec7aecfdd38d0dd921e6568f7735a71)): ?>
+<?php $component = $__componentOriginal7ec7aecfdd38d0dd921e6568f7735a71; ?>
+<?php unset($__componentOriginal7ec7aecfdd38d0dd921e6568f7735a71); ?>
+<?php endif; ?>
+<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($href): ?>
+</a>
+<?php else: ?>
+</button>
+<?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/packages/livewire/src/../resources/views/components/button.blade.php ENDPATH**/ ?>

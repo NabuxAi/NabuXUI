@@ -1,0 +1,649 @@
+/*
+ * Blocks: ambient backgrounds — sections whose sky is the effect.
+ *
+ *   Aurora backdrop      four heavily blurred, screen-blended blobs drifting
+ *                        and breathing on their own periods behind the copy
+ *   Perspective grid     a retro floor: one rotateX plane, a repeating grid
+ *                        streaming toward the viewer on a seamless one-cell
+ *                        loop, fog eating the horizon, a half-sunken sun
+ *   Starfield backdrop   a canvas of stars with real depth (js/blocks/
+ *                        ambient.ts `starfield`): radius and brightness fall
+ *                        out of 1/z, the pointer eases the vanishing point
+ *   Contour lines        an SVG survey map: phased sine bands redrawn by
+ *                        `contourLines`, summit dots riding their bands
+ *   Metaballs            gooey balls — feGaussianBlur + an feColorMatrix
+ *                        alpha threshold — that melt together and pull apart
+ *
+ * Every stage is a real <section>: it clips its layers, paints the content
+ * above them and parks its loops while `data-paused` (off screen, via
+ * `ambientStage`, or by the app). The aurora and starfield skies are always
+ * night — ink-950 with lapis-50 copy — so they read on a light page too; the
+ * grid, the map and the goo follow the theme. Travel distances multiply by
+ * --nx-motion and every loop stops under prefers-reduced-motion.
+ */
+@layer nx.components {
+  /* ---- The shared copy layer --------------------------------------------------
+   * What every ambient section says: an eyebrow chip, a display title, a line
+   * of body copy, an actions row, small fact chips. Colour comes from the
+   * stage (currentColor), so night skies stay light and day stages follow
+   * the theme. */
+  .nx-ambient-copy {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    justify-items: center;
+    gap: var(--nx-space-4);
+    padding: var(--nx-space-6);
+    text-align: center;
+  }
+
+  .nx-ambient-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    padding: 0.35rem var(--nx-space-3);
+    border: 1px solid color-mix(in oklab, currentColor 20%, transparent);
+    border-radius: var(--nx-radius-full);
+    background: color-mix(in oklab, currentColor 7%, transparent);
+    font-size: var(--nx-text-xs);
+    font-weight: 600;
+    letter-spacing: var(--nx-tracking-wide);
+
+    & .nx-icon { inline-size: 0.85rem; block-size: 0.85rem; }
+  }
+
+  .nx-ambient-title {
+    margin: 0;
+    max-inline-size: 34rem;
+    font-size: clamp(1.6rem, 4.5vw, 2.4rem);
+    font-weight: 700;
+    line-height: 1.25;
+    font-family: var(--nx-font-display);
+    text-wrap: balance;
+  }
+
+  .nx-ambient-text {
+    margin: 0;
+    max-inline-size: 30rem;
+    font-size: var(--nx-text-sm);
+    line-height: 1.7;
+    color: color-mix(in oklab, currentColor 78%, transparent);
+  }
+
+  .nx-ambient-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--nx-space-2);
+    margin-block-start: var(--nx-space-1);
+  }
+
+  .nx-ambient-chip {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.45rem;
+    padding: 0.45rem 0.95rem;
+    border: 1px solid color-mix(in oklab, currentColor 18%, transparent);
+    border-radius: var(--nx-radius-full);
+    background: color-mix(in oklab, currentColor 6%, transparent);
+    font-size: var(--nx-text-sm);
+    font-variant-numeric: tabular-nums;
+
+    & strong { color: color-mix(in oklab, var(--nx-glow) 80%, currentColor); font-weight: 650; }
+  }
+
+  /* ---- Aurora ------------------------------------------------------------------
+   *   <section class="nx-aurora" style="--nx-aurora-c1: …; --nx-aurora-c2: …; --nx-aurora-c3: …">
+   *     <div class="nx-aurora-sky" aria-hidden="true"><i></i> × 4</div>
+   *     <div class="nx-ambient-copy">…</div>
+   *   </section>
+   * The sky is always night: the blobs shine at screen blend, so they glow
+   * against ink-950 whatever the page theme is doing. Only transform animates. */
+  .nx-aurora {
+    --_c1: var(--nx-aurora-c1, var(--nx-cyan-400));
+    --_c2: var(--nx-aurora-c2, var(--nx-chart-7));
+    --_c3: var(--nx-aurora-c3, var(--nx-violet-500));
+    position: relative;
+    isolation: isolate;
+    overflow: clip;
+    border-radius: var(--nx-radius-2xl);
+    min-block-size: 24rem;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    padding: var(--nx-space-6);
+    background: var(--nx-ink-950);
+    color: var(--nx-lapis-50);
+  }
+
+  .nx-aurora-sky {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  .nx-aurora-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(clamp(2.5rem, 6vw, 4rem));
+    mix-blend-mode: screen;
+    opacity: 0.55;
+    will-change: transform;
+
+    /* Four blobs, each its own colour, size and corner; sizes in rem so the
+       blur stays proportional to the stage on phones. */
+    &:nth-child(1) {
+      inline-size: 24rem;
+      aspect-ratio: 1;
+      inset-inline-start: 4%;
+      inset-block-start: 2%;
+      background: var(--_c1);
+      animation: nx-aurora-drift-a 26s var(--nx-ease-in-out) infinite alternate;
+    }
+
+    &:nth-child(2) {
+      inline-size: 30rem;
+      aspect-ratio: 1;
+      inset-inline-start: 46%;
+      inset-block-start: 12%;
+      background: var(--_c2);
+      animation: nx-aurora-drift-b 32s var(--nx-ease-in-out) infinite alternate;
+    }
+
+    &:nth-child(3) {
+      inline-size: 20rem;
+      aspect-ratio: 1;
+      inset-inline-start: 62%;
+      inset-block-start: 48%;
+      background: var(--_c3);
+      animation: nx-aurora-drift-c 24s var(--nx-ease-in-out) infinite alternate;
+    }
+
+    &:nth-child(4) {
+      inline-size: 26rem;
+      aspect-ratio: 1;
+      inset-inline-start: 12%;
+      inset-block-start: 52%;
+      background: var(--_c1);
+      opacity: 0.4;
+      animation: nx-aurora-drift-d 34s var(--nx-ease-in-out) infinite alternate;
+    }
+  }
+
+  .nx-aurora[data-paused] .nx-aurora-blob { animation-play-state: paused; }
+
+  @keyframes nx-aurora-drift-a {
+    from { translate: calc(-12% * var(--nx-motion)) calc(-18% * var(--nx-motion)); scale: 1; }
+    to { translate: calc(10% * var(--nx-motion)) calc(8% * var(--nx-motion)); scale: 1.25; }
+  }
+
+  @keyframes nx-aurora-drift-b {
+    from { translate: calc(6% * var(--nx-motion)) calc(10% * var(--nx-motion)); scale: 1.2; }
+    to { translate: calc(-8% * var(--nx-motion)) calc(-12% * var(--nx-motion)); scale: 0.95; }
+  }
+
+  @keyframes nx-aurora-drift-c {
+    from { translate: calc(4% * var(--nx-motion)) calc(-10% * var(--nx-motion)); scale: 0.9; }
+    to { translate: calc(-10% * var(--nx-motion)) calc(10% * var(--nx-motion)); scale: 1.3; }
+  }
+
+  @keyframes nx-aurora-drift-d {
+    from { translate: calc(-8% * var(--nx-motion)) calc(6% * var(--nx-motion)); scale: 1.1; }
+    to { translate: calc(10% * var(--nx-motion)) calc(-8% * var(--nx-motion)); scale: 0.9; }
+  }
+
+  /* ---- Perspective grid ---------------------------------------------------------
+   *   <section class="nx-perspective-grid" style="--nx-perspective-duration: 1.6s">
+   *     <div class="nx-perspective-sun" aria-hidden="true"></div>
+   *     <div class="nx-perspective-floor" aria-hidden="true"><i class="nx-perspective-lines"></i></div>
+   *     <div class="nx-perspective-horizon" aria-hidden="true"></div>
+   *     <div class="nx-ambient-copy">…</div>
+   *   </section>
+   * Flat grey lines on paper in daylight; violet with a glow after dark. The
+   * stream is one seamless one-cell translate loop — --_cell is both the grid
+   * pitch and the loop length. */
+  .nx-perspective-grid {
+    --_cell: 64px;
+    --_bg: var(--nx-surface);
+    --_line: var(--nx-text-subtle);
+    --_line-alpha: 0.28;
+    --_accent: var(--nx-accent);
+    --_line-colour: color-mix(in oklab, var(--_line) calc(var(--_line-alpha) * 100%), transparent);
+    position: relative;
+    isolation: isolate;
+    overflow: clip;
+    border-radius: var(--nx-radius-2xl);
+    min-block-size: 24rem;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    padding: var(--nx-space-6) var(--nx-space-6) 25%;
+    background: var(--_bg);
+    color: var(--nx-text);
+    perspective: 420px;
+  }
+
+  [data-theme="dark"] .nx-perspective-grid,
+  .dark .nx-perspective-grid {
+    --_bg: color-mix(in oklab, var(--nx-ink-950) 78%, var(--nx-violet-700));
+    --_line: var(--nx-violet-300);
+    --_line-alpha: 0.38;
+    --_accent: var(--nx-violet-300);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"], .light) .nx-perspective-grid {
+      --_bg: color-mix(in oklab, var(--nx-ink-950) 78%, var(--nx-violet-700));
+      --_line: var(--nx-violet-300);
+      --_line-alpha: 0.38;
+      --_accent: var(--nx-violet-300);
+    }
+  }
+
+  .nx-perspective-sun {
+    position: absolute;
+    inset-inline: 0;
+    inset-block-start: 30%;
+    margin-inline: auto;
+    inline-size: 9.5rem;
+    block-size: 9.5rem;
+    border-radius: 50%;
+    background: linear-gradient(var(--nx-gold), var(--nx-chart-2) 65%, var(--nx-violet-600));
+    opacity: 0.5;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .nx-perspective-floor {
+    position: absolute;
+    inset-inline: -60%;
+    inset-block-start: 52%;
+    block-size: 150%;
+    transform: rotateX(58deg);
+    transform-origin: 50% 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .nx-perspective-lines {
+    position: absolute;
+    inset-inline: 0;
+    inset-block: -100% 0;
+    display: block;
+    background-image:
+      repeating-linear-gradient(to right, var(--_line-colour) 0 2px, transparent 2px var(--_cell)),
+      repeating-linear-gradient(to bottom, var(--_line-colour) 0 2px, transparent 2px var(--_cell));
+    animation: nx-perspective-run var(--nx-perspective-duration, 1.6s) linear infinite;
+    will-change: transform;
+  }
+
+  [data-theme="dark"] .nx-perspective-lines,
+  .dark .nx-perspective-lines {
+    filter: drop-shadow(0 0 6px color-mix(in oklab, var(--_line) 45%, transparent));
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"], .light) .nx-perspective-lines {
+      filter: drop-shadow(0 0 6px color-mix(in oklab, var(--_line) 45%, transparent));
+    }
+  }
+
+  .nx-perspective-grid[data-paused] .nx-perspective-lines { animation-play-state: paused; }
+
+  @keyframes nx-perspective-run {
+    to { translate: 0 var(--_cell); }
+  }
+
+  /* The fog that eats the horizon and the fade at the very front. */
+  .nx-perspective-horizon {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background:
+      linear-gradient(var(--_bg) 14%, transparent) top / 100% 56% no-repeat,
+      linear-gradient(transparent, var(--_bg)) bottom / 100% 18% no-repeat;
+  }
+
+  /* ---- Starfield ----------------------------------------------------------------
+   *   <section class="nx-starfield">
+   *     <canvas class="nx-starfield-canvas" aria-hidden="true"></canvas>  (js/blocks/ambient.ts starfield)
+   *     <div class="nx-ambient-copy">…</div>
+   *   </section>
+   * The behaviour reads the sky and star colours from --_sky/--_star, so both
+   * themes and any retuned stage render without touching the JS. */
+  .nx-starfield {
+    --_sky: var(--nx-ink-950);
+    --_star: var(--nx-lapis-50);
+    position: relative;
+    isolation: isolate;
+    overflow: clip;
+    border-radius: var(--nx-radius-2xl);
+    min-block-size: 24rem;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    padding: var(--nx-space-6);
+    background: var(--_sky);
+    color: var(--nx-lapis-50);
+  }
+
+  .nx-starfield-canvas {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    display: block;
+    pointer-events: none;
+  }
+
+  /* ---- Contour lines -------------------------------------------------------------
+   *   <section class="nx-contour">
+   *     <svg class="nx-contour-svg" viewBox="0 0 1200 480" preserveAspectRatio="xMidYMid slice">
+   *       <g class="nx-contour-lines" aria-hidden="true"><path class="nx-contour-line" /> × 8</g>
+   *       <g class="nx-contour-peak" data-contour-peak="id" data-band="5" data-x="320" data-color="var(--nx-warning)">
+   *         <circle class="nx-contour-halo" r="13" /><circle class="nx-contour-dot" r="5" tabindex="0" role="img" aria-label="…" />
+   *       </g>
+   *     </svg>
+   *     <div class="nx-ambient-copy">…</div>
+   *     <p class="nx-contour-card" role="status">…the readout of the hot summit…</p>
+   *   </section>
+   * js/blocks/ambient.ts `contourLines` writes the paths' d, rides the peaks
+   * and marks the hot band with data-hot. Teal ink on paper; a glow after dark. */
+  .nx-contour {
+    --_bg: var(--nx-bg-subtle);
+    --_line: var(--nx-cyan-700);
+    --_line-alpha: 0.5;
+    position: relative;
+    isolation: isolate;
+    overflow: clip;
+    border-radius: var(--nx-radius-2xl);
+    min-block-size: 24rem;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    padding: var(--nx-space-6);
+    background:
+      radial-gradient(140% 100% at 50% 0%, color-mix(in oklab, var(--_bg) 88%, var(--nx-lapis-50)), var(--_bg) 70%),
+      var(--_bg);
+    color: var(--nx-text);
+  }
+
+  [data-theme="dark"] .nx-contour,
+  .dark .nx-contour {
+    --_bg: color-mix(in oklab, var(--nx-ink-950) 84%, var(--nx-cyan-700));
+    --_line: var(--nx-cyan-300);
+    --_line-alpha: 0.42;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"], .light) .nx-contour {
+      --_bg: color-mix(in oklab, var(--nx-ink-950) 84%, var(--nx-cyan-700));
+      --_line: var(--nx-cyan-300);
+      --_line-alpha: 0.42;
+    }
+  }
+
+  .nx-contour-svg {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    display: block;
+    pointer-events: none;
+  }
+
+  [data-theme="dark"] .nx-contour-svg,
+  .dark .nx-contour-svg {
+    filter: drop-shadow(0 0 5px color-mix(in oklab, var(--_line) 18%, transparent));
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"], .light) .nx-contour-svg {
+      filter: drop-shadow(0 0 5px color-mix(in oklab, var(--_line) 18%, transparent));
+    }
+  }
+
+  .nx-contour-line {
+    fill: none;
+    stroke: color-mix(in oklab, var(--_line) calc(var(--_line-alpha) * 100%), transparent);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: stroke var(--nx-dur-fast) var(--nx-ease-out);
+  }
+
+  /* The hot band takes the summit's elevation colour (the behaviour writes
+     --nx-contour-hot on the stage); the cue is colour, never motion alone. */
+  .nx-contour-line[data-hot] {
+    stroke: var(--nx-contour-hot, var(--nx-accent));
+    stroke-opacity: 0.95;
+  }
+
+  /* Summits: dots that ride their band; focus and hover share one halo. */
+  .nx-contour-peak { pointer-events: auto; }
+
+  .nx-contour-peak .nx-contour-dot {
+    fill: currentColor;
+    stroke: none;
+    cursor: pointer;
+    transition: r var(--nx-dur-fast) var(--nx-ease-out);
+  }
+
+  .nx-contour-peak .nx-contour-halo {
+    fill: none;
+    stroke: var(--nx-contour-hot, var(--nx-accent));
+    stroke-width: 2;
+    opacity: 0;
+    transition: opacity var(--nx-dur-fast) var(--nx-ease-out);
+  }
+
+  .nx-contour-peak[data-hot] .nx-contour-halo { opacity: 0.8; }
+
+  .nx-contour-peak .nx-contour-dot:focus-visible {
+    outline: none;
+    r: 8;
+    stroke: var(--nx-contour-hot, var(--nx-accent));
+    stroke-width: 3;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .nx-contour-peak:hover .nx-contour-dot { r: 8; }
+  }
+
+  /* The corner readout: what the survey says about the hot summit. */
+  .nx-contour-card {
+    position: absolute;
+    inset-block-start: var(--nx-space-3);
+    inset-inline-end: var(--nx-space-3);
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    max-inline-size: min(13rem, 70%);
+    margin: 0;
+    padding: 0.5rem 0.85rem;
+    border: 1px solid color-mix(in oklab, currentColor 16%, transparent);
+    border-radius: var(--nx-radius-full);
+    background: color-mix(in oklab, currentColor 6%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    font-size: var(--nx-text-xs);
+    font-weight: 600;
+    text-align: start;
+    pointer-events: none;
+
+    & small {
+      display: block;
+      font-weight: 400;
+      font-size: 0.7rem;
+      color: color-mix(in oklab, currentColor 70%, transparent);
+    }
+
+    & .nx-contour-card-bar {
+      flex: none;
+      inline-size: 0.55rem;
+      block-size: 0.55rem;
+      border-radius: 50%;
+      background: var(--nx-contour-hot, var(--nx-accent));
+    }
+  }
+
+  /* ---- Metaballs -----------------------------------------------------------------
+   *   <section class="nx-metaballs" data-variant="dark|light"?">
+   *     <svg class="nx-metaballs-svg" viewBox="0 0 1200 480" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+   *       <defs><filter id="…"><feGaussianBlur stdDeviation="16" /><feColorMatrix values="… 24 -12" /></filter></defs>
+   *       <g class="nx-metaballs-goo" filter="url(#…)"><circle class="nx-metaballs-ball" cx cy r /> × 5</g>
+   *     </svg>
+   *     <div class="nx-ambient-copy">…</div>
+   *   </section>
+   * The wander is pure transform keyframes (one period per ball); the goo is
+   * the SVG filter, so neighbours melt and split without a single relaid
+   * pixel. data-variant pins the palette when the section must disagree with
+   * the page theme. */
+  .nx-metaballs {
+    --_bg: var(--nx-surface-2);
+    --_b1: var(--nx-violet-500);
+    --_b2: var(--nx-violet-400);
+    --_b3: var(--nx-chart-6);
+    --_b4: var(--nx-lapis-600);
+    --_b5: var(--nx-violet-600);
+    position: relative;
+    isolation: isolate;
+    overflow: clip;
+    border-radius: var(--nx-radius-2xl);
+    min-block-size: 24rem;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    padding: var(--nx-space-6);
+    background: var(--_bg);
+    color: var(--nx-text);
+    transition: background-color var(--nx-dur-slower) var(--nx-ease-out), color var(--nx-dur-slower) var(--nx-ease-out);
+  }
+
+  [data-theme="dark"] .nx-metaballs,
+  .dark .nx-metaballs {
+    --_bg: var(--nx-ink-950);
+    --_b1: var(--nx-cyan-400);
+    --_b2: var(--nx-lapis-400);
+    --_b3: var(--nx-chart-2);
+    --_b4: var(--nx-cyan-500);
+    --_b5: var(--nx-violet-400);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"], .light) .nx-metaballs {
+      --_bg: var(--nx-ink-950);
+      --_b1: var(--nx-cyan-400);
+      --_b2: var(--nx-lapis-400);
+      --_b3: var(--nx-chart-2);
+      --_b4: var(--nx-cyan-500);
+      --_b5: var(--nx-violet-400);
+    }
+  }
+
+  /* The app can pin either palette; these come after the theme rules on purpose. */
+  .nx-metaballs[data-variant="light"] {
+    --_bg: var(--nx-surface-2);
+    --_b1: var(--nx-violet-500);
+    --_b2: var(--nx-violet-400);
+    --_b3: var(--nx-chart-6);
+    --_b4: var(--nx-lapis-600);
+    --_b5: var(--nx-violet-600);
+  }
+
+  .nx-metaballs[data-variant="dark"] {
+    --_bg: var(--nx-ink-950);
+    --_b1: var(--nx-cyan-400);
+    --_b2: var(--nx-lapis-400);
+    --_b3: var(--nx-chart-2);
+    --_b4: var(--nx-cyan-500);
+    --_b5: var(--nx-violet-400);
+  }
+
+  .nx-metaballs-svg {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    display: block;
+    pointer-events: none;
+  }
+
+  .nx-metaballs-goo { mix-blend-mode: normal; }
+
+  [data-theme="dark"] .nx-metaballs-goo,
+  .dark .nx-metaballs-goo,
+  .nx-metaballs[data-variant="dark"] .nx-metaballs-goo { mix-blend-mode: screen; }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"], .light) .nx-metaballs-goo { mix-blend-mode: screen; }
+  }
+
+  .nx-metaballs-ball {
+    transform-box: fill-box;
+    transform-origin: center;
+    will-change: transform;
+
+    &:nth-child(1) { fill: var(--_b1); animation: nx-goo-w1 24s var(--nx-ease-in-out) infinite alternate; }
+    &:nth-child(2) { fill: var(--_b2); animation: nx-goo-w2 19s var(--nx-ease-in-out) infinite alternate; }
+    &:nth-child(3) { fill: var(--_b3); animation: nx-goo-w3 28s var(--nx-ease-in-out) infinite alternate; }
+    &:nth-child(4) { fill: var(--_b4); animation: nx-goo-w4 22s var(--nx-ease-in-out) infinite alternate; }
+    &:nth-child(5) { fill: var(--_b5); animation: nx-goo-w5 31s var(--nx-ease-in-out) infinite alternate; }
+    /* Extra balls borrow the first two wanders, offset so they never sync. */
+    &:nth-child(6) { fill: var(--_b1); animation: nx-goo-w1 26s var(--nx-ease-in-out) -8s infinite alternate; }
+    &:nth-child(7) { fill: var(--_b2); animation: nx-goo-w2 23s var(--nx-ease-in-out) -11s infinite alternate; }
+  }
+
+  .nx-metaballs[data-paused] .nx-metaballs-ball { animation-play-state: paused; }
+
+  @keyframes nx-goo-w1 {
+    from { translate: calc(-120px * var(--nx-motion)) calc(30px * var(--nx-motion)); scale: 1; }
+    to { translate: calc(210px * var(--nx-motion)) calc(-60px * var(--nx-motion)); scale: 1.3; }
+  }
+
+  @keyframes nx-goo-w2 {
+    from { translate: calc(160px * var(--nx-motion)) calc(-40px * var(--nx-motion)); scale: 1.15; }
+    to { translate: calc(-230px * var(--nx-motion)) calc(70px * var(--nx-motion)); scale: 0.9; }
+  }
+
+  @keyframes nx-goo-w3 {
+    from { translate: calc(-90px * var(--nx-motion)) calc(-70px * var(--nx-motion)); scale: 0.95; }
+    to { translate: calc(140px * var(--nx-motion)) calc(90px * var(--nx-motion)); scale: 1.25; }
+  }
+
+  @keyframes nx-goo-w4 {
+    from { translate: calc(130px * var(--nx-motion)) calc(60px * var(--nx-motion)); scale: 1.05; }
+    to { translate: calc(-160px * var(--nx-motion)) calc(-80px * var(--nx-motion)); scale: 1.2; }
+  }
+
+  @keyframes nx-goo-w5 {
+    from { translate: calc(-60px * var(--nx-motion)) calc(80px * var(--nx-motion)); scale: 1.2; }
+    to { translate: calc(190px * var(--nx-motion)) calc(-50px * var(--nx-motion)); scale: 0.9; }
+  }
+
+  /* The colour probe the starfield engine resolves token colours through; never seen. */
+  .nx-ambient-probe {
+    position: absolute;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  /* ---- Reduced motion -----------------------------------------------------------
+   * Every loop settles into its still shape: the aurora keeps its sky, the
+   * grid its floor, the goo its pose; the canvas and the survey draw one
+   * frame from the behaviours. The interactive states keep their colour
+   * transitions — only the movement is gone. */
+  @media (prefers-reduced-motion: reduce) {
+    .nx-aurora-blob,
+    .nx-perspective-lines,
+    .nx-metaballs-ball { animation: none; }
+
+    .nx-metaballs { transition: none; }
+
+    .nx-contour-line,
+    .nx-contour-peak .nx-contour-dot,
+    .nx-contour-peak .nx-contour-halo { transition: none; }
+  }
+}

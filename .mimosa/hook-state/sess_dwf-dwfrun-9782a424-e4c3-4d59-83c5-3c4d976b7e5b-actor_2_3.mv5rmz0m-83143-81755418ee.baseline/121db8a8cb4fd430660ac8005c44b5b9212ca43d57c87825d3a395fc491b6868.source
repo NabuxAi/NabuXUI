@@ -1,0 +1,45 @@
+<?php $attributes ??= new \Illuminate\View\ComponentAttributeBag;
+
+$__newAttributes = [];
+$__propNames = \Illuminate\View\ComponentAttributeBag::extractPropNames((['value', 'variant' => 'ghost', 'size' => 'md']));
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (in_array($__key, $__propNames)) {
+        $$__key = $$__key ?? $__value;
+    } else {
+        $__newAttributes[$__key] = $__value;
+    }
+}
+
+$attributes = new \Illuminate\View\ComponentAttributeBag($__newAttributes);
+
+unset($__propNames);
+unset($__newAttributes);
+
+foreach (array_filter((['value', 'variant' => 'ghost', 'size' => 'md']), 'is_string', ARRAY_FILTER_USE_KEY) as $__key => $__value) {
+    $$__key = $$__key ?? $__value;
+}
+
+$__defined_vars = get_defined_vars();
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (array_key_exists($__key, $__defined_vars)) unset($$__key);
+}
+
+unset($__defined_vars, $__key, $__value); ?>
+<button type="button" <?php echo e($attributes->class('nx-button nx-copy')->merge(['data-variant' => $variant, 'data-size' => $size === 'md' ? null : $size, 'data-icon-only' => trim((string) $slot) === '' ? '' : null])); ?>
+
+    x-data="nxCopy(<?php echo \Illuminate\Support\Js::from($value)->toHtml() ?>)" x-bind:data-copied="copied ? '' : null" @click="copy()"
+    <?php if(trim((string) $slot) === ''): ?> aria-label="<?php echo e(__('nabuxui::ui.copy')); ?>" <?php endif; ?>>
+    <span class="nx-button-label">
+        <span class="nx-copy-icons" aria-hidden="true">
+            <?php echo e(\NabuXUI\NabuXUI::icon('copy', 'nx-copy-idle')); ?>
+
+            <?php echo e(\NabuXUI\NabuXUI::icon('check', 'nx-copy-done')); ?>
+
+        </span>
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(trim((string) $slot) !== ''): ?><span class="nx-button-text"><?php echo e($slot); ?></span><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+        <span class="nx-visually-hidden" aria-live="polite" x-text="copied ? <?php echo \Illuminate\Support\Js::from(__('nabuxui::ui.copied'))->toHtml() ?> : ''"></span>
+    </span>
+</button>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/packages/livewire/src/../resources/views/components/copy-button.blade.php ENDPATH**/ ?>

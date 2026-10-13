@@ -1,0 +1,419 @@
+interface PageCheck {
+  /** نشانی نسبی بررسی‌شده روی سایت زنده، مثل "/react". */
+  url: string;
+  /** فقط وقتی true که صفحه محتوای واقعی رندر کرده باشد (نه صفحهٔ سفید/خالی). */
+  rendered: boolean;
+  /** خطاهای کنسول مرورگر؛ آرایهٔ خالی یعنی بدون خطا. */
+  consoleErrors: string[];
+  /** لینک‌های هم‌مبدأِ روی همان صفحه که 4xx/5xx برگرداندند. */
+  brokenLinks: string[];
+  /** یک جمله فارسی دربارهٔ آنچه دیده شد. */
+  note: string;
+}
+
+interface Confirmation {
+  /** آیا یافته به‌طور مستقل روی سایت زنده بازتولید شد؟ */
+  confirmed: boolean;
+  /** شواهد: چه بررسی‌ای اجرا شد و چه خروجی داد. */
+  evidence: string;
+  /** حدس یک‌جمله‌ای از ریشه یا محل مشکل در ریپو (فقط اگر بدیهی است). */
+  fixHint: string;
+}
+
+interface FixResult {
+  /** نشانی‌هایی که ترمیم شدند و به‌طور محلی راستی‌آزمایی شدند. */
+  fixed: string[];
+  /** نشانی‌هایی که ترمیم نشدند، با دلیل کوتاه. */
+  notFixed: string[];
+  /** هش کامیت ترمیم؛ رشتهٔ خالی اگر کامیتی زده نشد. */
+  commit: string;
+  /** شواهد راستی‌آزمایی محلی: چه دستورهایی اجرا شد و چه خروجی داد. */
+  evidence: string;
+}
+
+interface Finding {
+  /** نشانی روی سایت زنده، یا مسیر فایل وقتی مربوط است. */
+  where: string;
+  /** یک جمله: چه چیزی مشکل دارد. */
+  what: string;
+  /** چه چیزی نشانش داد: خروجی دستور یا آنچه بازرس دید. */
+  evidence: string;
+  /** "verified" وقتی به‌طور مستقل بازتولید شد؛ "unconfirmed" وقتی تأیید ناموفق ماند. */
+  status: "verified" | "unconfirmed";
+  /** اهمیت؛ "high" فقط برای صفحهٔ سفید، کرش یا خطای سرور. */
+  severity: "low" | "medium" | "high";
+}
+
+interface WorkflowReport {
+  /** دو سه جمله: پاسخ به «آیا سایت پس از دیپلوی سالم است؟» */
+  conclusion: string;
+  findings: Finding[];
+  /** چه چیزهایی چک شد و چطور: دستورات و پوشش صفحات. */
+  verified: string[];
+  /** چه چیزهایی چک نشد و چرا. */
+  notCovered: string[];
+}
+
+const BASE = "https://ui.nabuxai.com";
+
+const SHELL_URLS: string[] = [
+  "/", "/components", "/livewire", "/livewire/second",
+  "/react", "/react/settings", "/react/admin", "/react/admin/users",
+  "/vue", "/vue/dash", "/svelte", "/svelte/dash",
+  "/inertia", "/inertia/gallery", "/inertia/visits",
+  "/filament", "/login", "/register", "/forgot-password",
+];
+
+const ADMIN_URLS: string[] = [
+  "/admin", "/admin/analytics", "/admin/users", "/admin/kanban", "/admin/calendar",
+  "/admin/chat", "/admin/invoice", "/admin/profile", "/admin/settings",
+  "/admin/products", "/admin/orders", "/admin/email", "/admin/files",
+  "/admin/todo", "/admin/roles", "/admin/errors/404",
+];
+
+const ADVERTISED: string[] = [
+  "/", "/react", "/react/admin", "/vue", "/svelte", "/inertia", "/filament",
+];
+
+artifact.board("sites", {
+  title: "وضعیت صفحات کلیدی سایت زنده",
+  key: "url",
+  status: "status",
+  columns: ["سالم", "مشکل", "رفع شد"],
+  cardTitle: "url",
+  detail: [{ field: "note", label: "یادداشت" }],
+});
+
+function verifierAsk(session: string, urls: string[]): string {
+  return [
+    "سایت زندهٔ " + BASE + " تازه دیپلوی شده؛ تو بازرس مستقل صفحات هستی و باید صفحاتت را واقعاً در مرورگر باز کنی و ببینی.",
+    "",
+    "نشانی‌های تو (نسبی، به همین ترتیب):",
+    JSON.stringify(urls),
+    "",
+    "برای هر نشانی این کارها را بکن:",
+    "1) اول یک سشن مرورگر یکتای خودت بساز: export AGENT_BROWSER_SESSION=" + session + " — سشن بی‌نام مشترک است؛ استفاده نکن. ابزار: agent-browser.",
+    "2) صفحه را باز کن، ۲ تا ۴ ثانیه صبر کن، و با snapshot مطمئن شو محتوای واقعی رندر شده است (صفحهٔ سفید یا body خالی یعنی rendered=false).",
+    "3) تا پایین صفحه اسکرول کن و برگرد — این سایت با data-nx-reveal محتوای زیر fold را تا اسکرول پنهان می‌کند؛ نبودِ محتوای پایین صفحه بدون اسکرول باگ نیست.",
+    "4) agent-browser errors را بخوان و خطاهای کنسول را در consoleErrors بیاور (خطای favicon یا فونت گوگل را هم بیاور ولی در note بنویس بی‌اهمیت است).",
+    "5) همهٔ لینک‌های هم‌مبدأِ روی صفحه را با curl از نظر کد وضعیت HTTP چک کن؛ هرچه 4xx/5xx داد در brokenLinks بیاور.",
+    "6) از هر صفحه یک اسکرین‌شات در out/verify/ بگیر (نام فایل را از مسیر بساز).",
+    "",
+    "تله‌ها: لینکی که روی صفحه نیست را گزارش نکن (مثلاً /alpine جزو طعم‌های تبلیغ‌شده نیست). در صفحهٔ Filament فقط رندر صفحهٔ ورود کافی است؛ لاگین لازم نیست. هیچ فایلی در ریپو ویرایش نکن. در پایان سشن مرورگرت را ببند (agent-browser close).",
+    "اگر کاری غیرممکن شد یا دستورها با هم تناقض داشتند، صادقانه همین را گزارش کن؛ دور نزن و جعل نکن.",
+    "خروجی: آرایه‌ای از PageCheck به همین ترتیب نشانی‌ها؛ فیلدهای متنی را فارسی بنویس.",
+  ].join("\n");
+}
+
+function checksToFindings(checks: PageCheck[]): Finding[] {
+  const out: Finding[] = [];
+  for (const c of checks) {
+    if (!c.rendered) {
+      out.push({
+        where: c.url,
+        what: "صفحه رندر نشد (صفحهٔ سفید/خالی)",
+        evidence: c.note,
+        status: "unconfirmed",
+        severity: "high",
+      });
+    }
+    if (c.consoleErrors.length > 0) {
+      out.push({
+        where: c.url,
+        what: "خطای کنسول مرورگر: " + c.consoleErrors.join(" | "),
+        evidence: c.note,
+        status: "unconfirmed",
+        severity: "medium",
+      });
+    }
+    for (const link of c.brokenLinks) {
+      out.push({
+        where: c.url,
+        what: "لینک شکسته روی صفحه به " + link,
+        evidence: c.note,
+        status: "unconfirmed",
+        severity: "medium",
+      });
+    }
+  }
+  return out;
+}
+
+phase("چیدن فهرست نشانی‌ها از سایت زنده");
+const EXTRACT_CODE = `
+const bases = ['/', '/components', '/livewire', '/react', '/vue', '/svelte', '/inertia'];
+const found = new Set();
+(async () => {
+  for (const b of bases) {
+    try {
+      const r = await fetch('https://ui.nabuxai.com' + b);
+      const html = await r.text();
+      const re = /href="(\\/[^"#?]*)"/g;
+      let m;
+      while ((m = re.exec(html)) !== null) found.add(m[1]);
+    } catch (e) { /* page unavailable */ }
+  }
+  const ok = Array.from(found).filter(function (p) {
+    return /^\\/(components|blocks|admin|livewire|react|vue|svelte|inertia|filament|login|register|forgot-password)(\\/|$)/.test(p);
+  });
+  console.log(JSON.stringify(ok.sort()));
+})();
+`;
+const extract = await world.run("node", ["-e", EXTRACT_CODE], { timeoutMs: 120000 });
+let demos: string[] = [];
+try {
+  const parsed: unknown = JSON.parse(extract.stdout.trim());
+  if (Array.isArray(parsed)) {
+    demos = parsed.filter((x): x is string => typeof x === "string");
+  }
+} catch {
+  demos = [];
+}
+log("فهرست نشانی‌ها چیده شد: " + demos.length + " لینک از صفحات ورودی استخراج شد");
+if (demos.length < 10) {
+  log("هشدار: استخراج لینک‌ها کمتر از انتظار بود؛ جاروی HTTP فقط روی فهرست ایستا می‌ماند");
+}
+
+const GROUPS: Array<{ name: string; session: string; urls: string[] }> = [
+  { name: "بازرس خانه و سوییچر فریمورک‌ها", session: "verify-g1", urls: ["/", "/components"] },
+  { name: "بازرس Livewire و کاتالوگ", session: "verify-g2", urls: ["/livewire", "/livewire/second", "/components"] },
+  { name: "بازرس ادمین Livewire — بخش اول", session: "verify-g3", urls: ADMIN_URLS.slice(0, 6) },
+  { name: "بازرس ادمین Livewire — بخش دوم", session: "verify-g4", urls: ADMIN_URLS.slice(6) },
+  { name: "بازرس ورود و Filament", session: "verify-g5", urls: ["/login", "/register", "/forgot-password", "/filament"] },
+  { name: "بازرس طعم React", session: "verify-g6", urls: ["/react", "/react/settings", "/react/admin", "/react/admin/users"] },
+  { name: "بازرس Vue و Svelte و Inertia", session: "verify-g7", urls: ["/vue", "/vue/dash", "/svelte", "/svelte/dash", "/inertia", "/inertia/gallery", "/inertia/visits"] },
+];
+GROUPS[1].urls = GROUPS[1].urls.concat(demos.slice(0, 2));
+
+const allUrls: string[] = Array.from(new Set(SHELL_URLS.concat(ADMIN_URLS, demos))).sort();
+
+phase("جاروی HTTP همهٔ صفحات");
+const SWEEP_CODE = `
+const urls = ${JSON.stringify(allUrls)};
+const bad = [];
+let idx = 0;
+async function worker() {
+  while (true) {
+    const i = idx++;
+    if (i >= urls.length) return;
+    const u = urls[i];
+    try {
+      const r = await fetch('https://ui.nabuxai.com' + u, { redirect: 'follow' });
+      if (r.status >= 400) bad.push({ url: u, status: r.status });
+      else await r.text();
+    } catch (e) {
+      bad.push({ url: u, status: 0, error: String((e && e.message) || e) });
+    }
+  }
+}
+(async () => {
+  const n = Math.min(12, Math.max(1, urls.length));
+  const ws = [];
+  for (let i = 0; i < n; i++) ws.push(worker());
+  await Promise.all(ws);
+  console.log(JSON.stringify(bad));
+  process.exit(bad.length > 0 ? 1 : 0);
+})();
+`;
+const sweep = await world.run("node", ["-e", SWEEP_CODE], { timeoutMs: 300000 });
+let httpBad: Array<{ url: string; status: number; error?: string }> = [];
+try {
+  httpBad = JSON.parse(sweep.stdout.trim()) as Array<{ url: string; status: number; error?: string }>;
+} catch {
+  httpBad = [{ url: "(خروجی جارو قابل تجزیه نبود)", status: sweep.exitCode, error: sweep.stdout.slice(0, 400) }];
+}
+const httpFindings: Finding[] = httpBad.map((b) => ({
+  where: b.url,
+  what: "جاروی HTTP: پاسخ " + (b.status === 0 ? "خطای شبکه" : "کد " + b.status),
+  evidence: "node fetch " + BASE + b.url + (b.error ? " — " + b.error : ""),
+  status: "verified",
+  severity: ADVERTISED.includes(b.url) ? "high" : "medium",
+}));
+log("جاروی HTTP روی " + allUrls.length + " نشانی: " + httpBad.length + " پاسخ خراب");
+
+phase("راستی‌آزمایی مرورگری طعم‌ها و تأیید مستقل مشکل‌ها");
+log("هفت بازرس مرورگری موازی شروع می‌شوند؛ هر یافته بلافاصله تأییدکنندهٔ مستقل می‌گیرد");
+const allChecks: PageCheck[] = [];
+const confirmedBrowserFindings: Finding[] = [];
+const rejectedBrowserFindings: Finding[] = [];
+
+const groupResults = await Promise.all(
+  GROUPS.map(async (g, gi) => {
+    try {
+      const checks = await agent(g.name, {
+        system:
+          "بازرس وب مستقل و دقیق هستی؛ فقط مشاهده و گزارش می‌کنی و هیچ فایلی در ریپو ویرایش نمی‌کنی. " +
+          "اگر دستوری اجرا نشد یا نتیجه‌ای معتبر نبود، صادقانه همان را گزارش کن؛ هرگز نتیجه را جعل نکن. " +
+          "اگر инструкtions غیرقابل اجرا بود، به‌جای دور زدن اعلام کن.",
+      }).ask<PageCheck[]>(verifierAsk(g.session, g.urls));
+      for (const c of checks) {
+        const healthy = c.rendered && c.consoleErrors.length === 0 && c.brokenLinks.length === 0;
+        report({ url: c.url, status: healthy ? "سالم" : "مشکل", note: c.note }, "sites");
+        allChecks.push(c);
+        if (!healthy) log("مشکل در " + c.url + " — " + c.note);
+      }
+      const findings = checksToFindings(checks);
+      const pairs = await Promise.all(
+        findings.map(async (f, j) => {
+          const c = await agent("تأییدکنندهٔ " + (gi + 1) + "-" + (j + 1), {
+            system:
+              "تأییدکنندهٔ مستقل یافته‌های وب هستی؛ فقط با اجرای بررسی و خواندن کد کار می‌کنی و هیچ فایلی ویرایش نمی‌کنی. " +
+              "اگر یافته بازتولید نشد، همین را صادقانه بگو.",
+          }).ask<Confirmation>(
+            [
+              "این یافته را به‌طور مستقل بازتولید کن — فقط خواندن و اجرای بررسی، بدون هیچ ویرایشی:",
+              JSON.stringify(f),
+              "",
+              "روی " + BASE + " با ابزار خودت بازتولید کن: برای مشکل رندر/کنسول از مرورگر headless (agent-browser با سشن یکتای خودت) و برای کد وضعیت/asset از curl استفاده کن.",
+              "اگر بازتولید نشد confirmed=false بگذار و دقیقاً بگو چه دیدی.",
+              "اگر ریشه در ریپوی /Users/mrchatgpt/Sites/NabuXUI به‌سادگی معلوم است، در fixHint یک جمله بگو (فقط با خواندن کد، بدون ویرایش). فارسی بنویس.",
+            ].join("\n"),
+          );
+          return { finding: f, confirmation: c };
+        }),
+      );
+      for (const p of pairs) {
+        if (p.confirmation.confirmed) {
+          confirmedBrowserFindings.push({
+            ...p.finding,
+            status: "verified",
+            evidence: p.finding.evidence + " | تأیید مستقل: " + p.confirmation.evidence,
+          });
+        } else {
+          rejectedBrowserFindings.push({
+            ...p.finding,
+            evidence: p.finding.evidence + " | تأیید ناموفق: " + p.confirmation.evidence,
+          });
+        }
+      }
+      return checks;
+    } catch (err) {
+      log("گروه " + g.name + " نتیجهٔ معتبر برنگرداند: " + String(err));
+      for (const u of g.urls) {
+        report({ url: u, status: "مشکل", note: "بازرس این گروه نتیجهٔ معتبر برنگرداند" }, "sites");
+      }
+      return [] as PageCheck[];
+    }
+  }),
+);
+const checkedPages = groupResults.reduce((n, cs) => n + cs.length, 0);
+log("راستی‌آزمایی مرورگری تمام شد: " + checkedPages + " صفحه بررسی شد؛ " +
+  (confirmedBrowserFindings.length + rejectedBrowserFindings.length) + " یافته (تأییدشده: " + confirmedBrowserFindings.length + ")");
+
+const seen = new Set<string>();
+const toFix: Finding[] = [];
+for (const f of httpFindings.concat(confirmedBrowserFindings)) {
+  if (!seen.has(f.where + "|" + f.what)) {
+    seen.add(f.where + "|" + f.what);
+    toFix.push(f);
+  }
+}
+let fix: FixResult = { fixed: [], notFixed: [], commit: "", evidence: "چیزی برای ترمیم نبود" };
+if (toFix.length > 0) {
+  phase("ترمیم ایرادهای تأییدشده");
+  log(toFix.length + " ایراد تأییدشده برای ترمیم به ترمیم‌کار سپرده می‌شود");
+  fix = await agent("ترمیم‌کار", {
+    system:
+      "ترمیم‌کار دقیق ریپوی NabuXUI هستی. سشن‌های موازی هم‌زمان با تو کار می‌کنند؛ فقط فایل‌های خودت را تغییر و stage می‌کنی. " +
+      "اگر دروازه‌ای غیرقابل عبور بود یا اطلاعات لازم را نداشتی، به‌جای حدس زدن اعلام کن و escalate کن.",
+  }).ask<FixResult>(
+    [
+      "این یافته‌های تأییدشده را در ریپوی /Users/mrchatgpt/Sites/NabuXUI ترمیم کن:",
+      JSON.stringify(toFix, null, 2),
+      "",
+      "زمینه: سایت زندهٔ " + BASE + " همین پلی‌گراوند Laravel است که با playground/Dockerfile دیپلوی می‌شود.",
+      "نقشهٔ ریپو: طعم‌های SPA در apps/{showcase,admin,admin-vue,admin-svelte,inertia}؛ کامپوننت‌های Livewire در playground/app/Livewire؛ نماها در playground/resources/views؛ روت‌ها در playground/routes/web.php.",
+      "قراردادها: assetهای SPA با vite base './' بیلد می‌شوند و بازنویسی مسیر در bin/sync-flavors.sh و playground/Dockerfile انجام می‌شود — این دو را همیشه هماهنگ نگه دار.",
+      "مراحل: 1) git status بگیر و مطمئن شو فایل‌های سشن‌های موازی را قورت نمی‌دهی؛ 2) ایرادها را در کوچک‌ترین دامنه ترمیم کن؛",
+      "3) اگر اپ SPA تغییر کرد: pnpm --filter <app> build و سپس bash bin/sync-flavors.sh؛",
+      "4) راستی‌آزمایی محلی: از playground با php artisan serve روی یک پورت آزاد سرور بزن و نشانی‌های ترمیم‌شده را curl کن؛",
+      "5) فقط فایل‌های خودت را stage و با پیام فارسی و توضیحی کامیت کن. push نکن — دیپلوی بیرون از این ورک‌فلو انجام می‌شود.",
+      "خروجی را فارسی و دقیق برگردان.",
+    ].join("\n"),
+  );
+  for (const u of fix.fixed) {
+    report({ url: u, status: "رفع شد", note: "ترمیم محلی شد؛ روی سایت زنده پس از دیپلوی اعمال می‌شود" }, "sites");
+  }
+  log("ترمیم‌کار تمام کرد: " + fix.fixed.length + " ترمیم‌شده، " + fix.notFixed.length + " بازمانده" +
+    (fix.commit ? " — کامیت " + fix.commit : ""));
+}
+
+phase("جمع‌بندی و انتشار گزارش");
+const gitLog = await world.run("git", ["log", "--oneline", "-5"]);
+const gitStatus = await world.run("git", ["status", "--porcelain"]);
+const uncommitted = gitStatus.stdout.trim();
+
+const allFindings: Finding[] = toFix
+  .concat(rejectedBrowserFindings)
+  .map((f) => (fix.fixed.some((u) => f.where === u) ? { ...f, what: f.what + " — ترمیم شد" } : f));
+
+const md = [
+  "# گزارش راستی‌آزمایی سایت زنده پس از دیپلوی",
+  "",
+  "نشانی پایه: " + BASE,
+  "",
+  "## جاروی HTTP",
+  "- " + allUrls.length + " نشانی (از جمله " + demos.length + " لینک استخراج‌شده از خود سایت) بررسی شد.",
+  "- پاسخ‌های خراب: " + httpBad.length,
+  "",
+  "## راستی‌آزمایی مرورگری",
+  "- " + checkedPages + " صفحه در " + GROUPS.length + " گروه باز شد و رندر/کنسول/لینک‌هایش بررسی شد.",
+  "",
+  "| نشانی | رندر | خطای کنسول | لینک شکسته | یادداشت |",
+  "| --- | --- | --- | --- | --- |",
+  ...allChecks.map(
+    (c) =>
+      "| " + c.url + " | " + (c.rendered ? "بله" : "**نه**") + " | " +
+      (c.consoleErrors.length > 0 ? c.consoleErrors.length + " مورد" : "—") + " | " +
+      (c.brokenLinks.length > 0 ? c.brokenLinks.join("، ") : "—") + " | " + c.note + " |",
+  ),
+  "",
+  "## یافته‌ها",
+  allFindings.length === 0 ? "- موردی یافت نشد." : "",
+  ...allFindings.map(
+    (f) =>
+      "- [" + f.severity + (f.status === "verified" ? "/تأییدشده" : "/تأییدنشده") + "] " +
+      f.where + " — " + f.what + "\n  - شواهد: " + f.evidence,
+  ),
+  "",
+  "## ترمیم‌ها",
+  fix.fixed.length === 0 && fix.notFixed.length === 0
+    ? "- چیزی برای ترمیم نبود."
+    : "- ترمیم‌شده: " + (fix.fixed.join("، ") || "—") + "\n- بازمانده: " + (fix.notFixed.join("؛ ") || "—"),
+  fix.commit ? "- کامیت: " + fix.commit : "",
+  "- شواهد راستی‌آزمایی محلی: " + fix.evidence,
+  "",
+  "## آخرین کامیت‌های ریپو (پس از ورک‌فلو)",
+  ...gitLog.stdout.trim().split("\n").map((l) => "- " + l),
+].filter((l) => l !== "").join("\n");
+
+try {
+  await artifact.markdown("report", md, {
+    title: "گزارش راستی‌آزمایی سایت زنده",
+    description: "جاروی HTTP همهٔ نشانی‌ها + رندر مرورگری، خطای کنسول و لینک‌های شکستهٔ صفحات کلیدی پس از دیپلوی امروز.",
+    primary: true,
+  });
+} catch {
+  log("انتشار گزارش markdown ناموفق بود؛ متن کامل در خروجی نهایی ورک‌فلو هست");
+}
+
+const healthyPages = allChecks.filter((c) => c.rendered && c.consoleErrors.length === 0 && c.brokenLinks.length === 0).length;
+const result: WorkflowReport = {
+  conclusion:
+    checkedPages + " صفحهٔ کلیدی در مرورگر واقعی بررسی شد که " + healthyPages + " صفحه کاملاً سالم بودند؛ جاروی HTTP هم روی " +
+    allUrls.length + " نشانی " + httpBad.length + " پاسخ خراب داد. " +
+    (allFindings.length === 0
+      ? "هیچ ایرادی یافت نشد؛ سایت پس از دیپلوی سالم است."
+      : allFindings.length + " یافته ثبت شد که " + fix.fixed.length + " موردش محلی ترمیم و کامیت شد — برای اعمال روی سایت زنده باید push و دیپلوی شود."),
+  findings: allFindings,
+  verified: [
+    "جاروی HTTP قطعی (node fetch، خروجی JSON) روی " + allUrls.length + " نشانی شامل همهٔ دموهای کاتالوگ",
+    "رندر مرورگری واقعی " + checkedPages + " صفحهٔ کلیدی در " + GROUPS.length + " گروه مستقل + خطاهای کنسول + لینک‌های شکسته",
+    "هر یافتهٔ مرورگری پیش از گزارش، توسط یک تأییدکنندهٔ مستقل بازتولید شد",
+  ].concat(fix.fixed.length > 0 ? ["ترمیم‌ها به‌طور محلی با build/sync/serve راستی‌آزمایی و کامیت شدند: " + fix.evidence] : []),
+  notCovered: [
+    "دموهای تکی کاتالوگ فقط جاروی HTTP شدند؛ رندر مرورگری فقط برای دو نمونه انجام شد",
+    "تأیید نهاییِ ترمیم‌ها روی سایت زنده پس از push و دیپلوی Coolify، بیرون از این ورک‌فلو انجام می‌شود",
+  ].concat(uncommitted ? ["ریپو فایل‌های کاری دارد که ورک‌فلو لمس نکرده: " + uncommitted.split("\n").length + " سطر در git status"] : []),
+};
+return result;

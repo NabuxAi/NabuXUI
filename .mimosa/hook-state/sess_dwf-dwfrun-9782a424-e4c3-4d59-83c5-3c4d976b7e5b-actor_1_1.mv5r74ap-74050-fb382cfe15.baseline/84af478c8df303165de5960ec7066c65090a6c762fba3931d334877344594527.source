@@ -1,0 +1,101 @@
+
+<?php $attributes ??= new \Illuminate\View\ComponentAttributeBag;
+
+$__newAttributes = [];
+$__propNames = \Illuminate\View\ComponentAttributeBag::extractPropNames((['groups' => [], 'active' => null, 'collapsed' => false, 'brand' => null, 'brandMark' => null, 'label' => null, 'wired' => false]));
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (in_array($__key, $__propNames)) {
+        $$__key = $$__key ?? $__value;
+    } else {
+        $__newAttributes[$__key] = $__value;
+    }
+}
+
+$attributes = new \Illuminate\View\ComponentAttributeBag($__newAttributes);
+
+unset($__propNames);
+unset($__newAttributes);
+
+foreach (array_filter((['groups' => [], 'active' => null, 'collapsed' => false, 'brand' => null, 'brandMark' => null, 'label' => null, 'wired' => false]), 'is_string', ARRAY_FILTER_USE_KEY) as $__key => $__value) {
+    $$__key = $$__key ?? $__value;
+}
+
+$__defined_vars = get_defined_vars();
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (array_key_exists($__key, $__defined_vars)) unset($$__key);
+}
+
+unset($__defined_vars, $__key, $__value); ?>
+<?php
+    use NabuXUI\NabuXUI;
+    $lang = substr(app()->getLocale(), 0, 2);
+    // The toggle's own words live in the core i18n table (resources/lang, generated from it).
+    $words = [
+        'collapse' => __('nabuxui::ui.collapseSidebar', [], $lang),
+        'expand' => __('nabuxui::ui.expandSidebar', [], $lang),
+    ];
+    $active = (string) ($active ?? ($groups[0]['items'][0]['id'] ?? ''));
+    $mark = $brandMark ?? (is_string($brand) && $brand !== '' ? mb_substr($brand, 0, 1) : 'N');
+    $badgeOf = fn ($badge) => is_numeric($badge) ? NabuXUI::formatNumber((float) $badge, 0, $lang) : (string) $badge;
+?>
+<aside <?php echo e($attributes->class('nx-admin-sidebar')->merge(['data-collapsed' => $collapsed && ! $wired ? '' : null])); ?>>
+    <div class="nx-admin-brand">
+        <span class="nx-admin-mark" aria-hidden="true"><?php echo e($mark); ?></span>
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($brand): ?><span class="nx-admin-brand-text"><?php echo e($brand); ?></span><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+    </div>
+    <nav class="nx-admin-nav" <?php if($label): ?> aria-label="<?php echo e($label); ?>" <?php endif; ?>>
+        <span class="nx-indicator" aria-hidden="true"></span>
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $groups; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $group): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+            <?php $groupId = (string) ($group['id'] ?? $group['label'] ?? $loop->index); ?>
+            <section class="nx-admin-group" <?php if($groupId): ?> data-group="<?php echo e($groupId); ?>" <?php endif; ?>>
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(! empty($group['label'])): ?>
+                    <h3 class="nx-admin-group-label"><?php echo e($group['label']); ?></h3>
+                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                <ul>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $group['items']; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                        <?php
+                            $itemId = (string) $item['id'];
+                            $current = $itemId === $active;
+                            $disabled = ! empty($item['disabled']);
+                        ?>
+                        <li>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(! empty($item['href'])): ?>
+                                <a href="<?php echo e($item['href']); ?>" class="nx-admin-item" data-value="<?php echo e($itemId); ?>" data-label="<?php echo e($item['label']); ?>"
+                                    <?php if(! empty($item['navigate'])): ?> wire:navigate <?php endif; ?>
+                                    <?php if($disabled): ?> aria-disabled="true" <?php endif; ?>
+                                    <?php if($current): ?> aria-current="page" <?php endif; ?>
+                                    <?php if($wired): ?> x-bind:aria-current="active === <?php echo \Illuminate\Support\Js::from($itemId)->toHtml() ?> ? 'page' : null" x-on:click="active = <?php echo \Illuminate\Support\Js::from($itemId)->toHtml() ?>" <?php endif; ?>>
+                            <?php else: ?>
+                                <button type="button" class="nx-admin-item" data-value="<?php echo e($itemId); ?>" data-label="<?php echo e($item['label']); ?>"
+                                    <?php if($disabled): ?> disabled <?php endif; ?>
+                                    <?php if($current): ?> aria-current="page" <?php endif; ?>
+                                    <?php if($wired): ?> x-bind:aria-current="active === <?php echo \Illuminate\Support\Js::from($itemId)->toHtml() ?> ? 'page' : null" x-on:click="select(<?php echo \Illuminate\Support\Js::from($itemId)->toHtml() ?>)" <?php endif; ?>>
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                <?php echo e(NabuXUI::icon($item['icon'] ?? 'grid')); ?>
+
+                                <span class="nx-admin-label"><?php echo e($item['label']); ?></span>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(isset($item['badge'])): ?><span class="nx-admin-badge"><?php echo e($badgeOf($item['badge'])); ?></span><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(! empty($item['href'])): ?></a><?php else: ?></button><?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                        </li>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                </ul>
+            </section>
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+    </nav>
+    <div class="nx-admin-sidebar-foot">
+        <?php echo e($footer ?? ''); ?>
+
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($wired): ?>
+            <button type="button" class="nx-admin-item nx-admin-toggle" aria-expanded="<?php echo e($collapsed ? 'false' : 'true'); ?>"
+                data-label="<?php echo e($collapsed ? $words['expand'] : $words['collapse']); ?>"
+                x-bind:aria-expanded="collapsed ? 'false' : 'true'" x-bind:data-label="collapsed ? <?php echo \Illuminate\Support\Js::from($words['expand'])->toHtml() ?> : <?php echo \Illuminate\Support\Js::from($words['collapse'])->toHtml() ?>" x-on:click="collapsed = ! collapsed">
+                <?php echo e(NabuXUI::icon('chevron-left')); ?>
+
+                <span class="nx-admin-label" x-text="collapsed ? <?php echo \Illuminate\Support\Js::from($words['expand'])->toHtml() ?> : <?php echo \Illuminate\Support\Js::from($words['collapse'])->toHtml() ?>"><?php echo e($collapsed ? $words['expand'] : $words['collapse']); ?></span>
+            </button>
+        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+    </div>
+</aside>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/packages/livewire/src/../resources/views/components/admin-sidebar.blade.php ENDPATH**/ ?>

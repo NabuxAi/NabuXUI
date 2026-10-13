@@ -1,0 +1,440 @@
+/**
+ * Kinetic type (React): WordFillScroll, WordCycle3d, VelocityBand and
+ * ElasticLetters — text that answers how fast it is being read. Thin over
+ * css/blocks/kinetic.css and the core behaviours in js/blocks/kinetic.ts: the
+ * components render the markup and own the state, the behaviours run the
+ * frames. Persian and Arabic never lose their joins — splitText only ever
+ * hands out whole words where letters would break apart.
+ */
+import {
+  type CSSProperties,
+  type HTMLAttributes,
+  type ReactNode,
+  forwardRef,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import {
+  elasticLetters,
+  formatNumber,
+  onReducedMotionChange,
+  prefersReducedMotion,
+  scrollToStart,
+  splitText,
+  textDirection,
+  velocityBands,
+  wordFillScroll,
+} from '@nabuxai/ui-core';
+import { cx, mergeRefs, useBehavior, useControllable, useEvent, useIsoLayoutEffect } from '../internal/hooks';
+import { Icon } from '../internal/icon';
+import { useLocale } from '../internal/provider';
+
+/* ---- Word fill scroll ------------------------------------------------------------------ */
+
+export interface WordFillScrollProps extends Omit<HTMLAttributes<HTMLDivElement>, 'children'> {
+  /** The paragraph, lit word by word as the pane scrolls. */
+  children: string;
+  /** Height of the reading pane (a CSS length; default 18rem). */
+  paneHeight?: string;
+  /** Show the sticky percentage rail beside the pane (default true). */
+  rail?: boolean;
+  /** Show the "read it again" button under the pane (default true). */
+  reset?: boolean;
+  /** Label — and accessible name — of the reset button. */
+  resetLabel?: string;
+  /** Accessible name of the reading region. */
+  label?: string;
+  /** Called with the pane's reading progress (0–1) as it scrolls. */
+  onProgress?: (progress: number) => void;
+}
+
+/**
+ * A reading pane that lights its own way: every word carries a share of the
+ * pane's scroll progress, so colour climbs the paragraph exactly as fast as
+ * the reader — dim grey ahead of them, full ink behind. The sticky rail keeps
+ * the percentage and a hairline track honest; under reduced motion the
+ * lighting stays, strictly mapped to position.
+ */
+export const WordFillScroll = forwardRef<HTMLDivElement, WordFillScrollProps>(function WordFillScroll(
+  { children, paneHeight, rail = true, reset = true, resetLabel = 'Read again', label = 'Reading pane', onProgress, className, style, ...rest },
+  forwarded,
+) {
+  const locale = useLocale();
+  const root = useRef<HTMLDivElement>(null);
+  const pane = useRef<HTMLDivElement>(null);
+  const [percent, setPercent] = useState(0);
+
+  const handle = useEvent(onProgress);
+  const readout = useEvent((progress: number) => {
+    const next = Math.round(progress * 100);
+    setPercent((current) => (current === next ? current : next));
+    handle?.(progress);
+  });
+  useBehavior(root, wordFillScroll, { onProgress: readout });
+
+  // Whole words only — the pieces keep their spacing inside their spans.
+  const words = useMemo(
+    () => splitText(children, 'word').map((piece) => piece.trim()).filter((piece) => piece.length > 0),
+    [children],
+  );
+
+  const vars = { ...(paneHeight ? { '--_pane': paneHeight } : null) } as CSSProperties;
+  const mark = locale === 'fa' ? '٪' : '%';
+
+  return (
+    <div ref={mergeRefs(forwarded, root)} className={cx('nx-wordfill', className)} style={{ ...vars, ...style }} {...rest}>
+      <div className="nx-wordfill-layout">
+        {rail && (
+          <aside className="nx-wordfill-rail" aria-hidden="true">
+            <b className="nx-wordfill-pct" dir="ltr">
+              {formatNumber(percent, locale)}
+              {mark}
+            </b>
+            <i className="nx-wordfill-track">
+              <b className="nx-wordfill-fill" />
+            </i>
+          </aside>
+        )}
+        <div ref={pane} className="nx-wordfill-pane" tabIndex={0} role="region" aria-label={label}>
+          <p className="nx-wordfill-text" dir={textDirection(children)}>
+            {words.map((word, i) => (
+              <span key={`${i}-${word}`} className="nx-wordfill-word">
+                {word}{' '}
+              </span>
+            ))}
+          </p>
+        </div>
+      </div>
+      {reset && (
+        <div className="nx-wordfill-foot">
+          <button type="button" className="nx-wordfill-reset" onClick={() => scrollToStart(pane.current)}>
+            <Icon name="arrow-up" />
+            <span>{resetLabel}</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+});
+
+/* ---- Word cycle 3d ---------------------------------------------------------------------- */
+
+export interface WordCycle3dProps extends Omit<HTMLAttributes<HTMLElement>, 'children'> {
+  /** The words the keyword slot flips through (two or more). */
+  words: string[];
+  /** Copy before the slot. */
+  lead?: ReactNode;
+  /** Copy after the slot. */
+  tail?: ReactNode;
+  /** Small label over the line. */
+  kicker?: ReactNode;
+  /** A quiet line under the headline. */
+  hint?: ReactNode;
+  /** Milliseconds each word holds before it flips out (default 2400). */
+  interval?: number;
+  /** Show the word dots and the replay button (default true). */
+  controls?: boolean;
+  /** Accessible name of the dots group. */
+  dotsLabel?: string;
+  /** Label — and accessible name — of the replay button. */
+  replayLabel?: string;
+  index?: number;
+  defaultIndex?: number;
+  onIndexChange?: (index: number) => void;
+}
+
+/**
+ * The headline word that never stands still: the keyword flips out at
+ * rotateX(90°), swaps under the fold and swings back in from −90°, while a
+ * hidden same-font span measures each incoming word so the slot's width eases
+ * to it instead of jolting the line. Hover or focus holds the loop, the dots
+ * jump straight to a word, the cycle rests off screen, and under reduced
+ * motion the swap is instant.
+ */
+export const WordCycle3d = forwardRef<HTMLElement, WordCycle3dProps>(function WordCycle3d(
+  { words, lead, tail, kicker, hint, interval = 2400, controls = true, dotsLabel = 'Word', replayLabel = 'Replay the cycle', index, defaultIndex = 0, onIndexChange, className, ...rest },
+  forwarded,
+) {
+  const root = useRef<HTMLElement>(null);
+  const ghost = useRef<HTMLSpanElement>(null);
+  const [slot, setSlot] = useState<string | null>(null);
+  const [phase, setPhase] = useState<'show' | 'out' | 'in'>('show');
+  const [pointerHeld, setPointerHeld] = useState(false);
+  const [focusHeld, setFocusHeld] = useState(false);
+  const [calm, setCalm] = useState(false);
+  const [visible, setVisible] = useState(true);
+  const [current, setCurrent] = useControllable(index, defaultIndex, onIndexChange);
+
+  const safe = words.length > 0 ? words : [''];
+  const count = safe.length;
+  const at = ((Math.round(current) % count) + count) % count;
+  const word = safe[at] ?? '';
+  const held = pointerHeld || focusHeld;
+
+  // The swap's timers and frames, kept clearable wherever the loop is entered from.
+  const timers = useRef<{ out?: number; frames: number[] }>({ frames: [] });
+  const clearSwap = () => {
+    window.clearTimeout(timers.current.out);
+    timers.current.frames.forEach((id) => cancelAnimationFrame(id));
+    timers.current = { frames: [] };
+  };
+
+  /** Land on a word: straight in when calm, through the fold otherwise. */
+  const show = useEvent((next: number) => {
+    clearSwap();
+    setCurrent((((next % count) + count) % count));
+    if (calm) {
+      setPhase('show');
+      return;
+    }
+    setPhase('in');
+    const first = requestAnimationFrame(() => {
+      const second = requestAnimationFrame(() => setPhase('show'));
+      timers.current.frames.push(second);
+    });
+    timers.current.frames.push(first);
+  });
+
+  /** Flip the current word out, swap under the fold, swing the next one in. */
+  const swap = useEvent(() => {
+    if (count < 2) return;
+    if (calm) {
+      show(at + 1);
+      return;
+    }
+    clearSwap();
+    setPhase('out');
+    timers.current.out = window.setTimeout(() => show(at + 1), 260);
+  });
+
+  // No auto-cycle under reduced motion — the dots and replay still swap, instantly.
+  useEffect(() => {
+    setCalm(prefersReducedMotion());
+    return onReducedMotionChange(setCalm);
+  }, []);
+
+  // The cycle rests while the headline is off screen.
+  useEffect(() => {
+    const el = root.current;
+    if (!el || !('IntersectionObserver' in window)) return;
+    const observer = new IntersectionObserver(([entry]) => setVisible(!!entry?.isIntersecting), { threshold: 0.25 });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (calm || held || !visible || count < 2) return;
+    const id = window.setInterval(swap, interval);
+    return () => window.clearInterval(id);
+  }, [calm, held, visible, count, interval, swap]);
+
+  useEffect(() => clearSwap, []);
+
+  // The hidden tape measure: same font as the line (it lives inside it), so the
+  // slot eases to exactly the incoming word's width.
+  useIsoLayoutEffect(() => {
+    const tape = ghost.current;
+    if (!tape) return;
+    const fit = () => {
+      const width = Math.ceil(tape.getBoundingClientRect().width);
+      setSlot((current) => (width > 0 ? `${width}px` : current));
+    };
+    fit();
+    window.addEventListener('resize', fit, { passive: true });
+    return () => window.removeEventListener('resize', fit);
+  }, [word]);
+
+  return (
+    <section
+      ref={mergeRefs(forwarded, root)}
+      className={cx('nx-wordcycle', className)}
+      onPointerEnter={(event) => {
+        if (event.pointerType === 'mouse') setPointerHeld(true);
+      }}
+      onPointerLeave={() => setPointerHeld(false)}
+      onFocus={() => setFocusHeld(true)}
+      onBlur={() => setFocusHeld(false)}
+      {...rest}
+    >
+      {kicker !== undefined && <p className="nx-wordcycle-kicker">{kicker}</p>}
+      <h3 className="nx-wordcycle-line">
+        {lead !== undefined && (
+          <>
+            {lead}{' '}
+          </>
+        )}
+        <span className="nx-wordcycle-stage" style={{ '--_slot': slot ?? undefined } as CSSProperties}>
+          <span className="nx-wordcycle-word" data-state={phase}>
+            {word}
+          </span>
+        </span>
+        {tail !== undefined && <> {tail}</>}
+        <span className="nx-wordcycle-ghost" ref={ghost} aria-hidden="true">
+          {word}
+        </span>
+      </h3>
+      {hint !== undefined && <p className="nx-wordcycle-hint">{hint}</p>}
+      {controls && (
+        <div className="nx-wordcycle-foot">
+          <div className="nx-wordcycle-dots" role="group" aria-label={dotsLabel}>
+            {safe.map((option, n) => (
+              <button
+                key={`${n}-${option}`}
+                type="button"
+                className="nx-wordcycle-dot"
+                aria-current={n === at ? 'true' : 'false'}
+                aria-label={option}
+                onClick={() => show(n)}
+              />
+            ))}
+          </div>
+          <button type="button" className="nx-wordcycle-again" onClick={() => show(0)}>
+            {replayLabel}
+          </button>
+        </div>
+      )}
+    </section>
+  );
+});
+
+/* ---- Velocity band ----------------------------------------------------------------------- */
+
+export interface VelocityBandItem {
+  /** Stable key; the index is used when absent. */
+  key?: string;
+  /** The line that scrolls by; it repeats to fill the track. */
+  text: string;
+  /** Run against the pane's scroll — the gold band. */
+  reverse?: boolean;
+}
+
+export interface VelocityBandProps extends Omit<HTMLAttributes<HTMLElement>, 'children'> {
+  /** The content of the throttle pane — its scroll drives the bands. */
+  children: ReactNode;
+  bands: VelocityBandItem[];
+  /** Height of the throttle pane (a CSS length; default 11rem). */
+  paneHeight?: string;
+  /** How many copies of each line fill half the track (default 3). */
+  copies?: number;
+  /** Base drift, px per frame while the reader rests (default 0.6). */
+  drift?: number;
+  /** How much of each scroll delta lands on the bands (default 0.35). */
+  gain?: number;
+  /** How much of the scroll kick survives each frame (default 0.92). */
+  decay?: number;
+  /** Show the live speed readout (default true). */
+  meter?: boolean;
+  /** The readout's unit label. */
+  meterLabel?: string;
+  /** Accessible name of the throttle pane. */
+  label?: string;
+}
+
+/**
+ * Type that takes its speed from the reader's thumb: the pane is the throttle,
+ * and both bands ride its scroll velocity — one with the flick, one against
+ * it. A jump sends them racing, a pause lets the damping pull them back to a
+ * calm drift, and scrolling up drives them in reverse (the arrow and the gold
+ * band say so, not the motion alone). Off screen the loop parks; under
+ * reduced motion the bands stand still.
+ */
+export const VelocityBand = forwardRef<HTMLElement, VelocityBandProps>(function VelocityBand(
+  { children, bands, paneHeight, copies = 3, drift, gain, decay, meter = true, meterLabel = 'px/frame', label = 'Release notes', className, style, ...rest },
+  forwarded,
+) {
+  const locale = useLocale();
+  const root = useRef<HTMLElement>(null);
+  const [speed, setSpeed] = useState(0);
+  const onSpeed = useEvent((value: number) => setSpeed((current) => (current === value ? current : value)));
+  useBehavior(root, velocityBands, { drift, gain, decay, onSpeed });
+
+  const vars = { ...(paneHeight ? { '--_pane': paneHeight } : null) } as CSSProperties;
+  const repeat = Math.max(1, Math.round(copies));
+
+  return (
+    <section ref={mergeRefs(forwarded, root)} className={cx('nx-velocity', className)} style={{ ...vars, ...style }} {...rest}>
+      <div className="nx-velocity-pane" tabIndex={0} role="region" aria-label={label}>
+        {children}
+      </div>
+      {bands.map((band, i) => (
+        <div key={band.key ?? i} className="nx-velocity-band" data-reverse={band.reverse ? '' : undefined} aria-hidden="true">
+          <div className="nx-velocity-track" data-reverse={band.reverse ? '' : undefined}>
+            <span>{`${band.text} · `.repeat(repeat)}</span>
+            <span>{`${band.text} · `.repeat(repeat)}</span>
+          </div>
+        </div>
+      ))}
+      {meter && (
+        <p className="nx-velocity-meter">
+          <span className="nx-velocity-dir" aria-hidden="true">
+            <Icon name="arrow-right" />
+          </span>
+          <b className="nx-velocity-value">{formatNumber(Math.abs(speed), locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}</b>
+          <span>{meterLabel}</span>
+        </p>
+      )}
+    </section>
+  );
+});
+
+/* ---- Elastic letters ---------------------------------------------------------------------- */
+
+export interface ElasticLettersProps extends Omit<HTMLAttributes<HTMLElement>, 'children'> {
+  /** The wordmark; Latin splits into letters, joining scripts into whole words. */
+  children: string;
+  /** Small label over the wordmark. */
+  kicker?: ReactNode;
+  /** A quiet line under it. */
+  sub?: ReactNode;
+  /** Spring stiffness (default 170). */
+  stiffness?: number;
+  /** Spring damping, 4–24 — lower wobbles longer (default 10). */
+  damping?: number;
+  /** The horizontal pull at full stretch (default 0.5 → scaleX 1.5). */
+  stretch?: number;
+  /** The vertical squeeze that pays for it (default 0.24 → scaleY 0.76). */
+  squeeze?: number;
+}
+
+/**
+ * A wordmark whose units snap back like rubber: hovering pulls one into a
+ * stretched shape and releasing lets a real damped spring wobble it back onto
+ * its baseline. Latin units are letters; Persian and Arabic units are whole
+ * words, never broken letters. Fine pointers only; under reduced motion the
+ * stretch lands instantly with no shimmy.
+ */
+export const ElasticLetters = forwardRef<HTMLElement, ElasticLettersProps>(function ElasticLetters(
+  { children, kicker, sub, stiffness, damping, stretch, squeeze, className, ...rest },
+  forwarded,
+) {
+  const root = useRef<HTMLElement>(null);
+  useBehavior(root, elasticLetters, { stiffness, damping, stretch, squeeze });
+
+  // Letters for Latin, whole words for joining scripts — splitText already
+  // refuses to break a join, whichever granularity was asked for. Whitespace
+  // becomes a gap item, so word spacing survives the flex row.
+  const units = useMemo(
+    () => splitText(children, 'char').map((piece, i) => ({ key: i, text: piece.trim(), gap: piece.trim().length === 0 })),
+    [children],
+  );
+
+  return (
+    <section ref={mergeRefs(forwarded, root)} className={cx('nx-elastic', className)} {...rest}>
+      {kicker !== undefined && <p className="nx-elastic-kicker">{kicker}</p>}
+      <h3 className="nx-elastic-title" dir={textDirection(children)} aria-label={children}>
+        {units.map((unit) =>
+          unit.gap ? (
+            <span key={unit.key} className="nx-elastic-gap" aria-hidden="true" />
+          ) : (
+            <span key={unit.key} className="nx-elastic-unit" data-nx-unit aria-hidden="true">
+              {unit.text}
+            </span>
+          ),
+        )}
+      </h3>
+      {sub !== undefined && <p className="nx-elastic-sub">{sub}</p>}
+    </section>
+  );
+});

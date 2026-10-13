@@ -1,0 +1,9 @@
+
+<div <?php echo e($attributes->class('nx-backdrop-aurora')); ?>>
+    <span class="nx-backdrop-layer" aria-hidden="true"></span>
+    <span class="nx-backdrop-layer" aria-hidden="true"></span>
+    <span class="nx-backdrop-layer" aria-hidden="true"></span>
+    <?php echo e($slot); ?>
+
+</div>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/packages/livewire/src/../resources/views/components/backdrop-aurora.blade.php ENDPATH**/ ?>

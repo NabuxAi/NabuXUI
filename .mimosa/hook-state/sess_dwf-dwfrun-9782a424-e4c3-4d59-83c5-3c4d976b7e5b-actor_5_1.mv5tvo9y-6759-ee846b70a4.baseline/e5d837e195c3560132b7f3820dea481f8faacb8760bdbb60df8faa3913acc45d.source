@@ -1,0 +1,55 @@
+
+<?php $attributes ??= new \Illuminate\View\ComponentAttributeBag;
+
+$__newAttributes = [];
+$__propNames = \Illuminate\View\ComponentAttributeBag::extractPropNames((['position' => 'bottom-end', 'effect' => null]));
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (in_array($__key, $__propNames)) {
+        $$__key = $$__key ?? $__value;
+    } else {
+        $__newAttributes[$__key] = $__value;
+    }
+}
+
+$attributes = new \Illuminate\View\ComponentAttributeBag($__newAttributes);
+
+unset($__propNames);
+unset($__newAttributes);
+
+foreach (array_filter((['position' => 'bottom-end', 'effect' => null]), 'is_string', ARRAY_FILTER_USE_KEY) as $__key => $__value) {
+    $$__key = $$__key ?? $__value;
+}
+
+$__defined_vars = get_defined_vars();
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (array_key_exists($__key, $__defined_vars)) unset($$__key);
+}
+
+unset($__defined_vars, $__key, $__value); ?>
+<section <?php echo e($attributes->class('nx-toaster')->merge(['data-position' => $position, 'data-effect' => $effect, 'aria-label' => __('nabuxui::ui.notifications'), 'popover' => 'manual'])); ?>
+
+    x-data="nxToaster(<?php echo \Illuminate\Support\Js::from(\NabuXUI\NabuXUI::flashedToasts())->toHtml() ?>)" wire:ignore data-navigate-persist
+    @nx-toast.window="push($event.detail)" @pointerenter="pause()" @pointerleave="resume()" @focusin="pause()"
+    @focusout="if (! $root.contains($event.relatedTarget)) resume()">
+    <ol class="nx-toast-list" x-ref="list" aria-live="polite">
+        <template x-for="item in items" :key="item.id">
+            <li class="nx-toast" x-bind:data-id="item.id" x-bind:data-tone="item.tone" x-bind:data-state="item.state" x-bind:role="item.tone === 'danger' ? 'alert' : null" x-init="mount($el, item)">
+                <span class="nx-toast-icon" x-html="icon(item.tone)"></span>
+                <div class="nx-toast-body">
+                    <p class="nx-toast-title" x-text="item.title"></p>
+                    <template x-if="item.description"><p class="nx-toast-description" x-text="item.description"></p></template>
+                </div>
+                <template x-if="item.action && item.action.href">
+                    <a class="nx-button nx-toast-action" data-variant="secondary" data-size="xs" x-bind:href="item.action.href"><span class="nx-button-label" x-text="item.action.label"></span></a>
+                </template>
+                <button type="button" class="nx-toast-close" aria-label="<?php echo e(__('nabuxui::ui.dismiss')); ?>" @click="dismiss(item.id)"><?php echo e(\NabuXUI\NabuXUI::icon('x')); ?></button>
+                <template x-if="item.duration > 0 && item.state === 'open'">
+                    <span class="nx-toast-timer" aria-hidden="true" x-bind:style="`--nx-duration: ${item.duration}ms`"></span>
+                </template>
+            </li>
+        </template>
+    </ol>
+</section>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/packages/livewire/src/../resources/views/components/toaster.blade.php ENDPATH**/ ?>

@@ -1,0 +1,6 @@
+<button type="button" <?php echo e($attributes->class('nx-button nx-theme-toggle')->merge(['data-variant' => 'ghost', 'data-icon-only' => '', 'aria-label' => __('nabuxui::ui.darkMode')])); ?>
+
+    x-data="nxTheme()" x-bind:aria-pressed="dark ? 'true' : 'false'" x-bind:title="dark ? <?php echo \Illuminate\Support\Js::from(__('nabuxui::ui.toLight'))->toHtml() ?> : <?php echo \Illuminate\Support\Js::from(__('nabuxui::ui.toDark'))->toHtml() ?>" @click="toggle()">
+    <span class="nx-button-label"><span class="nx-theme-icons" aria-hidden="true"><?php echo e(\NabuXUI\NabuXUI::icon('sun', 'nx-theme-sun')); ?><?php echo e(\NabuXUI\NabuXUI::icon('moon', 'nx-theme-moon')); ?></span></span>
+</button>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/packages/livewire/src/../resources/views/components/theme-toggle.blade.php ENDPATH**/ ?>

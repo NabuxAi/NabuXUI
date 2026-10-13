@@ -1,0 +1,66 @@
+
+<?php $attributes ??= new \Illuminate\View\ComponentAttributeBag;
+
+$__newAttributes = [];
+$__propNames = \Illuminate\View\ComponentAttributeBag::extractPropNames(([
+    'phrases' => [],
+    'by' => 'grapheme',
+    'typeSpeed' => 55,
+    'deleteSpeed' => 28,
+    'hold' => 1800,
+    'loop' => true,
+    'startDelay' => 400,
+    'caret' => 'bar',
+]));
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (in_array($__key, $__propNames)) {
+        $$__key = $$__key ?? $__value;
+    } else {
+        $__newAttributes[$__key] = $__value;
+    }
+}
+
+$attributes = new \Illuminate\View\ComponentAttributeBag($__newAttributes);
+
+unset($__propNames);
+unset($__newAttributes);
+
+foreach (array_filter(([
+    'phrases' => [],
+    'by' => 'grapheme',
+    'typeSpeed' => 55,
+    'deleteSpeed' => 28,
+    'hold' => 1800,
+    'loop' => true,
+    'startDelay' => 400,
+    'caret' => 'bar',
+]), 'is_string', ARRAY_FILTER_USE_KEY) as $__key => $__value) {
+    $$__key = $$__key ?? $__value;
+}
+
+$__defined_vars = get_defined_vars();
+
+foreach ($attributes->all() as $__key => $__value) {
+    if (array_key_exists($__key, $__defined_vars)) unset($$__key);
+}
+
+unset($__defined_vars, $__key, $__value); ?>
+<?php
+    $phrases = array_values(array_filter(array_map('strval', (array) $phrases), 'strlen'));
+    $first = $phrases[0] ?? '';
+    $options = [
+        'phrases' => $phrases,
+        'by' => $by === 'word' ? 'word' : 'grapheme',
+        'typeSpeed' => (int) $typeSpeed,
+        'deleteSpeed' => (int) $deleteSpeed,
+        'hold' => (int) $hold,
+        'loop' => (bool) $loop,
+        'startDelay' => (int) $startDelay,
+    ];
+?>
+<span <?php echo e($attributes->class('nx-typewriter')->merge(['data-caret' => $caret === 'bar' ? null : $caret])); ?> x-data="nxTypewriter(<?php echo \Illuminate\Support\Js::from($options)->toHtml() ?>)" wire:ignore>
+    <span class="nx-visually-hidden"><?php echo e($loop ? implode(' · ', $phrases) : (end($phrases) ?: '')); ?></span>
+    <span class="nx-typewriter-line" aria-hidden="true" dir="<?php echo e(\NabuXUI\NabuXUI::direction($first)); ?>"><span class="nx-typewriter-text"><?php echo e($first); ?></span><span class="nx-typewriter-caret"></span></span>
+</span>
+<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/packages/livewire/src/../resources/views/components/typewriter.blade.php ENDPATH**/ ?>
