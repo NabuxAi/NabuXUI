@@ -1,0 +1,20 @@
+{
+  "title": { "en": "VIRALMEDIA AI design agency landing", "fa": "لندینگ آژانس طراحی هوش مصنوعی VIRALMEDIA" },
+  "oneLiner": {
+    "en": "A pure-black agency landing page with liquid-glass buttons: a video hero with a working email form, a word-by-word scroll-reveal manifesto, a 2×2 project grid that fades up, a parallax showreel and an HLS video CTA.",
+    "fa": "لندینگ تمام‌مشکی یک آژانس با دکمه‌های شیشهٔ مایع: هیروی ویدیویی با فرم ایمیلِ فعال، بیانیه‌ای که کلمه‌به‌کلمه با اسکرول روشن می‌شود، شبکهٔ ۲×۲ پروژه‌ها که بالا می‌آیند، شوریل پارالاکس و فراخوانی با ویدیوی HLS."
+  },
+  "js": true,
+  "props": [
+    { "name": "--background", "type": "color", "default": "hsl(0 0% 0%)",
+      "note": { "en": "Page background and the colour the video fades blend into.", "fa": "پس‌زمینهٔ صفحه و رنگی که محوشدگی ویدیوها در آن حل می‌شود." } },
+    { "name": "--muted-foreground", "type": "color", "default": "hsl(0 0% 75%)",
+      "note": { "en": "Grey for subtitles, card categories and footer links.", "fa": "خاکستریِ زیرعنوان‌ها، دسته‌بندی کارت‌ها و پیوندهای فوتر." } },
+    { "name": "--font-accent", "type": "string", "default": "'Instrument Serif', serif",
+      "note": { "en": "Italic accent face for “AI Magic”, “Work” and “Transform”.", "fa": "قلم تأکیدیِ ایتالیک برای واژه‌های برجستهٔ تیترها." } },
+    { "name": "FROM", "type": "number", "default": 0.15,
+      "note": { "en": "Starting opacity of each word in the scroll-reveal paragraph.", "fa": "شفافیت آغازین هر کلمه در پاراگراف آشکارشونده با اسکرول." } },
+    { "name": "SRC", "type": "url", "default": "https://stream.mux.com/4IMYGcL01xjs7ek5ANO17JC4VQVUTsojZlnw4fXzwSxc.m3u8",
+      "note": { "en": "HLS stream behind the closing CTA.", "fa": "استریم HLS پشت بخش فراخوان پایانی." } }
+  ]
+}

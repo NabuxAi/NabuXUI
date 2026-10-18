@@ -1,0 +1,680 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EIDOLON — Monolith Hero</title>
+<script>
+  (function () {
+    var p = new URLSearchParams(location.search);
+    var l = p.get('lang') === 'fa' ? 'fa' : 'en';
+    document.documentElement.lang = l;
+    document.documentElement.dir = l === 'fa' ? 'rtl' : 'ltr';
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --page: #14121b;
+    --ink: #f6f1fb;
+    --ink-dim: rgba(246, 241, 251, .72);
+    --line: rgba(255, 255, 255, .14);
+    --sky-top: #3a2552;
+    --sky-mid: #a0739f;
+    --sky-glow: #e3b3d0;
+    --accent: #b78cff;
+    --hue: 0deg;
+    --radius: 26px;
+    --sans: "Inter Tight", "Helvetica Neue", Arial, sans-serif;
+    --serif: "Instrument Serif", Georgia, serif;
+  }
+  html[lang="fa"] { --sans: "Vazirmatn", "Inter Tight", sans-serif; --serif: "Vazirmatn", serif; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--page); color: var(--ink); }
+  body {
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    padding: clamp(10px, 2.4vw, 32px) clamp(10px, 2.6vw, 36px) clamp(70px, 10vh, 120px);
+    background:
+      radial-gradient(1200px 380px at 50% 100%, rgba(120, 72, 180, .38), transparent 70%),
+      radial-gradient(1px 1px at 12% 88%, rgba(255,255,255,.5), transparent 60%),
+      radial-gradient(1px 1px at 34% 94%, rgba(255,255,255,.35), transparent 60%),
+      radial-gradient(1px 1px at 58% 90%, rgba(255,255,255,.45), transparent 60%),
+      radial-gradient(1px 1px at 77% 96%, rgba(255,255,255,.4), transparent 60%),
+      radial-gradient(1px 1px at 91% 87%, rgba(255,255,255,.3), transparent 60%),
+      var(--page);
+  }
+  button, a { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid #fff; outline-offset: 3px; border-radius: 6px; }
+
+  /* ---------- frame ---------- */
+  .frame {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    border-radius: var(--radius);
+    min-height: max(640px, calc(100vh - 2 * clamp(10px, 2.4vw, 32px)));
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 40px 120px -30px rgba(80, 40, 130, .55), 0 0 0 1px rgba(255,255,255,.06);
+    background: var(--sky-top);
+  }
+  .scene { position: absolute; inset: 0; z-index: -2; overflow: hidden; }
+  .scene svg { position: absolute; inset: -4%; width: 108%; height: 108%; display: block; }
+  .layer { transition: transform .9s cubic-bezier(.2,.7,.2,1); will-change: transform; }
+  .tint {
+    position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background:
+      linear-gradient(90deg, rgba(25, 12, 40, .55) 0%, rgba(25,12,40,.1) 42%, transparent 60%),
+      linear-gradient(0deg, rgba(22, 10, 34, .78) 0%, transparent 34%),
+      linear-gradient(180deg, rgba(30, 16, 44, .5) 0%, transparent 18%);
+  }
+  html[dir="rtl"] .tint {
+    background:
+      linear-gradient(270deg, rgba(25, 12, 40, .55) 0%, rgba(25,12,40,.1) 42%, transparent 60%),
+      linear-gradient(0deg, rgba(22, 10, 34, .78) 0%, transparent 34%),
+      linear-gradient(180deg, rgba(30, 16, 44, .5) 0%, transparent 18%);
+  }
+  .scene-hue { filter: hue-rotate(var(--hue)); transition: filter 1.2s ease; position: absolute; inset: 0; }
+  .fog {
+    position: absolute; inset-inline: -20%; bottom: 8%; height: 34%;
+    background:
+      radial-gradient(40% 50% at 30% 60%, rgba(196, 150, 230, .28), transparent 70%),
+      radial-gradient(35% 45% at 70% 55%, rgba(160, 110, 220, .25), transparent 70%);
+    animation: drift 18s ease-in-out infinite alternate;
+    pointer-events: none;
+  }
+  .fog.f2 { bottom: 0; height: 26%; opacity: .8; animation-duration: 24s; animation-direction: alternate-reverse; }
+  @keyframes drift { from { transform: translateX(-4%); } to { transform: translateX(4%); } }
+
+  /* ---------- header ---------- */
+  header.top {
+    display: grid;
+    grid-template-columns: 1fr auto auto 1fr;
+    align-items: center;
+    gap: clamp(16px, 4vw, 120px);
+    padding: 18px clamp(18px, 2.6vw, 34px);
+    border-bottom: 1px solid var(--line);
+  }
+  .brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; font-weight: 600; font-size: 13px; letter-spacing: .14em; font-family: "Inter Tight", sans-serif; }
+  .brand sup { font-size: 8px; letter-spacing: 0; opacity: .7; }
+  .brand svg { width: 26px; height: 18px; }
+  .meta { font-size: 11.5px; line-height: 1.45; }
+  .meta b { display: block; font-weight: 500; }
+  .meta span { color: var(--ink-dim); }
+  .clock { direction: ltr; unicode-bidi: isolate; }
+  html[lang="fa"] .clock { direction: rtl; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 12px;
+    background: #f7f4fa; color: #17121f;
+    border: 0; border-radius: 6px;
+    padding: 11px 14px 11px 16px;
+    font-size: 12.5px; font-weight: 600; cursor: pointer;
+    text-decoration: none;
+    transition: transform .3s ease, background .3s ease, box-shadow .3s ease;
+    box-shadow: 0 8px 30px -10px rgba(0,0,0,.45);
+    white-space: nowrap;
+  }
+  .btn:hover { transform: translateY(-2px); background: #fff; box-shadow: 0 14px 34px -12px rgba(190, 140, 255, .7); }
+  .btn .arr { width: 10px; height: 10px; opacity: .55; transition: transform .3s ease; }
+  .btn:hover .arr { transform: translate(2px, -2px); opacity: 1; }
+  html[dir="rtl"] .btn .arr { transform: scaleX(-1); }
+  html[dir="rtl"] .btn:hover .arr { transform: scaleX(-1) translate(2px, -2px); }
+  header .btn { justify-self: end; }
+
+  /* ---------- hero ---------- */
+  main.hero {
+    flex: 1;
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-content: start;
+    padding: clamp(36px, 7vh, 80px) clamp(18px, 2.6vw, 34px) 0;
+  }
+  .eyebrow { display: flex; align-items: center; gap: 10px; font-size: 10.5px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; margin-bottom: clamp(16px, 2.6vh, 26px); }
+  html[lang="fa"] .eyebrow { letter-spacing: 0; font-size: 12.5px; }
+  .eyebrow i { font-style: normal; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; border: 1px solid rgba(255,255,255,.5); font-size: 9px; letter-spacing: 0; }
+  h1 {
+    font-weight: 500;
+    font-size: clamp(50px, 7.6vw, 124px);
+    line-height: .92;
+    letter-spacing: -.055em;
+  }
+  html[lang="fa"] h1 { letter-spacing: -.01em; line-height: 1.12; font-weight: 600; font-size: clamp(44px, 6.6vw, 108px); }
+  h1 .ln { display: block; overflow: hidden; padding-bottom: .06em; }
+  h1 .ln > span { display: inline-block; }
+  h1 .serif { font-family: var(--serif); font-style: italic; font-weight: 400; letter-spacing: -.025em; color: #f1e3f6; }
+  html[lang="fa"] h1 .serif { font-style: normal; font-weight: 300; color: #ead2f2; letter-spacing: 0; }
+
+  .system { align-self: start; margin-top: clamp(20px, 6vh, 60px); text-align: end; }
+  .system h2 { font-size: 10px; font-weight: 500; letter-spacing: .2em; text-transform: uppercase; color: var(--ink-dim); margin-bottom: 10px; }
+  html[lang="fa"] .system h2 { letter-spacing: 0; font-size: 12px; }
+  .system ul { list-style: none; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+  .tab {
+    background: none; border: 0; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 12px;
+    padding: 6px 0; font-size: 12.5px; color: var(--ink-dim);
+    position: relative; transition: color .3s ease;
+  }
+  .tab small { font-size: 9.5px; opacity: .6; }
+  .tab::after { content: ""; position: absolute; inset-inline: 0; bottom: 1px; height: 1px; background: #fff; transform: scaleX(0); transform-origin: right; transition: transform .5s cubic-bezier(.2,.7,.2,1); }
+  html[dir="rtl"] .tab::after { transform-origin: left; }
+  .tab:hover { color: #fff; }
+  .tab[aria-selected="true"] { color: #fff; font-weight: 500; }
+  .tab[aria-selected="true"]::after { transform: scaleX(1); }
+
+  /* ---------- footer ---------- */
+  .foot {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: end;
+    gap: 24px;
+    padding: 24px clamp(18px, 2.6vw, 34px) clamp(18px, 2.6vw, 30px);
+  }
+  .lede { display: flex; align-items: end; gap: 18px; flex-wrap: wrap; }
+  .lede p { max-width: 300px; font-size: 12.5px; line-height: 1.5; color: var(--ink); padding-top: 12px; border-top: 1px solid rgba(255,255,255,.35); }
+  html[lang="fa"] .lede p { font-size: 13.5px; line-height: 1.8; }
+  .explore { display: inline-flex; align-items: center; gap: 12px; font-size: 11.5px; color: var(--ink-dim); padding-bottom: 14px; }
+  .explore .track { width: 46px; height: 1px; background: rgba(255,255,255,.25); position: relative; overflow: hidden; }
+  .explore .track::after { content: ""; position: absolute; inset-block: 0; inset-inline-start: 0; width: 40%; background: #fff; animation: slide 2.4s cubic-bezier(.6,0,.3,1) infinite; }
+  @keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(260%); } }
+  html[dir="rtl"] .explore .track::after { animation-name: slide-rtl; }
+  @keyframes slide-rtl { from { transform: translateX(100%); } to { transform: translateX(-260%); } }
+
+  .disc {
+    justify-self: end;
+    position: relative;
+    display: flex; align-items: center; gap: 14px;
+    width: min(380px, 100%);
+    padding: 8px 16px 8px 8px;
+    border-radius: 10px;
+    background: rgba(250, 247, 252, .92);
+    color: #1b1424;
+    border: 0; text-align: start; cursor: pointer;
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 24px 60px -20px rgba(20, 0, 40, .6);
+    transition: transform .4s cubic-bezier(.2,.7,.2,1), box-shadow .4s ease;
+  }
+  html[dir="rtl"] .disc { padding: 8px 8px 8px 16px; }
+  .disc:hover { transform: translateY(-4px); box-shadow: 0 30px 70px -20px rgba(120, 60, 200, .55); }
+  .thumb { position: relative; flex: none; width: 78px; height: 78px; border-radius: 6px; overflow: hidden; }
+  .thumb svg { width: 100%; height: 100%; display: block; filter: hue-rotate(var(--hue)); transition: filter 1.2s ease; }
+  .thumb .num { position: absolute; top: 6px; inset-inline-start: 6px; width: 20px; height: 20px; border-radius: 50%; background: rgba(255,255,255,.88); display: grid; place-items: center; font-size: 8.5px; font-weight: 600; color: #1b1424; }
+  .disc .k { font-size: 9px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: #8a7f96; }
+  html[lang="fa"] .disc .k { letter-spacing: 0; font-size: 11px; }
+  .disc .t { font-size: 15px; font-weight: 600; margin: 2px 0 4px; }
+  .disc .d { font-size: 12px; color: #4e4658; }
+  .disc .body { flex: 1; min-width: 0; }
+  .disc .body > * { transition: opacity .35s ease, transform .35s ease; }
+  .disc.swap .body > * { opacity: 0; transform: translateY(6px); }
+  .disc .corner { position: absolute; top: 10px; inset-inline-end: 12px; width: 10px; height: 10px; opacity: .45; }
+  html[dir="rtl"] .disc .corner { transform: scaleX(-1); }
+  .progress { position: absolute; inset-inline: 8px; bottom: 0; height: 2px; background: rgba(27,20,36,.08); border-radius: 2px; overflow: hidden; }
+  .progress i { display: block; height: 100%; width: 100%; background: #7a52c7; transform: scaleX(0); transform-origin: left; }
+  html[dir="rtl"] .progress i { transform-origin: right; }
+
+  /* ---------- dialog ---------- */
+  dialog {
+    margin: auto; border: 0; padding: 0; border-radius: 18px; width: min(440px, calc(100vw - 32px));
+    background: rgba(28, 18, 40, .82); color: var(--ink);
+    backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
+    box-shadow: 0 40px 120px -20px rgba(0,0,0,.7), 0 0 0 1px rgba(255,255,255,.12);
+  }
+  dialog::backdrop { background: rgba(10, 6, 16, .55); backdrop-filter: blur(4px); }
+  dialog[open] { animation: pop .45s cubic-bezier(.2,.8,.2,1); }
+  @keyframes pop { from { opacity: 0; transform: translateY(14px) scale(.97); } }
+  .dlg { padding: 26px; display: grid; gap: 16px; }
+  .dlg h3 { font-size: 22px; font-weight: 500; letter-spacing: -.02em; }
+  .dlg h3 em { font-family: var(--serif); font-weight: 400; }
+  .dlg label { display: grid; gap: 6px; font-size: 12px; color: var(--ink-dim); }
+  .dlg input { font: inherit; font-size: 14px; color: #fff; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.18); border-radius: 8px; padding: 11px 12px; }
+  .dlg input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(183,140,255,.25); }
+  .dlg input[aria-invalid="true"] { border-color: #ff8fa8; }
+  .err { color: #ffadc0; font-size: 11.5px; min-height: 1em; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.18); border-radius: 999px; padding: 7px 12px; font-size: 12px; cursor: pointer; color: var(--ink); transition: background .25s ease, color .25s ease; }
+  .chip[aria-pressed="true"] { background: #f7f4fa; color: #17121f; border-color: #f7f4fa; }
+  .row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .ghost { background: none; border: 0; color: var(--ink-dim); cursor: pointer; font-size: 12.5px; }
+  .ghost:hover { color: #fff; }
+  .done { text-align: center; padding: 18px 0 6px; display: grid; gap: 8px; }
+  .done p { color: var(--ink-dim); font-size: 13px; }
+
+  /* ---------- entrance ---------- */
+  .js .reveal { opacity: 0; transform: translateY(14px); }
+  .js h1 .ln > span { transform: translateY(105%); }
+  .js .scene svg { transform: scale(1.08); }
+  .ready .reveal { opacity: 1; transform: none; transition: opacity 1s ease, transform 1s cubic-bezier(.2,.7,.2,1); transition-delay: var(--d, 0s); }
+  .ready h1 .ln > span { transform: none; transition: transform 1.2s cubic-bezier(.16,.9,.2,1); transition-delay: var(--d, 0s); }
+  .ready .scene svg { transform: none; transition: transform 2.6s cubic-bezier(.2,.7,.2,1); }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 900px) {
+    header.top { grid-template-columns: 1fr auto; }
+    header .meta { display: none; }
+    main.hero { grid-template-columns: 1fr; }
+    .system { text-align: start; margin-top: 26px; }
+    .system ul { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 4px 18px; }
+    .foot { grid-template-columns: 1fr; gap: 18px; }
+    .explore { display: none; }
+    .disc { justify-self: stretch; width: 100%; }
+  }
+  @media (max-width: 480px) {
+    .frame { min-height: max(680px, calc(100vh - 20px)); --radius: 18px; }
+    .brand { font-size: 12px; }
+    header .btn { padding: 9px 12px; font-size: 12px; }
+    .lede { gap: 14px; }
+    .lede p { max-width: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .js .reveal, .js h1 .ln > span, .js .scene svg { opacity: 1 !important; transform: none !important; }
+    .layer { transform: none !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="frame" id="frame">
+    <div class="scene" aria-hidden="true">
+      <div class="scene-hue">
+        <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#3b2554"/>
+              <stop offset=".32" stop-color="#7a5384"/>
+              <stop offset=".55" stop-color="#b98aaa"/>
+              <stop offset=".72" stop-color="#8b5f99"/>
+              <stop offset="1" stop-color="#2a1638"/>
+            </linearGradient>
+            <radialGradient id="sun" cx=".52" cy=".52" r=".45">
+              <stop offset="0" stop-color="#f4c6d8" stop-opacity=".85"/>
+              <stop offset=".45" stop-color="#d49ac0" stop-opacity=".35"/>
+              <stop offset="1" stop-color="#d49ac0" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="cloud" cx=".5" cy=".5" r=".5">
+              <stop offset="0" stop-color="#f0c9de" stop-opacity=".55"/>
+              <stop offset="1" stop-color="#f0c9de" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="slab" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="#2b2340"/>
+              <stop offset=".4" stop-color="#1a1528"/>
+              <stop offset="1" stop-color="#120f1d"/>
+            </linearGradient>
+            <linearGradient id="edge" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#5a6aa8"/>
+              <stop offset=".5" stop-color="#8db4ff"/>
+              <stop offset="1" stop-color="#3b3a74"/>
+            </linearGradient>
+            <radialGradient id="core" cx=".5" cy=".55" r=".5">
+              <stop offset="0" stop-color="#ffd2ef" stop-opacity=".95"/>
+              <stop offset=".35" stop-color="#c06fe0" stop-opacity=".7"/>
+              <stop offset="1" stop-color="#5a2a8a" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#4b2b66"/>
+              <stop offset="1" stop-color="#1c0f28"/>
+            </linearGradient>
+            <radialGradient id="halo" cx=".5" cy=".5" r=".5">
+              <stop offset="0" stop-color="#c78bdc" stop-opacity=".5"/>
+              <stop offset="1" stop-color="#c78bdc" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="mist" cx=".5" cy=".5" r=".5">
+              <stop offset="0" stop-color="#a46ad8" stop-opacity=".55"/>
+              <stop offset="1" stop-color="#a46ad8" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="band" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#22122e" stop-opacity="0"/>
+              <stop offset=".35" stop-color="#22122e" stop-opacity=".9"/>
+              <stop offset="1" stop-color="#1a0d24"/>
+            </linearGradient>
+            <g id="acacia">
+              <path d="M0 0 C 4 -60, -6 -120, 2 -180 M2 -150 C 30 -190, 60 -210, 90 -225 M0 -140 C -30 -175, -70 -195, -100 -205" stroke="currentColor" stroke-width="7" fill="none" stroke-linecap="round"/>
+              <ellipse cx="95" cy="-232" rx="80" ry="18"/>
+              <ellipse cx="40" cy="-246" rx="70" ry="16"/>
+              <ellipse cx="-90" cy="-212" rx="70" ry="16"/>
+              <ellipse cx="-30" cy="-236" rx="60" ry="14"/>
+              <ellipse cx="10" cy="-196" rx="40" ry="10"/>
+            </g>
+          </defs>
+
+          <rect width="1600" height="900" fill="url(#sky)"/>
+          <g class="layer" data-depth="6">
+            <ellipse cx="830" cy="480" rx="760" ry="320" fill="url(#sun)"/>
+            <ellipse cx="420" cy="300" rx="320" ry="60" fill="url(#cloud)"/>
+            <ellipse cx="1180" cy="250" rx="360" ry="70" fill="url(#cloud)" opacity=".7"/>
+            <ellipse cx="860" cy="390" rx="420" ry="50" fill="url(#cloud)" opacity=".6"/>
+            <ellipse cx="1300" cy="420" rx="280" ry="40" fill="url(#cloud)" opacity=".5"/>
+          </g>
+          <!-- distant hills / tree line -->
+          <g class="layer" data-depth="10">
+            <path d="M0 620 C 160 590, 260 600, 380 580 S 640 600, 760 590 S 1040 570, 1180 590 S 1460 575, 1600 600 L1600 900 L0 900Z" fill="#6b3f84" opacity=".5"/>
+            <g fill="#4a2a63" color="#4a2a63" opacity=".7">
+              <use href="#acacia" transform="translate(1140 610) scale(.45)"/>
+              <use href="#acacia" transform="translate(1320 600) scale(.38)"/>
+              <use href="#acacia" transform="translate(260 612) scale(.4)"/>
+              <use href="#acacia" transform="translate(560 606) scale(.3)"/>
+            </g>
+          </g>
+          <!-- monolith -->
+          <g class="layer" data-depth="18">
+            <ellipse cx="800" cy="480" rx="230" ry="380" fill="url(#halo)" opacity=".6"/>
+            <path d="M752 132 L838 118 L846 640 L746 650 Z" fill="url(#slab)"/>
+            <path d="M838 118 L862 136 L868 628 L846 640 Z" fill="#0d0b16"/>
+            <path d="M838 118 L862 136 L864 300 L842 290 Z" fill="url(#edge)" opacity=".55"/>
+            <path d="M752 132 L838 118 L862 136 L776 148 Z" fill="#6c6aa6" opacity=".7"/>
+            <path d="M760 160 L770 156 L768 420 L758 430Z" fill="#8a96d8" opacity=".25"/>
+            <g>
+              <ellipse cx="800" cy="510" rx="48" ry="120" fill="url(#core)"/>
+              <path d="M780 470 L800 430 L812 480 L796 540 L818 560 L786 600" stroke="#ffd7f1" stroke-width="1.6" fill="none" opacity=".7"/>
+              <path d="M772 520 L790 498 L806 520 L790 560" stroke="#f3a9e4" stroke-width="1" fill="none" opacity=".6"/>
+            </g>
+            <!-- mound -->
+            <rect x="-40" y="660" width="1680" height="280" fill="url(#band)"/>
+            <path d="M300 790 C 430 730, 560 668, 660 650 C 700 640, 730 634, 770 636 C 800 628, 840 630, 880 640 C 960 656, 1040 690, 1120 728 C 1200 762, 1280 780, 1360 800 L1360 940 L300 940 Z" fill="url(#ground)"/>
+            <ellipse cx="640" cy="720" rx="260" ry="60" fill="url(#mist)" opacity=".7"/>
+            <ellipse cx="990" cy="740" rx="280" ry="56" fill="url(#mist)" opacity=".6"/>
+            <path d="M560 690 C 650 650, 740 636, 820 640 C 900 646, 990 676, 1080 716" stroke="#7a4f96" stroke-width="2" fill="none" opacity=".3"/>
+            <g stroke="#2a1838" stroke-width="2" opacity=".8">
+              <path d="M600 680 l-4 -18 M622 672 l3 -14 M640 666 l-4 -18 M660 658 l3 -20 M690 648 l-2 -16 M720 640 l4 -14 M744 636 l-3 -12 M856 636 l3 -14 M870 640 l-3 -16 M900 648 l2 -18 M930 658 l-4 -16 M960 668 l3 -14 M990 682 l-2 -18 M1020 696 l3 -14 M1050 708 l-3 -16"/>
+            </g>
+          </g>
+          <!-- foreground trees -->
+          <g class="layer" data-depth="30" fill="#24142f" color="#24142f">
+            <use href="#acacia" transform="translate(60 760) scale(1.5)" opacity=".75"/>
+            <use href="#acacia" transform="translate(1480 820) scale(1.5)"/>
+            <use href="#acacia" transform="translate(1600 700) scale(1.1)"/>
+            <path d="M0 0 L 0 900 L 40 900 C 60 600, 30 300, 90 0 Z" opacity=".85"/>
+            <path d="M1600 120 L1600 900 L1560 900 C 1540 600, 1580 300, 1520 120 Z" opacity=".6"/>
+          </g>
+        </svg>
+      </div>
+      <div class="fog"></div>
+      <div class="fog f2"></div>
+    </div>
+    <div class="tint" aria-hidden="true"></div>
+
+    <header class="top reveal" style="--d:.2s">
+      <a class="brand" href="#" aria-label="EIDOLON home">
+        <svg viewBox="0 0 26 18" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><ellipse cx="13" cy="9" rx="12" ry="7.5"/><ellipse cx="13" cy="9" rx="6" ry="7.5"/><path d="M1 9h24M13 1.5v15"/></svg>
+        <span>EIDOLON<sup>®</sup></span>
+      </a>
+      <div class="meta"><b data-i18n="studio">Independent studio</b><span data-i18n="studioSub">Identity · Digital · Motion</span></div>
+      <div class="meta"><b data-i18n="world">Worldwide</b><span class="clock" id="clock">09:48 · AST</span></div>
+      <button class="btn" type="button" data-open>
+        <span data-i18n="start">Start a project</span>
+        <svg class="arr" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M2 8L8 2M3 2h5v5"/></svg>
+      </button>
+    </header>
+
+    <main class="hero">
+      <div>
+        <p class="eyebrow reveal" style="--d:.35s"><i data-num="1">01</i><span data-i18n="eyebrow">Brand systems for the next chapter</span></p>
+        <h1>
+          <span class="ln"><span style="--d:.45s" data-i18n="h1a">Presence is</span></span>
+          <span class="ln"><span style="--d:.58s" data-i18n="h1b">not found.</span></span>
+          <span class="ln"><span class="serif" style="--d:.72s" data-i18n="h1c">It's designed.</span></span>
+        </h1>
+      </div>
+      <nav class="system reveal" style="--d:.9s" aria-labelledby="sysTitle">
+        <h2 id="sysTitle"><span data-i18n="system">System</span> / <span data-num="4">04</span></h2>
+        <ul role="tablist" aria-orientation="vertical" id="tabs"></ul>
+      </nav>
+    </main>
+
+    <footer class="foot">
+      <div class="lede reveal" style="--d:1s">
+        <p data-i18n="lede">We shape identities, digital products and motion worlds for ambitious brands moving into unfamiliar territory.</p>
+        <button class="btn" type="button" data-open>
+          <span data-i18n="discuss">Discuss the project</span>
+          <svg class="arr" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M2 8L8 2M3 2h5v5"/></svg>
+        </button>
+      </div>
+      <div class="explore reveal" style="--d:1.1s" aria-hidden="true"><span data-i18n="explore">Move to explore</span><span class="track"></span></div>
+      <button class="disc reveal" style="--d:1.2s" type="button" id="disc" aria-live="polite">
+        <span class="thumb" aria-hidden="true">
+          <svg viewBox="0 0 78 78">
+            <defs><linearGradient id="tsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a2c66"/><stop offset=".6" stop-color="#b384b4"/><stop offset="1" stop-color="#2b163a"/></linearGradient></defs>
+            <rect width="78" height="78" fill="url(#tsky)"/>
+            <ellipse cx="40" cy="48" rx="26" ry="18" fill="#f1c2e0" opacity=".35"/>
+            <path d="M35 12 L44 10 L45 62 L34 63Z" fill="#1c1629"/>
+            <path d="M44 10 L47 12 L47 61 L45 62Z" fill="#7c8fd8" opacity=".6"/>
+            <ellipse cx="40" cy="48" rx="4" ry="9" fill="#e6a6f0" opacity=".8"/>
+            <path d="M14 70 C 26 60, 52 58, 66 70 L66 78 L14 78Z" fill="#2b173a"/>
+          </svg>
+          <span class="num" id="discNum">01</span>
+        </span>
+        <span class="body">
+          <span class="k" style="display:block" data-i18n="selected">Selected discipline</span>
+          <span class="t" style="display:block" id="discTitle">Identity</span>
+          <span class="d" style="display:block" id="discDesc">Narrative, naming and visual systems</span>
+        </span>
+        <svg class="corner" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M2 8L8 2M3 2h5v5"/></svg>
+        <span class="progress" aria-hidden="true"><i id="prog"></i></span>
+      </button>
+    </footer>
+  </div>
+
+  <dialog id="dlg" aria-labelledby="dlgTitle">
+    <form class="dlg" id="form" method="dialog" novalidate>
+      <h3 id="dlgTitle"><span data-i18n="dlgA">Begin with a</span> <em data-i18n="dlgB">conversation.</em></h3>
+      <label><span data-i18n="name">Your name</span><input id="fName" name="name" autocomplete="name" required></label>
+      <label><span data-i18n="email">Email</span><input id="fEmail" name="email" type="email" autocomplete="email" required dir="ltr"></label>
+      <div>
+        <p style="font-size:12px;color:var(--ink-dim);margin-bottom:8px" data-i18n="need">What do you need?</p>
+        <div class="chips" id="chips"></div>
+      </div>
+      <p class="err" id="err" role="alert"></p>
+      <div class="row">
+        <button class="ghost" type="button" id="cancel" data-i18n="cancel">Cancel</button>
+        <button class="btn" type="submit"><span data-i18n="send">Send brief</span><svg class="arr" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M2 8L8 2M3 2h5v5"/></svg></button>
+      </div>
+    </form>
+    <div class="dlg done" id="done" hidden>
+      <h3><span data-i18n="thanksA">Received.</span> <em data-i18n="thanksB">We'll be in touch.</em></h3>
+      <p data-i18n="thanksP">Expect a reply from the studio within two working days.</p>
+      <div><button class="btn" type="button" id="close" data-i18n="close">Close</button></div>
+    </div>
+  </dialog>
+
+<script>
+(function () {
+  var lang = document.documentElement.lang === 'fa' ? 'fa' : 'en';
+  var I18N = {
+    en: {
+      studio: 'Independent studio', studioSub: 'Identity · Digital · Motion', world: 'Worldwide',
+      start: 'Start a project', eyebrow: 'Brand systems for the next chapter',
+      h1a: 'Presence is', h1b: 'not found.', h1c: "It's designed.",
+      system: 'System', lede: 'We shape identities, digital products and motion worlds for ambitious brands moving into unfamiliar territory.',
+      discuss: 'Discuss the project', explore: 'Move to explore', selected: 'Selected discipline',
+      dlgA: 'Begin with a', dlgB: 'conversation.', name: 'Your name', email: 'Email', need: 'What do you need?',
+      cancel: 'Cancel', send: 'Send brief', thanksA: 'Received.', thanksB: "We'll be in touch.",
+      thanksP: 'Expect a reply from the studio within two working days.', close: 'Close',
+      errName: 'Please tell us your name.', errEmail: 'Please enter a valid email address.', errChip: 'Pick at least one discipline.',
+      tz: 'AST'
+    },
+    fa: {
+      studio: 'استودیوی مستقل', studioSub: 'هویت · دیجیتال · موشن', world: 'در سراسر جهان',
+      start: 'شروع پروژه', eyebrow: 'سامانه‌های برند برای فصل بعد',
+      h1a: 'حضور پیدا', h1b: 'نمی‌شود.', h1c: 'طراحی می‌شود.',
+      system: 'سامانه', lede: 'ما برای برندهای بلندپروازی که پا به قلمروهای ناشناخته می‌گذارند، هویت، محصول دیجیتال و جهان‌های متحرک می‌سازیم.',
+      discuss: 'دربارهٔ پروژه حرف بزنیم', explore: 'برای کاوش حرکت کنید', selected: 'تخصص برگزیده',
+      dlgA: 'با یک', dlgB: 'گفت‌وگو شروع کنیم.', name: 'نام شما', email: 'ایمیل', need: 'به چه چیزی نیاز دارید؟',
+      cancel: 'انصراف', send: 'ارسال درخواست', thanksA: 'دریافت شد.', thanksB: 'به‌زودی با شما تماس می‌گیریم.',
+      thanksP: 'پاسخ استودیو حداکثر تا دو روز کاری به دستتان می‌رسد.', close: 'بستن',
+      errName: 'لطفاً نامتان را بنویسید.', errEmail: 'لطفاً یک ایمیل معتبر وارد کنید.', errChip: 'دست‌کم یک تخصص را انتخاب کنید.',
+      tz: ''
+    }
+  };
+  var DISC = {
+    en: [
+      ['Identity', 'Narrative, naming and visual systems'],
+      ['Digital', 'Products, platforms and interfaces'],
+      ['Motion', 'Film, kinetic type and launch moments'],
+      ['Direction', 'Art direction across every touchpoint']
+    ],
+    fa: [
+      ['هویت', 'روایت، نام‌گذاری و سامانه‌های بصری'],
+      ['دیجیتال', 'محصول، پلتفرم و رابط کاربری'],
+      ['موشن', 'فیلم، تایپوگرافی جنبشی و لحظه‌های رونمایی'],
+      ['کارگردانی', 'کارگردانی هنری در همهٔ نقاط تماس']
+    ]
+  };
+  var HUES = ['0deg', '-28deg', '32deg', '-60deg'];
+  var T = I18N[lang], D = DISC[lang];
+  var faDigits = function (s) { return lang === 'fa' ? String(s).replace(/\d/g, function (d) { return '۰۱۲۳۴۵۶۷۸۹'[d]; }) : String(s); };
+  var pad = function (n) { return faDigits(String(n).padStart(2, '0')); };
+
+  document.querySelectorAll('[data-i18n]').forEach(function (el) {
+    var k = el.getAttribute('data-i18n'); if (T[k] != null) el.textContent = T[k];
+  });
+  document.querySelectorAll('[data-num]').forEach(function (el) { el.textContent = pad(el.getAttribute('data-num')); });
+  document.title = lang === 'fa' ? 'EIDOLON — هیروی ستون سنگی' : 'EIDOLON — Monolith Hero';
+
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var root = document.documentElement;
+  if (!reduce) root.classList.add('js');
+
+  /* ---- tabs ---- */
+  var tabsEl = document.getElementById('tabs');
+  var disc = document.getElementById('disc');
+  var prog = document.getElementById('prog');
+  var first = true, active = 0, cycle = null, CYCLE_MS = 5200, progAnim = null;
+  var tabs = D.map(function (d, i) {
+    var li = document.createElement('li');
+    var b = document.createElement('button');
+    b.className = 'tab'; b.type = 'button'; b.setAttribute('role', 'tab');
+    b.id = 'tab' + i; b.setAttribute('aria-controls', 'disc');
+    b.innerHTML = '<small>' + pad(i + 1) + '</small><span></span>';
+    b.querySelector('span').textContent = d[0];
+    b.addEventListener('click', function () { select(i, true); });
+    b.addEventListener('keydown', function (e) {
+      var n = null;
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight') n = (i + 1) % D.length;
+      if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') n = (i + D.length - 1) % D.length;
+      if (n != null) { e.preventDefault(); select(n, true); tabs[n].focus(); }
+    });
+    li.setAttribute('role', 'presentation');
+    li.appendChild(b); tabsEl.appendChild(li);
+    return b;
+  });
+
+  function runProgress() {
+    if (reduce || !prog.animate) return;
+    if (progAnim) progAnim.cancel();
+    progAnim = prog.animate([{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: CYCLE_MS, easing: 'linear', fill: 'forwards' });
+  }
+  function select(i, user) {
+    active = i;
+    tabs.forEach(function (t, j) { t.setAttribute('aria-selected', j === i ? 'true' : 'false'); t.tabIndex = j === i ? 0 : -1; });
+    root.style.setProperty('--hue', HUES[i]);
+    var apply = function () {
+      document.getElementById('discNum').textContent = pad(i + 1);
+      document.getElementById('discTitle').textContent = D[i][0];
+      document.getElementById('discDesc').textContent = D[i][1];
+      disc.setAttribute('aria-label', T.selected + ': ' + D[i][0] + ' — ' + D[i][1]);
+      disc.classList.remove('swap');
+    };
+    if (reduce || first) { first = false; apply(); } else { disc.classList.add('swap'); setTimeout(apply, 280); }
+    if (user) restart(); else runProgress();
+  }
+  function restart() {
+    if (reduce) return;
+    clearInterval(cycle);
+    cycle = setInterval(function () { select((active + 1) % D.length); }, CYCLE_MS);
+    runProgress();
+  }
+  disc.addEventListener('click', function () { select((active + 1) % D.length, true); });
+  select(0, true);
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) { clearInterval(cycle); if (progAnim) progAnim.pause(); } else restart();
+  });
+
+  /* ---- clock ---- */
+  var clock = document.getElementById('clock');
+  function tick() {
+    var d = new Date();
+    var hm;
+    try { hm = d.toLocaleTimeString(lang === 'fa' ? 'fa' : 'en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }); }
+    catch (e) { hm = pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+    var tz = '';
+    try {
+      var parts = new Intl.DateTimeFormat('en-US', { timeZoneName: 'short' }).formatToParts(d);
+      parts.forEach(function (p) { if (p.type === 'timeZoneName') tz = p.value; });
+    } catch (e) {}
+    clock.textContent = lang === 'fa' ? hm + ' · ' + (tz ? 'به وقت محلی' : '') : hm + ' · ' + (tz || T.tz);
+  }
+  tick(); setInterval(tick, 15000);
+
+  /* ---- pointer parallax ---- */
+  var frame = document.getElementById('frame');
+  var layers = Array.prototype.slice.call(document.querySelectorAll('.layer'));
+  if (!reduce && window.matchMedia('(pointer: fine)').matches) {
+    var raf = 0, tx = 0, ty = 0;
+    frame.addEventListener('pointermove', function (e) {
+      var r = frame.getBoundingClientRect();
+      tx = (e.clientX - r.left) / r.width - .5;
+      ty = (e.clientY - r.top) / r.height - .5;
+      if (!raf) raf = requestAnimationFrame(function () {
+        raf = 0;
+        layers.forEach(function (l) {
+          var d = +l.getAttribute('data-depth') || 0;
+          l.style.transform = 'translate(' + (-tx * d * 1.6).toFixed(1) + 'px,' + (-ty * d).toFixed(1) + 'px)';
+        });
+      });
+    });
+    frame.addEventListener('pointerleave', function () { layers.forEach(function (l) { l.style.transform = ''; }); });
+  } else if (!reduce) {
+    // touch: gentle drift with device scroll / tap feedback
+    frame.addEventListener('touchmove', function (e) {
+      var t = e.touches[0]; if (!t) return;
+      var r = frame.getBoundingClientRect();
+      var x = (t.clientX - r.left) / r.width - .5;
+      layers.forEach(function (l) { var d = +l.getAttribute('data-depth') || 0; l.style.transform = 'translateX(' + (-x * d).toFixed(1) + 'px)'; });
+    }, { passive: true });
+  }
+
+  /* ---- dialog / form ---- */
+  var dlg = document.getElementById('dlg');
+  var form = document.getElementById('form');
+  var done = document.getElementById('done');
+  var err = document.getElementById('err');
+  var chips = document.getElementById('chips');
+  D.forEach(function (d) {
+    var c = document.createElement('button');
+    c.type = 'button'; c.className = 'chip'; c.textContent = d[0]; c.setAttribute('aria-pressed', 'false');
+    c.addEventListener('click', function () { c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'); });
+    chips.appendChild(c);
+  });
+  function openDlg() {
+    form.hidden = false; done.hidden = true; err.textContent = '';
+    chips.querySelectorAll('.chip').forEach(function (c, j) { c.setAttribute('aria-pressed', j === active ? 'true' : 'false'); });
+    if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
+  }
+  function closeDlg() { if (dlg.close) dlg.close(); else dlg.removeAttribute('open'); }
+  document.querySelectorAll('[data-open]').forEach(function (b) { b.addEventListener('click', openDlg); });
+  document.getElementById('cancel').addEventListener('click', closeDlg);
+  document.getElementById('close').addEventListener('click', closeDlg);
+  dlg.addEventListener('click', function (e) { if (e.target === dlg) closeDlg(); });
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var n = document.getElementById('fName'), m = document.getElementById('fEmail');
+    n.removeAttribute('aria-invalid'); m.removeAttribute('aria-invalid');
+    if (!n.value.trim()) { n.setAttribute('aria-invalid', 'true'); err.textContent = T.errName; n.focus(); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(m.value.trim())) { m.setAttribute('aria-invalid', 'true'); err.textContent = T.errEmail; m.focus(); return; }
+    if (!chips.querySelector('[aria-pressed="true"]')) { err.textContent = T.errChip; return; }
+    form.hidden = true; done.hidden = false; form.reset();
+    document.getElementById('close').focus();
+  });
+
+  /* ---- entrance ---- */
+  if (!reduce) requestAnimationFrame(function () { requestAnimationFrame(function () { root.classList.add('ready'); }); });
+})();
+</script>
+</body>
+</html>

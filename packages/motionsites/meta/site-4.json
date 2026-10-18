@@ -1,0 +1,20 @@
+{
+  "title": { "en": "Datacore video hero", "fa": "هیروی ویدیویی دیتاکور" },
+  "oneLiner": {
+    "en": "Linear-style dark SaaS hero for Datacore over a full-screen HLS video with a 60% black overlay, glass badge, serif-italic accent and a working services dropdown plus full-screen mobile menu.",
+    "fa": "هیروی تیره و مینیمال به سبک Linear برای دیتاکور روی ویدیوی تمام‌صفحهٔ HLS با پوشش سیاه ۶۰٪، نشان شیشه‌ای، واژهٔ تأکیدی سریف و منوی کشویی خدمات و منوی تمام‌صفحهٔ موبایل."
+  },
+  "js": true,
+  "props": [
+    { "name": "--primary", "type": "color", "default": "#7b39fc",
+      "note": { "en": "Purple of the primary buttons (hover uses --primary-hover).", "fa": "رنگ بنفش دکمه‌های اصلی (حالت هاور از ‎--primary-hover‎ می‌آید)." } },
+    { "name": "--accent", "type": "color", "default": "#f87b52",
+      "note": { "en": "Orange of the “New” tag in the badge.", "fa": "رنگ نارنجی برچسب «تازه» در نشان." } },
+    { "name": "--glass-bg", "type": "color", "default": "rgba(85,80,110,0.4)",
+      "note": { "en": "Fill of the glass Sign In button and badge.", "fa": "پس‌زمینهٔ دکمهٔ شیشه‌ای ورود و نشان." } },
+    { "name": "--overlay", "type": "color", "default": "rgba(0,0,0,0.6)",
+      "note": { "en": "Darkening layer over the background video.", "fa": "لایهٔ تیره‌کنندهٔ روی ویدیوی پس‌زمینه." } },
+    { "name": "VIDEO_SRC", "type": "string", "default": "https://stream.mux.com/4IMYGcL01xjs7ek5ANO17JC4VQVUTsojZlnw4fXzwSxc.m3u8",
+      "note": { "en": "HLS stream played behind the hero.", "fa": "جریان HLS که پشت هیرو پخش می‌شود." } }
+  ]
+}

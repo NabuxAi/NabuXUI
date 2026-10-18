@@ -1,0 +1,20 @@
+{
+  "title": { "en": "visualjoy glassmorphism agency hero", "fa": "هیروی شیشه‌ای آژانس ویژوال‌جوی" },
+  "oneLiner": {
+    "en": "Dark agency landing hero with a purple-pink gradient headline, glowing Zap pill and glass-wrapped CTA, over a screen-blended HLS ribbon video and an infinitely scrolling logo cloud.",
+    "fa": "هیروی تیرهٔ یک آژانس طراحی با تیتر گرادیانی بنفش‌وصورتی، نشان درخشان صاعقه و دکمهٔ شیشه‌ای، روی ویدیوی HLS روبانی با ترکیب screen و نوار لوگوهای بی‌پایان."
+  },
+  "js": true,
+  "props": [
+    { "name": "--g2", "type": "color", "default": "#C967E8",
+      "note": { "en": "Middle stop of the primary gradient (with --g1 #FA93FA and --g3 #983AD6).", "fa": "رنگ میانی گرادیان اصلی (همراه ‎--g1‎ و ‎--g3‎)." } },
+    { "name": "--bg", "type": "color", "default": "#010101",
+      "note": { "en": "Page background, also used by the video fade.", "fa": "پس‌زمینهٔ صفحه که در محوشدگی ویدیو هم به کار می‌رود." } },
+    { "name": "--video-overlap", "type": "length", "default": "150px",
+      "note": { "en": "How far the video slides up behind the hero text.", "fa": "میزان بالا آمدن ویدیو زیر متن هیرو." } },
+    { "name": "--slider-speed", "type": "time", "default": "40s",
+      "note": { "en": "Duration of one full loop of the logo slider.", "fa": "مدت یک دور کامل نوار لوگوها." } },
+    { "name": "VIDEO_SRC", "type": "string", "default": "https://customer-cbeadsgr09pnsezs.cloudflarestream.com/697945ca6b876878dba3b23fbd2f1561/manifest/video.m3u8",
+      "note": { "en": "HLS stream of the liquid ribbon video.", "fa": "جریان HLS ویدیوی روبان مایع." } }
+  ]
+}

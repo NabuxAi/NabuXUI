@@ -1,3 +1,0 @@
-
-<div <?php echo e($attributes->class('nx-route-progress')); ?> x-data="nxRouteProgress()" x-bind:data-state="state" data-state="idle" aria-hidden="true" data-navigate-persist></div>
-<?php /**PATH /Users/mrchatgpt/Sites/NabuXUI/packages/livewire/src/../resources/views/components/route-progress.blade.php ENDPATH**/ ?>

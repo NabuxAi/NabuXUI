@@ -1,0 +1,605 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VIRALMEDIA — AI Web Design Agency</title>
+<script>
+  (function () {
+    var p = new URLSearchParams(location.search);
+    var l = p.get('lang') === 'fa' ? 'fa' : 'en';
+    document.documentElement.lang = l;
+    document.documentElement.dir = l === 'fa' ? 'rtl' : 'ltr';
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --background: hsl(0 0% 0%);
+    --foreground: hsl(0 0% 100%);
+    --card: hsl(0 0% 9%);
+    --muted-foreground: hsl(0 0% 75%);
+    --border: hsl(0 0% 20%);
+    --radius: 2px;
+    --font-body: 'Barlow', sans-serif;
+    --font-accent: 'Instrument Serif', serif;
+    --reveal-from: 0.15;
+  }
+  html[lang="fa"] {
+    --font-body: 'Vazirmatn', 'Barlow', sans-serif;
+    --font-accent: 'Vazirmatn', 'Instrument Serif', serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--background); color: var(--foreground);
+    font-family: var(--font-body); overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  :focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+  .accent { font-family: var(--font-accent); font-style: italic; font-weight: 400; }
+  html[lang="fa"] .accent { font-style: normal; font-weight: 300; color: #fff; }
+  .ltr { direction: ltr; unicode-bidi: isolate; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* ---------- Liquid glass ---------- */
+  .liquid-glass, .liquid-glass-strong {
+    position: relative; isolation: isolate;
+    background: rgba(255,255,255,0.01);
+    background-blend-mode: luminosity;
+    border: none;
+  }
+  .liquid-glass { -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); box-shadow: inset 0 1px 1px rgba(255,255,255,0.1); }
+  .liquid-glass-strong {
+    -webkit-backdrop-filter: blur(50px); backdrop-filter: blur(50px);
+    box-shadow: 4px 4px 4px rgba(0,0,0,0.05), inset 0 1px 1px rgba(255,255,255,0.15);
+  }
+  .liquid-glass::before, .liquid-glass-strong::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.4px; pointer-events: none;
+    background: linear-gradient(180deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.15) 20%, transparent 40%, transparent 60%, rgba(255,255,255,0.15) 80%, rgba(255,255,255,0.45) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+  }
+  .liquid-glass-strong::before {
+    background: linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.2) 20%, transparent 40%, transparent 60%, rgba(255,255,255,0.2) 80%, rgba(255,255,255,0.5) 100%);
+  }
+
+  /* ---------- Navbar ---------- */
+  .nav {
+    position: fixed; top: 0; inset-inline: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 24px 32px; transition: background .3s, padding .3s;
+  }
+  .nav.scrolled { background: rgba(0,0,0,.35); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); padding-block: 16px; }
+  .logo { font-family: 'Barlow', sans-serif; font-size: 20px; font-weight: 600; letter-spacing: -0.025em; }
+  .nav-links { display: flex; gap: 4px; list-style: none; margin: 0; padding: 0; }
+  .nav-links a { display: block; padding: 8px 16px; font-size: 14px; font-weight: 500; border-radius: var(--radius); transition: background .2s; }
+  .nav-links a:hover { background: rgba(255,255,255,.1); }
+  .nav-right { display: flex; align-items: center; gap: 10px; }
+  .btn-glass { border-radius: 999px; padding: 10px 24px; font-size: 14px; font-weight: 500; display: inline-block; transition: transform .2s; }
+  .btn-glass:hover { transform: scale(1.03); }
+  .menu-btn { display: none; width: 42px; height: 42px; border-radius: 999px; align-items: center; justify-content: center; }
+  .menu-btn svg { width: 18px; height: 18px; }
+  .mobile-menu {
+    position: fixed; top: 76px; inset-inline: 16px; z-index: 49; border-radius: 20px;
+    padding: 12px; display: grid; gap: 2px;
+    background: rgba(10,10,10,.7);
+    opacity: 0; transform: translateY(-8px); pointer-events: none; visibility: hidden;
+    transition: opacity .25s, transform .25s, visibility .25s;
+  }
+  .mobile-menu.open { opacity: 1; transform: none; pointer-events: auto; visibility: visible; }
+  .mobile-menu a { padding: 12px 14px; border-radius: 12px; font-size: 16px; font-weight: 500; }
+  .mobile-menu a:hover { background: rgba(255,255,255,.08); }
+
+  /* ---------- Hero ---------- */
+  .hero { position: relative; width: 100%; height: 100vh; height: 100svh; min-height: 600px; overflow: hidden; }
+  .hero-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background:
+      radial-gradient(120% 60% at 60% 95%, rgba(196,58,140,.55), transparent 60%),
+      radial-gradient(80% 40% at 20% 100%, rgba(120,60,170,.4), transparent 70%),
+      #000;
+  }
+  .hero video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: bottom; z-index: 0; transform: translateY(-100px); }
+  .hero-fade { position: absolute; inset-inline: 0; bottom: 0; height: 240px; background: linear-gradient(to top, var(--background), transparent); z-index: 1; }
+  .hero-content {
+    position: relative; z-index: 10; height: 100%;
+    display: flex; flex-direction: column; justify-content: flex-end; align-items: center; text-align: center;
+    padding: 0 20px 40px;
+  }
+  .proof { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .avatars { display: flex; flex-shrink: 0; }
+  .avatars img { width: 32px; height: 32px; border-radius: 999px; border: 2px solid var(--background); object-fit: cover; background: #333; }
+  .avatars img + img { margin-inline-start: -8px; }
+  .proof span { white-space: nowrap; }
+  .proof span { font-size: 14px; color: var(--muted-foreground); }
+  .hero h1 { margin: 0 0 16px; font-weight: 500; font-size: 30px; letter-spacing: -1px; line-height: 1.1; }
+  html[lang="fa"] .hero h1 { letter-spacing: 0; line-height: 1.35; font-weight: 700; }
+  html[lang="fa"] .hero h1 .accent { font-weight: 300; }
+  .hero p.sub { margin: 0 0 28px; font-size: 14px; color: var(--muted-foreground); max-width: 34ch; }
+  .sub-form { display: flex; align-items: center; gap: 8px; width: 100%; max-width: 512px; border-radius: 999px; padding: 6px; }
+  .sub-form input {
+    flex: 1; min-width: 0; background: transparent; border: 0; outline: none; color: var(--foreground);
+    font: inherit; font-size: 15px; padding: 10px 16px;
+  }
+  .sub-form input::placeholder { color: rgba(255,255,255,.55); }
+  .btn-solid {
+    background: var(--foreground); color: var(--background); border: 0; border-radius: 999px;
+    font-weight: 600; font-size: 13px; letter-spacing: .04em; padding: 12px 22px;
+    transition: transform .2s cubic-bezier(.2,.7,.3,1.2);
+  }
+  html[lang="fa"] .btn-solid { letter-spacing: 0; font-size: 14px; }
+  .btn-solid:hover { transform: scale(1.03); }
+  .btn-solid:active { transform: scale(.98); }
+  .form-msg { min-height: 20px; margin-top: 10px; font-size: 13px; color: var(--muted-foreground); }
+  .form-msg.err { color: #ff8fa3; }
+  .form-msg.ok { color: #b9f6ca; }
+
+  /* entrance */
+  .enter { opacity: 0; transform: translateY(24px); animation: up .9s cubic-bezier(.2,.7,.2,1) forwards; }
+  @keyframes up { to { opacity: 1; transform: none; } }
+
+  /* ---------- About ---------- */
+  .about { background: var(--background); padding: 128px 32px; }
+  .about p {
+    max-width: 896px; margin: 0 auto; text-align: center;
+    font-size: 30px; font-weight: 500; letter-spacing: -1px; line-height: 1.625;
+  }
+  html[lang="fa"] .about p { letter-spacing: 0; line-height: 1.9; }
+  .about .w { opacity: var(--reveal-from); transition: opacity .15s linear; }
+
+  /* ---------- Work ---------- */
+  .work { background: var(--background); padding: 128px 32px 64px; position: relative; z-index: 2; }
+  .wrap { max-width: 1152px; margin: 0 auto; }
+  .h2 { font-size: 36px; font-weight: 500; letter-spacing: -2px; text-align: center; margin: 0 0 16px; }
+  html[lang="fa"] .h2 { letter-spacing: 0; }
+  .lede { color: var(--muted-foreground); font-size: 18px; text-align: center; max-width: 672px; margin: 0 auto 64px; line-height: 1.5; }
+  .grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
+  .card { display: block; opacity: 0; transform: translateY(40px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1); }
+  .card.in { opacity: 1; transform: none; }
+  .card .media { aspect-ratio: 4 / 3; border-radius: 16px; overflow: hidden; background: var(--card); }
+  .card img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .7s cubic-bezier(.2,.7,.2,1); }
+  .card:hover img { transform: scale(1.04); }
+  .card h3 { margin: 16px 0 0; font-size: 20px; font-weight: 500; }
+  .card .cat { font-size: 14px; color: var(--muted-foreground); margin-top: 4px; }
+
+  /* ---------- Showcase ---------- */
+  .showcase { position: relative; height: 650px; overflow: hidden; margin-top: -325px; z-index: 0; background: #050505; }
+  .showcase video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; will-change: transform; }
+  .fade-top, .fade-bot { position: absolute; inset-inline: 0; height: 128px; z-index: 10; pointer-events: none; }
+  .fade-top { top: 0; background: linear-gradient(to bottom, var(--background), transparent); }
+  .fade-bot { bottom: 0; background: linear-gradient(to top, var(--background), transparent); }
+
+  /* ---------- CTA ---------- */
+  .cta { position: relative; z-index: 10; width: 100%; height: 100vh; height: 100svh; min-height: 560px; overflow: hidden; display: flex; align-items: center; justify-content: center; background: radial-gradient(70% 60% at 50% 60%, #2a1240, #000 70%); }
+  .cta video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .cta .dim { position: absolute; inset: 0; background: rgba(0,0,0,.3); z-index: 1; }
+  .cta .fade-top, .cta .fade-bot { height: 160px; z-index: 2; }
+  .cta-inner { position: relative; z-index: 10; text-align: center; max-width: 768px; padding: 0 24px; }
+  .cta h2 { font-size: 36px; font-weight: 500; letter-spacing: -2px; margin: 0 0 24px; line-height: 1.1; }
+  html[lang="fa"] .cta h2 { letter-spacing: 0; line-height: 1.4; }
+  .cta p { font-size: 18px; color: var(--muted-foreground); margin: 0 0 40px; }
+  .cta-btns { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }
+  .cta-btns .btn-solid, .cta-btns .btn-glass { padding: 16px 40px; font-size: 14px; font-weight: 600; letter-spacing: .04em; }
+  html[lang="fa"] .cta-btns .btn-glass { letter-spacing: 0; }
+  .rv { opacity: 0; transform: translateY(30px); transition: opacity .8s ease, transform .8s cubic-bezier(.2,.7,.2,1); }
+  .rv.in { opacity: 1; transform: none; }
+
+  /* ---------- Footer ---------- */
+  footer { background: var(--background); border-top: 1px solid var(--border); padding: 64px 32px; }
+  .fgrid { display: grid; grid-template-columns: 1fr; gap: 40px; }
+  .fgrid h4 { margin: 0 0 16px; font-size: 14px; font-weight: 600; }
+  .fgrid ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .flink { color: var(--muted-foreground); font-size: 14px; transition: color .2s; }
+  .flink:hover { color: var(--foreground); }
+  .fdesc { color: var(--muted-foreground); font-size: 14px; line-height: 1.6; margin: 12px 0 0; max-width: 30ch; }
+  .fbottom { margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: 16px; justify-content: space-between; align-items: center; }
+  .fbottom small { color: var(--muted-foreground); font-size: 14px; }
+  .fbottom nav { display: flex; gap: 24px; }
+
+  .toast {
+    position: fixed; bottom: 24px; inset-inline-start: 50%; transform: translate(-50%, 20px); z-index: 60;
+    padding: 12px 20px; border-radius: 999px; font-size: 14px; opacity: 0; pointer-events: none;
+    background: rgba(20,20,20,.6); transition: opacity .3s, transform .3s;
+  }
+  html[dir="rtl"] .toast { transform: translate(50%, 20px); }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  html[dir="rtl"] .toast.show { transform: translate(50%, 0); }
+
+  @media (min-width: 640px) {
+    .hero h1 { font-size: 48px; }
+  }
+  @media (min-width: 768px) {
+    .hero video { transform: none; }
+    .hero-content { padding-bottom: 80px; }
+    .hero h1 { font-size: 60px; letter-spacing: -2px; }
+    .hero p.sub { font-size: 18px; white-space: nowrap; max-width: none; }
+    .sub-form { padding: 8px; }
+    .about p { font-size: 36px; }
+    .h2 { font-size: 48px; }
+    .grid { grid-template-columns: 1fr 1fr; }
+    .cta h2 { font-size: 48px; }
+    .fgrid { grid-template-columns: 1.4fr 1fr 1fr 1fr; }
+  }
+  @media (min-width: 1024px) {
+    .hero h1 { font-size: 72px; }
+    html[lang="fa"] .hero h1 { font-size: 58px; }
+    .about p { font-size: 48px; }
+    .cta h2 { font-size: 60px; }
+  }
+  @media (max-width: 860px) {
+    .nav-links { display: none; }
+    .menu-btn { display: inline-flex; }
+  }
+  @media (max-width: 767px) {
+    .hero-bg { background: #000; }
+    .hero video { height: calc(100% + 100px); }
+    .nav { padding: 18px 16px; }
+    .about { padding: 96px 20px; }
+    .work { padding: 96px 16px 48px; }
+    footer { padding: 56px 20px; }
+    .nav-right .btn-glass { padding: 9px 16px; font-size: 13px; }
+    .lede { font-size: 16px; margin-bottom: 40px; }
+  }
+  @media (max-width: 420px) {
+    .sub-form .btn-solid { padding: 12px 16px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .enter, .card, .rv { animation: none !important; opacity: 1 !important; transform: none !important; transition: none !important; }
+    .about .w { opacity: 1 !important; transition: none; }
+    .card img, .btn-solid, .btn-glass { transition: none; }
+  }
+</style>
+</head>
+<body>
+<header class="nav" id="nav">
+  <a href="#top" class="logo" aria-label="VIRALMEDIA home">VIRALMEDIA</a>
+  <nav aria-label="Primary">
+    <ul class="nav-links">
+      <li><a href="#work" data-i18n="nWork">Work</a></li>
+      <li><a href="#services" data-i18n="nServices">Services</a></li>
+      <li><a href="#about" data-i18n="nAbout">About</a></li>
+      <li><a href="#blog" data-i18n="nBlog">Blog</a></li>
+      <li><a href="#contact" data-i18n="nContact">Contact</a></li>
+    </ul>
+  </nav>
+  <div class="nav-right">
+    <a href="#contact" class="btn-glass liquid-glass-strong" data-i18n="getStarted">Get Started</a>
+    <button class="menu-btn liquid-glass-strong" id="menuBtn" aria-expanded="false" aria-controls="mobileMenu" aria-label="Menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path id="menuIcon" d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
+  </div>
+</header>
+<nav class="mobile-menu liquid-glass-strong" id="mobileMenu" aria-label="Mobile">
+  <a href="#work" data-i18n="nWork">Work</a>
+  <a href="#services" data-i18n="nServices">Services</a>
+  <a href="#about" data-i18n="nAbout">About</a>
+  <a href="#blog" data-i18n="nBlog">Blog</a>
+  <a href="#contact" data-i18n="nContact">Contact</a>
+</nav>
+
+<main id="top">
+  <section class="hero" aria-labelledby="heroTitle">
+    <div class="hero-bg" aria-hidden="true"></div>
+    <video id="heroVideo" muted playsinline autoplay loop preload="auto" aria-hidden="true"
+      src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260326_073936_8dd07fdb-4f6b-4220-a3f0-9dedfaab0c88.mp4"></video>
+    <div class="hero-fade" aria-hidden="true"></div>
+    <div class="hero-content">
+      <div class="proof enter" style="animation-delay:.1s">
+        <div class="avatars" aria-hidden="true">
+          <img src="https://i.pravatar.cc/64?img=12" alt="">
+          <img src="https://i.pravatar.cc/64?img=32" alt="">
+          <img src="https://i.pravatar.cc/64?img=47" alt="">
+        </div>
+        <span data-i18n="proof">7,000+ brands already transformed</span>
+      </div>
+      <h1 id="heroTitle" class="enter" style="animation-delay:.2s"><span data-i18n="h1a">Build Stunning with </span><span class="accent" data-i18n="h1b">AI Magic</span></h1>
+      <p class="sub enter" style="animation-delay:.3s" data-i18n="sub">AI-powered websites crafted for beauty, speed, and lasting performance.</p>
+      <form class="sub-form liquid-glass enter" style="animation-delay:.4s" id="subForm" novalidate>
+        <label for="email" class="sr-only" data-i18n="emailLabel">Email address</label>
+        <input id="email" type="email" autocomplete="email" required placeholder="Enter your email" data-i18n-ph="emailPh">
+        <button type="submit" class="btn-solid" data-i18n="subscribe">SUBSCRIBE</button>
+      </form>
+      <div class="form-msg" id="formMsg" role="status" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section class="about" id="about" aria-label="About">
+    <p id="reveal" data-i18n="aboutText">We blend artificial intelligence with human creativity to craft digital experiences that captivate, convert, and scale — building ambitious brands that truly thrive and lead in the modern web.</p>
+  </section>
+
+  <section class="work" id="work" aria-labelledby="workTitle">
+    <div class="wrap">
+      <h2 class="h2" id="workTitle"><span data-i18n="workA">Selected </span><span class="accent" data-i18n="workB">Work</span></h2>
+      <p class="lede" data-i18n="workSub">A curated collection of projects where bold design meets intelligent technology.</p>
+      <div class="grid" id="grid"></div>
+    </div>
+  </section>
+
+  <section class="showcase" id="services" aria-label="Showreel">
+    <div class="fade-top" aria-hidden="true"></div>
+    <video id="showVideo" muted playsinline autoplay loop preload="metadata" aria-hidden="true"
+      src="https://media.cleanshot.cloud/media/21620/nKosRonaEKSufJVJ4VtouFhOPkqgJ3dPoQ8ZP52S.mp4"></video>
+    <div class="fade-bot" aria-hidden="true"></div>
+  </section>
+
+  <section class="cta" id="contact" aria-labelledby="ctaTitle">
+    <video id="ctaVideo" muted playsinline autoplay loop aria-hidden="true"></video>
+    <div class="dim" aria-hidden="true"></div>
+    <div class="fade-top" aria-hidden="true"></div>
+    <div class="fade-bot" aria-hidden="true"></div>
+    <div class="cta-inner">
+      <h2 id="ctaTitle" class="rv"><span data-i18n="ctaA">Ready to </span><span class="accent" data-i18n="ctaB">Transform</span><span data-i18n="ctaC"> Your Brand?</span></h2>
+      <p class="rv" style="transition-delay:.1s" data-i18n="ctaSub">Let's build something extraordinary together.</p>
+      <div class="cta-btns rv" style="transition-delay:.2s">
+        <button class="btn-solid" data-toast="toastProject" data-i18n="startProject">START A PROJECT</button>
+        <button class="btn-glass liquid-glass-strong" data-toast="toastCall" data-i18n="bookCall">BOOK A CALL</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer id="blog">
+  <div class="wrap">
+    <div class="fgrid">
+      <div>
+        <div class="logo">VIRALMEDIA</div>
+        <p class="fdesc" data-i18n="fdesc">AI-powered web design agency crafting digital experiences that convert.</p>
+      </div>
+      <div>
+        <h4 data-i18n="fServices">Services</h4>
+        <ul>
+          <li><a class="flink" href="#services" data-i18n="s1">Brand Design</a></li>
+          <li><a class="flink" href="#services" data-i18n="s2">AI Web Design</a></li>
+          <li><a class="flink" href="#services" data-i18n="s3">AI Web Development</a></li>
+          <li><a class="flink" href="#services" data-i18n="s4">Optimization</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 data-i18n="fCompany">Company</h4>
+        <ul>
+          <li><a class="flink" href="#about" data-i18n="nAbout">About</a></li>
+          <li><a class="flink" href="#work" data-i18n="nWork">Work</a></li>
+          <li><a class="flink" href="#blog" data-i18n="nBlog">Blog</a></li>
+          <li><a class="flink" href="#contact" data-i18n="careers">Careers</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 data-i18n="fConnect">Connect</h4>
+        <ul>
+          <li><a class="flink" href="#top">Twitter</a></li>
+          <li><a class="flink" href="#top">LinkedIn</a></li>
+          <li><a class="flink" href="#top">Instagram</a></li>
+          <li><a class="flink" href="#top">Dribbble</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="fbottom">
+      <small data-i18n="copy">© 2026 VIRALMEDIA. All rights reserved.</small>
+      <nav aria-label="Legal">
+        <a class="flink" href="#top" data-i18n="privacy">Privacy</a>
+        <a class="flink" href="#top" data-i18n="terms">Terms</a>
+      </nav>
+    </div>
+  </div>
+</footer>
+<div class="toast liquid-glass-strong" id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js"></script>
+<script>
+(function () {
+  var lang = document.documentElement.lang === 'fa' ? 'fa' : 'en';
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var I18N = {
+    en: {
+      nWork: 'Work', nServices: 'Services', nAbout: 'About', nBlog: 'Blog', nContact: 'Contact',
+      getStarted: 'Get Started', proof: '7,000+ brands already transformed',
+      h1a: 'Build Stunning with ', h1b: 'AI Magic',
+      sub: 'AI-powered websites crafted for beauty, speed, and lasting performance.',
+      emailLabel: 'Email address', emailPh: 'Enter your email', subscribe: 'SUBSCRIBE',
+      errEmpty: 'Please enter your email.', errBad: 'That email doesn’t look right.', ok: 'You’re in — watch your inbox for the magic.',
+      aboutText: 'We blend artificial intelligence with human creativity to craft digital experiences that captivate, convert, and scale — building ambitious brands that truly thrive and lead in the modern web.',
+      workA: 'Selected ', workB: 'Work', workSub: 'A curated collection of projects where bold design meets intelligent technology.',
+      ctaA: 'Ready to ', ctaB: 'Transform', ctaC: ' Your Brand?', ctaSub: 'Let’s build something extraordinary together.',
+      startProject: 'START A PROJECT', bookCall: 'BOOK A CALL',
+      toastProject: 'Project brief opened — we reply within 24 hours.', toastCall: 'Calendar opened — pick a slot that suits you.',
+      fdesc: 'AI-powered web design agency crafting digital experiences that convert.',
+      fServices: 'Services', s1: 'Brand Design', s2: 'AI Web Design', s3: 'AI Web Development', s4: 'Optimization',
+      fCompany: 'Company', careers: 'Careers', fConnect: 'Connect',
+      copy: '© 2026 VIRALMEDIA. All rights reserved.', privacy: 'Privacy', terms: 'Terms',
+      projects: [
+        ['Nova Finance', 'Brand & Web Design'], ['Pulse Health', 'AI Web Development'],
+        ['Drift Studios', 'Website Optimization'], ['Arc Commerce', 'Brand & Development']
+      ]
+    },
+    fa: {
+      nWork: 'نمونه‌کارها', nServices: 'خدمات', nAbout: 'دربارهٔ ما', nBlog: 'وبلاگ', nContact: 'تماس',
+      getStarted: 'شروع کنید', proof: 'بیش از ۷٬۰۰۰ برند متحول شده‌اند',
+      h1a: 'سایتی خیره‌کننده بسازید با ', h1b: 'جادوی هوش مصنوعی',
+      sub: 'وب‌سایت‌هایی با هوش مصنوعی؛ زیبا، سریع و ماندگار در عملکرد.',
+      emailLabel: 'نشانی ایمیل', emailPh: 'ایمیل خود را وارد کنید', subscribe: 'عضویت',
+      errEmpty: 'لطفاً ایمیل خود را وارد کنید.', errBad: 'این ایمیل درست به نظر نمی‌رسد.', ok: 'عضو شدید — جادو به‌زودی به صندوق‌تان می‌رسد.',
+      aboutText: 'ما هوش مصنوعی را با خلاقیت انسانی درمی‌آمیزیم تا تجربه‌هایی دیجیتال بسازیم که مجذوب می‌کنند، مشتری می‌آورند و رشد می‌کنند — و برندهای جاه‌طلب را به جایی می‌رسانیم که در وب امروز بدرخشند و پیشتاز باشند.',
+      workA: 'کارهای ', workB: 'برگزیده', workSub: 'مجموعه‌ای دست‌چین از پروژه‌هایی که در آن‌ها طراحی جسورانه به فناوری هوشمند می‌رسد.',
+      ctaA: 'آماده‌اید برندتان را ', ctaB: 'دگرگون', ctaC: ' کنید؟', ctaSub: 'بیایید با هم چیزی فوق‌العاده بسازیم.',
+      startProject: 'شروع پروژه', bookCall: 'رزرو تماس',
+      toastProject: 'فرم پروژه باز شد — ظرف ۲۴ ساعت پاسخ می‌دهیم.', toastCall: 'تقویم باز شد — زمانی را که برایتان مناسب است انتخاب کنید.',
+      fdesc: 'آژانس طراحی وب مبتنی بر هوش مصنوعی که تجربه‌های دیجیتالِ نتیجه‌بخش می‌سازد.',
+      fServices: 'خدمات', s1: 'طراحی برند', s2: 'طراحی وب با هوش مصنوعی', s3: 'توسعهٔ وب با هوش مصنوعی', s4: 'بهینه‌سازی',
+      fCompany: 'شرکت', careers: 'فرصت‌های شغلی', fConnect: 'ارتباط',
+      copy: '© ۲۰۲۶ VIRALMEDIA. تمامی حقوق محفوظ است.', privacy: 'حریم خصوصی', terms: 'شرایط استفاده',
+      projects: [
+        ['Nova Finance', 'طراحی برند و وب'], ['Pulse Health', 'توسعهٔ وب با هوش مصنوعی'],
+        ['Drift Studios', 'بهینه‌سازی وب‌سایت'], ['Arc Commerce', 'برند و توسعه']
+      ]
+    }
+  };
+  var T = I18N[lang];
+
+  document.querySelectorAll('[data-i18n]').forEach(function (el) {
+    var k = el.getAttribute('data-i18n'); if (T[k] != null) el.textContent = T[k];
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(function (el) {
+    var k = el.getAttribute('data-i18n-ph'); if (T[k] != null) el.placeholder = T[k];
+  });
+
+  /* Projects */
+  var IMGS = [
+    'https://motionsites.ai/assets/hero-grow-ai-preview-BlQ8tAQ-.gif',
+    'https://motionsites.ai/assets/hero-evr-ventures-preview-DZxeVFEX.gif',
+    'https://motionsites.ai/assets/hero-wealth-preview-B70idl_u.gif',
+    'https://motionsites.ai/assets/hero-neuralyn-preview-Br4FRDQA.gif'
+  ];
+  var grid = document.getElementById('grid');
+  if (grid) {
+    T.projects.forEach(function (p, i) {
+      var a = document.createElement('a');
+      a.className = 'card'; a.href = '#work';
+      a.style.transitionDelay = (i * 0.1) + 's';
+      a.innerHTML = '<div class="media liquid-glass"><img loading="lazy" alt=""></div><h3 class="ltr"></h3><div class="cat"></div>';
+      var img = a.querySelector('img'); img.src = IMGS[i]; img.alt = p[0];
+      img.addEventListener('error', function () { img.style.visibility = 'hidden'; });
+      a.querySelector('h3').textContent = p[0];
+      a.querySelector('.cat').textContent = p[1];
+      grid.appendChild(a);
+    });
+  }
+
+  /* In-view reveals */
+  var io = null;
+  var revealEls = document.querySelectorAll('.card, .rv');
+  if (reduce || !('IntersectionObserver' in window)) {
+    revealEls.forEach(function (el) { el.classList.add('in'); });
+  } else {
+    io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: 0.15 });
+    revealEls.forEach(function (el) { io.observe(el); });
+  }
+
+  /* Scroll reveal text: split into words */
+  var reveal = document.getElementById('reveal');
+  var words = [];
+  if (reveal) {
+    var txt = reveal.textContent.trim().split(/\s+/);
+    reveal.textContent = '';
+    txt.forEach(function (w, i) {
+      var s = document.createElement('span'); s.className = 'w'; s.textContent = w;
+      reveal.appendChild(s);
+      if (i < txt.length - 1) reveal.appendChild(document.createTextNode(' '));
+      words.push(s);
+    });
+  }
+  var FROM = 0.15;
+  var nav = document.getElementById('nav');
+  var showcase = document.querySelector('.showcase');
+  var showVideo = document.getElementById('showVideo');
+  var ticking = false;
+  function onScroll() {
+    ticking = false;
+    var vh = window.innerHeight;
+    if (nav) nav.classList.toggle('scrolled', window.scrollY > 40);
+    if (reveal && !reduce) {
+      var r = reveal.getBoundingClientRect();
+      // offset ["start 0.9", "start 0.3"]
+      var start = vh * 0.9, end = vh * 0.3;
+      var prog = Math.min(1, Math.max(0, (start - r.top) / (start - end)));
+      var n = words.length;
+      words.forEach(function (w, i) {
+        var a = i / n, b = a + 1 / n;
+        var t = Math.min(1, Math.max(0, (prog - a) / (b - a)));
+        w.style.opacity = (FROM + (1 - FROM) * t).toFixed(3);
+      });
+    }
+    if (showcase && showVideo && !reduce) {
+      var sr = showcase.getBoundingClientRect();
+      if (sr.bottom > 0 && sr.top < vh) {
+        var p = (sr.top + sr.height / 2 - vh / 2) / vh;
+        showVideo.style.transform = 'translateY(' + (p * -60).toFixed(1) + 'px) scale(1.12)';
+      }
+    }
+  }
+  function req() { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }
+  window.addEventListener('scroll', req, { passive: true });
+  window.addEventListener('resize', req);
+  onScroll();
+
+  /* Mobile menu */
+  var menuBtn = document.getElementById('menuBtn'), menu = document.getElementById('mobileMenu'), icon = document.getElementById('menuIcon');
+  function setMenu(open) {
+    if (!menuBtn || !menu) return;
+    menu.classList.toggle('open', open);
+    menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (icon) icon.setAttribute('d', open ? 'M6 6l12 12M18 6L6 18' : 'M4 7h16M4 12h16M4 17h16');
+  }
+  if (menuBtn) menuBtn.addEventListener('click', function () { setMenu(!menu.classList.contains('open')); });
+  if (menu) menu.addEventListener('click', function (e) { if (e.target.closest('a')) setMenu(false); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
+
+  /* Email form */
+  var form = document.getElementById('subForm'), email = document.getElementById('email'), msg = document.getElementById('formMsg');
+  if (form) form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var v = (email.value || '').trim();
+    msg.className = 'form-msg';
+    if (!v) { msg.textContent = T.errEmpty; msg.classList.add('err'); email.focus(); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) { msg.textContent = T.errBad; msg.classList.add('err'); email.focus(); return; }
+    msg.textContent = T.ok; msg.classList.add('ok'); email.value = '';
+  });
+
+  /* Toast */
+  var toast = document.getElementById('toast'), tt = null;
+  document.querySelectorAll('[data-toast]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      if (!toast) return;
+      toast.textContent = T[b.getAttribute('data-toast')];
+      toast.classList.add('show');
+      clearTimeout(tt); tt = setTimeout(function () { toast.classList.remove('show'); }, 2600);
+    });
+  });
+
+  /* Videos: reduced motion → no autoplay */
+  var heroVideo = document.getElementById('heroVideo');
+  var ctaVideo = document.getElementById('ctaVideo');
+  var vids = [heroVideo, showVideo, ctaVideo].filter(Boolean);
+  vids.forEach(function (v) {
+    v.muted = true;
+    v.addEventListener('error', function () { v.style.display = 'none'; });
+    if (reduce) { v.removeAttribute('autoplay'); v.pause(); }
+  });
+
+  /* HLS for CTA */
+  var SRC = 'https://stream.mux.com/4IMYGcL01xjs7ek5ANO17JC4VQVUTsojZlnw4fXzwSxc.m3u8';
+  if (ctaVideo) {
+    try {
+      if (ctaVideo.canPlayType('application/vnd.apple.mpegurl')) {
+        ctaVideo.src = SRC;
+      } else if (window.Hls && window.Hls.isSupported()) {
+        var hls = new window.Hls({ capLevelToPlayerSize: true });
+        hls.loadSource(SRC); hls.attachMedia(ctaVideo);
+        hls.on(window.Hls.Events.ERROR, function (_, d) { if (d && d.fatal) { hls.destroy(); ctaVideo.style.display = 'none'; } });
+      }
+    } catch (err) { ctaVideo.style.display = 'none'; }
+  }
+
+  /* Pause off-screen videos */
+  if ('IntersectionObserver' in window && !reduce) {
+    var vio = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        var v = e.target;
+        if (e.isIntersecting) { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); } else v.pause();
+      });
+    });
+    vids.forEach(function (v) { vio.observe(v); });
+    window.addEventListener('pagehide', function () { vio.disconnect(); if (io) io.disconnect(); });
+  }
+})();
+</script>
+</body>
+</html>

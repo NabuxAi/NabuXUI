@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agency services section</title>
+<script>
+  (function () {
+    var p = new URLSearchParams(location.search);
+    var lang = p.get('lang') === 'fa' ? 'fa' : 'en';
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'fa' ? 'rtl' : 'ltr';
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800;900&family=Vazirmatn:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --page-bg: #0C0C0C;
+    --card-bg: #FFFFFF;
+    --ink: #0C0C0C;
+    --divider: rgba(12, 12, 12, 0.15);
+    --radius: 40px;
+    --fade-duration: 0.7s;
+    --ease: cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+  @media (min-width: 640px) { :root { --radius: 50px; } }
+  @media (min-width: 768px) { :root { --radius: 60px; } }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    font-family: 'Kanit', sans-serif;
+    background: var(--page-bg);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  html[lang="fa"], html[lang="fa"] body { font-family: 'Vazirmatn', 'Kanit', sans-serif; }
+  body { min-height: 100vh; overflow-x: hidden; }
+
+  .services {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--card-bg);
+    border-start-start-radius: var(--radius);
+    border-start-end-radius: var(--radius);
+    padding: 80px 20px;
+    min-height: 100vh;
+  }
+  @media (min-width: 640px) { .services { padding: 96px 32px; } }
+  @media (min-width: 768px) { .services { padding: 128px 40px; } }
+
+  .services h1 {
+    font-weight: 900;
+    text-transform: uppercase;
+    line-height: 1;
+    letter-spacing: -0.025em;
+    text-align: center;
+    width: 100%;
+    font-size: clamp(3rem, 12vw, 160px);
+    color: var(--ink);
+    margin-bottom: 64px;
+  }
+  html[lang="fa"] .services h1 { letter-spacing: 0; line-height: 1.25; }
+  @media (min-width: 640px) { .services h1 { margin-bottom: 80px; } }
+  @media (min-width: 768px) { .services h1 { margin-bottom: 112px; } }
+
+  .list { list-style: none; width: 100%; max-width: 64rem; }
+  .list li + li { border-top: 1px solid var(--divider); }
+
+  .row {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+    padding-block: 32px;
+    width: 100%;
+  }
+  @media (min-width: 640px) { .row { gap: 32px; padding-block: 40px; } }
+  @media (min-width: 768px) { .row { gap: 40px; padding-block: 48px; } }
+
+  .num {
+    font-weight: 900;
+    text-transform: uppercase;
+    line-height: 1;
+    flex-shrink: 0;
+    font-size: clamp(3rem, 10vw, 140px);
+    color: var(--ink);
+    direction: ltr;
+    unicode-bidi: isolate;
+    transition: transform .5s var(--ease);
+  }
+  html[lang="fa"] .num { line-height: 1.1; }
+
+  .body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 4px;
+    min-width: 0;
+  }
+  @media (min-width: 640px) { .body { gap: 16px; } }
+  @media (min-width: 768px) { .body { gap: 20px; } }
+
+  .name {
+    font-weight: 500;
+    text-transform: uppercase;
+    font-size: clamp(1rem, 2.2vw, 2.1rem);
+    color: var(--ink);
+    line-height: 1.2;
+  }
+  html[lang="fa"] .name { font-weight: 700; line-height: 1.5; }
+  .desc {
+    font-weight: 300;
+    line-height: 1.625;
+    max-width: 42rem;
+    font-size: clamp(0.85rem, 1.6vw, 1.25rem);
+    color: var(--ink);
+    opacity: 0.6;
+  }
+  html[lang="fa"] .desc { font-weight: 400; line-height: 1.9; }
+
+  /* FadeIn */
+  .fade {
+    opacity: 0;
+    transform: translate(var(--fx, 0px), var(--fy, 30px));
+    transition: opacity var(--fade-duration) var(--ease), transform var(--fade-duration) var(--ease);
+    transition-delay: var(--fd, 0s);
+  }
+  .fade.is-visible { opacity: 1; transform: none; }
+
+  @media (hover: hover) {
+    .row:hover .num { transform: translateX(8px); }
+    html[dir="rtl"] .row:hover .num { transform: translateX(-8px); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fade { opacity: 1 !important; transform: none !important; transition: none !important; }
+    .num { transition: none; }
+    .row:hover .num { transform: none !important; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <section class="services" aria-labelledby="services-title">
+    <h1 id="services-title" class="fade" style="--fy:40px;--fd:0s" data-i18n="title">Services</h1>
+    <ol class="list" id="list"></ol>
+  </section>
+</main>
+<script>
+(function () {
+  var lang = document.documentElement.lang === 'fa' ? 'fa' : 'en';
+  var I18N = {
+    en: {
+      docTitle: 'Agency services section',
+      title: 'Services',
+      items: [
+        ['3D Modeling', 'Creation of detailed objects, characters, or environments tailored to specific client needs, ideal for games, products, and visualizations.'],
+        ['Rendering', 'High-quality, photorealistic renders that showcase designs with custom lighting, textures, and materials to bring concepts to life.'],
+        ['Motion Design', 'Dynamic animations and motion graphics that add energy and storytelling to brands, products, and digital experiences.'],
+        ['Branding', 'Crafting cohesive visual identities — from logos to full brand systems — that communicate a clear and memorable presence.'],
+        ['Web Design', 'Designing clean, modern, and conversion-focused websites with attention to layout, typography, and user experience.']
+      ]
+    },
+    fa: {
+      docTitle: 'بخش خدمات آژانس',
+      title: 'خدمات',
+      items: [
+        ['مدل‌سازی سه‌بعدی', 'ساخت اشیا، کاراکترها و محیط‌های پرجزئیات، دقیقاً مطابق نیاز هر مشتری؛ مناسب بازی، محصول و تصویرسازی.'],
+        ['رندرینگ', 'رندرهای باکیفیت و واقع‌نما با نورپردازی، بافت و متریال سفارشی که ایده‌ها را جان‌دار و ملموس نشان می‌دهند.'],
+        ['موشن دیزاین', 'انیمیشن‌ها و موشن‌گرافیک‌های پرانرژی که به برندها، محصولات و تجربه‌های دیجیتال، حرکت و روایت می‌بخشند.'],
+        ['برندینگ', 'طراحی هویت بصری یکپارچه — از لوگو تا سیستم کامل برند — برای حضوری روشن و ماندگار در ذهن مخاطب.'],
+        ['طراحی وب', 'طراحی وب‌سایت‌های تمیز، امروزی و نتیجه‌محور با دقت در چیدمان، تایپوگرافی و تجربهٔ کاربری.']
+      ]
+    }
+  };
+  var t = I18N[lang];
+  var faDigits = function (s) { return s.replace(/\d/g, function (d) { return '۰۱۲۳۴۵۶۷۸۹'[d]; }); };
+
+  document.title = t.docTitle;
+  document.querySelectorAll('[data-i18n]').forEach(function (el) {
+    var k = el.getAttribute('data-i18n');
+    if (t[k]) el.textContent = t[k];
+  });
+
+  var list = document.getElementById('list');
+  if (list) {
+    t.items.forEach(function (item, i) {
+      var n = String(i + 1).padStart(2, '0');
+      if (lang === 'fa') n = faDigits(n);
+      var li = document.createElement('li');
+      li.className = 'fade';
+      li.style.setProperty('--fy', '30px');
+      li.style.setProperty('--fd', (i * 0.1) + 's');
+      li.innerHTML =
+        '<article class="row">' +
+          '<span class="num" aria-hidden="true"></span>' +
+          '<div class="body"><h2 class="name"></h2><p class="desc"></p></div>' +
+        '</article>';
+      li.querySelector('.num').textContent = n;
+      li.querySelector('.name').textContent = item[0];
+      li.querySelector('.desc').textContent = item[1];
+      list.appendChild(li);
+    });
+  }
+
+  var els = document.querySelectorAll('.fade');
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce || !('IntersectionObserver' in window)) {
+    els.forEach(function (el) { el.classList.add('is-visible'); });
+    return;
+  }
+  // viewport { once: true, margin: "50px", amount: 0 }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting) {
+        e.target.classList.add('is-visible');
+        io.unobserve(e.target);
+      }
+    });
+  }, { rootMargin: '50px', threshold: 0 });
+  requestAnimationFrame(function () {
+    els.forEach(function (el) { io.observe(el); });
+  });
+  window.addEventListener('pagehide', function () { io.disconnect(); });
+})();
+</script>
+</body>
+</html>

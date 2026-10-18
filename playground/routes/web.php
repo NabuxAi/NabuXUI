@@ -16,6 +16,21 @@ Route::get('/components/{group}/{slug}', \App\Livewire\ComponentDemo::class)
     ->where(['group' => '[a-z][a-z0-9-]*', 'slug' => '[a-z][a-z0-9-]*'])
     ->name('components.demo');
 
+// The MotionSites scenes (packages/motionsites/scenes): standalone pages the
+// ms-* demos frame in an iframe. Served raw, never through Blade.
+Route::get('/motionsites/{slug}.html', function (string $slug) {
+    $file = \App\Support\MotionSites::sceneFile($slug);
+    abort_if($file === null, 404);
+
+    return response()->file($file, ['Content-Type' => 'text/html; charset=utf-8']);
+})->where('slug', '[a-z][a-z0-9-]*')->name('motionsites.scene');
+Route::get('/motionsites/thumbs/{slug}.webp', function (string $slug) {
+    $file = \App\Support\MotionSites::thumbFile($slug);
+    abort_if($file === null, 404);
+
+    return response()->file($file, ['Content-Type' => 'image/webp', 'Cache-Control' => 'public, max-age=86400']);
+})->where('slug', '[a-z][a-z0-9-]*')->name('motionsites.thumb');
+
 /*
  * The admin panel (Livewire): one page per sidebar entry inside the shared
  * <x-admin.page> shell. The dashboard is complete; the rest are stubs that

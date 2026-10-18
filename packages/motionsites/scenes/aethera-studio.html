@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aethera Studio — Cinematic hero</title>
+<script>
+  (function () {
+    var p = new URLSearchParams(location.search);
+    var l = p.get('lang') === 'fa' ? 'fa' : 'en';
+    document.documentElement.lang = l;
+    document.documentElement.dir = l === 'fa' ? 'rtl' : 'ltr';
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500&family=Vazirmatn:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FFFFFF;
+    --ink: #000000;
+    --muted: #6F6F6F;
+    --on-ink: #FFFFFF;
+    --video-top: 300px;
+    --fade: 0.5s;
+    --display: 'Instrument Serif', 'Vazirmatn', Georgia, serif;
+    --body: 'Inter', 'Vazirmatn', system-ui, sans-serif;
+  }
+  html[lang="fa"] {
+    --display: 'Vazirmatn', 'Instrument Serif', serif;
+    --body: 'Vazirmatn', 'Inter', system-ui, sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  a { color: inherit; text-decoration: none; }
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 6px; }
+
+  .page {
+    position: relative;
+    min-height: 100vh;
+    min-height: 100svh;
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ---------- video layer ---------- */
+  .bg {
+    position: absolute;
+    inset: auto 0 0 0;
+    top: var(--video-top);
+    z-index: 0;
+    overflow: hidden;
+    /* fallback painted meadow if the stream fails */
+    background:
+      radial-gradient(120% 60% at 50% 100%, #6fa83f 0%, #8cc152 30%, transparent 60%),
+      radial-gradient(60% 40% at 80% 40%, #9bb7d6 0%, transparent 70%),
+      radial-gradient(60% 40% at 20% 45%, #a9c1dc 0%, transparent 70%),
+      linear-gradient(#ffffff 0%, #e8f0f7 35%, #b9d58f 70%, #6c9f3d 100%);
+  }
+  .bg video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    will-change: opacity;
+  }
+  .bg::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, var(--bg) 0%, transparent 50%, var(--bg) 100%);
+    pointer-events: none;
+  }
+
+  /* ---------- nav ---------- */
+  header {
+    position: relative;
+    z-index: 10;
+  }
+  nav.bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding: 24px 32px;
+    max-width: 80rem;
+    margin-inline: auto;
+  }
+  .logo {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+    direction: ltr;
+  }
+  .logo sup { font-size: 0.45em; vertical-align: super; margin-inline-start: 1px; }
+  .links {
+    display: flex;
+    gap: 32px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .links a {
+    font-size: 0.875rem;
+    color: var(--muted);
+    transition: color .2s ease;
+  }
+  .links a:hover, .links a[aria-current="page"] { color: var(--ink); }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    cursor: pointer;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--on-ink);
+    font-family: var(--body);
+    transition: transform .25s ease, box-shadow .25s ease;
+  }
+  .btn:hover { transform: scale(1.03); }
+  .btn:active { transform: scale(0.98); }
+  .btn-sm { padding: 10px 24px; font-size: 0.875rem; }
+  .btn-lg { padding: 20px 56px; font-size: 1rem; margin-top: 48px; }
+  .btn-lg svg { width: 18px; height: 18px; margin-inline-start: 10px; transition: transform .25s ease; }
+  html[dir="rtl"] .btn-lg svg { transform: scaleX(-1); }
+  .btn-lg:hover svg { transform: translateX(3px); }
+  html[dir="rtl"] .btn-lg:hover svg { transform: scaleX(-1) translateX(3px); }
+
+  .menu-btn {
+    display: none;
+    width: 44px; height: 44px;
+    border-radius: 999px;
+    border: 1px solid rgba(0,0,0,.12);
+    background: rgba(255,255,255,.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    cursor: pointer;
+    align-items: center; justify-content: center;
+    color: var(--ink);
+  }
+  .menu-btn span, .menu-btn span::before, .menu-btn span::after {
+    display: block; width: 18px; height: 1.5px; background: currentColor; position: relative;
+    transition: transform .3s ease, background .3s ease;
+  }
+  .menu-btn span::before, .menu-btn span::after { content: ""; position: absolute; inset-inline-start: 0; }
+  .menu-btn span::before { top: -6px; }
+  .menu-btn span::after { top: 6px; }
+  .menu-btn[aria-expanded="true"] span { background: transparent; }
+  .menu-btn[aria-expanded="true"] span::before { transform: translateY(6px) rotate(45deg); }
+  .menu-btn[aria-expanded="true"] span::after { transform: translateY(-6px) rotate(-45deg); }
+
+  .drawer {
+    position: absolute;
+    inset-inline: 16px;
+    top: 84px;
+    z-index: 20;
+    padding: 20px;
+    border-radius: 24px;
+    background: rgba(255,255,255,.82);
+    backdrop-filter: blur(18px) saturate(1.3);
+    -webkit-backdrop-filter: blur(18px) saturate(1.3);
+    border: 1px solid rgba(0,0,0,.08);
+    box-shadow: 0 20px 50px -20px rgba(0,0,0,.25);
+    opacity: 0;
+    transform: translateY(-8px) scale(.98);
+    pointer-events: none;
+    visibility: hidden;
+    transition: opacity .25s ease, transform .25s ease, visibility 0s linear .25s;
+  }
+  .drawer.open {
+    opacity: 1; transform: none; pointer-events: auto; visibility: visible;
+    transition: opacity .25s ease, transform .25s ease;
+  }
+  .drawer ul { list-style: none; margin: 0 0 16px; padding: 0; }
+  .drawer li a {
+    display: block; padding: 12px 4px;
+    font-family: var(--display);
+    font-size: 1.6rem;
+    color: var(--muted);
+    border-bottom: 1px solid rgba(0,0,0,.06);
+  }
+  .drawer li a[aria-current="page"] { color: var(--ink); }
+  .drawer .btn { width: 100%; }
+
+  /* ---------- hero ---------- */
+  main.hero {
+    position: relative;
+    z-index: 10;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: center;
+    padding: calc(8rem - 75px) 24px 10rem;
+  }
+  h1 {
+    margin: 0;
+    max-width: 80rem;
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: 3rem;
+    line-height: 0.95;
+    letter-spacing: -2.46px;
+    color: var(--ink);
+  }
+  h1 em { font-style: italic; color: var(--muted); }
+  html[lang="fa"] h1 { letter-spacing: 0; line-height: 1.2; font-weight: 500; }
+  html[lang="fa"] h1 em { font-style: normal; font-weight: 300; }
+  .desc {
+    margin: 32px 0 0;
+    max-width: 42rem;
+    font-size: 1rem;
+    line-height: 1.625;
+    color: var(--muted);
+  }
+  html[lang="fa"] .desc { line-height: 1.95; }
+
+  .fade-rise { animation: fade-rise .8s ease-out both; }
+  .fade-rise-delay { animation: fade-rise .8s ease-out .2s both; }
+  .fade-rise-delay-2 { animation: fade-rise .8s ease-out .4s both; }
+  @keyframes fade-rise {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .toast {
+    position: fixed;
+    inset-block-end: 24px;
+    inset-inline-start: 50%;
+    transform: translate(-50%, 20px);
+    z-index: 40;
+    padding: 12px 20px;
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--on-ink);
+    font-size: .875rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .3s ease, transform .3s ease;
+    white-space: nowrap;
+  }
+  html[dir="rtl"] .toast { transform: translate(50%, 20px); }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  html[dir="rtl"] .toast.show { transform: translate(50%, 0); }
+
+  @media (min-width: 640px) {
+    h1 { font-size: 4.5rem; }
+    .desc { font-size: 1.125rem; }
+  }
+  @media (min-width: 768px) {
+    h1 { font-size: 6rem; }
+  }
+  html[lang="fa"] h1 { font-size: clamp(2.25rem, 6.4vw, 5rem); }
+  @media (max-width: 860px) {
+    .links, nav.bar > .btn-sm { display: none; }
+    .menu-btn { display: inline-flex; }
+  }
+  @media (max-width: 640px) {
+    nav.bar { padding: 20px 20px; }
+    :root { --video-top: 380px; }
+    .btn-lg { padding: 18px 44px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fade-rise, .fade-rise-delay, .fade-rise-delay-2 { animation: none; }
+    .btn, .btn:hover { transition: none; transform: none; }
+    .drawer, .toast { transition: none; }
+    .bg video { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="bg" aria-hidden="true">
+    <video id="bgv" muted playsinline autoplay preload="auto"
+      poster="https://motionsitesai-main.vercel.app/assets/previews/aethera-studio.webp"
+      src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260328_083109_283f3553-e28f-428b-a723-d639c617eb2b.mp4"></video>
+  </div>
+
+  <header>
+    <nav class="bar" aria-label="Primary">
+      <a class="logo" href="#" aria-label="Aethera home">Aethera<sup>®</sup></a>
+      <ul class="links">
+        <li><a href="#" aria-current="page" data-i18n="home">Home</a></li>
+        <li><a href="#" data-i18n="studio">Studio</a></li>
+        <li><a href="#" data-i18n="about">About</a></li>
+        <li><a href="#" data-i18n="journal">Journal</a></li>
+        <li><a href="#" data-i18n="reach">Reach Us</a></li>
+      </ul>
+      <button class="btn btn-sm js-cta" type="button" data-i18n="cta">Begin Journey</button>
+      <button class="menu-btn" type="button" aria-expanded="false" aria-controls="drawer" data-i18n-aria="menu" aria-label="Open menu"><span></span></button>
+    </nav>
+    <div class="drawer" id="drawer">
+      <ul>
+        <li><a href="#" aria-current="page" data-i18n="home">Home</a></li>
+        <li><a href="#" data-i18n="studio">Studio</a></li>
+        <li><a href="#" data-i18n="about">About</a></li>
+        <li><a href="#" data-i18n="journal">Journal</a></li>
+        <li><a href="#" data-i18n="reach">Reach Us</a></li>
+      </ul>
+      <button class="btn btn-sm js-cta" type="button" data-i18n="cta">Begin Journey</button>
+    </div>
+  </header>
+
+  <main class="hero">
+    <h1 class="fade-rise" data-i18n-html="h1">Beyond <em>silence,</em> we build <em>the eternal.</em></h1>
+    <p class="desc fade-rise-delay" data-i18n="desc">Building platforms for brilliant minds, fearless makers, and thoughtful souls. Through the noise, we craft digital havens for deep work and pure flows.</p>
+    <button class="btn btn-lg fade-rise-delay-2 js-cta" type="button"><span data-i18n="cta">Begin Journey</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+  </main>
+</div>
+<div class="toast" role="status" aria-live="polite" id="toast"></div>
+
+<script>
+(function () {
+  var I18N = {
+    en: {
+      home: 'Home', studio: 'Studio', about: 'About', journal: 'Journal', reach: 'Reach Us',
+      cta: 'Begin Journey', menu: 'Open menu', menuClose: 'Close menu',
+      h1: 'Beyond <em>silence,</em> we build <em>the eternal.</em>',
+      desc: 'Building platforms for brilliant minds, fearless makers, and thoughtful souls. Through the noise, we craft digital havens for deep work and pure flows.',
+      toast: 'The journey begins — we will be in touch.'
+    },
+    fa: {
+      home: 'خانه', studio: 'استودیو', about: 'دربارهٔ ما', journal: 'یادداشت‌ها', reach: 'تماس با ما',
+      cta: 'سفر را آغاز کن', menu: 'باز کردن منو', menuClose: 'بستن منو',
+      h1: 'فراتر از <em>سکوت،</em> ما <em>جاودانگی</em> را می‌سازیم.',
+      desc: 'سکوهایی می‌سازیم برای ذهن‌های درخشان، سازندگان بی‌پروا و جان‌های اندیشمند. در میان هیاهو، پناهگاه‌هایی دیجیتال برای کار عمیق و جریان ناب خلق می‌کنیم.',
+      toast: 'سفر آغاز شد — به‌زودی با شما در تماس خواهیم بود.'
+    }
+  };
+  var lang = document.documentElement.lang === 'fa' ? 'fa' : 'en';
+  var T = I18N[lang];
+  document.querySelectorAll('[data-i18n]').forEach(function (el) {
+    var k = el.getAttribute('data-i18n'); if (T[k]) el.textContent = T[k];
+  });
+  document.querySelectorAll('[data-i18n-html]').forEach(function (el) {
+    var k = el.getAttribute('data-i18n-html'); if (T[k]) el.innerHTML = T[k];
+  });
+
+  /* mobile menu */
+  var mb = document.querySelector('.menu-btn');
+  var dr = document.getElementById('drawer');
+  function setMenu(open) {
+    if (!mb || !dr) return;
+    mb.setAttribute('aria-expanded', open ? 'true' : 'false');
+    mb.setAttribute('aria-label', open ? T.menuClose : T.menu);
+    dr.classList.toggle('open', open);
+  }
+  setMenu(false);
+  if (mb) mb.addEventListener('click', function () { setMenu(mb.getAttribute('aria-expanded') !== 'true'); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
+  document.addEventListener('click', function (e) {
+    if (!dr || !mb) return;
+    if (dr.classList.contains('open') && !dr.contains(e.target) && !mb.contains(e.target)) setMenu(false);
+  });
+
+  /* nav active state */
+  var allLinks = document.querySelectorAll('.links a, .drawer a');
+  allLinks.forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault();
+      var key = a.getAttribute('data-i18n');
+      allLinks.forEach(function (b) {
+        if (b.getAttribute('data-i18n') === key) b.setAttribute('aria-current', 'page');
+        else b.removeAttribute('aria-current');
+      });
+      setMenu(false);
+    });
+  });
+
+  /* CTA toast */
+  var toast = document.getElementById('toast'), tt;
+  document.querySelectorAll('.js-cta').forEach(function (b) {
+    b.addEventListener('click', function () {
+      if (!toast) return;
+      toast.textContent = T.toast;
+      toast.classList.add('show');
+      clearTimeout(tt);
+      tt = setTimeout(function () { toast.classList.remove('show'); }, 2400);
+      setMenu(false);
+    });
+  });
+
+  /* video: manual fade loop */
+  var v = document.getElementById('bgv');
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!v) return;
+  if (reduce) { try { v.pause(); } catch (e) {} v.removeAttribute('autoplay'); return; }
+  var FADE = 0.5, raf = 0, resetting = false;
+  function tick() {
+    if (!resetting && v.duration && isFinite(v.duration)) {
+      var t = v.currentTime, d = v.duration, o = 1;
+      if (t < FADE) o = t / FADE;
+      else if (t > d - FADE) o = Math.max(0, (d - t) / FADE);
+      v.style.opacity = String(Math.min(1, Math.max(0, o)));
+    }
+    raf = requestAnimationFrame(tick);
+  }
+  function start() { cancelAnimationFrame(raf); raf = requestAnimationFrame(tick); }
+  v.addEventListener('ended', function () {
+    resetting = true;
+    v.style.opacity = '0';
+    setTimeout(function () {
+      try { v.currentTime = 0; } catch (e) {}
+      var p = v.play(); if (p && p.catch) p.catch(function () {});
+      resetting = false;
+    }, 100);
+  });
+  v.addEventListener('error', function () { v.style.display = 'none'; });
+  var p = v.play(); if (p && p.catch) p.catch(function () {});
+  start();
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) { cancelAnimationFrame(raf); v.pause(); }
+    else { var q = v.play(); if (q && q.catch) q.catch(function () {}); start(); }
+  });
+})();
+</script>
+</body>
+</html>

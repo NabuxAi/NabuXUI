@@ -1,0 +1,18 @@
+{
+  "title": { "en": "Studio rate 3D render pricing hero", "fa": "هیروی قیمت‌گذاری رندر سه‌بعدی Studio rate" },
+  "oneLiner": {
+    "en": "Full-screen looping video of a crystal-and-moss diorama with a giant light \"Studio rate\" heading and a glassy three-column pricing card: a lime toggle adds the cinematic add-on and the price counts up or down.",
+    "fa": "ویدیوی تمام‌صفحه و حلقه‌ای از یک دیوراما با کریستال و خزه، همراه با تیتر بزرگ و نازک و کارت قیمت شیشه‌ای سه‌ستونه؛ سوییچ سبز لیمویی افزونهٔ سینمایی را اضافه می‌کند و قیمت با شمارش بالا و پایین می‌رود."
+  },
+  "js": true,
+  "props": [
+    { "name": "--accent", "type": "color", "default": "#B2D770",
+      "note": { "en": "Lime accent for the toggle, check icons and CTA.", "fa": "رنگ لیمویی سوییچ، آیکون‌های تیک و دکمهٔ اقدام." } },
+    { "name": "--card-h", "type": "length", "default": "340px",
+      "note": { "en": "Fixed height of the pricing card on md+ screens.", "fa": "ارتفاع ثابت کارت قیمت در صفحه‌های متوسط به بالا." } },
+    { "name": "BASE_PRICE", "type": "number", "default": "2660",
+      "note": { "en": "Delivery price without the cinematic add-on.", "fa": "قیمت تحویل بدون افزونهٔ سینمایی." } },
+    { "name": "ADDON_PRICE", "type": "number", "default": "520",
+      "note": { "en": "Cost of the cinematic fidelity add-on toggled by the switch.", "fa": "هزینهٔ افزونهٔ کیفیت سینمایی که با سوییچ فعال می‌شود." } }
+  ]
+}

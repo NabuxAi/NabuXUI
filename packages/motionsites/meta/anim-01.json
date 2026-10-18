@@ -1,0 +1,20 @@
+{
+  "title": { "en": "Superdesign infinite canvas with spring-physics nodes", "fa": "بوم بی‌پایان سوپردیزاین با گره‌های فنری" },
+  "oneLiner": {
+    "en": "A dark infinite canvas where UI node cards drag with spring physics and velocity tilt, glow under the cursor, and stay wired by live bezier edges. Pan, wheel/pinch zoom, a minimap, sticky notes, a theme switch and a prompt bar that turns text into a new card through skeleton-loader states.",
+    "fa": "بومی تیره و بی‌پایان که کارت‌های رابط در آن با فیزیک فنری و کجیِ وابسته به سرعت کشیده می‌شوند، زیر نشانگر می‌درخشند و با خم‌های بزیهٔ زنده به هم وصل می‌مانند. جابه‌جایی، زوم با چرخ یا دو انگشت، نقشهٔ کوچک، یادداشت چسبان، تغییر پوسته و نوار درخواستی که متن را از راه حالت‌های اسکلتی به کارتی تازه تبدیل می‌کند."
+  },
+  "js": true,
+  "props": [
+    { "name": "--accent", "type": "color", "default": "#8b5cf6",
+      "note": { "en": "Primary violet: hover glow, selection, buttons and loader.", "fa": "بنفش اصلی: درخشش هاور، انتخاب، دکمه‌ها و لودر." } },
+    { "name": "--accent-2", "type": "color", "default": "#22d3ee",
+      "note": { "en": "Cyan used for the flowing edge dashes and minimap viewport.", "fa": "فیروزه‌ای خط‌چین‌های روان روی اتصال‌ها و کادر دید نقشهٔ کوچک." } },
+    { "name": "SPRING", "type": "object", "default": "{ k: 380, c: 24 }",
+      "note": { "en": "Stiffness and damping of the node drag spring; lower damping means more bounce.", "fa": "سختی و میرایی فنرِ کشیدن گره‌ها؛ میرایی کمتر یعنی جهش بیشتر." } },
+    { "name": "GRID", "type": "number", "default": 22,
+      "note": { "en": "Dot-grid pitch in world pixels (doubles when zoomed far out).", "fa": "فاصلهٔ نقطه‌های شبکه به پیکسل جهان (در زوم خیلی دور دو برابر می‌شود)." } },
+    { "name": "ZOOM_MIN / ZOOM_MAX", "type": "number", "default": "0.25 / 2.5",
+      "note": { "en": "Zoom limits for wheel, pinch and buttons.", "fa": "حد پایین و بالای زوم برای چرخ، دو انگشت و دکمه‌ها." } }
+  ]
+}

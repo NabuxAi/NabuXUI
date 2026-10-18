@@ -18,6 +18,7 @@
   import DashboardPage from './pages/Dashboard.svelte';
   import AnalyticsPage from './pages/Analytics.svelte';
   import UsersPage from './pages/Users.svelte';
+  import ComponentsPage from './pages/Components.svelte';
   import KanbanPage from './pages/KanbanPage.svelte';
   import CalendarPage from './pages/Calendar.svelte';
   import ChatPage from './pages/Chat.svelte';
@@ -38,6 +39,7 @@
     { id: 'dash', group: 'main', icon: 'grid', Component: DashboardPage },
     { id: 'analytics', group: 'main', icon: 'chart', Component: AnalyticsPage },
     { id: 'users', group: 'main', icon: 'users', Component: UsersPage },
+    { id: 'components', group: 'main', icon: 'sparkles', Component: ComponentsPage },
     { id: 'kanban', group: 'work', icon: 'layers', Component: KanbanPage },
     { id: 'calendar', group: 'work', icon: 'grid', Component: CalendarPage },
     { id: 'chat', group: 'work', icon: 'message', Component: ChatPage },

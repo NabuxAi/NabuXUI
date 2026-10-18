@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist/types",
+    "emitDeclarationOnly": true
+  },
+  "files": [
+    "src/shims-svelte.d.ts"
+  ],
+  "include": [
+    "src/**/*.ts"
+  ]
+}

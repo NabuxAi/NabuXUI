@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Livewire\Concerns\SwitchesDemoLocale;
 use App\Support\DemoCatalog;
+use App\Support\MotionSites;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -20,6 +21,11 @@ class ComponentCatalog extends Component
 
     public string $group = 'all';
 
+    /** Cards rendered so far — the catalog holds ~1,200 demos, so it grows by a page at a time. */
+    public int $limit = self::PAGE;
+
+    private const PAGE = 60;
+
     public function mount(): void
     {
         $this->rememberLocale();
@@ -29,6 +35,22 @@ class ComponentCatalog extends Component
     {
         $this->search = '';
         $this->group = 'all';
+        $this->limit = self::PAGE;
+    }
+
+    public function updatedSearch(): void
+    {
+        $this->limit = self::PAGE;
+    }
+
+    public function updatedGroup(): void
+    {
+        $this->limit = self::PAGE;
+    }
+
+    public function showMore(): void
+    {
+        $this->limit += self::PAGE;
     }
 
     /**
@@ -67,6 +89,8 @@ class ComponentCatalog extends Component
                 'oneLiner' => DemoCatalog::pick($demo['oneLiner'] ?? '', $locale),
                 'js' => (bool) ($demo['js'] ?? false),
                 'icon' => $demo['icon'] ?? null,
+                'thumb' => isset($demo['scene']) && MotionSites::thumbFile((string) $demo['scene']) !== null
+                    ? '/motionsites/thumbs/'.$demo['scene'].'.webp' : null,
             ];
         }
 
@@ -75,8 +99,11 @@ class ComponentCatalog extends Component
 
     public function render()
     {
+        $demos = $this->filtered();
+
         return view('livewire.component-catalog', [
-            'demos' => $this->filtered(),
+            'demos' => array_slice($demos, 0, $this->limit),
+            'matching' => count($demos),
             'groups' => DemoCatalog::groups(),
             'total' => count(DemoCatalog::flat()),
         ]);

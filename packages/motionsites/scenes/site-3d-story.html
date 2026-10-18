@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Veldara — 3D Story</title>
+<script>
+  (function () {
+    var q = new URLSearchParams(location.search);
+    var lang = q.get('lang') === 'fa' ? 'fa' : 'en';
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'fa' ? 'rtl' : 'ltr';
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --accent: #2C5C88;
+    --accent-hover: #3a7aad;
+    --bg: #010101;
+    --particle-density: 12000;
+    --font: "Inter", system-ui, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  html[lang="fa"] { --font: "Vazirmatn", "Inter", system-ui, sans-serif; }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { overflow-x: hidden; }
+  body { font-family: var(--font); background: var(--bg); color: #fff; -webkit-font-smoothing: antialiased; }
+  a:focus-visible, button:focus-visible { outline: 2px solid #7fb2e0; outline-offset: 3px; border-radius: 6px; }
+
+  /* Scroll video */
+  #scroll-video-container {
+    position: fixed; inset: 0; top: -20%; z-index: -10; background: #0a0a0a; overflow: hidden;
+  }
+  #scroll-video-container video,
+  #scroll-video-container .fallback {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  }
+  #scroll-video-container video { opacity: 0; transition: opacity .8s ease; }
+  #scroll-video-container video.ready { opacity: 1; }
+  #scroll-video-container .overlay { position: absolute; inset: 0; background: rgba(0,0,0,.2); }
+
+  /* Static bloom fallback (shown until / unless the video decodes) */
+  .fallback { background: radial-gradient(ellipse 40% 34% at 50% 52%, rgba(70,90,140,.28), transparent 70%), #020203; }
+  .bloom {
+    position: absolute; left: 50%; top: 52%; width: min(52vw, 520px); aspect-ratio: 1;
+    transform: translate(-50%, -50%) rotate(var(--spin, 0deg)); transition: transform .3s linear;
+    filter: drop-shadow(0 0 40px rgba(140,160,230,.25));
+  }
+  .petal-drift { position: absolute; width: 90px; opacity: .55; }
+  .petal-drift.a { inset-inline-end: 8%; top: 22%; transform: rotate(-30deg); }
+  .petal-drift.b { inset-inline-end: 14%; top: 78%; width: 110px; transform: rotate(40deg); }
+
+  #particles-canvas { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
+
+  /* Nav */
+  nav.top {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 2.5rem;
+  }
+  nav .brand-row { display: flex; align-items: center; gap: 2rem; }
+  nav .logo { font-family: "Inter", sans-serif; font-weight: 700; font-size: 1.25rem; color: #fff; letter-spacing: -.025em; text-decoration: none; }
+  nav .nav-links { display: flex; align-items: center; gap: 1.5rem; }
+  nav .nav-links a { font-size: .875rem; color: #d1d5db; text-decoration: none; transition: color .2s; }
+  nav .nav-links a:hover { color: #fff; }
+  nav .end { display: flex; align-items: center; gap: 1rem; }
+  nav .social { display: flex; align-items: center; gap: 1rem; }
+  nav .social a { color: #d1d5db; transition: color .2s; display: inline-flex; }
+  nav .social a:hover { color: #fff; }
+  nav .social svg { width: 1.25rem; height: 1.25rem; }
+  .menu-btn {
+    display: none; background: transparent; border: 1px solid rgba(255,255,255,.18); color: #e5e7eb;
+    width: 2.25rem; height: 2.25rem; border-radius: .5rem; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .menu-btn svg { width: 1.1rem; height: 1.1rem; }
+  .mobile-menu {
+    position: fixed; top: 4.25rem; inset-inline: 1rem; z-index: 49; display: none; flex-direction: column;
+    background: rgba(16,16,18,.92); border: 1px solid rgba(255,255,255,.08); border-radius: .75rem; padding: .5rem;
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  }
+  .mobile-menu.open { display: flex; }
+  .mobile-menu a { color: #e5e7eb; text-decoration: none; padding: .75rem .9rem; border-radius: .5rem; font-size: .95rem; }
+  .mobile-menu a:hover { background: rgba(255,255,255,.06); }
+
+  /* Hero */
+  #content { position: relative; z-index: 2; }
+  #hero { position: relative; height: 100vh; height: 100svh; width: 100%; display: flex; flex-direction: column; }
+  #hero .gradient-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.6), transparent, transparent); }
+  #hero .content {
+    position: relative; z-index: 10; flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-end; text-align: center; padding: 0 1.5rem 6rem;
+  }
+  #hero .subtitle { font-size: .875rem; color: #c3c8d1; text-shadow: 0 1px 8px rgba(0,0,0,.8); margin-bottom: 1rem; letter-spacing: .05em; }
+  html[lang="fa"] #hero .subtitle { letter-spacing: 0; }
+  #hero h1 { font-size: clamp(1.5rem, 5vw, 3.75rem); font-weight: 600; line-height: 1.15; max-width: 48rem; letter-spacing: -.01em; }
+  html[lang="fa"] #hero h1 { line-height: 1.5; letter-spacing: 0; font-weight: 700; font-size: clamp(1.5rem, 4.2vw, 3.25rem); max-width: 52rem; }
+  .underlined { position: relative; display: inline-block; }
+  .underlined .line {
+    position: absolute; bottom: .25rem; inset-inline-start: 0; width: 100%; height: 10px;
+    background: var(--accent); border-radius: 2px; transform-origin: left center;
+    animation: draw 1s .5s cubic-bezier(.65,0,.35,1) both;
+  }
+  [dir="rtl"] .underlined .line { transform-origin: right center; bottom: .15rem; }
+  .underlined .txt { position: relative; }
+  @keyframes draw { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+  .ctas { display: flex; align-items: center; gap: 1rem; margin-top: 2.5rem; flex-wrap: wrap; justify-content: center; }
+  .code-box {
+    display: flex; align-items: center; gap: .5rem; background: #1a1a1a; border: 1px solid rgba(55,65,81,.5);
+    border-radius: .5rem; padding: .875rem 1.25rem .875rem 2rem; direction: ltr; font: inherit; color: inherit; cursor: pointer;
+    transition: border-color .2s;
+  }
+  .code-box:hover { border-color: rgba(120,140,170,.6); }
+  .code-box .prompt { color: var(--accent); font-family: var(--mono); font-size: .875rem; }
+  .code-box code { font-size: .875rem; color: #e5e7eb; font-family: var(--mono); }
+  .code-box .copy { width: 1rem; height: 1rem; color: #6b7280; margin-inline-start: .5rem; }
+  .code-box .copied:empty { display: none; }
+  .code-box .copied { font-size: .75rem; color: #7fb2e0; text-align: left; font-family: var(--font); }
+  .cta-btn {
+    display: inline-flex; align-items: center; gap: .5rem; background: var(--accent); color: #fff; font-weight: 500;
+    border-radius: .5rem; padding: .875rem 2rem; font-size: .875rem; text-decoration: none; transition: background .2s;
+  }
+  .cta-btn:hover { background: var(--accent-hover); }
+  .cta-btn .arr { display: inline-block; transition: transform .2s; }
+  .cta-btn:hover .arr { transform: translateX(3px); }
+  [dir="rtl"] .cta-btn .arr { transform: scaleX(-1); }
+  [dir="rtl"] .cta-btn:hover .arr { transform: scaleX(-1) translateX(3px); }
+
+  .bounce-arrow { position: relative; z-index: 10; display: flex; justify-content: center; padding-bottom: 2rem; }
+  .bounce-arrow a { color: #6b7280; display: inline-flex; }
+  .bounce-arrow svg { width: 1.5rem; height: 1.5rem; animation: bounce 1s infinite; }
+  @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-25%); } }
+
+  /* Fixed cards */
+  #fixed-cards { position: fixed; bottom: 0; left: 0; right: 0; z-index: 4; padding: 2rem 2.5rem; opacity: 0; pointer-events: none; }
+  #fixed-cards .grid { max-width: 72rem; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2.5rem; }
+  #fixed-cards .card h3 { font-size: 1.5rem; font-weight: 700; color: #fff; margin-bottom: 1rem; }
+  #fixed-cards .card p { color: #d1d5db; font-size: .875rem; line-height: 1.6; }
+  html[lang="fa"] #fixed-cards .card p { line-height: 1.9; }
+
+  /* Section 3 */
+  #section-three { position: relative; min-height: 100vh; display: flex; align-items: flex-end; justify-content: center; padding: 0 2.5rem 8rem; }
+  #section-three .inner {
+    position: relative; z-index: 10; display: flex; flex-direction: column; align-items: center; text-align: center;
+    opacity: 0; transform: translateY(32px); filter: blur(8px);
+    transition: opacity 1s ease-out, transform 1s ease-out, filter 1s ease-out;
+  }
+  #section-three .inner.visible { opacity: 1; transform: none; filter: blur(0); }
+  #section-three .inner p { color: #d1d5db; font-size: 1rem; margin-bottom: .75rem; }
+  #section-three .inner h2 { font-family: "Inter", sans-serif; font-size: clamp(1.875rem, 6vw, 4.5rem); font-weight: 700; direction: ltr; }
+  #section-three .inner .cta-btn { margin-top: 2rem; }
+
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  @media (max-width: 768px) {
+    nav.top { padding: 1rem 1.25rem; }
+    nav .nav-links { display: none; }
+    .menu-btn { display: inline-flex; }
+    nav .social { gap: .85rem; }
+    #hero .content { padding-bottom: 5rem; }
+    #hero h1 { font-size: 1.5rem; }
+    .ctas { flex-direction: column; }
+    #fixed-cards .grid { grid-template-columns: 1fr; gap: 1.5rem; }
+    #fixed-cards { padding: 1.5rem 1rem; }
+    #fixed-cards .card h3 { font-size: 1.25rem; margin-bottom: .5rem; }
+    #section-three { padding: 0 1.25rem 5rem; }
+    .bloom { width: 80vw; top: 46%; }
+    .petal-drift { width: 56px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bounce-arrow svg, .underlined .line { animation: none; }
+    #section-three .inner { transition: none; opacity: 1; transform: none; filter: none; }
+    .bloom { transition: none; }
+    #scroll-video-container video { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="scroll-video-container" aria-hidden="true">
+  <div class="fallback">
+    <svg class="bloom" id="bloom" viewBox="-100 -100 200 200">
+      <defs>
+        <radialGradient id="pg" cx="50%" cy="85%" r="90%">
+          <stop offset="0" stop-color="#f6d9e6" stop-opacity=".95"/>
+          <stop offset=".45" stop-color="#a9b9de" stop-opacity=".7"/>
+          <stop offset="1" stop-color="#3d4f86" stop-opacity=".25"/>
+        </radialGradient>
+        <radialGradient id="pg2" cx="50%" cy="80%" r="90%">
+          <stop offset="0" stop-color="#ffffff" stop-opacity=".9"/>
+          <stop offset=".6" stop-color="#c9b8dc" stop-opacity=".55"/>
+          <stop offset="1" stop-color="#6178b4" stop-opacity=".2"/>
+        </radialGradient>
+      </defs>
+      <g id="petals-outer"></g>
+      <g id="petals-inner"></g>
+      <circle r="10" fill="#fbe7ef" opacity=".7"/>
+    </svg>
+    <svg class="petal-drift a" viewBox="0 0 60 100"><path d="M30 0C55 20 60 70 30 100 0 70 5 20 30 0Z" fill="url(#pg)" opacity=".8"/></svg>
+    <svg class="petal-drift b" viewBox="0 0 60 100"><path d="M30 0C55 20 60 70 30 100 0 70 5 20 30 0Z" fill="#2a3552" opacity=".9"/></svg>
+  </div>
+  <video id="scroll-video" muted playsinline preload="auto"
+    src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260616_212935_bbf608da-62d1-4f25-9be4-c346e4d09cc8.mp4"></video>
+  <div class="overlay"></div>
+</div>
+
+<canvas id="particles-canvas" aria-hidden="true"></canvas>
+
+<aside id="fixed-cards" aria-label="Features">
+  <div class="grid">
+    <article class="card">
+      <h3 data-i18n="c1t">Explore Veldara</h3>
+      <p data-i18n="c1p">Veldara merges the elegance of Svelte 5 with the depth of Three.js within easy reach. It's crafted to be robust and adaptable while remaining intuitive and simple to grasp.</p>
+    </article>
+    <article class="card">
+      <h3 data-i18n="c2t">Unlock Three.js</h3>
+      <p data-i18n="c2p">The web is growing increasingly dimensional. At its heart, Veldara offers a composable declarative API for building performant Three.js experiences on the web.</p>
+    </article>
+    <article class="card">
+      <h3 data-i18n="c3t">Connect Everything</h3>
+      <p data-i18n="c3p">Veldara ships with tooling for physics, XR, animation, layouting, model loading, and extensive utilities to make building compelling 3D apps for the web effortless.</p>
+    </article>
+  </div>
+</aside>
+
+<header>
+  <nav class="top" aria-label="Main">
+    <div class="brand-row">
+      <a href="#hero" class="logo" dir="ltr">veldara</a>
+      <div class="nav-links">
+        <a href="#guides" data-i18n="guides">Guides</a>
+        <a href="#journal" data-i18n="journal">Journal</a>
+      </div>
+    </div>
+    <div class="end">
+      <div class="social">
+        <a href="#github" aria-label="GitHub"><svg fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg></a>
+        <a href="#discord" aria-label="Discord"><svg fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286z"/></svg></a>
+        <a href="#twitter" aria-label="Twitter"><svg fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg></a>
+      </div>
+      <button class="menu-btn" id="menu-btn" aria-expanded="false" aria-controls="mobile-menu">
+        <span class="sr-only" data-i18n="menu">Menu</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path id="menu-icon" d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </nav>
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="#guides" data-i18n="guides">Guides</a>
+    <a href="#journal" data-i18n="journal">Journal</a>
+  </div>
+</header>
+
+<main id="content">
+  <section id="hero">
+    <div class="gradient-overlay" aria-hidden="true"></div>
+    <div class="content">
+      <p class="subtitle" data-i18n="subtitle">Our Purpose:</p>
+      <h1 id="hero-title">Instantly craft immersive <span class="underlined"><span class="line" aria-hidden="true"></span><span class="txt">3D worlds</span></span> on the web.</h1>
+      <div class="ctas">
+        <button class="code-box" id="copy-cmd" type="button" aria-label="Copy install command">
+          <span class="prompt" aria-hidden="true">&gt;</span>
+          <code>npm i @veldara/core</code>
+          <svg class="copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+          <span class="copied" id="copied" aria-live="polite"></span>
+        </button>
+        <a href="#section-three" class="cta-btn"><span data-i18n="cta">Get Started</span> <span class="arr" aria-hidden="true">&rarr;</span></a>
+      </div>
+    </div>
+    <div class="bounce-arrow">
+      <a href="#cards-trigger" aria-label="Scroll down" data-i18n-aria="scroll"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/></svg></a>
+    </div>
+  </section>
+
+  <div style="height:150vh" aria-hidden="true"></div>
+  <div id="cards-trigger" style="height:200vh" aria-hidden="true"></div>
+  <div style="height:100vh" aria-hidden="true"></div>
+
+  <section id="section-three">
+    <div class="inner" id="section-three-inner">
+      <p data-i18n="presenting">Presenting</p>
+      <h2>Veldara 8</h2>
+      <a href="#hero" class="cta-btn"><span data-i18n="back">Back to top</span> <span class="arr" aria-hidden="true">&uarr;</span></a>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var I18N = {
+    en: {
+      guides: 'Guides', journal: 'Journal', menu: 'Menu', subtitle: 'Our Purpose:',
+      h1: 'Instantly craft immersive <span class="underlined"><span class="line" aria-hidden="true"></span><span class="txt">3D worlds</span></span> on the web.',
+      cta: 'Get Started', copy: 'Copy install command', copied: 'Copied', scroll: 'Scroll down',
+      c1t: 'Explore Veldara', c1p: 'Veldara merges the elegance of Svelte 5 with the depth of Three.js within easy reach. It’s crafted to be robust and adaptable while remaining intuitive and simple to grasp.',
+      c2t: 'Unlock Three.js', c2p: 'The web is growing increasingly dimensional. At its heart, Veldara offers a composable declarative API for building performant Three.js experiences on the web.',
+      c3t: 'Connect Everything', c3p: 'Veldara ships with tooling for physics, XR, animation, layouting, model loading, and extensive utilities to make building compelling 3D apps for the web effortless.',
+      presenting: 'Presenting', back: 'Back to top', features: 'Features'
+    },
+    fa: {
+      guides: 'راهنماها', journal: 'مجله', menu: 'منو', subtitle: 'هدف ما:',
+      h1: 'در یک آن، <span class="underlined"><span class="line" aria-hidden="true"></span><span class="txt">جهان‌های سه‌بعدی</span></span> فراگیر را روی وب بسازید.',
+      cta: 'شروع کنید', copy: 'کپی دستور نصب', copied: 'کپی شد', scroll: 'پیمایش به پایین',
+      c1t: 'Veldara را بشناسید', c1p: 'Veldara ظرافت Svelte 5 را با عمق Three.js درمی‌آمیزد و همه را در دسترس شما می‌گذارد. محکم و انعطاف‌پذیر ساخته شده و در عین حال ساده و سرراست است.',
+      c2t: 'قدرت Three.js را آزاد کنید', c2p: 'وب هر روز بُعد تازه‌ای پیدا می‌کند. در قلب Veldara یک API اعلانی و ترکیب‌پذیر هست که ساختن تجربه‌های سریع و روان Three.js را روی وب ممکن می‌کند.',
+      c3t: 'همه‌چیز را به هم وصل کنید', c3p: 'Veldara با ابزارهایی برای فیزیک، XR، انیمیشن، چیدمان، بارگذاری مدل و ده‌ها ابزار کمکی دیگر می‌آید تا ساختن اپ‌های سه‌بعدی گیرا برای وب بی‌دردسر باشد.',
+      presenting: 'معرفی', back: 'بازگشت به بالا', features: 'ویژگی‌ها'
+    }
+  };
+  var lang = document.documentElement.lang === 'fa' ? 'fa' : 'en';
+  var T = I18N[lang];
+  var isRTL = lang === 'fa';
+  document.querySelectorAll('[data-i18n]').forEach(function (el) {
+    var k = el.getAttribute('data-i18n');
+    if (T[k] != null) el.textContent = T[k];
+  });
+  var h1 = document.getElementById('hero-title');
+  if (h1) h1.innerHTML = T.h1;
+  var copyBtn = document.getElementById('copy-cmd');
+  if (copyBtn) copyBtn.setAttribute('aria-label', T.copy);
+  var scrollA = document.querySelector('[data-i18n-aria="scroll"]');
+  if (scrollA) scrollA.setAttribute('aria-label', T.scroll);
+  var cardsAside = document.getElementById('fixed-cards');
+  if (cardsAside) cardsAside.setAttribute('aria-label', T.features);
+
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- Fallback bloom petals ---------- */
+  var NS = 'http://www.w3.org/2000/svg';
+  function petals(id, n, len, wid, fill, offset, op) {
+    var g = document.getElementById(id);
+    if (!g) return;
+    for (var i = 0; i < n; i++) {
+      var p = document.createElementNS(NS, 'path');
+      var w = wid, l = len;
+      p.setAttribute('d', 'M0 0C' + w + ' ' + (-l * .3) + ' ' + (w * .8) + ' ' + (-l * .9) + ' 0 ' + (-l) + 'C' + (-w * .8) + ' ' + (-l * .9) + ' ' + (-w) + ' ' + (-l * .3) + ' 0 0Z');
+      p.setAttribute('fill', fill);
+      p.setAttribute('opacity', op);
+      p.setAttribute('stroke', 'rgba(230,235,255,.35)');
+      p.setAttribute('stroke-width', '.6');
+      p.setAttribute('transform', 'rotate(' + (i * 360 / n + offset) + ')');
+      g.appendChild(p);
+    }
+  }
+  petals('petals-outer', 11, 92, 34, 'url(#pg)', 0, .75);
+  petals('petals-inner', 8, 58, 26, 'url(#pg2)', 20, .85);
+  var bloom = document.getElementById('bloom');
+
+  /* ---------- Scroll-scrubbed video ---------- */
+  var video = document.getElementById('scroll-video');
+  var seeking = false, pending = null;
+  function progress() {
+    var vh = window.innerHeight;
+    var start = vh * .5, end = document.documentElement.scrollHeight - vh;
+    var r = end - start;
+    if (r <= 0) return 0;
+    return Math.max(0, Math.min(1, (window.scrollY - start) / r));
+  }
+  function seekTo(t) {
+    if (!video) return;
+    if (seeking) { pending = t; return; }
+    if (Math.abs(video.currentTime - t) < 0.01) return;
+    seeking = true;
+    try { video.currentTime = t; } catch (e) { seeking = false; }
+  }
+  if (video) {
+    video.addEventListener('seeked', function () {
+      seeking = false;
+      if (pending != null) { var t = pending; pending = null; seekTo(t); }
+    });
+    video.addEventListener('stalled', function () { seeking = false; });
+    video.addEventListener('loadeddata', function () {
+      video.classList.add('ready');
+      if (video.duration && isFinite(video.duration)) seekTo(progress() * (video.duration - 0.05));
+    });
+    video.addEventListener('error', function () { video.style.display = 'none'; });
+  }
+
+  /* ---------- Particles ---------- */
+  var pc = document.getElementById('particles-canvas');
+  var pctx = pc ? pc.getContext('2d') : null;
+  var parts = [], rafP = 0, running = false;
+  var DENSITY = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--particle-density')) || 12000;
+  function makeParticles() {
+    if (!pc) return;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    pc.width = Math.round(innerWidth * dpr); pc.height = Math.round(innerHeight * dpr);
+    pctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    parts = [];
+    var count = Math.floor(innerWidth * innerHeight / DENSITY);
+    for (var i = 0; i < count; i++) {
+      parts.push({ x: Math.random() * innerWidth, y: Math.random() * innerHeight,
+        vx: (Math.random() - .5) * .3, vy: (Math.random() - .5) * .3,
+        s: Math.random() * 1.5 + .5, o: Math.random() * .6 + .2 });
+    }
+  }
+  function drawParticles(move) {
+    if (!pctx) return;
+    var w = innerWidth, h = innerHeight;
+    pctx.clearRect(0, 0, w, h);
+    for (var i = 0; i < parts.length; i++) {
+      var p = parts[i];
+      if (move) {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0) p.x = w; if (p.x > w) p.x = 0;
+        if (p.y < 0) p.y = h; if (p.y > h) p.y = 0;
+      }
+      pctx.beginPath();
+      pctx.arc(p.x, p.y, p.s, 0, Math.PI * 2);
+      pctx.fillStyle = 'rgba(255,255,255,' + p.o + ')';
+      pctx.fill();
+    }
+  }
+  function loop() { drawParticles(true); rafP = requestAnimationFrame(loop); }
+  function start() { if (reduce || running) return; running = true; rafP = requestAnimationFrame(loop); }
+  function stop() { running = false; cancelAnimationFrame(rafP); }
+  makeParticles();
+  drawParticles(false);
+  start();
+  document.addEventListener('visibilitychange', function () { document.hidden ? stop() : start(); });
+
+  /* ---------- Hero fade + cards reveal ---------- */
+  var hero = document.getElementById('hero');
+  var cards = document.getElementById('fixed-cards');
+  var grid = cards ? cards.querySelector('.grid') : null;
+  var trigger = document.getElementById('cards-trigger');
+  function setMask(el, v) { el.style.maskImage = v; el.style.webkitMaskImage = v; }
+  function update() {
+    var y = window.scrollY, vh = window.innerHeight;
+    if (hero) hero.style.opacity = Math.max(0, 1 - y / (vh * .3));
+    if (bloom && !reduce) bloom.style.setProperty('--spin', (progress() * 140) + 'deg');
+    if (video && video.readyState >= 1 && video.duration && isFinite(video.duration)) seekTo(progress() * (video.duration - 0.05));
+    if (!cards || !grid || !trigger) return;
+    var rect = trigger.getBoundingClientRect();
+    var top = rect.top + y, hgt = rect.height;
+    var s = top - vh * .5, e = top + hgt - vh * .3, r = e - s;
+    var pr = r > 0 ? Math.max(0, Math.min(1, (y - s) / r)) : 0;
+    var active = y >= s - vh * .2 && y <= e + vh * .3;
+    var fi = Math.min(1, Math.max(0, (y - (s - vh * .2)) / (vh * .2)));
+    var fo = Math.min(1, Math.max(0, (e + vh * .3 - y) / (vh * .3)));
+    var op = active ? Math.min(fi, fo) : 0;
+    cards.style.opacity = op;
+    cards.style.pointerEvents = op > .1 ? 'auto' : 'none';
+    var pct = pr * 130;
+    if (window.innerWidth < 768) {
+      setMask(grid, 'linear-gradient(to bottom, black ' + pct + '%, transparent ' + (pct + 20) + '%)');
+    } else {
+      setMask(grid, 'linear-gradient(to ' + (isRTL ? 'left' : 'right') + ', black ' + pct + '%, transparent ' + (pct + 15) + '%)');
+    }
+  }
+  var ticking = false;
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function () { ticking = false; update(); });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', function () { makeParticles(); drawParticles(false); onScroll(); });
+  update();
+
+  /* ---------- Section three reveal ---------- */
+  var s3 = document.getElementById('section-three-inner');
+  if (s3) {
+    if (reduce || !('IntersectionObserver' in window)) s3.classList.add('visible');
+    else {
+      var io = new IntersectionObserver(function (entries) {
+        if (entries[0] && entries[0].isIntersecting) { s3.classList.add('visible'); io.disconnect(); }
+      }, { threshold: .15 });
+      io.observe(s3);
+    }
+  }
+
+  /* ---------- Copy command ---------- */
+  var copied = document.getElementById('copied');
+  if (copyBtn) copyBtn.addEventListener('click', function () {
+    var txt = 'npm i @veldara/core';
+    var done = function () {
+      if (!copied) return;
+      copied.textContent = T.copied;
+      setTimeout(function () { copied.textContent = ''; }, 1600);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, done);
+    else done();
+  });
+
+  /* ---------- Mobile menu ---------- */
+  var mb = document.getElementById('menu-btn'), mm = document.getElementById('mobile-menu'), mi = document.getElementById('menu-icon');
+  function setMenu(open) {
+    if (!mb || !mm) return;
+    mm.classList.toggle('open', open);
+    mb.setAttribute('aria-expanded', String(open));
+    if (mi) mi.setAttribute('d', open ? 'M6 6l12 12M18 6L6 18' : 'M4 7h16M4 12h16M4 17h16');
+  }
+  if (mb) mb.addEventListener('click', function () { setMenu(!mm.classList.contains('open')); });
+  if (mm) mm.addEventListener('click', function (e) { if (e.target.closest('a')) setMenu(false); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
+})();
+</script>
+</body>
+</html>

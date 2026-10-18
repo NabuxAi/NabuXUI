@@ -1,0 +1,15 @@
+{
+  "title": { "en": "EIDOLON monolith studio hero", "fa": "هیروی ستون سنگی استودیوی EIDOLON" },
+  "oneLiner": {
+    "en": "A cinematic brand-studio hero in a rounded frame: a glowing monolith rises from a misty violet savanna behind editorial sans and italic-serif type, with a discipline switcher that re-tints the scene, pointer parallax, drifting fog and a glass project-brief dialog.",
+    "fa": "هیروی سینمایی یک استودیوی برند در قابی گرد: ستونی سنگی و درخشان از دل دشتی بنفش و مه‌آلود سر برمی‌آورد، پشت تایپوگرافی مجله‌ای؛ با انتخابگر تخصص که رنگ صحنه را عوض می‌کند، پارالاکس با نشانگر، مه روان و پنجرهٔ شیشه‌ای ثبت درخواست پروژه."
+  },
+  "js": true,
+  "props": [
+    { "name": "--accent", "type": "color", "default": "#b78cff", "note": { "en": "Focus ring and highlight colour inside the project dialog.", "fa": "رنگ حلقهٔ فوکوس و تأکید در پنجرهٔ درخواست پروژه." } },
+    { "name": "--page", "type": "color", "default": "#14121b", "note": { "en": "Page background around the hero frame.", "fa": "رنگ پس‌زمینهٔ صفحه دور قاب هیرو." } },
+    { "name": "--radius", "type": "length", "default": "26px", "note": { "en": "Corner radius of the hero frame.", "fa": "شعاع گوشه‌های قاب هیرو." } },
+    { "name": "CYCLE_MS", "type": "number", "default": "5200", "note": { "en": "Milliseconds before the discipline switcher auto-advances.", "fa": "فاصلهٔ زمانی (میلی‌ثانیه) تا رفتن خودکار انتخابگر به تخصص بعدی." } },
+    { "name": "HUES", "type": "string", "default": "0deg, -28deg, 32deg, -60deg", "note": { "en": "Hue rotation applied to the scene for each discipline.", "fa": "میزان چرخش رنگ صحنه برای هر تخصص." } }
+  ]
+}

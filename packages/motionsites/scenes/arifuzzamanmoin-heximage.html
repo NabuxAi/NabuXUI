@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heximage — hex-dump ASCII portrait</title>
+<script>
+  (function () {
+    var p = new URLSearchParams(location.search);
+    var lang = p.get('lang') === 'fa' ? 'fa' : 'en';
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'fa' ? 'rtl' : 'ltr';
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Vazirmatn:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #050505;
+    --ink: #ececf0;
+    --muted: #7c7c86;
+    --line: rgba(255,255,255,.10);
+    --accent: #ff2a3a;
+    --accent-2: #c026d3;
+    --cell: 11;          /* base cell size in px, scaled by density */
+    --flicker-ms: 90;    /* frame interval of the flicker loop */
+    --mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    --sans: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  html[lang="fa"] { --sans: 'Vazirmatn', 'JetBrains Mono', sans-serif; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: var(--sans);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  main {
+    position: relative; min-height: 100vh; min-height: 100dvh;
+    display: grid; grid-template-rows: auto 1fr auto;
+  }
+  .stage { position: absolute; inset: 0; overflow: hidden; }
+  canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
+  .scan {
+    position: absolute; inset: 0; pointer-events: none;
+    background:
+      repeating-linear-gradient(to bottom, rgba(255,255,255,.025) 0 1px, transparent 1px 3px),
+      radial-gradient(120% 90% at 50% 45%, transparent 55%, rgba(0,0,0,.85) 100%);
+  }
+  header, footer { position: relative; z-index: 2; padding: 20px clamp(16px, 4vw, 40px); }
+  header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+  .brand { display: grid; gap: 4px; }
+  .brand b { font-family: var(--mono); font-weight: 700; letter-spacing: .18em; font-size: 13px; text-transform: uppercase; }
+  .brand b::before { content: ''; display: inline-block; width: 8px; height: 8px; background: var(--accent); margin-inline-end: 10px; vertical-align: 1px; animation: blink 1.2s steps(2) infinite; }
+  .brand span { font-size: 12px; color: var(--muted); }
+  .stat { font-family: var(--mono); font-size: 11px; color: var(--muted); text-align: end; line-height: 1.7; direction: ltr; }
+  .stat em { color: var(--ink); font-style: normal; }
+  footer { display: flex; justify-content: center; align-self: end; }
+  .bar {
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: center;
+    padding: 6px; border: 1px solid var(--line); border-radius: 12px;
+    background: rgba(10,10,12,.72); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    max-width: 100%;
+  }
+  .grp { display: flex; gap: 2px; padding: 2px; border-radius: 8px; background: rgba(255,255,255,.04); }
+  .bar .lbl { font-size: 11px; color: var(--muted); padding-inline: 8px 4px; }
+  button {
+    font: inherit; font-size: 12px; color: var(--ink); background: transparent;
+    border: 0; border-radius: 6px; padding: 8px 11px; cursor: pointer;
+    display: inline-flex; gap: 6px; align-items: center; min-height: 34px;
+  }
+  button:hover { background: rgba(255,255,255,.07); }
+  button[aria-pressed="true"] { background: var(--ink); color: #000; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button svg { width: 14px; height: 14px; }
+  button svg[hidden] { display: none; }
+  .hint { position: absolute; z-index: 2; inset-inline-start: clamp(16px, 4vw, 40px); bottom: 90px; font-size: 11px; color: var(--muted); max-width: 220px; line-height: 1.6; }
+  @keyframes blink { 50% { opacity: 0; } }
+  @media (max-width: 640px) {
+    .hint { display: none; }
+    .stat { display: none; }
+    button { padding: 8px 9px; }
+    .bar .lbl { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .brand b::before { animation: none; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="stage" aria-hidden="true">
+    <canvas id="hex"></canvas>
+    <div class="scan"></div>
+  </div>
+  <header>
+    <div class="brand">
+      <b>Heximage</b>
+      <span data-i18n="sub">Animated hex-dump ASCII portrait</span>
+    </div>
+    <div class="stat" aria-live="off">
+      <div>GRID <em id="grid">— × —</em></div>
+      <div>MODE <em id="mode">HEX</em> · <em id="fps">11</em> FPS</div>
+      <div>0x<em id="addr">0000</em></div>
+    </div>
+  </header>
+  <p class="hint" data-i18n="hint">Move the pointer over the portrait to scramble the dump.</p>
+  <footer>
+    <nav class="bar" aria-label="Heximage controls" data-i18n-aria="controls">
+      <button id="play" type="button" aria-pressed="false">
+        <svg id="icoPause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+        <svg id="icoPlay" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" hidden><path d="M7 4v16l13-8z"/></svg>
+        <span id="playTxt" data-i18n="pause">Pause</span>
+      </button>
+      <span class="lbl" data-i18n="density">Density</span>
+      <div class="grp" role="group" aria-label="Density">
+        <button type="button" data-density="1.35" aria-pressed="false" data-i18n="low">Low</button>
+        <button type="button" data-density="1" aria-pressed="true" data-i18n="mid">Mid</button>
+        <button type="button" data-density=".75" aria-pressed="false" data-i18n="high">High</button>
+      </div>
+      <div class="grp" role="group" aria-label="Charset">
+        <button type="button" data-set="hex" aria-pressed="true">HEX</button>
+        <button type="button" data-set="bin" aria-pressed="false">BIN</button>
+      </div>
+      <button id="glitch" type="button" aria-pressed="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg>
+        <span data-i18n="glitch">Glitch</span>
+      </button>
+    </nav>
+  </footer>
+</main>
+<script>
+(() => {
+  const lang = document.documentElement.lang;
+  const I18N = {
+    en: { sub: 'Animated hex-dump ASCII portrait', hint: 'Move the pointer over the portrait to scramble the dump.', pause: 'Pause', play: 'Play', density: 'Density', low: 'Low', mid: 'Mid', high: 'High', glitch: 'Glitch', controls: 'Heximage controls' },
+    fa: { sub: 'پرترهٔ اسکی متحرک به سبک هگز‌دامپ', hint: 'نشانگر را روی پرتره بکشید تا ارقام به‌هم بریزند.', pause: 'توقف', play: 'پخش', density: 'تراکم', low: 'کم', mid: 'متوسط', high: 'زیاد', glitch: 'گلیچ', controls: 'کنترل‌های هگزایمیج' }
+  };
+  const T = I18N[lang] || I18N.en;
+  document.querySelectorAll('[data-i18n]').forEach(el => { const k = el.dataset.i18n; if (T[k]) el.textContent = T[k]; });
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => { const k = el.dataset.i18nAria; if (T[k]) el.setAttribute('aria-label', T[k]); });
+
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const canvas = document.getElementById('hex');
+  const ctx = canvas.getContext('2d');
+  const off = document.createElement('canvas');
+  const octx = off.getContext('2d', { willReadFrequently: true });
+  const css = getComputedStyle(document.documentElement);
+  const BASE_CELL = parseFloat(css.getPropertyValue('--cell')) || 11;
+  const FRAME_MS = parseFloat(css.getPropertyValue('--flicker-ms')) || 90;
+  const ACCENTS = [css.getPropertyValue('--accent').trim() || '#ff2a3a', css.getPropertyValue('--accent-2').trim() || '#c026d3'];
+  const HEX = '0123456789ABCDEF';
+
+  let W = 0, H = 0, dpr = 1, cw = 0, ch = 0, cols = 0, rows = 0;
+  let lum = new Float32Array(0), jitter = new Int8Array(0), accent = new Uint16Array(0), accentCol = new Uint8Array(0);
+  let density = 1, charset = 'hex', glitch = true, playing = !reduce;
+  let t0 = performance.now(), last = 0, raf = 0, visible = true;
+  const ptr = { x: -9999, y: -9999, on: false };
+
+  function drawFigure(c, W, H) {
+    c.fillStyle = '#000'; c.fillRect(0, 0, W, H);
+    const u = Math.min(H * 1.05, W * 1.25);
+    const cx = W / 2;
+    const headY = H * 0.30, rx = u * 0.115, ry = u * 0.15;
+    const sY = headY + ry + u * 0.07;
+    // neck
+    let g = c.createLinearGradient(cx - u * .06, 0, cx + u * .06, 0);
+    g.addColorStop(0, '#5a5a5a'); g.addColorStop(.5, '#9a9a9a'); g.addColorStop(1, '#4a4a4a');
+    c.fillStyle = g; c.fillRect(cx - u * .06, headY + ry * .5, u * .12, sY - headY);
+    // suit
+    g = c.createLinearGradient(0, sY, 0, H);
+    g.addColorStop(0, '#c9c9c9'); g.addColorStop(1, '#8c8c8c');
+    c.fillStyle = g;
+    c.beginPath();
+    c.moveTo(cx - u * .08, sY);
+    c.quadraticCurveTo(cx - u * .34, sY + u * .02, cx - u * .40, sY + u * .14);
+    c.lineTo(cx - u * .43, H + 20); c.lineTo(cx + u * .43, H + 20);
+    c.lineTo(cx + u * .40, sY + u * .14);
+    c.quadraticCurveTo(cx + u * .34, sY + u * .02, cx + u * .08, sY);
+    c.closePath(); c.fill();
+    // side shading
+    g = c.createLinearGradient(cx - u * .43, 0, cx + u * .43, 0);
+    g.addColorStop(0, 'rgba(0,0,0,.45)'); g.addColorStop(.25, 'rgba(0,0,0,0)'); g.addColorStop(.75, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.5)');
+    c.fillStyle = g; c.fillRect(cx - u * .45, sY, u * .9, H - sY);
+    // shirt V
+    c.fillStyle = '#ffffff';
+    c.beginPath(); c.moveTo(cx - u * .075, sY - u * .01); c.lineTo(cx + u * .075, sY - u * .01); c.lineTo(cx, sY + u * .42); c.closePath(); c.fill();
+    // lapels
+    c.strokeStyle = '#3c3c3c'; c.lineWidth = u * .018;
+    c.beginPath(); c.moveTo(cx - u * .1, sY); c.lineTo(cx - u * .015, sY + u * .44); c.moveTo(cx + u * .1, sY); c.lineTo(cx + u * .015, sY + u * .44); c.stroke();
+    // tie
+    c.fillStyle = '#2a2a2a';
+    c.beginPath(); c.moveTo(cx - u * .018, sY + u * .01); c.lineTo(cx + u * .018, sY + u * .01); c.lineTo(cx + u * .03, sY + u * .3); c.lineTo(cx, sY + u * .35); c.lineTo(cx - u * .03, sY + u * .3); c.closePath(); c.fill();
+    // collar shadow
+    c.fillStyle = 'rgba(0,0,0,.35)';
+    c.beginPath(); c.ellipse(cx, sY - u * .005, u * .08, u * .02, 0, 0, Math.PI * 2); c.fill();
+    // head
+    g = c.createRadialGradient(cx - rx * .25, headY - ry * .1, rx * .1, cx, headY, rx * 1.1);
+    g.addColorStop(0, '#e8e8e8'); g.addColorStop(.7, '#a8a8a8'); g.addColorStop(1, '#555');
+    c.fillStyle = g;
+    c.beginPath(); c.ellipse(cx, headY, rx, ry, 0, 0, Math.PI * 2); c.fill();
+    // ears
+    c.fillStyle = '#7a7a7a';
+    c.beginPath(); c.ellipse(cx - rx * .98, headY + ry * .05, rx * .14, ry * .2, 0, 0, Math.PI * 2); c.ellipse(cx + rx * .98, headY + ry * .05, rx * .14, ry * .2, 0, 0, Math.PI * 2); c.fill();
+    // hair
+    c.save(); c.beginPath(); c.ellipse(cx, headY, rx * 1.04, ry * 1.04, 0, 0, Math.PI * 2); c.clip();
+    c.fillStyle = '#b4b4b4';
+    c.beginPath(); c.ellipse(cx, headY - ry * .78, rx * 1.15, ry * .5, 0, 0, Math.PI * 2); c.fill();
+    c.restore();
+    // brows, eyes, nose, mouth
+    c.fillStyle = '#353535';
+    c.fillRect(cx - rx * .62, headY - ry * .2, rx * .45, ry * .06);
+    c.fillRect(cx + rx * .17, headY - ry * .2, rx * .45, ry * .06);
+    c.fillStyle = '#2a2a2a';
+    c.beginPath(); c.ellipse(cx - rx * .38, headY - ry * .02, rx * .17, ry * .07, 0, 0, Math.PI * 2); c.ellipse(cx + rx * .38, headY - ry * .02, rx * .17, ry * .07, 0, 0, Math.PI * 2); c.fill();
+    c.fillStyle = 'rgba(40,40,40,.6)';
+    c.beginPath(); c.moveTo(cx, headY + ry * .02); c.lineTo(cx + rx * .14, headY + ry * .32); c.lineTo(cx - rx * .05, headY + ry * .34); c.closePath(); c.fill();
+    c.fillStyle = '#3a3a3a';
+    c.fillRect(cx - rx * .3, headY + ry * .52, rx * .6, ry * .06);
+    // jaw shadow
+    g = c.createLinearGradient(0, headY + ry * .5, 0, headY + ry);
+    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.35)');
+    c.fillStyle = g; c.beginPath(); c.ellipse(cx, headY, rx, ry, 0, 0, Math.PI * 2); c.fill();
+  }
+
+  function build() {
+    W = canvas.clientWidth; H = canvas.clientHeight;
+    if (!W || !H) return;
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+    const base = W < 640 ? BASE_CELL * 0.8 : BASE_CELL;
+    cw = base * density; ch = cw * 1.25;
+    cols = Math.ceil(W / cw); rows = Math.ceil(H / ch);
+    const s = 0.5;
+    off.width = Math.max(1, Math.round(W * s)); off.height = Math.max(1, Math.round(H * s));
+    octx.setTransform(s, 0, 0, s, 0, 0);
+    drawFigure(octx, W, H);
+    const img = octx.getImageData(0, 0, off.width, off.height).data;
+    const n = cols * rows;
+    lum = new Float32Array(n); jitter = new Int8Array(n); accent = new Uint16Array(n); accentCol = new Uint8Array(n);
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+      const x = Math.min(off.width - 1, Math.floor((c + .5) * cw * s));
+      const y = Math.min(off.height - 1, Math.floor((r + .5) * ch * s));
+      lum[r * cols + c] = img[(y * off.width + x) * 4] / 255;
+      jitter[r * cols + c] = Math.round((Math.random() - .5) * 3);
+    }
+    const gEl = document.getElementById('grid'); if (gEl) gEl.textContent = cols + ' × ' + rows;
+    render(performance.now());
+  }
+
+  function glyph(i, L) {
+    if (charset === 'bin') return (L > .55) ^ (jitter[i] & 1) ? '1' : '0';
+    const idx = Math.max(0, Math.min(15, Math.round((1 - L) * 15) + jitter[i]));
+    return HEX[idx];
+  }
+
+  function render(now) {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.fillStyle = '#050505'; ctx.fillRect(0, 0, W, H);
+    const fs = Math.round(cw * 1.02);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const reveal = reduce ? 1 : Math.min(1, (now - t0) / 1400);
+    const revealRow = reveal * (rows + 6);
+    const R = Math.max(70, Math.min(W, H) * .14);
+    let curBold = null;
+    for (let r = 0; r < rows; r++) {
+      const y = (r + .5) * ch;
+      const rowGap = revealRow - r;
+      if (rowGap < 0) break;
+      for (let c = 0; c < cols; c++) {
+        const i = r * cols + c;
+        let L = lum[i];
+        const x = (c + .5) * cw;
+        let scramble = rowGap < 6;
+        if (ptr.on) {
+          const d = Math.hypot(x - ptr.x, y - ptr.y);
+          if (d < R) { const k = 1 - d / R; L = Math.min(1, L + k * .35); if (Math.random() < k * .8) scramble = true; }
+        }
+        let ch2, color, alpha;
+        if (L < .1) {
+          if ((i * 7919) % 7 > 1) continue;
+          ch2 = HEX[(i * 31 + (jitter[i] + 8)) & 15];
+          color = '236,236,240'; alpha = .045;
+        } else {
+          ch2 = scramble ? HEX[(Math.random() * 16) | 0] : glyph(i, L);
+          alpha = .18 + .82 * Math.pow(L, 1.25);
+          color = '236,236,240';
+        }
+        const bold = L > .78;
+        if (bold !== curBold) { ctx.font = (bold ? '700 ' : '400 ') + fs + 'px "JetBrains Mono", ui-monospace, monospace'; curBold = bold; }
+        if (accent[i] && L >= .1) {
+          ctx.fillStyle = ACCENTS[accentCol[i]];
+        } else {
+          ctx.fillStyle = 'rgba(' + color + ',' + alpha.toFixed(3) + ')';
+        }
+        ctx.fillText(ch2, x, y);
+      }
+    }
+  }
+
+  function tick() {
+    // mutate a few cells — the flicker
+    const n = lum.length; if (!n) return;
+    const flips = Math.ceil(n * .035);
+    for (let k = 0; k < flips; k++) {
+      const i = (Math.random() * n) | 0;
+      jitter[i] = Math.max(-2, Math.min(2, jitter[i] + (Math.random() < .5 ? -1 : 1)));
+    }
+    for (let i = 0; i < n; i++) if (accent[i]) accent[i]--;
+    if (glitch && Math.random() < .55) {
+      const count = 1 + ((Math.random() * 3) | 0);
+      for (let k = 0; k < count; k++) {
+        const i = (Math.random() * n) | 0;
+        if (lum[i] > .15) { accent[i] = 3 + ((Math.random() * 6) | 0); accentCol[i] = Math.random() < .7 ? 0 : 1; }
+      }
+    }
+    const a = document.getElementById('addr');
+    if (a) a.textContent = (((performance.now() / 10) | 0) & 0xffff).toString(16).toUpperCase().padStart(4, '0');
+  }
+
+  function loop(now) {
+    raf = 0;
+    if (!playing || !visible) return;
+    if (now - last >= FRAME_MS) { last = now; tick(); render(now); }
+    else if (now - t0 < 1500 || ptr.on) render(now);
+    raf = requestAnimationFrame(loop);
+  }
+  function start() { if (!raf && playing && visible) raf = requestAnimationFrame(loop); }
+  function stop() { if (raf) cancelAnimationFrame(raf); raf = 0; }
+
+  // controls
+  const playBtn = document.getElementById('play');
+  function syncPlay() {
+    if (!playBtn) return;
+    playBtn.setAttribute('aria-pressed', String(!playing));
+    document.getElementById('icoPause').hidden = !playing;
+    document.getElementById('icoPlay').hidden = playing;
+    document.getElementById('playTxt').textContent = playing ? T.pause : T.play;
+  }
+  playBtn && playBtn.addEventListener('click', () => { playing = !playing; syncPlay(); playing ? start() : stop(); });
+  document.querySelectorAll('[data-density]').forEach(b => b.addEventListener('click', () => {
+    density = parseFloat(b.dataset.density);
+    document.querySelectorAll('[data-density]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    build();
+  }));
+  document.querySelectorAll('[data-set]').forEach(b => b.addEventListener('click', () => {
+    charset = b.dataset.set;
+    document.querySelectorAll('[data-set]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    const m = document.getElementById('mode'); if (m) m.textContent = charset.toUpperCase();
+    render(performance.now());
+  }));
+  const gBtn = document.getElementById('glitch');
+  gBtn && gBtn.addEventListener('click', () => { glitch = !glitch; gBtn.setAttribute('aria-pressed', String(glitch)); if (!glitch) accent.fill(0); render(performance.now()); });
+
+  const main = document.querySelector('main');
+  main.addEventListener('pointermove', e => {
+    const r = canvas.getBoundingClientRect();
+    ptr.x = e.clientX - r.left; ptr.y = e.clientY - r.top; ptr.on = true;
+    if (!playing || reduce) render(performance.now());
+  });
+  main.addEventListener('pointerleave', () => { ptr.on = false; render(performance.now()); });
+
+  let rt = 0;
+  const ro = new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(build, 80); });
+  ro.observe(canvas);
+  document.addEventListener('visibilitychange', () => { visible = !document.hidden; visible ? start() : stop(); });
+  const io = new IntersectionObserver(es => { visible = es[0].isIntersecting && !document.hidden; visible ? start() : stop(); });
+  io.observe(canvas);
+  window.addEventListener('pagehide', () => { stop(); ro.disconnect(); io.disconnect(); });
+
+  syncPlay();
+  build();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => render(performance.now()));
+  start();
+})();
+</script>
+</body>
+</html>

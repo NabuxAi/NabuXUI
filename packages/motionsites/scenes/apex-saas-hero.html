@@ -1,0 +1,528 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Apex SaaS Hero</title>
+<script>
+  (function () {
+    var p = new URLSearchParams(location.search);
+    var l = p.get('lang') === 'fa' ? 'fa' : 'en';
+    document.documentElement.lang = l;
+    document.documentElement.dir = l === 'fa' ? 'rtl' : 'ltr';
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --background: 260 87% 3%;
+    --foreground: 40 6% 95%;
+    --primary: 262 83% 58%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 4% 16%;
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 5% 65%;
+    --border: 240 4% 20%;
+    --hero-heading: 40 10% 96%;
+    --hero-sub: 40 6% 82%;
+    --card: 240 6% 9%;
+    --ring: 262 83% 58%;
+    --radius: 0.75rem;
+    --marquee-duration: 20s;
+    --video-fade: 500ms;
+    --font: 'Geist', 'Geist Sans', 'Inter', system-ui, sans-serif;
+  }
+  html[lang="fa"] { --font: 'Vazirmatn', 'Geist', 'Inter', system-ui, sans-serif; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: hsl(var(--background)); }
+  body {
+    font-family: var(--font);
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  :focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; border-radius: 8px; }
+  svg { display: block; flex-shrink: 0; }
+  .latin { font-family: 'Geist', 'Inter', system-ui, sans-serif; }
+
+  /* ---------- liquid glass ---------- */
+  .liquid-glass {
+    background: rgba(255, 255, 255, 0.01);
+    background-blend-mode: luminosity;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: none;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+  }
+  .liquid-glass::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.4px;
+    background: linear-gradient(180deg,
+      rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.15) 20%,
+      rgba(255,255,255,0) 40%, rgba(255,255,255,0) 60%,
+      rgba(255,255,255,0.15) 80%, rgba(255,255,255,0.45) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* ---------- hero ---------- */
+  .hero { position: relative; overflow: hidden; background: hsl(var(--background)); }
+  .hero::after {
+    content: ''; position: absolute; inset: auto 0 -30% 0; height: 60%;
+    background: radial-gradient(50% 50% at 50% 100%, hsl(var(--primary) / .12), transparent 70%);
+    pointer-events: none;
+  }
+
+  /* navbar */
+  .nav-wrap { display: flex; justify-content: center; padding: 20px 16px; position: relative; z-index: 20; }
+  .nav {
+    border-radius: 24px; padding: 8px; max-width: 850px; width: 100%;
+    display: flex; align-items: center; justify-content: space-between; gap: 24px;
+    overflow: visible;
+  }
+  .brand { display: flex; align-items: center; gap: 8px; padding-inline-start: 4px; }
+  .brand-mark {
+    width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center;
+    background: linear-gradient(to bottom, hsl(var(--secondary)), hsl(var(--muted)));
+    border: 1px solid hsl(var(--border));
+  }
+  .brand-name { font-family: 'Geist', 'Inter', system-ui, sans-serif; font-size: 20px; font-weight: 600; letter-spacing: -0.025em; }
+  .links { display: flex; align-items: center; list-style: none; }
+  .links > li { position: relative; }
+  .link {
+    display: flex; align-items: center; gap: 4px;
+    padding: 8px 12px; font-size: 16px; color: hsl(var(--foreground) / .9);
+    transition: color .2s;
+  }
+  .link:hover, .link[aria-expanded="true"] { color: hsl(var(--foreground)); }
+  .link svg { transition: transform .25s; opacity: .8; }
+  .link[aria-expanded="true"] svg { transform: rotate(180deg); }
+  .drop {
+    position: absolute; top: calc(100% + 14px); inset-inline-start: 50%; translate: -50% 0;
+    min-width: 230px; padding: 8px; border-radius: 16px;
+    background: hsl(var(--card) / .92);
+    border: 1px solid hsl(var(--border));
+    box-shadow: 0 20px 50px rgba(0,0,0,.55);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    opacity: 0; visibility: hidden; transform: translateY(-6px);
+    transition: opacity .2s, transform .2s, visibility .2s;
+  }
+  [dir="rtl"] .drop { translate: 50% 0; }
+  .drop.open { opacity: 1; visibility: visible; transform: none; }
+  .drop a {
+    display: block; padding: 10px 12px; border-radius: 10px; font-size: 14px;
+    color: hsl(var(--foreground) / .85);
+  }
+  .drop a small { display: block; font-size: 12px; color: hsl(var(--muted-foreground)); margin-top: 2px; }
+  .drop a:hover { background: rgba(255,255,255,.05); color: hsl(var(--foreground)); }
+  .btn-primary {
+    background: hsl(var(--primary)); color: hsl(var(--primary-foreground));
+    transition: background .2s, transform .2s, box-shadow .2s;
+  }
+  .btn-primary:hover { background: hsl(262 83% 64%); box-shadow: 0 8px 30px hsl(var(--primary) / .35); }
+  .btn-primary:active { transform: scale(.97); }
+  .signup { border-radius: 12px; padding: 8px 16px; font-size: 14px; font-weight: 500; white-space: nowrap; }
+  .nav-end { display: flex; align-items: center; gap: 8px; }
+  .burger { display: none; width: 36px; height: 36px; border-radius: 10px; place-items: center; }
+  .burger:hover { background: rgba(255,255,255,.06); }
+  .mobile-menu {
+    position: absolute; top: calc(100% - 6px); inset-inline: 16px; max-width: 850px; margin-inline: auto;
+    padding: 10px; border-radius: 20px;
+    background: hsl(var(--card) / .95); border: 1px solid hsl(var(--border));
+    box-shadow: 0 24px 60px rgba(0,0,0,.6);
+    display: none; flex-direction: column;
+  }
+  .mobile-menu.open { display: flex; animation: menuIn .22s ease-out; }
+  @keyframes menuIn { from { opacity: 0; transform: translateY(-6px); } }
+  .mobile-menu a { padding: 12px 14px; border-radius: 12px; font-size: 16px; color: hsl(var(--foreground) / .9); }
+  .mobile-menu a:hover { background: rgba(255,255,255,.05); }
+
+  /* hero body */
+  .hero-body {
+    position: relative; z-index: 2;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 80px 16px 24px;
+  }
+  .badge {
+    border-radius: 999px; padding: 4px 4px 4px 12px; margin-bottom: 32px;
+    display: flex; align-items: center; gap: 8px; font-size: 12px;
+  }
+  [dir="rtl"] .badge { padding: 4px 12px 4px 4px; }
+  .badge-cta {
+    border-radius: 999px; background: rgba(255,255,255,.05); padding: 2px 12px;
+    display: flex; align-items: center; gap: 4px; transition: background .2s;
+  }
+  .badge:hover .badge-cta { background: rgba(255,255,255,.1); }
+  .badge-cta svg { transition: transform .2s; }
+  .badge:hover .badge-cta svg { transform: translateX(2px); }
+  [dir="rtl"] .badge-cta svg { transform: scaleX(-1); }
+  [dir="rtl"] .badge:hover .badge-cta svg { transform: scaleX(-1) translateX(2px); }
+  h1 {
+    color: hsl(var(--hero-heading)); text-align: center;
+    font-size: 36px; font-weight: 600; line-height: 1.05; letter-spacing: -0.025em;
+    max-width: 1024px;
+  }
+  html[lang="fa"] h1 { line-height: 1.3; letter-spacing: 0; }
+  .sub {
+    color: hsl(var(--hero-sub)); text-align: center; font-size: 18px; line-height: 32px;
+    max-width: 448px; margin-top: 16px; opacity: .8;
+  }
+  html[lang="fa"] .sub { max-width: 470px; }
+  .ctas { display: flex; align-items: center; gap: 16px; margin-top: 32px; flex-wrap: wrap; justify-content: center; }
+  .cta { border-radius: 999px; padding: 12px 24px; font-size: 16px; white-space: nowrap; }
+  .cta-main { font-weight: 500; }
+  .cta-ghost { font-weight: 400; transition: background .2s; }
+  .cta-ghost:hover { background-color: rgba(255,255,255,.05); }
+
+  /* entrance */
+  .rise { opacity: 0; transform: translateY(14px); filter: blur(6px); animation: rise .9s cubic-bezier(.2,.7,.2,1) forwards; }
+  .rise.d1 { animation-delay: .05s; } .rise.d2 { animation-delay: .15s; } .rise.d3 { animation-delay: .28s; }
+  .rise.d4 { animation-delay: .4s; } .rise.d5 { animation-delay: .5s; }
+  @keyframes rise { to { opacity: 1; transform: none; filter: none; } }
+
+  /* ---------- social proof ---------- */
+  .proof { position: relative; width: 100%; overflow: hidden; background: hsl(var(--background)); }
+  .proof-fallback {
+    position: absolute; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(38% 30% at 22% 55%, hsl(212 95% 60% / .55), transparent 70%),
+      radial-gradient(30% 22% at 62% 46%, hsl(226 90% 55% / .55), transparent 70%),
+      radial-gradient(42% 26% at 82% 60%, hsl(238 85% 50% / .45), transparent 70%),
+      radial-gradient(70% 20% at 50% 72%, hsl(230 90% 40% / .35), transparent 70%);
+    filter: blur(6px);
+    animation: drift 14s ease-in-out infinite alternate;
+  }
+  @keyframes drift { to { transform: translateX(-4%) scale(1.05); } }
+  .proof video {
+    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+    opacity: 0; transition: opacity var(--video-fade) linear;
+  }
+  .proof video.on { opacity: 1; }
+  .proof-shade {
+    position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(to bottom, hsl(var(--background)), transparent 50%, hsl(var(--background)));
+  }
+  .proof-inner {
+    position: relative; z-index: 10;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 64px 16px 96px; gap: 80px;
+  }
+  .stats { display: flex; align-items: center; gap: 32px; flex-wrap: wrap; justify-content: center; list-style: none; }
+  .stat { display: flex; align-items: center; gap: 12px; color: hsl(var(--foreground) / .8); font-size: 14px; font-weight: 500; }
+  .stat-icon { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; color: hsl(var(--foreground) / .7); }
+  .spacer { height: clamp(180px, 30vw, 380px); }
+  .logos { width: 100%; max-width: 1024px; display: flex; align-items: center; gap: 48px; }
+  .logos-label { color: hsl(var(--foreground) / .5); font-size: 14px; white-space: nowrap; flex-shrink: 0; line-height: 1.5; }
+  .marquee {
+    position: relative; overflow: hidden; flex: 1; min-width: 0;
+    -webkit-mask: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+            mask: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  }
+  .track { display: flex; width: max-content; animation: marquee var(--marquee-duration) linear infinite; }
+  .marquee:hover .track { animation-play-state: paused; }
+  .set { display: flex; align-items: center; gap: 64px; padding-inline-end: 64px; flex-shrink: 0; }
+  [dir="rtl"] .track { animation-name: marquee-rtl; }
+  @keyframes marquee { from { transform: translateX(0%); } to { transform: translateX(-50%); } }
+  @keyframes marquee-rtl { from { transform: translateX(0%); } to { transform: translateX(50%); } }
+  .logo { flex-shrink: 0; display: flex; align-items: center; gap: 8px; direction: ltr; }
+  .logo-icon { width: 24px; height: 24px; border-radius: 8px; display: grid; place-items: center; font-size: 12px; font-weight: 700; color: hsl(var(--foreground) / .7); }
+  .logo-name { font-size: 16px; font-weight: 600; white-space: nowrap; }
+
+  @media (min-width: 640px) { h1 { font-size: 60px; } }
+  @media (min-width: 1024px) { h1 { font-size: 72px; } }
+  @media (max-width: 820px) {
+    .links { display: none; }
+    .burger { display: grid; }
+    .nav { gap: 12px; }
+  }
+  @media (max-width: 640px) {
+    .hero-body { padding-top: 56px; }
+    .logos { flex-direction: column; gap: 24px; text-align: center; }
+    .logos-label { white-space: normal; }
+    .marquee { width: 100%; }
+    .stats { flex-direction: column; align-items: flex-start; gap: 16px; }
+    .proof-inner { gap: 56px; }
+  }
+  @media (max-width: 400px) {
+    .cta { padding: 12px 20px; font-size: 15px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .rise { animation: none; opacity: 1; transform: none; filter: none; }
+    .track, .proof-fallback { animation: none; }
+    .proof video { transition: none; }
+    .mobile-menu.open { animation: none; }
+    .marquee { overflow-x: auto; }
+  }
+</style>
+</head>
+<body>
+<header class="hero" id="top">
+  <div class="nav-wrap">
+    <nav class="nav liquid-glass" aria-label="Main" data-i18n-aria="navLabel">
+      <a href="#top" class="brand" aria-label="Apex home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/>
+            <line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/>
+          </svg>
+        </span>
+        <span class="brand-name">APEX</span>
+      </a>
+      <ul class="links">
+        <li>
+          <button class="link" type="button" aria-expanded="false" aria-controls="drop-features" data-drop>
+            <span data-i18n="features">Features</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="drop" id="drop-features">
+            <a href="#proof"><span data-i18n="f1">Workflow automation</span><small data-i18n="f1s">Route every lead on autopilot</small></a>
+            <a href="#proof"><span data-i18n="f2">Revenue analytics</span><small data-i18n="f2s">See the whole funnel at a glance</small></a>
+            <a href="#proof"><span data-i18n="f3">Lead management</span><small data-i18n="f3s">One inbox for every prospect</small></a>
+          </div>
+        </li>
+        <li><a class="link" href="#proof" data-i18n="solutions">Solutions</a></li>
+        <li><a class="link" href="#proof" data-i18n="plans">Plans</a></li>
+        <li>
+          <button class="link" type="button" aria-expanded="false" aria-controls="drop-learning" data-drop>
+            <span data-i18n="learning">Learning</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="drop" id="drop-learning">
+            <a href="#proof"><span data-i18n="l1">Guides</span><small data-i18n="l1s">Playbooks for growth teams</small></a>
+            <a href="#proof"><span data-i18n="l2">Webinars</span><small data-i18n="l2s">Live sessions with experts</small></a>
+            <a href="#proof"><span data-i18n="l3">Changelog</span><small data-i18n="l3s">What shipped this month</small></a>
+          </div>
+        </li>
+      </ul>
+      <div class="nav-end">
+        <button class="signup btn-primary" type="button" data-i18n="signup">Sign Up</button>
+        <button class="burger" type="button" aria-expanded="false" aria-controls="mobile-menu" aria-label="Menu" data-i18n-aria="menu">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+      </div>
+    </nav>
+    <div class="mobile-menu" id="mobile-menu">
+      <a href="#proof" data-i18n="features">Features</a>
+      <a href="#proof" data-i18n="solutions">Solutions</a>
+      <a href="#proof" data-i18n="plans">Plans</a>
+      <a href="#proof" data-i18n="learning">Learning</a>
+    </div>
+  </div>
+
+  <main class="hero-body">
+    <a href="#proof" class="badge liquid-glass rise d1">
+      <span data-i18n="badge">Nova+ Launched!</span>
+      <span class="badge-cta">
+        <span data-i18n="explore">Explore</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+      </span>
+    </a>
+    <h1 class="rise d2"><span data-i18n="h1a">Accelerate Your</span><br><span data-i18n="h1b">Revenue Growth Now</span></h1>
+    <p class="sub rise d3" data-i18n="sub">Drive your funnel forward with clever workflows, analytics, and seamless lead management.</p>
+    <div class="ctas rise d4">
+      <button type="button" class="cta cta-main btn-primary" data-i18n="cta1">Start Free Right Now</button>
+      <button type="button" class="cta cta-ghost liquid-glass" data-i18n="cta2">Schedule a Consult</button>
+    </div>
+  </main>
+</header>
+
+<section class="proof" id="proof" aria-labelledby="proof-label">
+  <div class="proof-fallback" aria-hidden="true"></div>
+  <video id="bgVideo" muted playsinline autoplay loop preload="auto" aria-hidden="true"
+    src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260308_114720_3dabeb9e-2c39-4907-b747-bc3544e2d5b7.mp4"></video>
+  <div class="proof-shade" aria-hidden="true"></div>
+  <div class="proof-inner">
+    <ul class="stats">
+      <li class="stat">
+        <span class="stat-icon liquid-glass" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        </span>
+        <span data-i18n="s1">3-5 week turnround</span>
+      </li>
+      <li class="stat">
+        <span class="stat-icon liquid-glass" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </span>
+        <span data-i18n="s2">Upfront cost clarity</span>
+      </li>
+      <li class="stat">
+        <span class="stat-icon liquid-glass" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+        </span>
+        <span data-i18n="s3">Full refund assurance</span>
+      </li>
+    </ul>
+
+    <div class="spacer" aria-hidden="true"></div>
+
+    <div class="logos">
+      <p class="logos-label" id="proof-label"><span data-i18n="trust1">Relied on by brands</span><br><span data-i18n="trust2">across the globe</span></p>
+      <div class="marquee">
+        <div class="track" id="track"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+(function () {
+  var I18N = {
+    en: {
+      navLabel: 'Main', menu: 'Menu',
+      features: 'Features', solutions: 'Solutions', plans: 'Plans', learning: 'Learning',
+      f1: 'Workflow automation', f1s: 'Route every lead on autopilot',
+      f2: 'Revenue analytics', f2s: 'See the whole funnel at a glance',
+      f3: 'Lead management', f3s: 'One inbox for every prospect',
+      l1: 'Guides', l1s: 'Playbooks for growth teams',
+      l2: 'Webinars', l2s: 'Live sessions with experts',
+      l3: 'Changelog', l3s: 'What shipped this month',
+      signup: 'Sign Up',
+      badge: 'Nova+ Launched!', explore: 'Explore',
+      h1a: 'Accelerate Your', h1b: 'Revenue Growth Now',
+      sub: 'Drive your funnel forward with clever workflows, analytics, and seamless lead management.',
+      cta1: 'Start Free Right Now', cta2: 'Schedule a Consult',
+      s1: '3-5 week turnround', s2: 'Upfront cost clarity', s3: 'Full refund assurance',
+      trust1: 'Relied on by brands', trust2: 'across the globe'
+    },
+    fa: {
+      navLabel: 'منوی اصلی', menu: 'منو',
+      features: 'ویژگی‌ها', solutions: 'راهکارها', plans: 'پلن‌ها', learning: 'آموزش',
+      f1: 'خودکارسازی گردش‌کار', f1s: 'هر سرنخ خودکار به مسیر درست می‌رود',
+      f2: 'تحلیل درآمد', f2s: 'کل قیف فروش در یک نگاه',
+      f3: 'مدیریت سرنخ‌ها', f3s: 'یک صندوق برای همهٔ مشتریان بالقوه',
+      l1: 'راهنماها', l1s: 'دستورالعمل‌هایی برای تیم‌های رشد',
+      l2: 'وبینارها', l2s: 'جلسه‌های زنده با متخصصان',
+      l3: 'تازه‌ها', l3s: 'آنچه این ماه منتشر شد',
+      signup: 'ثبت‌نام',
+      badge: 'Nova+ منتشر شد!', explore: 'ببینید',
+      h1a: 'رشد درآمدتان را', h1b: 'همین حالا شتاب دهید',
+      sub: 'با گردش‌کارهای هوشمند، تحلیل‌های دقیق و مدیریت یکپارچهٔ سرنخ‌ها، قیف فروش‌تان را رو به جلو ببرید.',
+      cta1: 'همین حالا رایگان شروع کنید', cta2: 'رزرو جلسهٔ مشاوره',
+      s1: 'تحویل در ۳ تا ۵ هفته', s2: 'هزینهٔ شفاف از همان ابتدا', s3: 'تضمین بازپرداخت کامل',
+      trust1: 'مورد اعتماد برندها', trust2: 'در سراسر جهان'
+    }
+  };
+  var lang = document.documentElement.lang === 'fa' ? 'fa' : 'en';
+  var dict = I18N[lang];
+  document.querySelectorAll('[data-i18n]').forEach(function (el) {
+    var v = dict[el.getAttribute('data-i18n')];
+    if (v != null) el.textContent = v;
+  });
+  document.querySelectorAll('[data-i18n-aria]').forEach(function (el) {
+    var v = dict[el.getAttribute('data-i18n-aria')];
+    if (v != null) el.setAttribute('aria-label', v);
+  });
+  var home = document.querySelector('.brand');
+  if (home) home.setAttribute('aria-label', lang === 'fa' ? 'خانهٔ Apex' : 'Apex home');
+
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---- dropdowns ---- */
+  var drops = Array.prototype.slice.call(document.querySelectorAll('[data-drop]'));
+  function closeAll(except) {
+    drops.forEach(function (b) {
+      if (b === except) return;
+      b.setAttribute('aria-expanded', 'false');
+      var p = document.getElementById(b.getAttribute('aria-controls'));
+      if (p) p.classList.remove('open');
+    });
+  }
+  drops.forEach(function (b) {
+    b.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var open = b.getAttribute('aria-expanded') !== 'true';
+      closeAll(b);
+      b.setAttribute('aria-expanded', String(open));
+      var p = document.getElementById(b.getAttribute('aria-controls'));
+      if (p) p.classList.toggle('open', open);
+    });
+  });
+
+  /* ---- mobile menu ---- */
+  var burger = document.querySelector('.burger');
+  var menu = document.getElementById('mobile-menu');
+  function setMenu(open) {
+    if (!burger || !menu) return;
+    burger.setAttribute('aria-expanded', String(open));
+    menu.classList.toggle('open', open);
+  }
+  if (burger) burger.addEventListener('click', function (e) {
+    e.stopPropagation();
+    setMenu(burger.getAttribute('aria-expanded') !== 'true');
+  });
+  if (menu) menu.addEventListener('click', function (e) { if (e.target.closest('a')) setMenu(false); });
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('.drop')) closeAll();
+    if (menu && !e.target.closest('#mobile-menu')) setMenu(false);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { closeAll(); setMenu(false); }
+  });
+
+  /* ---- logo marquee (duplicated set for seamless loop) ---- */
+  var LOGOS = ['Vortex', 'Nimbus', 'Prysma', 'Cirrus', 'Kynder', 'Halcyn'];
+  var track = document.getElementById('track');
+  if (track) {
+    for (var k = 0; k < 2; k++) {
+      var set = document.createElement('div');
+      set.className = 'set';
+      if (k === 1) set.setAttribute('aria-hidden', 'true');
+      LOGOS.forEach(function (name) {
+        var d = document.createElement('div');
+        d.className = 'logo';
+        d.innerHTML = '<span class="logo-icon liquid-glass" aria-hidden="true">' + name[0] +
+          '</span><span class="logo-name latin">' + name + '</span>';
+        set.appendChild(d);
+      });
+      track.appendChild(set);
+    }
+  }
+
+  /* ---- background video: fade in on play, fade out before end, loop ---- */
+  var video = document.getElementById('bgVideo');
+  if (video) {
+    var FADE = 0.5;
+    if (reduce) {
+      video.removeAttribute('autoplay');
+      video.pause();
+      video.addEventListener('loadeddata', function () {
+        try { video.currentTime = 1.5; } catch (e) {}
+        video.classList.add('on');
+      });
+    } else {
+      video.addEventListener('playing', function () { video.classList.add('on'); });
+      video.addEventListener('timeupdate', function () {
+        if (!video.duration) return;
+        var t = video.currentTime;
+        /* fade out just before the loop point, fade back in right after it */
+        video.classList.toggle('on', t > 0.05 && video.duration - t > FADE);
+      });
+      var io = 'IntersectionObserver' in window ? new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) { var p = video.play(); if (p && p.catch) p.catch(function () {}); }
+          else video.pause();
+        });
+      }, { threshold: 0.05 }) : null;
+      if (io) io.observe(video);
+      window.addEventListener('pagehide', function () { if (io) io.disconnect(); });
+    }
+    video.addEventListener('error', function () { video.style.display = 'none'; });
+  }
+})();
+</script>
+</body>
+</html>

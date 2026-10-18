@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>nm — ASCII city flicker</title>
+<script>
+  (function () {
+    var p = new URLSearchParams(location.search);
+    var lang = p.get('lang') === 'fa' ? 'fa' : 'en';
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'fa' ? 'rtl' : 'ltr';
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Vazirmatn:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #000000;
+    --fg: #e6e6e6;
+    --muted: #8a8a8a;
+    --line: rgba(255,255,255,.12);
+    --panel: rgba(8,8,8,.72);
+    --accent: #f2f2f2;
+    --cell: 9px;          /* ASCII cell width */
+    --flicker: 0.18;      /* per-cell flicker amount (0–1) */
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --sans: "JetBrains Mono", ui-monospace, monospace;
+  }
+  html[lang="fa"] { --sans: "Vazirmatn", "JetBrains Mono", sans-serif; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); }
+  body { font-family: var(--sans); overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+  .stage { position: relative; min-height: 100vh; min-height: 100svh; overflow: hidden; isolation: isolate; }
+  canvas#ascii { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: -2; }
+  .vignette { position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(120% 90% at 50% 30%, transparent 55%, rgba(0,0,0,.65) 100%),
+                repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 1px, transparent 1px 3px); }
+
+  header.bar { display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 18px clamp(16px, 4vw, 40px); font-family: var(--mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; }
+  .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--accent); text-decoration: none; font-weight: 700; font-size: 15px; letter-spacing: .02em; text-transform: none; }
+  .brand .cur { display: inline-block; width: 8px; height: 15px; background: var(--accent); animation: blink 1s steps(1) infinite; }
+  .bar nav { display: flex; gap: 22px; }
+  .bar nav a { text-shadow: 0 0 6px #000, 0 0 2px #000; color: #a8a8a8; text-decoration: none; font-family: var(--sans); }
+  .bar nav a:hover, .bar nav a:focus-visible { color: var(--fg); }
+  .menu-btn { display: none; background: none; border: 1px solid var(--line); color: var(--fg); font: inherit; padding: 7px 10px; border-radius: 4px; cursor: pointer; }
+  @media (max-width: 640px) {
+    .bar nav { display: none; position: absolute; top: 58px; inset-inline: 16px; flex-direction: column; gap: 0;
+      background: var(--panel); border: 1px solid var(--line); border-radius: 6px; backdrop-filter: blur(8px); z-index: 5; }
+    .bar nav.open { display: flex; }
+    .bar nav a { padding: 12px 14px; border-bottom: 1px solid var(--line); }
+    .bar nav a:last-child { border-bottom: 0; }
+    .menu-btn { display: inline-block; }
+  }
+
+  main.hero { position: relative; min-height: calc(100svh - 60px); display: flex; flex-direction: column; justify-content: flex-end;
+    padding: 0 clamp(16px, 4vw, 40px) clamp(20px, 4vw, 40px); gap: 22px; }
+  .copy { max-width: 640px; }
+  .tag { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+    border: 1px solid var(--line); padding: 5px 10px; border-radius: 999px; background: rgba(0,0,0,.5); }
+  .tag i { width: 6px; height: 6px; border-radius: 50%; background: #d9d9d9; box-shadow: 0 0 8px #fff; animation: pulse 1.6s ease-in-out infinite; }
+  h1, .lede { text-shadow: 0 2px 18px rgba(0,0,0,.9), 0 0 3px #000; }
+  h1 { margin: 16px 0 10px; font-weight: 500; font-size: clamp(30px, 5.4vw, 64px); line-height: 1.04; letter-spacing: -.02em; }
+  html[lang="fa"] h1 { line-height: 1.35; letter-spacing: 0; }
+  h1 .dim { color: var(--muted); }
+  .lede { margin: 0; color: #b4b4b4; font-size: clamp(14px, 1.4vw, 16px); line-height: 1.7; max-width: 52ch; }
+  .cmd { margin-top: 18px; display: inline-flex; align-items: center; gap: 10px; max-width: 100%;
+    font-family: var(--mono); font-size: 12.5px; background: rgba(0,0,0,.72); border: 1px solid var(--line); border-radius: 6px; padding: 9px 10px 9px 14px; direction: ltr; }
+  .cmd code { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; color: #d8d8d8; }
+  .cmd code b { color: var(--muted); font-weight: 400; }
+  .copy-btn { flex: none; background: #f2f2f2; color: #000; border: 0; border-radius: 4px; padding: 6px 10px; font: 600 11px var(--sans); cursor: pointer; }
+  .copy-btn:focus-visible, button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+  .panel { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; font-family: var(--mono); font-size: 12px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; backdrop-filter: blur(6px); }
+  .panel .grp { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-family: var(--sans); }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 5px; overflow: hidden; }
+  .seg button { background: none; border: 0; color: var(--muted); font: 500 12px var(--mono); padding: 6px 10px; cursor: pointer; }
+  .seg button + button { border-inline-start: 1px solid var(--line); }
+  .seg button[aria-pressed="true"] { background: #e9e9e9; color: #000; }
+  .play { background: none; border: 1px solid var(--line); color: var(--fg); border-radius: 5px; padding: 6px 10px; font: 500 12px var(--sans); cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+  .play svg { width: 12px; height: 12px; }
+  input[type="range"] { accent-color: #e6e6e6; width: 110px; }
+  .stat { margin-inline-start: auto; color: var(--muted); direction: ltr; unicode-bidi: isolate; }
+  @media (max-width: 640px) { .stat { display: none; } input[type="range"] { width: 90px; } }
+
+  @keyframes blink { 50% { opacity: 0; } }
+  @keyframes pulse { 50% { opacity: .35; } }
+  .rise { opacity: 0; transform: translateY(10px); animation: rise .8s cubic-bezier(.2,.7,.2,1) forwards; }
+  .rise.d2 { animation-delay: .15s; } .rise.d3 { animation-delay: .3s; }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) {
+    .rise { animation: none; opacity: 1; transform: none; }
+    .brand .cur, .tag i { animation: none; }
+  }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="stage">
+  <canvas id="ascii" aria-hidden="true"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <header class="bar">
+    <a class="brand" href="#" aria-label="nm"><span>nm</span><span class="cur" aria-hidden="true"></span></a>
+    <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="nav" data-i18n="menu">Menu</button>
+    <nav id="nav" aria-label="Primary">
+      <a href="#" data-i18n="n1">Work</a>
+      <a href="#" data-i18n="n2">Signal</a>
+      <a href="#" data-i18n="n3">Archive</a>
+      <a href="#" data-i18n="n4">Contact</a>
+    </nav>
+  </header>
+
+  <main class="hero">
+    <div class="copy">
+      <span class="tag rise"><i aria-hidden="true"></i><span data-i18n="tag">Live ASCII · flicker</span></span>
+      <h1 class="rise d2"><span data-i18n="h1a">The city, rendered</span><br><span class="dim" data-i18n="h1b">one character at a time.</span></h1>
+      <p class="lede rise d3" data-i18n="lede">A looping skyline drawn entirely in monospace glyphs. Drop it behind a hero, a card or a retro terminal — no video, no dependencies.</p>
+      <div class="cmd rise d3">
+        <code id="cmdText"><b>$</b> npx shadcn@latest add https://21st.dev/r/nblairwalker/nm</code>
+        <button class="copy-btn" id="copyBtn" data-i18n="copy">Copy</button>
+      </div>
+    </div>
+
+    <section class="panel" aria-label="Controls" data-i18n-aria="controls">
+      <button class="play" id="playBtn" aria-pressed="true">
+        <svg id="playIco" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>
+        <span id="playLbl" data-i18n="pause">Pause</span>
+      </button>
+      <div class="grp"><span data-i18n="style">Style</span>
+        <div class="seg" role="group" id="styleSeg">
+          <button data-set="chars" aria-pressed="true" data-i18n="s1">Characters</button>
+          <button data-set="blocks" aria-pressed="false" data-i18n="s2">Blocks</button>
+          <button data-set="binary" aria-pressed="false">01</button>
+        </div>
+      </div>
+      <label class="grp"><span data-i18n="density">Density</span>
+        <input type="range" id="density" min="6" max="16" step="1" value="9">
+      </label>
+      <label class="grp"><span data-i18n="flicker">Flicker</span>
+        <input type="range" id="flicker" min="0" max="50" step="1" value="18">
+      </label>
+      <span class="stat" id="stat">— × —</span>
+    </section>
+    <p class="sr" id="live" aria-live="polite"></p>
+  </main>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var LANG = document.documentElement.lang === 'fa' ? 'fa' : 'en';
+  var I18N = {
+    en: { menu: 'Menu', n1: 'Work', n2: 'Signal', n3: 'Archive', n4: 'Contact', tag: 'Live ASCII · flicker',
+      h1a: 'The city, rendered', h1b: 'one character at a time.',
+      lede: 'A looping skyline drawn entirely in monospace glyphs. Drop it behind a hero, a card or a retro terminal — no video, no dependencies.',
+      copy: 'Copy', copied: 'Copied', pause: 'Pause', play: 'Play', style: 'Style', s1: 'Characters', s2: 'Blocks',
+      density: 'Density', flicker: 'Flicker', controls: 'Controls', copiedMsg: 'Install command copied' },
+    fa: { menu: 'منو', n1: 'نمونه‌کارها', n2: 'سیگنال', n3: 'آرشیو', n4: 'تماس', tag: 'اسکی زنده · سوسو',
+      h1a: 'شهر، نویسه به نویسه', h1b: 'روی صفحه جان می‌گیرد.',
+      lede: 'خط آسمانی که بی‌وقفه تکرار می‌شود و سراسر با حروف تک‌فاصله کشیده شده است. آن را پشت هیرو، کارت یا یک ترمینال قدیمی بگذارید؛ بی‌ویدیو و بی‌وابستگی.',
+      copy: 'کپی', copied: 'کپی شد', pause: 'توقف', play: 'پخش', style: 'سبک', s1: 'نویسه‌ها', s2: 'بلوک‌ها',
+      density: 'تراکم', flicker: 'سوسو', controls: 'کنترل‌ها', copiedMsg: 'فرمان نصب کپی شد' }
+  };
+  var T = I18N[LANG];
+  document.querySelectorAll('[data-i18n]').forEach(function (el) { var k = el.getAttribute('data-i18n'); if (T[k]) el.textContent = T[k]; });
+  document.querySelectorAll('[data-i18n-aria]').forEach(function (el) { var k = el.getAttribute('data-i18n-aria'); if (T[k]) el.setAttribute('aria-label', T[k]); });
+  var faDigits = function (s) { return LANG === 'fa' ? String(s).replace(/\d/g, function (d) { return '۰۱۲۳۴۵۶۷۸۹'[d]; }) : String(s); };
+
+  /* ---------- config ---------- */
+  var CONFIG = { fps: 20, ramps: {
+    chars: ' .`:-=+*cox#%&@',
+    blocks: ' ░░▒▒▓▓██',
+    binary: ' 0101010101'
+  } };
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- nav ---------- */
+  var menuBtn = document.getElementById('menuBtn'), nav = document.getElementById('nav');
+  if (menuBtn && nav) menuBtn.addEventListener('click', function () {
+    var open = nav.classList.toggle('open'); menuBtn.setAttribute('aria-expanded', String(open));
+  });
+
+  /* ---------- copy ---------- */
+  var copyBtn = document.getElementById('copyBtn'), live = document.getElementById('live');
+  if (copyBtn) copyBtn.addEventListener('click', function () {
+    var txt = 'npx shadcn@latest add https://21st.dev/r/nblairwalker/nm';
+    var done = function () { copyBtn.textContent = T.copied; if (live) live.textContent = T.copiedMsg; setTimeout(function () { copyBtn.textContent = T.copy; }, 1400); };
+    try { navigator.clipboard.writeText(txt).then(done, done); } catch (e) { done(); }
+  });
+
+  /* ---------- scene ---------- */
+  var cv = document.getElementById('ascii');
+  var ctx = cv && cv.getContext('2d');
+  if (!ctx) return;
+  var root = getComputedStyle(document.documentElement);
+  var cellW = parseFloat(root.getPropertyValue('--cell')) || 9;
+  var flick = parseFloat(root.getPropertyValue('--flicker')) || 0.18;
+  var rampKey = 'chars';
+  var cols = 0, rows = 0, W = 0, H = 0, dpr = 1;
+  var base, winMask, buildings = [], seed = 7;
+  var mouse = { x: -1, y: -1 };
+
+  function rnd() { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }
+  function hash(x, y) { var h = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return h - Math.floor(h); }
+  function noise(x, y) {
+    var ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy;
+    var a = hash(ix, iy), b = hash(ix + 1, iy), c = hash(ix, iy + 1), d = hash(ix + 1, iy + 1);
+    var ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy);
+    return a + (b - a) * ux + (c - a) * uy + (a - b - c + d) * ux * uy;
+  }
+
+  function buildCity() {
+    seed = 7; buildings = [];
+    // three depth layers: far (lighter), mid, near (darkest)
+    var layers = [ { tone: .10, minH: .26, maxH: .54, minW: .025, maxW: .06 },
+                   { tone: .055, minH: .16, maxH: .40, minW: .035, maxW: .08 },
+                   { tone: .03, minH: .06, maxH: .22, minW: .05, maxW: .12 } ];
+    layers.forEach(function (L, li) {
+      var x = -0.02;
+      while (x < 1.02) {
+        var w = L.minW + rnd() * (L.maxW - L.minW);
+        var h = L.minH + Math.pow(rnd(), 1.6) * (L.maxH - L.minH);
+        if (li === 0 && rnd() < .12) h += .18; // the occasional tower
+        buildings.push({ x: x, w: w, h: h, tone: L.tone + rnd() * .05, layer: li, spire: rnd() < .25, win: .08 + rnd() * .22 });
+        x += w + (rnd() < .3 ? rnd() * .02 : 0);
+      }
+    });
+  }
+
+  function resize() {
+    W = cv.clientWidth; H = cv.clientHeight; dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cols = Math.ceil(W / cellW); rows = Math.ceil(H / (cellW * 1.6));
+    base = new Float32Array(cols * rows); winMask = new Float32Array(cols * rows);
+    var skyline = 0.68; // ground line as fraction of height (city occupies top ~2/3, like the reference)
+    for (var r = 0; r < rows; r++) {
+      var v = r / rows;
+      for (var c = 0; c < cols; c++) {
+        var u = c / cols, i = r * cols + c;
+        // sky: brighter near the top, cloudy texture
+        var sky = .56 - v * .5 + (noise(u * 5, v * 7) - .5) * .12 + (noise(u * 16, v * 22) - .5) * .04;
+        // moon glow
+        var dx = (u - .55) * (W / H), dy = v - .2, md = Math.sqrt(dx * dx + dy * dy);
+        sky += md < .045 ? .4 : Math.max(0, .16 - md) * .8;
+        var val = Math.max(0, sky), win = 0;
+        for (var b = 0; b < buildings.length; b++) {
+          var B = buildings[b];
+          if (u < B.x || u > B.x + B.w) continue;
+          var top = skyline - B.h;
+          if (B.spire && u > B.x + B.w * .4 && u < B.x + B.w * .6) top -= .06;
+          if (v >= top && v < skyline + .1) {
+            val = B.tone * (1 - (v - top) * .5);
+            // windows grid
+            var gx = Math.floor((u - B.x) * cols), gy = Math.floor((v - top) * rows);
+            if (B.layer < 2 && gx % 2 === 1 && gy % 2 === 1 && hash(b * 13 + gx, gy) < B.win) win = .2 + hash(gx, gy + b) * .32;
+            if (B.layer === 2 && gy % 3 === 0 && hash(b + gx, gy) < .3) win = .12;
+          }
+        }
+        // fade into black ground
+        var fade = v < skyline ? 1 : Math.max(0, 1 - (v - skyline) / .28);
+        base[i] = val * fade; winMask[i] = win * fade;
+      }
+    }
+    var st = document.getElementById('stat'); if (st) st.textContent = faDigits(cols + ' × ' + rows);
+    draw(performance.now());
+  }
+
+  function draw(t) {
+    var ramp = CONFIG.ramps[rampKey], n = ramp.length - 1;
+    var ch = cellW * 1.6, time = t / 1000;
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+    ctx.font = (cellW * 1.25) + 'px "JetBrains Mono", monospace';
+    ctx.textBaseline = 'top';
+    var LEVELS = 12, buckets = [];
+    for (var k = 0; k < LEVELS; k++) buckets.push([]);
+    var mx = mouse.x / cellW, my = mouse.y / ch;
+    for (var r = 0; r < rows; r++) {
+      for (var c = 0; c < cols; c++) {
+        var i = r * cols + c, v = base[i];
+        // drifting clouds
+        if (r < rows * .55) v += (noise(c * .06 + time * .25, r * .12) - .5) * .08;
+        // flickering windows
+        var w = winMask[i];
+        if (w) v = Math.max(v, w * (hash(c, r + Math.floor(time * 2 + hash(r, c) * 9)) > .2 ? 1 : .2));
+        // per-cell flicker
+        if (!reduce) v += (hash(c + Math.floor(time * CONFIG.fps), r * 1.7) - .5) * flick * v * 2;
+        // pointer lamp
+        if (mx >= 0) { var ddx = c - mx, ddy = (r - my) * 1.6, d2 = ddx * ddx + ddy * ddy; if (d2 < 120) v += (1 - d2 / 120) * .35; }
+        if (v < .035) continue;
+        v = Math.min(1, v);
+        var idx = Math.min(n, Math.max(1, Math.round(v * n)));
+        buckets[Math.min(LEVELS - 1, Math.floor(v * LEVELS))].push(c, r, idx);
+      }
+    }
+    for (var L = 0; L < LEVELS; L++) {
+      var b = buckets[L]; if (!b.length) continue;
+      var g = Math.round(40 + (L / (LEVELS - 1)) * 215);
+      ctx.fillStyle = 'rgb(' + g + ',' + g + ',' + g + ')';
+      for (var j = 0; j < b.length; j += 3) ctx.fillText(ramp[b[j + 2]], b[j] * cellW, b[j + 1] * ch);
+    }
+  }
+
+  var playing = !reduce, visible = true, last = 0, raf = 0;
+  function loop(t) {
+    raf = 0;
+    if (!playing || !visible || document.hidden) return;
+    if (t - last > 1000 / CONFIG.fps) { last = t; draw(t); }
+    raf = requestAnimationFrame(loop);
+  }
+  function kick() { if (!raf && playing && visible && !document.hidden) raf = requestAnimationFrame(loop); }
+
+  buildCity(); resize();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { draw(performance.now()); });
+  var rt; window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(resize, 120); });
+  document.addEventListener('visibilitychange', kick);
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (e) { visible = e[0].isIntersecting; kick(); });
+    io.observe(cv);
+    window.addEventListener('pagehide', function () { io.disconnect(); });
+  }
+  var stage = document.querySelector('.stage');
+  if (stage) {
+    stage.addEventListener('pointermove', function (e) { var r = cv.getBoundingClientRect(); mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top; if (!playing) draw(performance.now()); });
+    stage.addEventListener('pointerleave', function () { mouse.x = mouse.y = -1; if (!playing) draw(performance.now()); });
+  }
+
+  /* ---------- controls ---------- */
+  var playBtn = document.getElementById('playBtn'), playLbl = document.getElementById('playLbl'), playIco = document.getElementById('playIco');
+  function syncPlay() {
+    playBtn.setAttribute('aria-pressed', String(playing));
+    playLbl.textContent = playing ? T.pause : T.play;
+    playIco.innerHTML = playing ? '<rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/>' : '<path d="M7 5l12 7-12 7z"/>';
+  }
+  if (playBtn) { syncPlay(); playBtn.addEventListener('click', function () { playing = !playing; syncPlay(); kick(); }); }
+  var seg = document.getElementById('styleSeg');
+  if (seg) seg.addEventListener('click', function (e) {
+    var btn = e.target.closest('button[data-set]'); if (!btn) return;
+    rampKey = btn.getAttribute('data-set');
+    seg.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', String(b === btn)); });
+    draw(performance.now());
+  });
+  var dens = document.getElementById('density');
+  if (dens) dens.addEventListener('input', function () { cellW = +dens.value; resize(); });
+  var fl = document.getElementById('flicker');
+  if (fl) { fl.value = Math.round(flick * 100); fl.addEventListener('input', function () { flick = fl.value / 100; if (!playing) draw(performance.now()); }); }
+
+  kick();
+})();
+</script>
+</body>
+</html>

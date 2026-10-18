@@ -1,0 +1,20 @@
+{
+  "title": { "en": "Franky / Dev digital wave field hero", "fa": "هیروی میدان موج دیجیتال Franky / Dev" },
+  "oneLiner": {
+    "en": "A dark, green pixel-grid portfolio hero: every cursor move sends glowing pulses rippling through a living tile field behind a glass panel, with a live field card, HKT clock and working mode/input toggles.",
+    "fa": "هیروی تیرهٔ پورتفولیو روی شبکه‌ای از پیکسل‌های سبز: هر حرکت نشانگر موجی درخشان در میدان کاشی‌های زنده می‌فرستد؛ با کارت میدان زنده، ساعت هنگ‌کنگ و کلیدهای حالت و ورودی که واقعاً کار می‌کنند."
+  },
+  "js": true,
+  "props": [
+    { "name": "--accent", "type": "color", "default": "#b6ff4a",
+      "note": { "en": "Lime accent for the CTA, eyebrow and live indicators.", "fa": "رنگ لیمویی دکمهٔ اصلی، برچسب بالای تیتر و نشانگرهای زنده." } },
+    { "name": "--cell", "type": "color", "default": "#3fae2a",
+      "note": { "en": "Green of the equaliser bars in the field card.", "fa": "سبزِ میله‌های اکولایزر در کارت میدان." } },
+    { "name": "--orb", "type": "color", "default": "#a66bff",
+      "note": { "en": "Violet pulse orb that fires a ripple across the grid.", "fa": "گوی بنفشی که با کلیک موجی در شبکه می‌فرستد." } },
+    { "name": "radius", "type": "number", "default": 190,
+      "note": { "en": "Pixel radius of the cursor's influence on the panel grid.", "fa": "شعاع اثر نشانگر روی شبکهٔ پنل (پیکسل)." } },
+    { "name": "speed", "type": "number", "default": 420,
+      "note": { "en": "Ripple front speed in pixels per second.", "fa": "سرعت پیشروی جبههٔ موج (پیکسل بر ثانیه)." } }
+  ]
+}

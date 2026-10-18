@@ -6,10 +6,10 @@
  */
 import { ref } from 'vue';
 
-export type PanelId = 'dash' | 'analytics' | 'users' | 'kanban' | 'calendar' | 'chat' | 'invoices' | 'profile' | 'settings';
+export type PanelId = 'dash' | 'analytics' | 'users' | 'kanban' | 'calendar' | 'chat' | 'invoices' | 'profile' | 'settings' | 'components';
 export type RouteId = PanelId | 'login';
 
-export const ROUTES: readonly RouteId[] = ['dash', 'analytics', 'users', 'kanban', 'calendar', 'chat', 'invoices', 'profile', 'settings', 'login'];
+export const ROUTES: readonly RouteId[] = ['dash', 'analytics', 'users', 'kanban', 'calendar', 'chat', 'invoices', 'profile', 'settings', 'components', 'login'];
 
 export const isAuthRoute = (id: RouteId) => id === 'login';
 

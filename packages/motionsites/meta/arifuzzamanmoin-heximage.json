@@ -1,0 +1,14 @@
+{
+  "title": { "en": "Heximage hex-dump ASCII portrait", "fa": "پرترهٔ اسکی هگز‌دامپ هگزایمیج" },
+  "oneLiner": {
+    "en": "A portrait rendered as a flickering grid of hex digits on black, with red and magenta glitch glyphs, a scan-in reveal and a pointer that scrambles the dump.",
+    "fa": "پرتره‌ای که از شبکه‌ای لرزان از ارقام هگز روی زمینهٔ سیاه ساخته شده؛ با حرف‌های گلیچی قرمز و ارغوانی، ظاهرشدن خط‌به‌خط و نشانگری که ارقام را به‌هم می‌ریزد."
+  },
+  "js": true,
+  "props": [
+    { "name": "--cell", "type": "number", "default": "11", "note": { "en": "Base glyph cell size in px (density buttons scale it).", "fa": "اندازهٔ پایهٔ هر خانهٔ کاراکتر به پیکسل (دکمه‌های تراکم آن را مقیاس می‌دهند)." } },
+    { "name": "--flicker-ms", "type": "number", "default": "90", "note": { "en": "Interval between flicker frames.", "fa": "فاصلهٔ زمانی بین فریم‌های لرزش." } },
+    { "name": "--accent", "type": "color", "default": "#ff2a3a", "note": { "en": "Main glitch glyph colour.", "fa": "رنگ اصلی حرف‌های گلیچی." } },
+    { "name": "--accent-2", "type": "color", "default": "#c026d3", "note": { "en": "Secondary glitch glyph colour.", "fa": "رنگ دوم حرف‌های گلیچی." } }
+  ]
+}

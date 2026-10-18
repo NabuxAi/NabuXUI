@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tubes Cursor — Interactive Neon Background</title>
+<script>
+  (function () {
+    var l = new URLSearchParams(location.search).get('lang') === 'fa' ? 'fa' : 'en';
+    document.documentElement.lang = l;
+    document.documentElement.dir = l === 'fa' ? 'rtl' : 'ltr';
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700&family=Vazirmatn:wght@400;500;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #000000;
+    --fg: #ffffff;
+    --tube-1: #f967fb;
+    --tube-2: #53bc28;
+    --tube-3: #6958d5;
+    --font: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+  }
+  html[lang="fa"] { --font: 'Vazirmatn', 'Montserrat', ui-sans-serif, system-ui, sans-serif; }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font);
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  .stage {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 400px;
+    overflow: hidden;
+    background: var(--bg);
+    cursor: crosshair;
+  }
+  canvas#tubes {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    display: block;
+    touch-action: none;
+  }
+  /* Static fallback (reduced motion / no GPU) */
+  .fallback {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    opacity: 1;
+    transition: opacity 1.4s ease;
+  }
+  /* shown while the WebGL module streams in, then faded out once tubes render */
+  .stage.gl-ready .fallback { opacity: 0; }
+  .stage.no-gl .fallback { opacity: 1; }
+  .fallback svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .fallback .halo {
+    position: absolute; inset: 0;
+    background: radial-gradient(40% 35% at 62% 46%, rgba(249,103,251,.16), transparent 70%);
+  }
+
+  .overlay {
+    position: relative; z-index: 10;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 1.5rem;
+    text-align: center;
+    padding: 0 1rem;
+  }
+  .titles { pointer-events: auto; cursor: default; display: grid; gap: .5rem; }
+  h1, h2 { margin: 0; user-select: none; text-transform: uppercase; color: var(--fg);
+    filter: drop-shadow(0 0 20px rgba(0,0,0,1)); }
+  h1 { font-size: clamp(3.75rem, 9vw, 6rem); font-weight: 700; letter-spacing: -0.05em; line-height: 1; }
+  h2 { font-size: clamp(2.25rem, 6vw, 3.75rem); font-weight: 500; letter-spacing: -0.025em; line-height: 1; color: rgba(255,255,255,.9); }
+  html[lang="fa"] h1, html[lang="fa"] h2 { letter-spacing: 0; line-height: 1.3; }
+  html[lang="fa"] h1 { font-weight: 800; }
+
+  .cta { margin-top: 2rem; display: flex; flex-direction: column; align-items: center; gap: 1rem; pointer-events: auto; }
+  .cta p {
+    margin: 0; max-width: 28rem;
+    font-size: .875rem; line-height: 1.45;
+    color: rgba(255,255,255,.8);
+    text-shadow: 0 4px 3px rgba(0,0,0,.07), 0 2px 2px rgba(0,0,0,.06);
+  }
+  html[lang="fa"] .cta p { line-height: 1.9; }
+  .btn {
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .75rem 1.5rem;
+    background: rgba(255,255,255,.1);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 999px;
+    color: #fff; text-decoration: none; font: inherit; font-size: 1rem;
+    transition: background-color .3s ease, border-color .3s ease, box-shadow .3s ease;
+  }
+  .btn:hover { background: rgba(255,255,255,.2); }
+  .btn:focus-visible, .hint:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+  .btn svg { width: 1rem; height: 1rem; transition: transform .3s ease; }
+  .btn:hover svg { transform: translate(2px, -2px); }
+  html[dir="rtl"] .btn svg { transform: scaleX(-1); }
+  html[dir="rtl"] .btn:hover svg { transform: scaleX(-1) translate(2px, -2px); }
+
+  .hint {
+    position: absolute; bottom: 2rem; inset-inline: 0; margin-inline: auto;
+    width: max-content; max-width: calc(100% - 2rem);
+    display: flex; flex-direction: column; align-items: center; gap: .5rem;
+    background: none; border: 0; padding: .25rem .5rem; border-radius: .5rem;
+    color: rgba(255,255,255,.5); font: inherit; cursor: pointer;
+    pointer-events: auto;
+    animation: pulse 2s cubic-bezier(.4,0,.6,1) infinite;
+  }
+  .hint svg { width: 1.5rem; height: 1.5rem; }
+  .hint span { font-size: .75rem; text-transform: uppercase; letter-spacing: .1em; }
+  html[lang="fa"] .hint span { letter-spacing: 0; font-size: .8rem; }
+  @keyframes pulse { 50% { opacity: .5; } }
+
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  @media (max-width: 480px) {
+    .cta { margin-top: 1rem; }
+    .cta p { font-size: .8125rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hint { animation: none; }
+    .btn, .btn svg, .fallback { transition: none; }
+  }
+</style>
+</head>
+<body>
+<main class="stage" id="stage">
+  <canvas id="tubes" aria-hidden="true"></canvas>
+  <div class="fallback" aria-hidden="true">
+    <div class="halo"></div>
+    <svg viewBox="0 0 1280 800" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <filter id="glow" x="-20%" y="-50%" width="140%" height="200%">
+          <feGaussianBlur stdDeviation="4" result="b"/>
+          <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <linearGradient id="gA" x1="0" x2="1"><stop offset="0" stop-color="#f967fb" stop-opacity="0"/><stop offset=".6" stop-color="#f967fb"/><stop offset="1" stop-color="#ff008a"/></linearGradient>
+        <linearGradient id="gB" x1="0" x2="1"><stop offset="0" stop-color="#53bc28" stop-opacity="0"/><stop offset=".6" stop-color="#83f36e"/><stop offset="1" stop-color="#60aed5"/></linearGradient>
+        <linearGradient id="gC" x1="0" x2="1"><stop offset="0" stop-color="#6958d5" stop-opacity="0"/><stop offset=".6" stop-color="#60aed5"/><stop offset="1" stop-color="#fe8a2e"/></linearGradient>
+      </defs>
+      <g fill="none" stroke-linecap="round" filter="url(#glow)">
+        <path d="M640 375 C 800 380, 990 400, 975 360 C 960 320, 880 290, 840 272" stroke="url(#gA)" stroke-width="4"/>
+        <path d="M660 395 C 820 400, 985 410, 980 380 C 975 340, 900 300, 860 275" stroke="url(#gB)" stroke-width="3"/>
+        <path d="M700 360 C 840 360, 965 370, 965 335 C 960 300, 920 285, 890 272" stroke="url(#gC)" stroke-width="3"/>
+        <path d="M720 405 C 860 410, 975 405, 970 390 C 965 360, 940 330, 900 300" stroke="url(#gA)" stroke-width="2"/>
+        <path d="M680 385 C 850 392, 960 395, 962 350 C 960 310, 870 285, 830 268" stroke="url(#gB)" stroke-width="2"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="overlay">
+    <div class="titles">
+      <h1 data-i18n="h1">Tubes</h1>
+      <h2 data-i18n="h2">Cursor</h2>
+    </div>
+    <div class="cta">
+      <p data-i18n="body">Move your cursor to interact with the 3D tubes. Click anywhere to randomize the neon colors.</p>
+      <a class="btn" href="https://www.framer.com/@kevin-levron/" target="_blank" rel="noreferrer">
+        <span data-i18n="cta">Original Concept</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+      </a>
+    </div>
+    <button class="hint" type="button" id="hint">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.037 4.688a.495.495 0 0 1 .651-.651l16 6.5a.5.5 0 0 1-.063.947l-6.124 1.58a2 2 0 0 0-1.438 1.435l-1.579 6.126a.5.5 0 0 1-.947.063z"/></svg>
+      <span data-i18n="hint">Click to randomize</span>
+    </button>
+    <p class="sr-only" aria-live="polite" id="live"></p>
+  </div>
+</main>
+
+<script type="module">
+  const I18N = {
+    en: {
+      h1: 'Tubes', h2: 'Cursor',
+      body: 'Move your cursor to interact with the 3D tubes. Click anywhere to randomize the neon colors.',
+      cta: 'Original Concept', hint: 'Click to randomize',
+      live: 'Neon colors randomized', title: 'Tubes Cursor — Interactive Neon Background'
+    },
+    fa: {
+      h1: 'لوله‌ها', h2: 'نشانگر',
+      body: 'نشانگر را حرکت دهید تا لوله‌های سه‌بعدی دنبالش کنند. هر جای صفحه کلیک کنید تا رنگ‌های نئون عوض شوند.',
+      cta: 'ایدهٔ اصلی', hint: 'برای رنگ تازه کلیک کنید',
+      live: 'رنگ‌های نئون عوض شد', title: 'نشانگر لوله‌ای — پس‌زمینهٔ نئونی تعاملی'
+    }
+  };
+  const lang = document.documentElement.lang === 'fa' ? 'fa' : 'en';
+  const t = I18N[lang];
+  document.querySelectorAll('[data-i18n]').forEach((el) => { const v = t[el.dataset.i18n]; if (v) el.textContent = v; });
+  document.title = t.title;
+
+  // Config (mirrors the original component's props)
+  const ENABLE_CLICK_INTERACTION = true;
+  const TUBE_COLORS = ['#f967fb', '#53bc28', '#6958d5'];
+  const LIGHT_COLORS = ['#83f36e', '#fe8a2e', '#ff008a', '#60aed5'];
+  const LIGHT_INTENSITY = 200;
+  const LIB_URL = 'https://cdn.jsdelivr.net/npm/threejs-components@0.0.19/build/cursors/tubes1.min.js';
+
+  const stage = document.getElementById('stage');
+  const canvas = document.getElementById('tubes');
+  const live = document.getElementById('live');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let app = null;
+
+  const randomColors = (n) => Array.from({ length: n }, () =>
+    '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0'));
+
+  function setFallbackColors(c) {
+    const stops = document.querySelectorAll('.fallback linearGradient');
+    stops.forEach((g, i) => {
+      const s = g.querySelectorAll('stop');
+      if (s[1]) s[1].setAttribute('stop-color', c[i % c.length]);
+      if (s[0]) s[0].setAttribute('stop-color', c[i % c.length]);
+    });
+  }
+
+  function randomize() {
+    if (!ENABLE_CLICK_INTERACTION) return;
+    const colors = randomColors(3);
+    const lights = randomColors(4);
+    setFallbackColors(colors);
+    if (app && app.tubes) {
+      app.tubes.setColors(colors);
+      app.tubes.setLightsColors(lights);
+    }
+    if (live) live.textContent = t.live;
+  }
+
+  stage.addEventListener('click', (e) => {
+    if (e.target.closest('a')) return; // let the link open without recolouring
+    if (e.target.closest('#hint')) return; // handled below
+    randomize();
+  });
+  document.getElementById('hint')?.addEventListener('click', randomize);
+
+  async function init() {
+    if (reduced) { stage.classList.add('no-gl'); return; }
+    try {
+      const mod = await import(LIB_URL);
+      const TubesCursor = mod.default;
+      app = TubesCursor(canvas, {
+        tubes: { colors: TUBE_COLORS, lights: { intensity: LIGHT_INTENSITY, colors: LIGHT_COLORS } }
+      });
+      setTimeout(() => stage.classList.add('gl-ready'), 1200);
+    } catch (err) {
+      app = null;
+      stage.classList.add('no-gl');
+    }
+  }
+  init();
+
+  addEventListener('pagehide', () => { try { app?.dispose?.(); } catch (_) {} });
+</script>
+</body>
+</html>

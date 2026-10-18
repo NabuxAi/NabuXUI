@@ -1,0 +1,920 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hand Prosthesis Simulator</title>
+<script>
+  (function () {
+    var p = new URLSearchParams(location.search);
+    var l = p.get('lang') === 'fa' ? 'fa' : 'en';
+    document.documentElement.lang = l;
+    document.documentElement.dir = l === 'fa' ? 'rtl' : 'ltr';
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<style>
+  :root {
+    --page: #000;
+    --frame: #0c0c0d;
+    --panel: #131314;
+    --panel-2: #19191b;
+    --field: #1c1c1f;
+    --line: rgba(255,255,255,.07);
+    --line-2: rgba(255,255,255,.12);
+    --text: #f4f4f5;
+    --muted: #8a8a90;
+    --dim: #5c5c62;
+    --accent: #ff3d1f;
+    --gold: #d6a531;
+    --radius: 18px;
+    --left-w: 280px;
+    --right-w: 252px;
+    --font: 'Inter', system-ui, sans-serif;
+  }
+  html[lang="fa"] { --font: 'Vazirmatn', 'Inter', system-ui, sans-serif; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: radial-gradient(120% 50% at 50% 110%, rgba(120,80,10,.28), transparent 60%) fixed, var(--page); color: var(--text); font-family: var(--font); -webkit-font-smoothing: antialiased; }
+  body { min-height: 100vh; overflow-x: hidden; }
+  button, input { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .ltr { direction: ltr; unicode-bidi: isolate; }
+
+  /* ---------- gold particle backdrop ---------- */
+  #dust { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; display: block; }
+
+  /* ---------- app frame ---------- */
+  main.page { position: relative; z-index: 1; min-height: 100vh; padding: 28px clamp(12px, 3vw, 40px); display: grid; place-items: center; }
+  .app {
+    width: 100%; max-width: 1480px; height: min(calc(100vh - 56px), 900px); min-height: 600px;
+    background: var(--frame); border: 1px solid var(--line); border-radius: 26px;
+    box-shadow: 0 40px 120px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,255,255,.04);
+    display: grid; grid-template-columns: var(--left-w) 1fr; grid-template-rows: auto 1fr;
+    grid-template-areas: "back stage" "left stage";
+    gap: 14px 6px; padding: 12px; overflow: hidden;
+    animation: rise .9s cubic-bezier(.2,.8,.2,1) both;
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(24px) scale(.985); } to { opacity: 1; transform: none; } }
+
+  .back {
+    grid-area: back; display: flex; align-items: center; gap: 10px; height: 40px; padding-inline: 14px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 12px; font-size: 12.5px; font-weight: 500;
+    text-align: start; transition: background .2s, border-color .2s;
+  }
+  .back:hover { background: var(--panel-2); border-color: var(--line-2); }
+  .back svg { width: 14px; height: 14px; }
+  html[dir="rtl"] .back svg, html[dir="rtl"] .flip { transform: scaleX(-1); }
+
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); }
+
+  /* ---------- left panel ---------- */
+  .left { grid-area: left; padding: 18px 16px 16px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #2a2a2d transparent; animation: slideL .8s .15s cubic-bezier(.2,.8,.2,1) both; }
+  @keyframes slideL { from { opacity: 0; transform: translateX(-18px); } to { opacity: 1; transform: none; } }
+  html[dir="rtl"] .left { animation-name: slideR; }
+  @keyframes slideR { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: none; } }
+  .h { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: -.01em; }
+  .sub-h { display: flex; align-items: center; justify-content: space-between; margin: 16px 0 8px; font-size: 11.5px; color: var(--muted); }
+  .sub-h:first-of-type { margin-top: 14px; }
+  .icon-btn { display: inline-grid; place-items: center; width: 22px; height: 22px; padding: 0; border: 0; background: transparent; color: var(--dim); border-radius: 6px; transition: color .2s, background .2s; }
+  .icon-btn:hover { color: var(--text); background: rgba(255,255,255,.06); }
+  .icon-btn[aria-pressed="true"] { color: var(--accent); }
+  .icon-btn svg { width: 13px; height: 13px; }
+  .xyz { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .num {
+    display: flex; align-items: center; gap: 6px; height: 32px; padding-inline: 9px; background: var(--field);
+    border: 1px solid transparent; border-radius: 9px; transition: border-color .2s, background .2s; min-width: 0;
+  }
+  .num:focus-within { border-color: rgba(255,255,255,.35); background: #202024; }
+  .num.is-active { border-color: rgba(255,255,255,.28); }
+  .num b { font-size: 10.5px; font-weight: 500; color: var(--dim); cursor: ew-resize; user-select: none; touch-action: none; }
+  .num input { width: 100%; min-width: 0; border: 0; background: transparent; outline: none; font-size: 12px; font-weight: 500; padding: 0; font-variant-numeric: tabular-nums; }
+  .sep { height: 1px; background: var(--line); margin: 18px 0 16px; }
+  .params-h { display: flex; align-items: center; justify-content: space-between; }
+  .badge { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding-inline: 9px; background: #fff; color: #0c0c0d; border-radius: 999px; font-size: 10.5px; font-weight: 600; white-space: nowrap; }
+  .badge svg { width: 10px; height: 10px; }
+  .slider { margin-top: 13px; }
+  .slider .row { display: flex; justify-content: space-between; font-size: 12px; font-weight: 500; margin-bottom: 9px; }
+  .slider .row output { font-variant-numeric: tabular-nums; }
+  input[type=range] {
+    -webkit-appearance: none; appearance: none; width: 100%; height: 14px; margin: 0; background: transparent; cursor: pointer; --p: 50%;
+  }
+  input[type=range]::-webkit-slider-runnable-track { height: 3px; border-radius: 3px; background: linear-gradient(to right, #4a4a50 var(--p), #262629 var(--p)); }
+  html[dir="rtl"] input[type=range]::-webkit-slider-runnable-track { background: linear-gradient(to left, #4a4a50 var(--p), #262629 var(--p)); }
+  input[type=range]::-moz-range-track { height: 3px; border-radius: 3px; background: #262629; }
+  input[type=range]::-moz-range-progress { height: 3px; border-radius: 3px; background: #4a4a50; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; margin-top: -4.5px; border-radius: 50%; background: var(--accent); border: 2.5px solid #fff; box-shadow: 0 0 0 4px rgba(255,61,31,.0); transition: box-shadow .2s, transform .2s; }
+  input[type=range]::-moz-range-thumb { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); border: 2.5px solid #fff; }
+  input[type=range]:hover::-webkit-slider-thumb, input[type=range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 5px rgba(255,61,31,.22); transform: scale(1.1); }
+  input[type=range]:focus-visible { outline: none; }
+  .weights { margin-top: 15px; }
+  .weights .lab { font-size: 11.5px; color: var(--muted); margin-bottom: 9px; }
+  .wbox { position: relative; display: grid; grid-template-columns: var(--palm, 65%) 1fr; height: 46px; background: var(--field); border-radius: 10px; overflow: hidden; transition: grid-template-columns .4s ease; }
+  .wbox div { padding: 7px 10px; display: flex; flex-direction: column; justify-content: space-between; }
+  .wbox div + div { border-inline-start: 1px solid var(--line-2); }
+  .wbox small { font-size: 9.5px; color: var(--dim); }
+  .wbox strong { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  /* ---------- stage ---------- */
+  .stage { grid-area: stage; position: relative; border-radius: 20px; overflow: hidden; min-height: 0; }
+  .vp { position: absolute; inset: 0; background: radial-gradient(60% 55% at 45% 45%, #17171a 0%, #0c0c0d 70%); }
+  .vp canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: pan-y; }
+  .vp canvas.dragging { cursor: grabbing; }
+  .vp .fallback { position: absolute; inset: 0; display: none; place-items: center; text-align: center; color: var(--muted); font-size: 13px; }
+  .vp.no-gl .fallback { display: grid; }
+  .vp .fallback svg { width: 160px; height: 220px; margin-bottom: 12px; opacity: .7; }
+  .top { position: absolute; inset-inline: 18px; top: 10px; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none; z-index: 2; }
+  .top > * { pointer-events: auto; }
+  .title h1 { margin: 0; font-size: 21px; font-weight: 700; letter-spacing: -.025em; }
+  .title p { margin: 2px 0 0; font-size: 11.5px; color: var(--muted); }
+  .modes { display: flex; gap: 2px; padding: 4px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+  .modes button { width: 30px; height: 30px; display: grid; place-items: center; border: 0; background: transparent; color: var(--dim); border-radius: 8px; transition: background .2s, color .2s; }
+  .modes button svg { width: 15px; height: 15px; }
+  .modes button:hover { color: var(--text); }
+  .modes button[aria-pressed="true"] { background: #26262a; color: #fff; }
+  .hint { position: absolute; inset-inline-start: 18px; bottom: 18px; font-size: 11px; color: var(--dim); z-index: 2; pointer-events: none; transition: opacity .6s; }
+  .toolbar { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); display: flex; gap: 6px; padding: 5px; background: rgba(19,19,20,.85); border: 1px solid var(--line); border-radius: 14px; backdrop-filter: blur(10px); z-index: 2; }
+  .toolbar button { width: 34px; height: 34px; display: grid; place-items: center; border: 0; border-radius: 9px; background: transparent; color: #cfcfd4; transition: background .2s, transform .15s; }
+  .toolbar button:hover { background: #26262a; }
+  .toolbar button:active { transform: scale(.92); }
+  .toolbar button.primary { background: var(--accent); color: #fff; box-shadow: 0 6px 18px rgba(255,61,31,.35); }
+  .toolbar button.primary:hover { background: #ff5436; }
+  .toolbar button[aria-pressed="true"] { background: #2c2c30; color: var(--accent); }
+  .toolbar svg { width: 15px; height: 15px; }
+
+  /* ---------- right panels ---------- */
+  .right { position: absolute; top: 70px; inset-inline-end: 10px; width: var(--right-w); display: flex; flex-direction: column; gap: 10px; z-index: 3; max-height: calc(100% - 80px); animation: slideR .8s .25s cubic-bezier(.2,.8,.2,1) both; }
+  html[dir="rtl"] .right { animation-name: slideL; }
+  .right .card { background: rgba(19,19,20,.9); backdrop-filter: blur(14px); padding: 14px 12px 12px; }
+  .ph { display: flex; justify-content: space-between; align-items: center; padding-inline: 2px; }
+  .ph .icon-btn svg { transition: transform .3s; }
+  .card.collapsed .ph .icon-btn svg { transform: rotate(180deg); }
+  .pbody { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .35s ease, opacity .3s; }
+  .pbody > div { overflow: hidden; min-height: 0; }
+  .card.collapsed .pbody { grid-template-rows: 0fr; opacity: 0; }
+  .search { display: flex; align-items: center; gap: 7px; height: 30px; margin-top: 12px; padding-inline: 9px; background: var(--field); border-radius: 8px; border: 1px solid transparent; }
+  .search:focus-within { border-color: var(--line-2); }
+  .search svg { width: 12px; height: 12px; color: var(--dim); flex: none; }
+  .search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 11.5px; }
+  .search input::placeholder { color: var(--dim); }
+  .tree { list-style: none; margin: 10px 0 0; padding: 0; max-height: 196px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #2a2a2d transparent; }
+  .tree li { display: flex; align-items: center; border-radius: 8px; transition: background .2s; }
+  .tree li:hover { background: rgba(255,255,255,.03); }
+  .tree li.sel { background: #222225; }
+  .tree li[hidden] { display: none; }
+  .tree .pick { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; height: 30px; padding-inline: calc(8px + var(--d, 0) * 16px) 4px; border: 0; background: transparent; text-align: start; font-size: 11.5px; color: #d9d9de; }
+  .tree .pick span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tree .pick svg { width: 10px; height: 10px; flex: none; color: var(--dim); }
+  .tree li.sel .pick svg { color: var(--accent); }
+  .tree li.off .pick { color: var(--dim); }
+  .tree .eye, .tree .caret { opacity: 0; }
+  .tree li:hover .eye, .tree li.sel .eye, .tree li.off .eye, .tree .eye:focus-visible, .tree .caret { opacity: 1; }
+  .tree .caret svg { transition: transform .25s; }
+  .tree li.closed .caret svg { transform: rotate(-90deg); }
+  html[dir="rtl"] .tree li.closed .caret svg { transform: rotate(90deg); }
+  .tree .empty { font-size: 11px; color: var(--dim); padding: 8px; }
+  .chips { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 12px; }
+  .chip { display: flex; align-items: center; justify-content: center; gap: 6px; height: 30px; border: 0; border-radius: 8px; background: var(--field); font-size: 11px; font-weight: 500; white-space: nowrap; transition: background .2s, transform .15s; }
+  .chip:hover { background: #26262a; }
+  .chip:active { transform: scale(.96); }
+  .chip.running { background: #2c1712; color: #ffb4a4; }
+  .chip svg { width: 10px; height: 10px; }
+  .tog { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; height: 26px; padding-inline: 2px; font-size: 11.5px; font-weight: 500; }
+  .switch { position: relative; width: 26px; height: 15px; border-radius: 999px; border: 0; padding: 0; background: #2f2f33; transition: background .25s; flex: none; }
+  .switch::after { content: ""; position: absolute; top: 2.5px; inset-inline-start: 2.5px; width: 10px; height: 10px; border-radius: 50%; background: #8d8d93; transition: inset-inline-start .25s cubic-bezier(.3,1.4,.5,1), background .25s; }
+  .switch[aria-checked="true"] { background: var(--accent); }
+  .switch[aria-checked="true"]::after { inset-inline-start: 13.5px; background: #fff; }
+  .explode { display: grid; grid-template-columns: 1fr 52px; align-items: end; gap: 8px; margin-top: 8px; padding-inline: 2px; }
+  .explode label { display: block; font-size: 11.5px; font-weight: 500; margin-bottom: 9px; }
+  .gizmo { width: 52px; height: 52px; }
+
+  .toast { position: fixed; left: 50%; bottom: 40px; transform: translate(-50%, 20px); opacity: 0; pointer-events: none; z-index: 10; background: #f4f4f5; color: #0c0c0d; font-size: 12.5px; font-weight: 500; padding: 10px 16px; border-radius: 12px; transition: opacity .3s, transform .3s; max-width: calc(100vw - 32px); text-align: center; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 1180px) { :root { --left-w: 250px; --right-w: 228px; } }
+  @media (max-width: 920px) {
+    main.page { padding: 16px; place-items: start center; }
+    .app { height: auto; min-height: 0; grid-template-columns: 1fr; grid-template-rows: auto auto auto; grid-template-areas: "back" "stage" "left"; }
+    .stage { display: flex; flex-direction: column; gap: 12px; overflow: visible; }
+    .vp { position: relative; inset: auto; height: min(72vh, 560px); min-height: 400px; border-radius: 18px; overflow: hidden; }
+    .right { position: static; width: auto; max-height: none; display: grid; grid-template-columns: 1fr 1fr; align-items: start; }
+    .left { overflow: visible; }
+  }
+  @media (max-width: 640px) {
+    .right { grid-template-columns: 1fr; }
+    .title h1 { font-size: 17px; }
+    .hint { display: none; }
+    .top { inset-inline: 12px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; }
+  }
+</style>
+</head>
+<body>
+<canvas id="dust" aria-hidden="true"></canvas>
+<main class="page">
+  <div class="app">
+    <button class="back" type="button" id="backBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+      <span data-i18n="back">Back to library</span>
+    </button>
+
+    <!-- ===== left: transform + parameters ===== -->
+    <aside class="left card" aria-labelledby="posH">
+      <h2 class="h" id="posH" data-i18n="position">Position</h2>
+
+      <div class="sub-h"><span data-i18n="location">Location</span>
+        <button class="icon-btn" type="button" data-reset="loc" data-i18n-aria="reset" aria-label="Reset">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg></button>
+      </div>
+      <div class="xyz" data-group="loc"></div>
+
+      <div class="sub-h"><span data-i18n="rotation">Rotation</span>
+        <button class="icon-btn" type="button" data-reset="rot" data-i18n-aria="reset" aria-label="Reset">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button>
+      </div>
+      <div class="xyz" data-group="rot"></div>
+
+      <div class="sub-h"><span data-i18n="scale">Scale</span>
+        <button class="icon-btn" type="button" id="lockBtn" aria-pressed="true" data-i18n-aria="lock" aria-label="Lock proportions">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M9 17H7a5 5 0 0 1 0-10h2M15 7h2a5 5 0 0 1 0 10h-2M8 12h8"/></svg></button>
+      </div>
+      <div class="xyz" data-group="scl"></div>
+
+      <div class="sep"></div>
+      <div class="params-h">
+        <h2 class="h" data-i18n="params">Parameters</h2>
+        <span class="badge"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="m12 2 3 7 7 .6-5.3 4.6L18.4 22 12 18l-6.4 4 1.7-7.8L2 9.6 9 9z"/></svg><span id="maxKg">Max 6.7 kg</span></span>
+      </div>
+
+      <div class="slider"><div class="row"><label for="sWall" data-i18n="wall">Wall thickness</label><output id="oWall" for="sWall"></output></div>
+        <input type="range" id="sWall" min="2" max="8" step="0.01" value="5.44"></div>
+      <div class="slider"><div class="row"><label for="sFlex" data-i18n="flex">Flexibility</label><output id="oFlex" for="sFlex"></output></div>
+        <input type="range" id="sFlex" min="0" max="110" step="1" value="75"></div>
+      <div class="slider"><div class="row"><label for="sRot" data-i18n="wristRot">Rotation</label><output id="oRot" for="sRot"></output></div>
+        <input type="range" id="sRot" min="0" max="180" step="1" value="90"></div>
+      <div class="slider"><div class="row"><label for="sGrip" data-i18n="grip">Grip force</label><output id="oGrip" for="sGrip"></output></div>
+        <input type="range" id="sGrip" min="0" max="100" step="1" value="85"></div>
+
+      <div class="weights">
+        <div class="lab" data-i18n="weight">Weight distribution</div>
+        <div class="wbox" id="wbox">
+          <div><small data-i18n="palm">Palm</small><strong id="wPalm">65%</strong></div>
+          <div><small data-i18n="wrist">Wrist</small><strong id="wWrist">35%</strong></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ===== stage ===== -->
+    <section class="stage" aria-labelledby="modelTitle">
+      <div class="vp" id="vp">
+        <canvas id="gl" aria-label="3D viewport" data-i18n-aria="viewport"></canvas>
+        <div class="fallback" aria-hidden="true">
+          <div>
+            <svg viewBox="0 0 160 220" fill="none" stroke="#6b6b72" stroke-width="2"><rect x="44" y="80" width="72" height="80" rx="14"/><rect x="46" y="22" width="14" height="56" rx="7"/><rect x="64" y="10" width="14" height="68" rx="7"/><rect x="82" y="14" width="14" height="64" rx="7"/><rect x="100" y="28" width="14" height="50" rx="7"/><path d="M44 120 18 88" stroke="#ff3d1f" stroke-width="12" stroke-linecap="round"/><ellipse cx="80" cy="182" rx="30" ry="18"/></svg>
+            <div data-i18n="nogl">3D preview needs WebGL.</div>
+          </div>
+        </div>
+        <div class="top">
+          <div class="title">
+            <h1 id="modelTitle" data-i18n="model">Model – ZM0634</h1>
+            <p data-i18n="sub">Hand prosthesis</p>
+          </div>
+          <div class="modes" role="group" data-i18n-aria="render" aria-label="Render mode">
+            <button type="button" data-mode="lines" aria-pressed="false" data-i18n-aria="mLines" aria-label="Wireframe" title="Wireframe">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg></button>
+            <button type="button" data-mode="solid" aria-pressed="true" data-i18n-aria="mSolid" aria-label="Solid" title="Solid">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 9 5v10l-9 5-9-5V7z"/><path d="m3 7 9 5 9-5M12 12v10"/></svg></button>
+            <button type="button" data-mode="xray" aria-pressed="false" data-i18n-aria="mXray" aria-label="X-ray" title="X-ray">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></button>
+          </div>
+        </div>
+        <div class="hint" id="hint" data-i18n="hint">Drag to orbit · scroll to zoom</div>
+        <div class="toolbar" role="toolbar" data-i18n-aria="tools" aria-label="Viewport tools">
+          <button type="button" class="primary" id="tZoom" data-i18n-aria="tZoom" aria-label="Zoom in" title="Zoom in">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+          <button type="button" id="tFit" data-i18n-aria="tFit" aria-label="Fit to view" title="Fit to view">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/></svg></button>
+          <button type="button" id="tCut" aria-pressed="false" data-i18n-aria="tCut" aria-label="Section cut" title="Section cut">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12"/></svg></button>
+        </div>
+      </div>
+
+      <!-- ===== right: layers + animations ===== -->
+      <div class="right">
+        <section class="card" id="layersCard" aria-labelledby="layH">
+          <div class="ph"><h2 class="h" id="layH" data-i18n="layers">Layers</h2>
+            <button class="icon-btn" type="button" data-collapse aria-expanded="true" data-i18n-aria="collapse" aria-label="Collapse">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button>
+          </div>
+          <div class="pbody"><div>
+            <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+              <input type="search" id="layerSearch" placeholder="Search" data-i18n-ph="search" data-i18n-aria="search" aria-label="Search"></label>
+            <ul class="tree" id="tree"></ul>
+          </div></div>
+        </section>
+
+        <section class="card" id="animCard" aria-labelledby="animH">
+          <div class="ph"><h2 class="h" id="animH" data-i18n="anims">Animations</h2>
+            <button class="icon-btn" type="button" data-collapse aria-expanded="true" data-i18n-aria="collapse" aria-label="Collapse">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m6 15 6-6 6 6"/></svg></button>
+          </div>
+          <div class="pbody"><div>
+            <div class="chips">
+              <button class="chip" type="button" id="cineBtn"><svg class="flip" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 4v16l14-8z"/></svg><span data-i18n="cine">Cinematic intro</span></button>
+              <button class="chip" type="button" id="printBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4v-7h16v7h-2M7 14h10v7H7z"/></svg><span data-i18n="print">Print reveal</span></button>
+            </div>
+            <div class="tog"><span id="lIdle" data-i18n="idle">Idle float</span><button class="switch" type="button" role="switch" aria-checked="true" aria-labelledby="lIdle" data-tog="idle"></button></div>
+            <div class="tog"><span id="lTurn" data-i18n="turn">Turntable</span><button class="switch" type="button" role="switch" aria-checked="false" aria-labelledby="lTurn" data-tog="turn"></button></div>
+            <div class="tog"><span id="lGlow" data-i18n="glow">Hover glow</span><button class="switch" type="button" role="switch" aria-checked="true" aria-labelledby="lGlow" data-tog="glow"></button></div>
+            <div class="explode">
+              <div><label for="sExplode" data-i18n="explode">Explode view</label>
+                <input type="range" id="sExplode" min="0" max="1" step="0.01" value="0"></div>
+              <svg class="gizmo ltr" id="gizmo" viewBox="-26 -26 52 52" aria-hidden="true">
+                <line id="gx" x1="0" y1="0" x2="16" y2="0" stroke="#ff4a3d" stroke-width="1.6"/>
+                <line id="gy" x1="0" y1="0" x2="0" y2="-16" stroke="#3ddc84" stroke-width="1.6"/>
+                <line id="gz" x1="0" y1="0" x2="-10" y2="10" stroke="#4a7dff" stroke-width="1.6"/>
+                <circle id="cx" r="2.6" fill="#ff4a3d"/><circle id="cy" r="2.6" fill="#3ddc84"/><circle id="cz" r="2.6" fill="#4a7dff"/>
+                <text id="tx" font-size="6" fill="#ff4a3d" font-family="Inter" text-anchor="middle">x</text>
+                <text id="ty" font-size="6" fill="#3ddc84" font-family="Inter" text-anchor="middle">y</text>
+                <text id="tz" font-size="6" fill="#4a7dff" font-family="Inter" text-anchor="middle">z</text>
+              </svg>
+            </div>
+          </div></div>
+        </section>
+      </div>
+    </section>
+  </div>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="module">
+const LANG = document.documentElement.lang === 'fa' ? 'fa' : 'en';
+const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const I18N = {
+  en: {
+    back: 'Back to library', position: 'Position', location: 'Location', rotation: 'Rotation', scale: 'Scale',
+    params: 'Parameters', max: 'Max', kg: 'kg', wall: 'Wall thickness', cm: 'cm', flex: 'Flexibility', wristRot: 'Rotation',
+    grip: 'Grip force', weight: 'Weight distribution', palm: 'Palm', wrist: 'Wrist',
+    model: 'Model – ZM0634', sub: 'Hand prosthesis', nogl: '3D preview needs WebGL.', viewport: '3D viewport — drag to orbit',
+    render: 'Render mode', mLines: 'Wireframe', mSolid: 'Solid', mXray: 'X-ray', hint: 'Drag to orbit · scroll to zoom',
+    tools: 'Viewport tools', tZoom: 'Zoom in', tFit: 'Fit to view', tCut: 'Section cut',
+    layers: 'Layers', search: 'Search', collapse: 'Collapse', reset: 'Reset', lock: 'Lock proportions', vis: 'Toggle visibility', expand: 'Expand group',
+    anims: 'Animations', cine: 'Cinematic intro', print: 'Print reveal', idle: 'Idle float', turn: 'Turntable', glow: 'Hover glow', explode: 'Explode view',
+    noLayers: 'No layers match', toastLib: 'The library opens in the full app — this is a live preview.',
+    toastCut: 'Section cut on', toastCutOff: 'Section cut off', toastFit: 'View reset',
+    L_thumb: 'Thumb collection', L_tendons: 'Cube / tendons 1', L_spheres: 'Sphere / connection', L_cone1: 'Cone / joint 1', L_cone2: 'Cone / joint 2',
+    L_palm: 'Palm shell', L_fingers: 'Finger array', L_wrist: 'Wrist mount'
+  },
+  fa: {
+    back: 'بازگشت به کتابخانه', position: 'موقعیت', location: 'جایگاه', rotation: 'چرخش', scale: 'مقیاس',
+    params: 'پارامترها', max: 'حداکثر', kg: 'کیلوگرم', wall: 'ضخامت دیواره', cm: 'سانتی‌متر', flex: 'انعطاف‌پذیری', wristRot: 'چرخش مچ',
+    grip: 'نیروی گرفتن', weight: 'توزیع وزن', palm: 'کف دست', wrist: 'مچ',
+    model: 'مدل – ZM0634', sub: 'پروتز دست', nogl: 'پیش‌نمایش سه‌بعدی به WebGL نیاز دارد.', viewport: 'نمای سه‌بعدی — برای چرخاندن بکشید',
+    render: 'حالت نمایش', mLines: 'سیمی', mSolid: 'توپر', mXray: 'اشعهٔ ایکس', hint: 'برای چرخاندن بکشید · برای زوم اسکرول کنید',
+    tools: 'ابزارهای نما', tZoom: 'بزرگ‌نمایی', tFit: 'قاب‌گرفتن مدل', tCut: 'برش مقطع',
+    layers: 'لایه‌ها', search: 'جست‌وجو', collapse: 'جمع کردن', reset: 'بازنشانی', lock: 'قفل تناسب', vis: 'نمایش یا پنهان‌سازی', expand: 'باز کردن گروه',
+    anims: 'انیمیشن‌ها', cine: 'ورود سینمایی', print: 'نمایش چاپ', idle: 'شناوری آرام', turn: 'صفحهٔ گردان', glow: 'درخشش با هاور', explode: 'نمای انفجاری',
+    noLayers: 'لایه‌ای پیدا نشد', toastLib: 'کتابخانه در نسخهٔ کامل باز می‌شود؛ این یک پیش‌نمایش زنده است.',
+    toastCut: 'برش مقطع روشن شد', toastCutOff: 'برش مقطع خاموش شد', toastFit: 'نما بازنشانی شد',
+    L_thumb: 'مجموعهٔ شست', L_tendons: 'مکعب / تاندون‌ها ۱', L_spheres: 'کره / اتصال', L_cone1: 'مخروط / مفصل ۱', L_cone2: 'مخروط / مفصل ۲',
+    L_palm: 'پوستهٔ کف دست', L_fingers: 'ردیف انگشت‌ها', L_wrist: 'پایهٔ مچ'
+  }
+};
+const T = I18N[LANG];
+document.querySelectorAll('[data-i18n]').forEach(el => { const v = T[el.dataset.i18n]; if (v) el.textContent = v; });
+document.querySelectorAll('[data-i18n-aria]').forEach(el => { const v = T[el.dataset.i18nAria]; if (v) { el.setAttribute('aria-label', v); if (el.hasAttribute('title')) el.title = v; } });
+document.querySelectorAll('[data-i18n-ph]').forEach(el => { const v = T[el.dataset.i18nPh]; if (v) el.placeholder = v; });
+
+const FA_DIG = '۰۱۲۳۴۵۶۷۸۹';
+const toFa = s => String(s).replace(/\d/g, d => FA_DIG[d]).replace(/\./g, '٫').replace(/-/g, '−');
+const fmt = (n, dec = 0) => { let s = (+n).toFixed(dec); if (dec && s.includes('.')) s = s.replace(/\.?0+$/, ''); return LANG === 'fa' ? toFa(s) : s; };
+const parse = s => parseFloat(String(s).replace(/[۰-۹]/g, d => FA_DIG.indexOf(d)).replace(/[٫,]/g, '.').replace(/−/g, '-'));
+const $ = s => document.querySelector(s);
+
+/* ---------- toast ---------- */
+const toastEl = $('#toast'); let toastT;
+function toast(msg) { if (!toastEl) return; toastEl.textContent = msg; toastEl.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => toastEl.classList.remove('show'), 2200); }
+$('#backBtn')?.addEventListener('click', () => toast(T.toastLib));
+
+/* ---------- state ---------- */
+const S = {
+  loc: { x: 138.5, y: 74, z: 137 }, rot: { x: 0, y: 0, z: 0 }, scl: { x: 1, y: 1, z: 1 },
+  wall: 5.44, flex: 75, wrot: 90, grip: 85, explode: 0,
+  idle: !REDUCE, turn: false, glow: true, mode: 'solid', cut: false,
+  selected: 'spheres', hidden: new Set(), closed: new Set()
+};
+const DEF = { loc: { ...S.loc }, rot: { ...S.rot }, scl: { ...S.scl } };
+let lockScale = true;
+if (REDUCE) $('[data-tog="idle"]')?.setAttribute('aria-checked', 'false');
+
+/* ---------- xyz fields ---------- */
+const STEP = { loc: 0.5, rot: 1, scl: 0.05 };
+const DEC = { loc: 1, rot: 0, scl: 2 };
+const fields = {};
+document.querySelectorAll('.xyz').forEach(wrap => {
+  const g = wrap.dataset.group;
+  ['x', 'y', 'z'].forEach(ax => {
+    const box = document.createElement('label');
+    box.className = 'num ltr';
+    box.innerHTML = `<b>${ax.toUpperCase()}</b><input inputmode="decimal" autocomplete="off" aria-label="${T[g === 'loc' ? 'location' : g === 'rot' ? 'rotation' : 'scale']} ${ax.toUpperCase()}">`;
+    if (g === 'scl' && ax === 'z') box.classList.add('is-active');
+    wrap.appendChild(box);
+    const inp = box.querySelector('input');
+    fields[g + ax] = inp;
+    const commit = v => {
+      if (!isFinite(v)) { syncFields(); return; }
+      if (g === 'scl') { v = Math.max(0.2, Math.min(3, v)); if (lockScale) { S.scl.x = S.scl.y = S.scl.z = v; } else S.scl[ax] = v; }
+      else S[g][ax] = v;
+      syncFields(); applyTransform();
+    };
+    inp.addEventListener('change', () => commit(parse(inp.value)));
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); commit(S[g][ax] + (e.key === 'ArrowUp' ? 1 : -1) * STEP[g] * (e.shiftKey ? 10 : 1)); }
+      if (e.key === 'Enter') inp.blur();
+    });
+    // scrub by dragging the axis letter
+    const lab = box.querySelector('b');
+    lab.addEventListener('pointerdown', e => {
+      e.preventDefault(); lab.setPointerCapture(e.pointerId);
+      const x0 = e.clientX, v0 = S[g][ax];
+      const mv = ev => commit(+(v0 + (ev.clientX - x0) * STEP[g] * 0.5).toFixed(DEC[g]));
+      const up = () => { lab.removeEventListener('pointermove', mv); lab.removeEventListener('pointerup', up); };
+      lab.addEventListener('pointermove', mv); lab.addEventListener('pointerup', up);
+    });
+  });
+});
+function syncFields() { for (const g of ['loc', 'rot', 'scl']) for (const ax of ['x', 'y', 'z']) { const f = fields[g + ax]; if (f && document.activeElement !== f) f.value = fmt(S[g][ax], DEC[g]); } }
+syncFields();
+document.querySelectorAll('[data-reset]').forEach(b => b.addEventListener('click', () => { const g = b.dataset.reset; S[g] = { ...DEF[g] }; syncFields(); applyTransform(); }));
+$('#lockBtn')?.addEventListener('click', e => { lockScale = !lockScale; e.currentTarget.setAttribute('aria-pressed', String(lockScale)); });
+
+/* ---------- sliders ---------- */
+function fillRange(r) { const p = (r.value - r.min) / (r.max - r.min) * 100; r.style.setProperty('--p', p + '%'); }
+const sliders = { sWall: 'wall', sFlex: 'flex', sRot: 'wrot', sGrip: 'grip', sExplode: 'explode' };
+for (const [id, key] of Object.entries(sliders)) {
+  const r = document.getElementById(id); if (!r) continue;
+  fillRange(r);
+  r.addEventListener('input', () => { S[key] = +r.value; fillRange(r); updateReadouts(); });
+}
+function updateReadouts() {
+  const set = (id, t) => { const o = document.getElementById(id); if (o) o.textContent = t; };
+  set('oWall', `${fmt(S.wall, 2)} ${T.cm}`);
+  set('oFlex', `${fmt(S.flex)}°`);
+  set('oRot', `${fmt(S.wrot)}°`);
+  set('oGrip', LANG === 'fa' ? `٪${fmt(S.grip)}` : `${S.grip}%`);
+  const maxKg = (S.grip / 100) * 7.88 * Math.pow(S.wall / 5.44, 0.35);
+  set('maxKg', `${T.max} ${fmt(maxKg, 1)} ${T.kg}`);
+  const palm = Math.round(Math.max(40, Math.min(85, 50 + S.wall * 2.757)));
+  set('wPalm', LANG === 'fa' ? `٪${fmt(palm)}` : `${palm}%`);
+  set('wWrist', LANG === 'fa' ? `٪${fmt(100 - palm)}` : `${100 - palm}%`);
+  $('#wbox')?.style.setProperty('--palm', palm + '%');
+}
+updateReadouts();
+
+/* ---------- toggles / collapse ---------- */
+document.querySelectorAll('[data-tog]').forEach(sw => sw.addEventListener('click', () => {
+  const on = sw.getAttribute('aria-checked') !== 'true';
+  sw.setAttribute('aria-checked', String(on)); S[sw.dataset.tog] = on;
+}));
+document.querySelectorAll('[data-collapse]').forEach(b => b.addEventListener('click', () => {
+  const card = b.closest('.card'); const c = card.classList.toggle('collapsed'); b.setAttribute('aria-expanded', String(!c));
+}));
+
+/* ---------- layers tree ---------- */
+const LAYERS = [
+  { id: 'thumb', icon: 'group', d: 0, group: true },
+  { id: 'tendons', icon: 'cube', d: 1, parent: 'thumb' },
+  { id: 'spheres', icon: 'sphere', d: 1, parent: 'thumb' },
+  { id: 'cone1', icon: 'cone', d: 1, parent: 'thumb' },
+  { id: 'cone2', icon: 'cone', d: 1, parent: 'thumb' },
+  { id: 'palm', icon: 'cube', d: 0 },
+  { id: 'fingers', icon: 'group', d: 0 },
+  { id: 'wrist', icon: 'cone', d: 0 }
+];
+const ICONS = {
+  group: '<svg viewBox="0 0 10 10" aria-hidden="true"><rect x="1" y="1" width="8" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-dasharray="2 1.4"/><rect x="3.5" y="3.5" width="3" height="3" fill="currentColor"/></svg>',
+  cube: '<svg viewBox="0 0 10 10" aria-hidden="true"><rect x="1.5" y="1.5" width="7" height="7" rx="1.2" fill="none" stroke="currentColor"/></svg>',
+  sphere: '<svg viewBox="0 0 10 10" aria-hidden="true"><circle cx="5" cy="5" r="3.8" fill="none" stroke="currentColor"/></svg>',
+  cone: '<svg viewBox="0 0 10 10" aria-hidden="true"><path d="M5 1.2 8.6 8.6H1.4z" fill="none" stroke="currentColor" stroke-linejoin="round"/></svg>'
+};
+const EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4M6.6 6.6A17 17 0 0 0 2 12s3.6 7 10 7a9.8 9.8 0 0 0 5.4-1.6"/></svg>';
+const CARET = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+const tree = $('#tree');
+function renderTree() {
+  if (!tree) return;
+  const q = ($('#layerSearch')?.value || '').trim().toLowerCase();
+  tree.innerHTML = '';
+  let shown = 0;
+  for (const L of LAYERS) {
+    const name = T['L_' + L.id];
+    const match = !q || name.toLowerCase().includes(q) || I18N.en['L_' + L.id].toLowerCase().includes(q);
+    const hiddenByParent = !q && L.parent && S.closed.has(L.parent);
+    const li = document.createElement('li');
+    li.style.setProperty('--d', q ? 0 : L.d);
+    li.className = (S.selected === L.id ? 'sel ' : '') + (isHidden(L.id) ? 'off ' : '') + (S.closed.has(L.id) ? 'closed' : '');
+    li.hidden = !match || hiddenByParent;
+    if (!li.hidden) shown++;
+    li.innerHTML = `<button type="button" class="pick" aria-pressed="${S.selected === L.id}">${ICONS[L.icon]}<span>${name}</span></button>`
+      + (L.group ? `<button type="button" class="icon-btn caret" aria-expanded="${!S.closed.has(L.id)}" aria-label="${T.expand}">${CARET}</button>` : '')
+      + `<button type="button" class="icon-btn eye" aria-pressed="${!S.hidden.has(L.id)}" aria-label="${T.vis}: ${name}">${S.hidden.has(L.id) ? EYE_OFF : EYE}</button>`;
+    li.querySelector('.pick').addEventListener('click', () => { S.selected = S.selected === L.id ? null : L.id; renderTree(); refreshHighlight(); });
+    li.querySelector('.eye').addEventListener('click', () => { S.hidden.has(L.id) ? S.hidden.delete(L.id) : S.hidden.add(L.id); renderTree(); applyVisibility(); });
+    li.querySelector('.caret')?.addEventListener('click', () => { S.closed.has(L.id) ? S.closed.delete(L.id) : S.closed.add(L.id); renderTree(); });
+    tree.appendChild(li);
+  }
+  if (!shown) { const e = document.createElement('li'); e.className = 'empty'; e.textContent = T.noLayers; tree.appendChild(e); }
+}
+function isHidden(id) { const L = LAYERS.find(l => l.id === id); return S.hidden.has(id) || (L?.parent ? S.hidden.has(L.parent) : false); }
+$('#layerSearch')?.addEventListener('input', renderTree);
+renderTree();
+
+/* ---------- render-mode buttons ---------- */
+document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => {
+  S.mode = b.dataset.mode;
+  document.querySelectorAll('[data-mode]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  applyMode();
+}));
+
+/* hooks the 3D layer fills in */
+let applyTransform = () => {}, applyVisibility = () => {}, refreshHighlight = () => {}, applyMode = () => {};
+
+/* =================================================================
+   Gold particle terrain backdrop (2D canvas)
+   ================================================================= */
+(function dust() {
+  const cv = document.getElementById('dust'); if (!cv) return;
+  const ctx = cv.getContext('2d'); if (!ctx) return;
+  let W = 0, H = 0, img = null, buf = null, raf = 0, running = true, lastT = 0;
+  const COLS = 150, ROWS = 46;
+  const hex = (getComputedStyle(document.documentElement).getPropertyValue('--gold').trim() || '#d6a531').replace('#', '');
+  const G = [parseInt(hex.slice(0, 2), 16), parseInt(hex.slice(2, 4), 16), parseInt(hex.slice(4, 6), 16)];
+  function size() { W = Math.max(1, innerWidth); H = Math.max(1, innerHeight); cv.width = W; cv.height = H; img = ctx.createImageData(W, H); buf = new Uint32Array(img.data.buffer); }
+  function dot(x, y, s, r, g, b, a) {
+    const A = Math.min(255, a * 255) | 0; if (A < 4) return;
+    const px = (A << 24) | (b << 16) | (g << 8) | r;
+    for (let j = 0; j < s; j++) { const yy = y + j; if (yy < 0 || yy >= H) continue; for (let i = 0; i < s; i++) { const xx = x + i; if (xx >= 0 && xx < W) buf[yy * W + xx] = px; } }
+  }
+  function draw(t) {
+    if (!buf) return;
+    buf.fill(0);
+    const horizon = H * 0.18, fov = H * 0.9;
+    for (let r = ROWS - 1; r >= 0; r--) {
+      const z = 1.2 + r * 0.22;
+      for (let c = 0; c < COLS; c++) {
+        const u = c / (COLS - 1) * 2 - 1, x = u * 9;
+        const side = Math.pow(Math.abs(u), 1.6);
+        const h = (Math.sin(x * 1.3 + t * 0.6 + r * 0.35) * 0.5 + Math.sin(x * 0.55 - t * 0.4 + r * 0.18) * 0.7 + Math.cos(r * 0.5 + t * 0.3) * 0.3) * (0.4 + side * 1.6) + side * 3.2;
+        const sx = (W / 2 + (x / z) * fov * 0.55) | 0;
+        const sy = (H - 10 - ((h - 0.2) / z) * fov * 0.28 - (r / ROWS) * (H - horizon) * 0.42) | 0;
+        if (sx < -4 || sx > W || sy < 0 || sy >= H) continue;
+        const tw = Math.sin(c * 12.9898 + r * 78.233 + t * 1.5) * 0.5 + 0.5;
+        const a = (1 - r / ROWS * 0.8) * (0.3 + 0.7 * tw) * (0.55 + side * 1.1);
+        const k = 0.8 + tw * 0.35;
+        dot(sx, sy, z < 2.2 ? 2 : 1, Math.min(255, G[0] * k) | 0, Math.min(255, G[1] * k) | 0, Math.min(255, G[2] * k) | 0, a);
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+  function loop(ts) { if (!running) return; raf = requestAnimationFrame(loop); if (ts - lastT < 33) return; lastT = ts; draw(ts / 1000); }
+  size(); addEventListener('resize', () => { size(); if (REDUCE) draw(0); });
+  if (REDUCE) { draw(0); return; }
+  raf = requestAnimationFrame(loop);
+  document.addEventListener('visibilitychange', () => { running = !document.hidden; cancelAnimationFrame(raf); if (running) raf = requestAnimationFrame(loop); });
+})();
+
+/* =================================================================
+   Three.js viewport
+   ================================================================= */
+const vp = $('#vp'), canvas = $('#gl');
+(async function init3D() {
+  let THREE, RoomEnvironment;
+  try {
+    THREE = await import('three');
+    ({ RoomEnvironment } = await import('three/addons/environments/RoomEnvironment.js'));
+  } catch (e) { vp?.classList.add('no-gl'); return; }
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  } catch (e) { vp?.classList.add('no-gl'); return; }
+  renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+  renderer.localClippingEnabled = true;
+
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.Fog(0x0c0c0d, 16, 34);
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+
+  const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 100);
+  const target = new THREE.Vector3(0, 2.35, 0);
+  const cam = { theta: 0.55, phi: 1.22, r: 11.5 };
+  const camGoal = { ...cam };
+
+  const key = new THREE.DirectionalLight(0xffffff, 1.6); key.position.set(4, 8, 6); scene.add(key);
+  const rim = new THREE.DirectionalLight(0xff8a6a, 0.9); rim.position.set(-6, 3, -5); scene.add(rim);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.15));
+
+  /* floor grid + axis lines */
+  const grid = new THREE.GridHelper(40, 60, 0x232326, 0x18181a);
+  grid.material.transparent = true; grid.material.opacity = 0.8; scene.add(grid);
+  const axisMat = new THREE.LineBasicMaterial({ color: 0xff5a2a, transparent: true, opacity: 0.55 });
+  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-20, 0.002, 4), new THREE.Vector3(20, 0.002, -4)]), axisMat));
+  const axisMat2 = new THREE.LineBasicMaterial({ color: 0x6f6f76, transparent: true, opacity: 0.35 });
+  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-6, 0.002, -20), new THREE.Vector3(6, 0.002, 20)]), axisMat2));
+
+  /* clipping planes: print reveal (horizontal) + section cut (vertical) */
+  const printPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 100);
+  const cutPlane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 100);
+  const planes = [printPlane, cutPlane];
+
+  const COL = { metal: 0x8b8e94, dark: 0x55585e, light: 0xb8bbc1, orange: 0xff4a1c, tendon: 0xd2d5da };
+  const allMeshes = [];
+  function mat(color, opts = {}) {
+    return new THREE.MeshStandardMaterial({ color, metalness: 0.55, roughness: 0.42, clippingPlanes: planes, clipShadows: true, side: THREE.DoubleSide, ...opts });
+  }
+  function mesh(geo, color, layer, opts) {
+    const m = new THREE.Mesh(geo, mat(color, opts));
+    m.userData.base = color; m.userData.layer = layer;
+    allMeshes.push(m); return m;
+  }
+
+  /* ---- build the hand ---- */
+  const root = new THREE.Group(); scene.add(root);          // user transform
+  const floatG = new THREE.Group(); root.add(floatG);        // idle float
+  const hand = new THREE.Group(); floatG.add(hand);          // wrist rotation
+  const parts = [];                                          // explode targets
+  const addPart = (obj, dir) => { obj.userData.basePos = obj.position.clone(); obj.userData.dir = new THREE.Vector3(...dir); parts.push(obj); };
+
+  // wrist mount
+  const wristG = new THREE.Group(); hand.add(wristG);
+  const dome = mesh(new THREE.SphereGeometry(0.62, 40, 20, 0, Math.PI * 2, 0, Math.PI / 2), COL.light, 'wrist'); dome.rotation.x = Math.PI; dome.position.y = 0.62; wristG.add(dome);
+  const collar = mesh(new THREE.CylinderGeometry(0.66, 0.66, 0.18, 40), COL.dark, 'wrist'); collar.position.y = 0.66; wristG.add(collar);
+  const neck = mesh(new THREE.CylinderGeometry(0.5, 0.6, 0.36, 32), COL.metal, 'wrist'); neck.position.y = 0.92; wristG.add(neck);
+  for (let i = 0; i < 3; i++) { const ring = mesh(new THREE.TorusGeometry(0.62, 0.035, 10, 48), COL.dark, 'wrist'); ring.rotation.x = Math.PI / 2; ring.position.y = 0.48 + i * 0.12; wristG.add(ring); }
+  addPart(wristG, [0, -1.1, 0]);
+
+  // palm shell: body + ribbed plates
+  const palmG = new THREE.Group(); hand.add(palmG); palmG.position.y = 1.95;
+  const palmBody = new THREE.Group(); palmG.add(palmBody);
+  palmBody.add(mesh(new THREE.BoxGeometry(1.42, 1.75, 0.4), COL.dark, 'palm'));
+  for (let i = 0; i < 5; i++) {
+    const plate = mesh(new THREE.BoxGeometry(0.25, 1.62, 0.12), COL.metal, 'palm');
+    plate.position.set(-0.56 + i * 0.28, 0, 0.26); plate.rotation.y = (i - 2) * 0.05; palmBody.add(plate);
+    const back = mesh(new THREE.BoxGeometry(0.25, 1.5, 0.08), COL.metal, 'palm');
+    back.position.set(-0.56 + i * 0.28, 0.04, -0.24); palmBody.add(back);
+  }
+  const heel = mesh(new THREE.CylinderGeometry(0.66, 0.58, 0.3, 32), COL.metal, 'palm'); heel.position.y = -0.98; heel.scale.z = 0.45; palmG.add(heel);
+  addPart(palmG, [0, 0, 0.0]);
+
+  // fingers
+  const fingersG = new THREE.Group(); hand.add(fingersG);
+  const fingerDefs = [{ x: -0.52, s: 0.94 }, { x: -0.175, s: 1.06 }, { x: 0.175, s: 1 }, { x: 0.52, s: 0.84 }];
+  const fingerJoints = [];
+  fingerDefs.forEach((f, fi) => {
+    const base = new THREE.Group(); base.position.set(f.x, 2.88, 0); base.rotation.z = -f.x * 0.06; fingersG.add(base);
+    const knuckle = mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.3, 20), COL.light, 'fingers'); knuckle.rotation.z = Math.PI / 2; base.add(knuckle);
+    let parent = base; const joints = [];
+    [0.74, 0.54, 0.42].forEach((len, si) => {
+      len *= f.s;
+      const j = new THREE.Group(); parent.add(j);
+      if (si > 0) { j.position.y = parent.userData.len; const cyl = mesh(new THREE.CylinderGeometry(0.115, 0.115, 0.29, 18), COL.light, 'fingers'); cyl.rotation.z = Math.PI / 2; j.add(cyl); }
+      const w = 0.27 - si * 0.022;
+      const seg = mesh(new THREE.BoxGeometry(w, len - 0.08, 0.29), COL.metal, 'fingers'); seg.position.y = len / 2; j.add(seg);
+      const ridge = mesh(new THREE.BoxGeometry(w * 0.55, len - 0.18, 0.06), COL.dark, 'fingers'); ridge.position.set(0, len / 2, 0.19); j.add(ridge);
+      for (let k = 0; k < 2; k++) { const side = mesh(new THREE.BoxGeometry(0.04, len - 0.16, 0.24), COL.dark, 'fingers'); side.position.set((k ? 1 : -1) * (w / 2 + 0.02), len / 2, 0); j.add(side); }
+      if (si === 2) { const tip = mesh(new THREE.SphereGeometry(w / 2, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), COL.metal, 'fingers'); tip.position.y = len - 0.04; tip.scale.z = 1.05; j.add(tip); }
+      j.userData.len = len; joints.push(j); parent = j;
+    });
+    fingerJoints.push(joints);
+    addPart(base, [f.x * 0.9, 1.0, 0.1 * fi]);
+  });
+
+  // thumb collection (orange) with spheres / cones / tendons
+  const thumbG = new THREE.Group(); hand.add(thumbG);
+  thumbG.position.set(-0.8, 1.4, 0.22); thumbG.rotation.set(0.45, -0.3, 0.72);
+  const spheresG = new THREE.Group(); thumbG.add(spheresG);
+  const thumbJoints = [];
+  const cone1 = mesh(new THREE.ConeGeometry(0.24, 0.34, 28), COL.light, 'cone1'); cone1.rotation.z = Math.PI; cone1.position.y = -0.06; thumbG.add(cone1);
+  const baseRing = mesh(new THREE.TorusGeometry(0.24, 0.05, 12, 36), COL.light, 'spheres'); baseRing.rotation.x = Math.PI / 2; baseRing.position.y = 0.12; spheresG.add(baseRing);
+  let tParent = thumbG;
+  let cone2;
+  [0.52, 0.42, 0.34].forEach((len, si) => {
+    const j = new THREE.Group(); tParent.add(j);
+    j.position.y = si === 0 ? 0.16 : tParent.userData.len;
+    const sph = mesh(new THREE.SphereGeometry(0.2 - si * 0.025, 24, 16), COL.light, 'spheres'); j.add(sph);
+    const r = 0.2 - si * 0.03;
+    const seg = mesh(new THREE.CylinderGeometry(r * 0.9, r, len - 0.1, 24), COL.orange, 'thumb', { metalness: 0.25, roughness: 0.5 }); seg.position.y = len / 2; j.add(seg);
+    const band = mesh(new THREE.TorusGeometry(r * 0.98, 0.025, 8, 28), COL.orange, 'thumb', { metalness: 0.25, roughness: 0.5 }); band.rotation.x = Math.PI / 2; band.position.y = len * 0.55; j.add(band);
+    if (si === 1) { cone2 = mesh(new THREE.ConeGeometry(0.13, 0.22, 20), COL.light, 'cone2'); cone2.position.set(0, len * 0.5, r + 0.04); cone2.rotation.x = Math.PI / 2; j.add(cone2); }
+    if (si === 2) { const tip = mesh(new THREE.SphereGeometry(r * 0.9, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), COL.orange, 'thumb', { metalness: 0.25, roughness: 0.5 }); tip.position.y = len - 0.05; j.add(tip); }
+    j.userData.len = len; thumbJoints.push(j); tParent = j;
+  });
+  addPart(thumbG, [-1.2, 0.2, 0.5]);
+
+  // tendons: tubes from the wrist to the thumb base, plus a frame cube
+  const tendonsG = new THREE.Group(); hand.add(tendonsG);
+  for (let i = 0; i < 3; i++) {
+    const c = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-0.25 + i * 0.18, 0.95, 0.42),
+      new THREE.Vector3(-0.55 + i * 0.05, 1.05 + i * 0.05, 0.62 - i * 0.04),
+      new THREE.Vector3(-0.72, 1.3 + i * 0.04, 0.45),
+      new THREE.Vector3(-0.86, 1.45, 0.26)
+    ]);
+    tendonsG.add(mesh(new THREE.TubeGeometry(c, 40, 0.035, 8), COL.tendon, 'tendons', { metalness: 0.2, roughness: 0.35 }));
+  }
+  const tBox = mesh(new THREE.BoxGeometry(0.28, 0.2, 0.18), COL.light, 'tendons'); tBox.position.set(-0.15, 0.98, 0.46); tendonsG.add(tBox);
+  addPart(tendonsG, [-0.3, -0.2, 1.1]);
+
+  // selection ring (the red marker on the selected part)
+  const ringMat = new THREE.MeshBasicMaterial({ color: 0xff3d1f, transparent: true, opacity: 0.9, depthTest: false });
+  const selRing = new THREE.Mesh(new THREE.TorusGeometry(0.26, 0.022, 8, 48), ringMat); selRing.renderOrder = 10; scene.add(selRing);
+  // print-reveal glow slice
+  const sliceMat = new THREE.MeshBasicMaterial({ color: 0xff5a2a, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false });
+  const slice = new THREE.Mesh(new THREE.RingGeometry(0.2, 2.2, 64), sliceMat); slice.rotation.x = -Math.PI / 2; scene.add(slice);
+
+  /* ---- hooks ---- */
+  const layerObjs = { thumb: [thumbG], tendons: [tendonsG], spheres: [spheresG, ...thumbJoints.map(j => j.children[0])], cone1: [cone1], cone2: [cone2], palm: [palmG], fingers: [fingersG], wrist: [wristG] };
+  applyTransform = () => {
+    root.position.set((S.loc.x - DEF.loc.x) / 40, (S.loc.y - DEF.loc.y) / 40, (S.loc.z - DEF.loc.z) / 40);
+    root.rotation.set(THREE.MathUtils.degToRad(S.rot.x), THREE.MathUtils.degToRad(S.rot.y), THREE.MathUtils.degToRad(S.rot.z));
+    root.scale.set(S.scl.x, S.scl.y, S.scl.z);
+  };
+  applyVisibility = () => { allMeshes.forEach(m => { m.visible = !isHidden(m.userData.layer); }); };
+  let hoverLayer = null;
+  refreshHighlight = () => {
+    allMeshes.forEach(m => {
+      const L = m.userData.layer;
+      const sel = S.selected && (L === S.selected || (S.selected === 'thumb' && LAYERS.find(l => l.id === L)?.parent === 'thumb'));
+      const hov = S.glow && hoverLayer && L === hoverLayer;
+      m.material.emissive.setHex(sel ? 0xff3d1f : hov ? 0xff7a40 : 0x000000);
+      m.material.emissiveIntensity = sel ? (S.mode === 'lines' ? 1.2 : 0.55) : hov ? 0.35 : 0;
+    });
+  };
+  applyMode = () => {
+    allMeshes.forEach(m => {
+      const M = m.material;
+      M.wireframe = S.mode === 'lines';
+      M.transparent = S.mode === 'xray';
+      M.opacity = S.mode === 'xray' ? 0.28 : 1;
+      M.depthWrite = S.mode !== 'xray';
+      M.color.setHex(S.mode === 'solid' ? m.userData.base : S.mode === 'lines' ? 0x9ea3ab : 0x9fb6d6);
+      M.metalness = S.mode === 'solid' ? (m.userData.base === COL.orange || m.userData.base === COL.tendon ? 0.25 : 0.55) : 0.1;
+      M.needsUpdate = true;
+    });
+    refreshHighlight();
+  };
+  applyTransform(); applyVisibility(); applyMode();
+  const _renderTree = renderTree;
+
+  /* ---- orbit controls ---- */
+  let drag = null, moved = false;
+  canvas.addEventListener('pointerdown', e => {
+    drag = { x: e.clientX, y: e.clientY, t: camGoal.theta, p: camGoal.phi }; moved = false;
+    canvas.setPointerCapture(e.pointerId); canvas.classList.add('dragging');
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (drag) {
+      const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
+      camGoal.theta = drag.t - dx * 0.008;
+      camGoal.phi = THREE.MathUtils.clamp(drag.p - dy * 0.006, 0.25, 1.52);
+      $('#hint') && ($('#hint').style.opacity = 0);
+    } else hoverAt(e);
+  });
+  const endDrag = e => {
+    if (drag && !moved && e.type === 'pointerup') pickAt(e);
+    drag = null; canvas.classList.remove('dragging');
+  };
+  canvas.addEventListener('pointerup', endDrag);
+  canvas.addEventListener('pointercancel', endDrag);
+  canvas.addEventListener('pointerleave', () => { if (hoverLayer) { hoverLayer = null; refreshHighlight(); } });
+  canvas.addEventListener('wheel', e => { e.preventDefault(); camGoal.r = THREE.MathUtils.clamp(camGoal.r * (1 + Math.sign(e.deltaY) * 0.08), 5, 22); }, { passive: false });
+
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+  function hitLayer(e) {
+    const r = canvas.getBoundingClientRect();
+    ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    const hits = ray.intersectObjects(allMeshes.filter(m => m.visible), false);
+    const h = hits.find(h => { const p = h.point; return printPlane.distanceToPoint(p) >= 0 && cutPlane.distanceToPoint(p) >= 0; });
+    return h ? h.object.userData.layer : null;
+  }
+  function hoverAt(e) { const L = S.glow ? hitLayer(e) : null; if (L !== hoverLayer) { hoverLayer = L; refreshHighlight(); canvas.style.cursor = L ? 'pointer' : ''; } }
+  function pickAt(e) { const L = hitLayer(e); S.selected = L; if (L && S.closed.has('thumb') && LAYERS.find(l => l.id === L)?.parent) S.closed.delete('thumb'); _renderTree(); refreshHighlight(); }
+
+  /* ---- toolbar ---- */
+  $('#tZoom')?.addEventListener('click', () => { camGoal.r = Math.max(5, camGoal.r * 0.8); });
+  $('#tFit')?.addEventListener('click', () => { Object.assign(camGoal, { theta: 0.55, phi: 1.22, r: 11.5 }); toast(T.toastFit); });
+  $('#tCut')?.addEventListener('click', e => { S.cut = !S.cut; e.currentTarget.setAttribute('aria-pressed', String(S.cut)); toast(S.cut ? T.toastCut : T.toastCutOff); });
+
+  /* ---- timeline animations ---- */
+  let cine = null, print = null;
+  const ease = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  function runCine() {
+    cine = { t0: performance.now(), dur: 2800, from: { theta: -2.2, phi: 0.55, r: 19 }, to: { theta: 0.55, phi: 1.22, r: 11.5 } };
+    $('#cineBtn')?.classList.add('running');
+  }
+  function runPrint() { print = { t0: performance.now(), dur: 3200 }; $('#printBtn')?.classList.add('running'); }
+  $('#cineBtn')?.addEventListener('click', runCine);
+  $('#printBtn')?.addEventListener('click', runPrint);
+  if (!REDUCE) { runCine(); runPrint(); }
+
+  /* ---- loop ---- */
+  let raf = 0, visible = true, inView = true, last = performance.now(), time = 0, explodeCur = 0, curlCur = 0;
+  const v3 = new THREE.Vector3();
+  function resize() {
+    const w = canvas.clientWidth, h = canvas.clientHeight; if (!w || !h) return;
+    renderer.setSize(w, h, false); camera.aspect = w / h;
+    camera.fov = w < 560 ? 42 : 32; camera.updateProjectionMatrix();
+  }
+  const ro = new ResizeObserver(resize); ro.observe(canvas); resize();
+
+  const gz = ['x', 'y', 'z'].map(a => ({ line: document.getElementById('g' + a), dot: document.getElementById('c' + a), txt: document.getElementById('t' + a), v: new THREE.Vector3(a === 'x' ? 1 : 0, a === 'y' ? 1 : 0, a === 'z' ? 1 : 0) }));
+  const invQ = new THREE.Quaternion();
+
+  function frame(now) {
+    const dt = Math.max(0, Math.min(0.05, (now - last) / 1000)); last = Math.max(last, now); time += dt;
+    // camera timelines
+    if (cine) {
+      const k = Math.max(0, Math.min(1, (now - cine.t0) / cine.dur)), e = ease(k);
+      for (const p of ['theta', 'phi', 'r']) camGoal[p] = cam[p] = cine.from[p] + (cine.to[p] - cine.from[p]) * e;
+      if (k >= 1) { cine = null; $('#cineBtn')?.classList.remove('running'); }
+    }
+    if (S.turn && !drag) camGoal.theta += dt * 0.35;
+    const lerp = 1 - Math.pow(0.0015, dt);
+    cam.theta += (camGoal.theta - cam.theta) * lerp; cam.phi += (camGoal.phi - cam.phi) * lerp; cam.r += (camGoal.r - cam.r) * lerp;
+    camera.position.set(target.x + cam.r * Math.sin(cam.phi) * Math.sin(cam.theta), target.y + cam.r * Math.cos(cam.phi), target.z + cam.r * Math.sin(cam.phi) * Math.cos(cam.theta));
+    camera.lookAt(target);
+
+    // print reveal
+    if (print) {
+      const k = Math.max(0, Math.min(1, (now - print.t0) / print.dur)), h = -0.1 + ease(k) * 5.2;
+      printPlane.constant = h; slice.position.y = h; sliceMat.opacity = k < 1 ? 0.22 * Math.sin(k * Math.PI) + 0.05 : 0;
+      if (k >= 1) { print = null; printPlane.constant = 100; sliceMat.opacity = 0; $('#printBtn')?.classList.remove('running'); }
+    }
+    cutPlane.constant += ((S.cut ? 0 : 100) - cutPlane.constant) * (S.cut && cutPlane.constant > 3 ? 1 : lerp);
+    if (S.cut && cutPlane.constant > 3) cutPlane.constant = 3;
+
+    // parameters → rig
+    hand.rotation.y = THREE.MathUtils.degToRad(S.wrot - 90);
+    palmBody.scale.z = 0.6 + (S.wall / 5.44) * 0.4;
+    floatG.position.y = S.idle ? Math.sin(time * 1.4) * 0.09 : floatG.position.y * 0.9;
+    floatG.rotation.z = S.idle ? Math.sin(time * 0.9) * 0.025 : floatG.rotation.z * 0.9;
+    const breathe = S.idle ? Math.sin(time * 1.1) * 0.06 : 0;
+    const curlGoal = THREE.MathUtils.degToRad(S.flex) * (S.grip / 100) * 0.24 + breathe;
+    curlCur += (curlGoal - curlCur) * lerp;
+    fingerJoints.forEach((js, fi) => js.forEach((j, si) => { j.rotation.x = curlCur * [0.75, 1, 0.8][si] * (1 + fi * 0.06); }));
+    thumbJoints.forEach((j, si) => { j.rotation.z = -curlCur * [0.15, 0.55, 0.5][si] - (si ? 0.18 : 0); j.rotation.x = curlCur * 0.25; });
+
+    explodeCur += (S.explode - explodeCur) * lerp;
+    parts.forEach(p => p.position.copy(p.userData.basePos).addScaledVector(p.userData.dir, explodeCur * 1.3));
+
+    // selection ring follows the selected part
+    const selObj = S.selected && layerObjs[S.selected]?.[0];
+    if (selObj && selObj.visible !== false && !isHidden(S.selected)) {
+      selObj.getWorldPosition(v3);
+      if (S.selected === 'spheres') thumbJoints[0].getWorldPosition(v3);
+      if (S.selected === 'palm' || S.selected === 'fingers') v3.set(0, 0, 0).applyMatrix4(S.selected === 'palm' ? palmG.matrixWorld : fingerJoints[1][1].matrixWorld);
+      selRing.visible = true; selRing.position.copy(v3); selRing.quaternion.copy(camera.quaternion);
+      selRing.scale.setScalar(1 + Math.sin(time * 3) * (REDUCE ? 0 : 0.06));
+    } else selRing.visible = false;
+
+    // axis gizmo
+    invQ.copy(camera.quaternion).invert();
+    gz.forEach(g => {
+      if (!g.line) return;
+      const p = g.v.clone().applyQuaternion(invQ);
+      const x = p.x * 15, y = -p.y * 15;
+      g.line.setAttribute('x2', x.toFixed(2)); g.line.setAttribute('y2', y.toFixed(2));
+      g.dot?.setAttribute('cx', x.toFixed(2)); g.dot?.setAttribute('cy', y.toFixed(2));
+      g.txt?.setAttribute('x', (x * 1.45).toFixed(2)); g.txt?.setAttribute('y', (y * 1.45 + 2).toFixed(2));
+    });
+
+    renderer.render(scene, camera);
+    raf = requestAnimationFrame(frame);
+  }
+  function start() { cancelAnimationFrame(raf); if (visible && inView) { last = performance.now(); raf = requestAnimationFrame(frame); } }
+  document.addEventListener('visibilitychange', () => { visible = !document.hidden; start(); });
+  const io = new IntersectionObserver(es => { inView = es[0].isIntersecting; start(); }); io.observe(canvas);
+  start();
+  addEventListener('pagehide', () => { io.disconnect(); ro.disconnect(); cancelAnimationFrame(raf); });
+})();
+</script>
+</body>
+</html>

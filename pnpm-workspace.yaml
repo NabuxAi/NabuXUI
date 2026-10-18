@@ -1,6 +1,8 @@
 packages:
   - packages/core
   - packages/react
+  - packages/vue
+  - packages/svelte
   - packages/inertia
   - packages/livewire
   - apps/*

@@ -1,0 +1,20 @@
+{
+  "title": { "en": "Exon AI 3D hex-grid hero", "fa": "هیروی شبکهٔ شش‌ضلعی سه‌بعدی Exon AI" },
+  "oneLiner": {
+    "en": "A dark AI-platform hero over a live three.js grid of bevelled hexagon tiles: tiles near the cursor sink into an electric-blue crater lit from behind, while the glass navbar drops in, the headline fades up in a stagger and the CTAs pull magnetically toward the pointer.",
+    "fa": "هیروی تیره‌ای برای یک پلتفرم هوش مصنوعی روی شبکهٔ زندهٔ three.js از کاشی‌های شش‌ضلعی لبه‌دار: کاشی‌های نزدیک نشانگر در گودالی آبی و درخشان فرو می‌روند که از پشت نور می‌گیرد، نوار ناوبری شیشه‌ای از بالا می‌افتد، تیتر پله‌پله بالا می‌آید و دکمه‌ها مغناطیس‌وار به سمت نشانگر کشیده می‌شوند."
+  },
+  "js": true,
+  "props": [
+    { "name": "CONFIG.depthScale", "type": "number", "default": 3,
+      "note": { "en": "How deep the tiles sink around the cursor.", "fa": "میزان فرورفتن کاشی‌ها در اطراف نشانگر." } },
+    { "name": "CONFIG.hoverRadius", "type": "number", "default": 4.2,
+      "note": { "en": "World-space radius of the blue crater that follows the pointer.", "fa": "شعاع گودال آبی که نشانگر را دنبال می‌کند (در فضای صحنه)." } },
+    { "name": "CONFIG.light2Color", "type": "color", "default": "#0066ff",
+      "note": { "en": "Colour of the deep light behind the grid and the glow in the gaps.", "fa": "رنگ نور عمیق پشت شبکه و درخشش لابه‌لای کاشی‌ها." } },
+    { "name": "--primary-500", "type": "color", "default": "#3b82f6",
+      "note": { "en": "Primary blue of the buttons and the headline gradient.", "fa": "آبی اصلی دکمه‌ها و گرادیان تیتر." } },
+    { "name": "--cyan-400", "type": "color", "default": "#22d3ee",
+      "note": { "en": "Cyan end of the logo and headline gradient.", "fa": "سر فیروزه‌ای گرادیان لوگو و تیتر." } }
+  ]
+}

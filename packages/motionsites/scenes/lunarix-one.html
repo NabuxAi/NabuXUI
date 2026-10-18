@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lunarix One — Smart Ring</title>
+<script>
+  (function () {
+    var p = new URLSearchParams(location.search);
+    var lang = p.get('lang') === 'fa' ? 'fa' : 'en';
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'fa' ? 'rtl' : 'ltr';
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Sora:wght@300;400;600&family=JetBrains+Mono:wght@400;500&family=Vazirmatn:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #070815;
+    --bg-2: #0d0f26;
+    --stage-a: #15173a;
+    --stage-b: #2a2c66;
+    --ink: #eef0ff;
+    --muted: #9aa0c8;
+    --dim: #5d628f;
+    --line: rgba(190, 200, 255, .14);
+    --glass: rgba(255, 255, 255, .045);
+    --accent: #7fe3ff;
+    --violet: #9b8cff;
+    --amber: #ffb36b;
+    --radius: 22px;
+    --f-display: 'Sora', 'Inter', system-ui, sans-serif;
+    --f-body: 'Inter', system-ui, sans-serif;
+    --f-mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  html[lang="fa"] {
+    --f-display: 'Sora', 'Vazirmatn', sans-serif;
+    --f-body: 'Inter', 'Vazirmatn', sans-serif;
+    --f-mono: 'JetBrains Mono', 'Vazirmatn', monospace;
+  }
+  html[lang="fa"] body { font-family: 'Vazirmatn', 'Inter', sans-serif; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--f-body);
+    line-height: 1.55;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  #stars { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+  .wrap { position: relative; z-index: 1; width: min(1240px, 100% - 32px); margin-inline: auto; }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; color: inherit; cursor: pointer; background: none; border: 0; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 8px; }
+  .mono { font-family: var(--f-mono); letter-spacing: .18em; text-transform: uppercase; font-size: 10.5px; }
+  html[lang="fa"] .mono { letter-spacing: 0; text-transform: none; font-size: 12px; }
+
+  /* header */
+  header { position: sticky; top: 0; z-index: 20; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); background: linear-gradient(to bottom, rgba(7,8,21,.85), rgba(7,8,21,.4)); border-bottom: 1px solid var(--line); }
+  .nav { display: flex; align-items: center; justify-content: space-between; height: 64px; gap: 16px; }
+  .logo { display: flex; align-items: center; gap: 10px; font-family: 'Sora', sans-serif; font-weight: 600; letter-spacing: .32em; font-size: 13px; direction: ltr; }
+  .logo svg { width: 22px; height: 22px; }
+  .links { display: flex; gap: 28px; font-size: 13.5px; color: var(--muted); }
+  .links a { transition: color .25s; }
+  .links a:hover { color: var(--ink); }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 999px; padding: 11px 20px; font-size: 13.5px; font-weight: 500; transition: transform .25s cubic-bezier(.2,.8,.2,1), background .25s, box-shadow .25s, border-color .25s; white-space: nowrap; }
+  .btn:active { transform: scale(.97); }
+  .btn-primary { background: linear-gradient(135deg, #fff, #cfe9ff 55%, #b8b0ff); color: #0b0c22; box-shadow: 0 0 0 1px rgba(255,255,255,.4) inset, 0 10px 40px -10px rgba(127,227,255,.6); }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px rgba(255,255,255,.6) inset, 0 14px 50px -8px rgba(155,140,255,.75); }
+  .btn-ghost { border: 1px solid var(--line); background: var(--glass); }
+  .btn-ghost:hover { border-color: rgba(190,200,255,.35); background: rgba(255,255,255,.08); }
+  .menu-btn { display: none; width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line); background: var(--glass); align-items: center; justify-content: center; }
+  .menu-btn span, .menu-btn span::before, .menu-btn span::after { display: block; width: 16px; height: 1.5px; background: var(--ink); position: relative; transition: transform .3s, background .3s; content: ''; }
+  .menu-btn span::before { position: absolute; top: -5px; }
+  .menu-btn span::after { position: absolute; top: 5px; }
+  .menu-btn[aria-expanded="true"] span { background: transparent; }
+  .menu-btn[aria-expanded="true"] span::before { transform: translateY(5px) rotate(45deg); }
+  .menu-btn[aria-expanded="true"] span::after { transform: translateY(-5px) rotate(-45deg); }
+  .drawer { display: none; }
+
+  /* hero card */
+  .hero { padding-block: 28px 40px; }
+  .card {
+    position: relative; overflow: hidden; border-radius: var(--radius);
+    background: radial-gradient(120% 90% at 58% 45%, var(--stage-b) 0%, var(--stage-a) 45%, #0a0b1e 100%);
+    border: 1px solid var(--line);
+    box-shadow: 0 40px 120px -40px rgba(70, 80, 200, .45), inset 0 1px 0 rgba(255,255,255,.06);
+    min-height: min(680px, calc(100vh - 110px));
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  }
+  .card canvas#fx { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 2; touch-action: pan-y; }
+  .cyl { position: absolute; z-index: 1; inset-block: 0; inset-inline-start: 46%; width: 44%; pointer-events: none; }
+  .cyl::before { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(255,255,255,.08), rgba(255,255,255,.015) 18%, rgba(255,255,255,.0) 50%, rgba(255,255,255,.015) 82%, rgba(255,255,255,.09)); border-inline: 1px solid rgba(220,225,255,.16); }
+  .cyl .rim { position: absolute; inset-inline: 0; height: 72px; border-radius: 50%; border: 1.5px solid rgba(235,240,255,.7); box-shadow: 0 0 18px rgba(200,210,255,.35), inset 0 0 18px rgba(200,210,255,.15); }
+  .cyl .rim.top { top: -36px; }
+  .cyl .rim.bot { bottom: -36px; background: radial-gradient(60% 70% at 50% 40%, rgba(220,230,255,.32), transparent 70%); }
+  .cyl .dot { position: absolute; top: 2px; inset-inline-start: 50%; width: 5px; height: 5px; margin-inline-start: -2.5px; border-radius: 50%; background: #fff; box-shadow: 0 0 10px #fff; }
+  .grid-lines { position: absolute; inset: 0; z-index: 1; pointer-events: none; opacity: .5; }
+  .grid-lines i { position: absolute; height: 1px; background: linear-gradient(90deg, transparent, rgba(160,170,230,.25), transparent); width: 120px; }
+
+  .copy { position: relative; z-index: 3; padding: clamp(28px, 4vw, 52px); display: flex; flex-direction: column; justify-content: space-between; gap: 32px; pointer-events: none; }
+  .copy > * { pointer-events: auto; }
+  .brandtag b { display: block; font-family: 'Sora', sans-serif; font-weight: 600; letter-spacing: .34em; font-size: 12px; color: #fff; direction: ltr; text-align: start; }
+  .brandtag span { color: var(--dim); display: block; margin-top: 4px; }
+  .eyebrow { color: var(--accent); margin-bottom: 18px; display: inline-flex; align-items: center; gap: 10px; }
+  .eyebrow::before { content: ''; width: 22px; height: 1px; background: currentColor; }
+  h1 { font-family: var(--f-display); font-weight: 300; font-size: clamp(44px, 6.4vw, 92px); line-height: .98; letter-spacing: -.035em; }
+  h1 .brand { direction: ltr; unicode-bidi: isolate; display: inline-block; background: linear-gradient(100deg, #fff 30%, #bfe9ff 60%, #b2a6ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .tagline { font-family: var(--f-display); font-size: clamp(17px, 1.6vw, 21px); font-weight: 300; margin-top: 18px; color: #d8dcff; }
+  .lead { color: var(--muted); max-width: 42ch; margin-top: 14px; font-size: 15px; }
+  .ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+
+  .panel { border: 1px solid var(--line); background: rgba(14, 16, 42, .55); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 18px; padding: 14px; max-width: 420px; }
+  .tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; background: rgba(255,255,255,.04); border-radius: 12px; padding: 4px; position: relative; }
+  .tabs .pill { position: absolute; top: 4px; bottom: 4px; inset-inline-start: 4px; width: calc((100% - 8px) / 3); border-radius: 9px; background: linear-gradient(135deg, rgba(127,227,255,.22), rgba(155,140,255,.22)); box-shadow: inset 0 0 0 1px rgba(200,220,255,.25); transition: transform .45s cubic-bezier(.2,.8,.2,1); }
+  .tab { position: relative; z-index: 1; padding: 9px 6px; border-radius: 9px; font-size: 13px; color: var(--muted); transition: color .25s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+  .tab svg { width: 14px; height: 14px; }
+  .tab[aria-selected="true"] { color: #fff; }
+  .readout { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 14px 6px 4px; }
+  .readout .val { font-family: 'Sora', 'Vazirmatn', sans-serif; font-weight: 300; font-size: 38px; line-height: 1; letter-spacing: -.02em; }
+  .readout .unit { color: var(--muted); font-size: 12px; margin-inline-start: 6px; }
+  .readout p { color: var(--muted); font-size: 12.5px; max-width: 24ch; text-align: end; }
+  .spark { width: 100%; height: 34px; display: block; margin-top: 6px; }
+
+  .hint { position: absolute; z-index: 3; inset-block-end: 18px; inset-inline-end: 22px; color: var(--dim); pointer-events: none; }
+  .corner { position: absolute; z-index: 3; inset-block-start: 22px; inset-inline-end: 22px; color: var(--dim); text-align: end; pointer-events: none; }
+  .corner b { color: var(--muted); font-weight: 500; }
+
+  /* entrance */
+  .rise { opacity: 0; transform: translateY(18px); animation: rise .9s cubic-bezier(.2,.8,.2,1) forwards; }
+  .d1 { animation-delay: .1s } .d2 { animation-delay: .22s } .d3 { animation-delay: .34s } .d4 { animation-delay: .5s }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+  .reveal { opacity: 0; transform: translateY(26px); transition: opacity .9s cubic-bezier(.2,.8,.2,1), transform .9s cubic-bezier(.2,.8,.2,1); }
+  .reveal.in { opacity: 1; transform: none; }
+
+  /* sections */
+  section.block { padding-block: clamp(56px, 9vw, 110px); }
+  .sec-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; margin-bottom: 40px; }
+  h2 { font-family: var(--f-display); font-weight: 300; font-size: clamp(30px, 4vw, 52px); letter-spacing: -.03em; line-height: 1.05; }
+  .sec-head p { color: var(--muted); max-width: 44ch; }
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .feat { position: relative; overflow: hidden; border-radius: var(--radius); border: 1px solid var(--line); background: linear-gradient(160deg, rgba(255,255,255,.06), rgba(255,255,255,.015)); padding: 28px; min-height: 260px; display: flex; flex-direction: column; justify-content: space-between; transition: transform .5s cubic-bezier(.2,.8,.2,1), border-color .4s; }
+  .feat::after { content: ''; position: absolute; width: 260px; height: 260px; border-radius: 50%; inset-block-start: var(--my, -200px); inset-inline-start: var(--mx, -200px); transform: translate(-50%, -50%); background: radial-gradient(circle, rgba(127,227,255,.22), transparent 65%); pointer-events: none; transition: opacity .4s; opacity: 0; }
+  html[dir="rtl"] .feat::after { transform: translate(50%, -50%); }
+  .feat:hover { transform: translateY(-4px); border-color: rgba(190,200,255,.3); }
+  .feat:hover::after { opacity: 1; }
+  .feat .ic { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; background: rgba(127,227,255,.1); border: 1px solid rgba(127,227,255,.25); color: var(--accent); }
+  .feat .ic svg { width: 22px; height: 22px; }
+  .feat h3 { font-family: var(--f-display); font-weight: 400; font-size: 22px; margin-block: 28px 8px; }
+  .feat p { color: var(--muted); font-size: 14.5px; }
+
+  .config { display: grid; grid-template-columns: 1.1fr 1fr; gap: 16px; }
+  .showcase { position: relative; border-radius: var(--radius); border: 1px solid var(--line); background: radial-gradient(80% 80% at 50% 45%, #22245a, #0c0d22); min-height: 420px; display: grid; place-items: center; overflow: hidden; }
+  .showcase svg { width: min(78%, 380px); height: auto; filter: drop-shadow(0 30px 40px rgba(0,0,0,.5)); transition: transform .8s cubic-bezier(.2,.8,.2,1); }
+  .showcase:hover svg { transform: rotate(-6deg) scale(1.03); }
+  .showcase .glow { position: absolute; width: 50%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, rgba(127,227,255,.25), transparent 65%); filter: blur(10px); }
+  .opts { border-radius: var(--radius); border: 1px solid var(--line); background: var(--glass); padding: clamp(22px, 3vw, 36px); display: flex; flex-direction: column; gap: 26px; }
+  .opts h3 { font-size: 13px; color: var(--muted); font-weight: 500; margin-bottom: 12px; display: flex; justify-content: space-between; }
+  .opts h3 output { color: var(--ink); }
+  .swatches { display: flex; gap: 12px; flex-wrap: wrap; }
+  .sw { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); padding: 4px; transition: border-color .3s, transform .3s; }
+  .sw i { display: block; width: 100%; height: 100%; border-radius: 50%; }
+  .sw[aria-checked="true"] { border-color: #fff; transform: scale(1.06); }
+  .sizes { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; }
+  .sz { padding: 10px 0; border-radius: 10px; border: 1px solid var(--line); font-family: 'Sora', 'Vazirmatn', sans-serif; font-size: 14px; transition: background .25s, border-color .25s, color .25s; color: var(--muted); }
+  .sz:hover { border-color: rgba(190,200,255,.35); color: var(--ink); }
+  .sz[aria-checked="true"] { background: #fff; color: #0b0c22; border-color: #fff; }
+  .note { font-size: 12.5px; color: var(--dim); margin-top: 10px; }
+  .buy { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-top: 22px; border-top: 1px solid var(--line); }
+  .price { font-family: 'Sora', 'Vazirmatn', sans-serif; font-size: 30px; font-weight: 300; }
+  .price small { font-size: 13px; color: var(--muted); margin-inline-start: 6px; }
+  .msg { min-height: 1.4em; font-size: 13.5px; color: var(--accent); }
+  .msg.err { color: #ff9a9a; }
+
+  .specs { display: grid; grid-template-columns: repeat(4, 1fr); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .spec { padding: 30px 26px; border-inline-end: 1px solid var(--line); background: rgba(255,255,255,.02); }
+  .spec:last-child { border-inline-end: 0; }
+  .spec b { display: block; font-family: 'Sora', 'Vazirmatn', sans-serif; font-weight: 300; font-size: clamp(30px, 3.4vw, 44px); letter-spacing: -.02em; }
+  .spec span { color: var(--muted); font-size: 13.5px; }
+  footer { border-top: 1px solid var(--line); padding-block: 30px 40px; color: var(--dim); font-size: 13px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+  @media (max-width: 960px) {
+    .links, .nav > .btn { display: none; }
+    .menu-btn { display: inline-flex; }
+    .drawer { display: block; position: fixed; inset: 64px 0 auto 0; z-index: 19; background: rgba(9,10,28,.96); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-bottom: 1px solid var(--line); padding: 10px 16px 22px; transform: translateY(-12px); opacity: 0; visibility: hidden; transition: opacity .3s, transform .3s, visibility .3s; }
+    .drawer.open { opacity: 1; transform: none; visibility: visible; }
+    .drawer a { display: block; padding: 14px 4px; border-bottom: 1px solid var(--line); font-size: 16px; }
+    .drawer .btn { margin-top: 16px; width: 100%; }
+    .card { grid-template-columns: 1fr; min-height: 0; }
+    .copy { order: 0; }
+    .stage-space { height: 440px; order: 1; }
+    .cyl { inset-inline-start: 18%; width: 64%; inset-block: auto 0; height: 440px; }
+    .features { grid-template-columns: 1fr; }
+    .config { grid-template-columns: 1fr; }
+    .specs { grid-template-columns: repeat(2, 1fr); }
+    .spec:nth-child(2) { border-inline-end: 0; }
+    .spec:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+    .corner { display: none; }
+  }
+  @media (max-width: 520px) {
+    .copy { padding: 24px 20px; gap: 22px; }
+    .panel { max-width: none; }
+    .sizes { grid-template-columns: repeat(4, 1fr); }
+    .readout .val { font-size: 32px; }
+    .stage-space, .cyl { height: 380px; }
+    .cyl { inset-inline-start: 10%; width: 80%; }
+    .spec { padding: 22px 18px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .rise, .reveal { animation: none !important; opacity: 1 !important; transform: none !important; transition: none !important; }
+    .tabs .pill, .feat, .showcase svg, .btn { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<canvas id="stars" aria-hidden="true"></canvas>
+
+<header>
+  <div class="wrap nav">
+    <a class="logo" href="#top" aria-label="Lunarix">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><ellipse cx="12" cy="12" rx="9" ry="9" stroke="url(#lg)" stroke-width="2"/><ellipse cx="12" cy="12" rx="9" ry="3.2" stroke="#fff" stroke-opacity=".5" stroke-width="1"/><defs><linearGradient id="lg" x1="3" y1="3" x2="21" y2="21"><stop stop-color="#7fe3ff"/><stop offset="1" stop-color="#9b8cff"/></linearGradient></defs></svg>
+      LUNARIX
+    </a>
+    <nav class="links" aria-label="Primary">
+      <a href="#design" data-i18n="nDesign">Design</a>
+      <a href="#science" data-i18n="nScience">Science</a>
+      <a href="#finishes" data-i18n="nFinish">Finishes</a>
+      <a href="#specs" data-i18n="nSpecs">Specs</a>
+    </nav>
+    <a class="btn btn-primary" href="#finishes" data-i18n="preorder">Pre-order</a>
+    <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="drawer" data-i18n-aria="menu" aria-label="Menu"><span></span></button>
+  </div>
+</header>
+<div class="drawer" id="drawer">
+  <a href="#design" data-i18n="nDesign">Design</a>
+  <a href="#science" data-i18n="nScience">Science</a>
+  <a href="#finishes" data-i18n="nFinish">Finishes</a>
+  <a href="#specs" data-i18n="nSpecs">Specs</a>
+  <a class="btn btn-primary" href="#finishes" data-i18n="preorder">Pre-order</a>
+</div>
+
+<main id="top">
+  <section class="hero wrap" aria-labelledby="h1">
+    <div class="card" id="card">
+      <div class="grid-lines" aria-hidden="true"><i style="top:30%;inset-inline-start:6%"></i><i style="top:62%;inset-inline-start:10%"></i><i style="top:46%;inset-inline-end:3%"></i></div>
+      <div class="cyl" aria-hidden="true"><span class="rim top"></span><span class="dot"></span><span class="rim bot"></span></div>
+      <canvas id="fx" aria-hidden="true"></canvas>
+
+      <div class="copy">
+        <div class="brandtag rise d1"><b>LUNARIX ONE</b><span class="mono" data-i18n="study">Light study · 001</span></div>
+        <div>
+          <div class="eyebrow mono rise d1" data-i18n="eyebrow">Smart ring · Series One</div>
+          <h1 id="h1" class="rise d2"><span class="brand">Lunarix One</span></h1>
+          <p class="tagline rise d2" data-i18n="tagline">Every heartbeat, breath and motion — rendered as light.</p>
+          <p class="lead rise d3" data-i18n="lead">The Lunarix One smart ring merges design, emotion and science — turning every heartbeat, breath and motion into an elegant symphony of light.</p>
+          <div class="ctas rise d3">
+            <a class="btn btn-primary" href="#finishes" data-i18n="ctaBuy">Pre-order · $349</a>
+            <a class="btn btn-ghost" href="#science" data-i18n="ctaSci">Explore the science</a>
+          </div>
+        </div>
+        <div class="panel rise d4" role="region" aria-labelledby="liveLbl">
+          <span id="liveLbl" class="mono" style="color:var(--dim);display:block;margin:2px 4px 10px" data-i18n="live">Live signal</span>
+          <div class="tabs" role="tablist" aria-labelledby="liveLbl">
+            <span class="pill" id="pill" aria-hidden="true"></span>
+            <button class="tab" role="tab" id="t-heart" aria-selected="true" aria-controls="readout" data-mode="heart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7Z"/></svg><span data-i18n="mHeart">Heartbeat</span></button>
+            <button class="tab" role="tab" id="t-breath" aria-selected="false" aria-controls="readout" data-mode="breath" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/></svg><span data-i18n="mBreath">Breath</span></button>
+            <button class="tab" role="tab" id="t-motion" aria-selected="false" aria-controls="readout" data-mode="motion" tabindex="-1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg><span data-i18n="mMotion">Motion</span></button>
+          </div>
+          <div id="readout" role="tabpanel" aria-live="polite">
+            <div class="readout">
+              <div><span class="val" id="val">72</span><span class="unit" id="unit">BPM</span></div>
+              <p id="cap">Optical PPG sampled 128 times a second.</p>
+            </div>
+            <svg class="spark" viewBox="0 0 300 34" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="sg" x1="0" x2="1"><stop stop-color="#7fe3ff" stop-opacity=".1"/><stop offset=".7" stop-color="#7fe3ff"/><stop offset="1" stop-color="#b2a6ff"/></linearGradient></defs><path id="sparkPath" d="" fill="none" stroke="url(#sg)" stroke-width="1.6"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="stage-space" aria-hidden="true"></div>
+
+      <div class="corner mono" aria-hidden="true"><b data-i18n="cornerA">Titanium · 3.2 g</b><br><span data-i18n="cornerB">7-day battery</span></div>
+      <div class="hint mono" aria-hidden="true" data-i18n="hint">Move cursor over the ring</div>
+    </div>
+  </section>
+
+  <section class="block wrap" id="design" aria-labelledby="h2a">
+    <div class="sec-head reveal">
+      <h2 id="h2a" data-i18n="h2a">Three signals.<br>One symphony.</h2>
+      <p data-i18n="h2aP">Worn day and night, Lunarix One listens quietly — then translates your body into light you can read at a glance.</p>
+    </div>
+    <div class="features" id="science">
+      <article class="feat reveal">
+        <div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="8"/><ellipse cx="12" cy="12" rx="8" ry="3"/></svg></div>
+        <div><h3 data-i18n="f1t">Design</h3><p data-i18n="f1p">Sculpted in aerospace titanium, 2.4 mm thin and 3.2 grams. A ring first, a sensor second.</p></div>
+      </article>
+      <article class="feat reveal">
+        <div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 12h4l2-5 3 10 2-5h7"/></svg></div>
+        <div><h3 data-i18n="f2t">Emotion</h3><p data-i18n="f2p">Stress, calm and recovery mapped through heart-rate variability — gently, without a screen.</p></div>
+      </article>
+      <article class="feat reveal">
+        <div class="ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4A2 2 0 0 0 19 18l-5-9V3"/><path d="M7.5 14h9"/></svg></div>
+        <div><h3 data-i18n="f3t">Science</h3><p data-i18n="f3p">Clinical-grade sensors validated against lab polysomnography for accurate sleep staging.</p></div>
+      </article>
+    </div>
+  </section>
+
+  <section class="block wrap" id="finishes" aria-labelledby="h2b">
+    <div class="sec-head reveal">
+      <h2 id="h2b" data-i18n="h2b">Choose your light.</h2>
+      <p data-i18n="h2bP">Three finishes, eight sizes, one inner glow. Every ring ships with a free sizing kit.</p>
+    </div>
+    <div class="config">
+      <div class="showcase reveal" aria-hidden="true">
+        <div class="glow"></div>
+        <svg viewBox="0 0 400 300" id="ringSvg">
+          <defs>
+            <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1">
+              <stop id="m1" offset="0" stop-color="#f4f6ff"/>
+              <stop id="m2" offset=".45" stop-color="#9aa1bd"/>
+              <stop id="m3" offset="1" stop-color="#e2e6f5"/>
+            </linearGradient>
+            <linearGradient id="inner" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#7fe3ff"/><stop offset="1" stop-color="#9b8cff"/></linearGradient>
+          </defs>
+          <ellipse cx="200" cy="160" rx="150" ry="86" fill="none" stroke="url(#metal)" stroke-width="34"/>
+          <ellipse cx="200" cy="160" rx="133" ry="72" fill="none" stroke="url(#inner)" stroke-width="2" opacity=".85"/>
+          <ellipse cx="200" cy="144" rx="150" ry="86" fill="none" stroke="#fff" stroke-opacity=".25" stroke-width="1.5"/>
+          <circle cx="200" cy="232" r="3" fill="#7fe3ff"><animate attributeName="opacity" values="1;.3;1" dur="1.2s" repeatCount="indefinite"/></circle>
+        </svg>
+      </div>
+      <div class="opts reveal">
+        <div>
+          <h3><span data-i18n="finish">Finish</span><output id="finishName">Lunar Silver</output></h3>
+          <div class="swatches" role="radiogroup" data-i18n-aria="finish" aria-label="Finish">
+            <button class="sw" role="radio" aria-checked="true" data-f="silver" aria-label="Lunar Silver"><i style="background:linear-gradient(135deg,#f4f6ff,#9aa1bd)"></i></button>
+            <button class="sw" role="radio" aria-checked="false" data-f="black" aria-label="Eclipse Black" tabindex="-1"><i style="background:linear-gradient(135deg,#4a4d60,#121320)"></i></button>
+            <button class="sw" role="radio" aria-checked="false" data-f="gold" aria-label="Aurora Gold" tabindex="-1"><i style="background:linear-gradient(135deg,#ffe2b0,#c08a45)"></i></button>
+          </div>
+        </div>
+        <div>
+          <h3><span data-i18n="size">Size</span><output id="sizeName">—</output></h3>
+          <div class="sizes" role="radiogroup" id="sizes" data-i18n-aria="size" aria-label="Size"></div>
+          <p class="note" data-i18n="sizeNote">Not sure? We'll send a free sizing kit first.</p>
+        </div>
+        <div class="buy">
+          <div class="price" id="price">$349<small data-i18n="ship">free shipping</small></div>
+          <button class="btn btn-primary" id="reserve" data-i18n="reserve">Reserve yours</button>
+        </div>
+        <p class="msg" id="msg" role="status"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="block wrap" id="specs" aria-labelledby="h2c">
+    <div class="sec-head reveal"><h2 id="h2c" data-i18n="h2c">Quietly extraordinary.</h2></div>
+    <div class="specs reveal">
+      <div class="spec"><b data-i18n="s1v">2.4 mm</b><span data-i18n="s1">Thickness</span></div>
+      <div class="spec"><b data-i18n="s2v">7 days</b><span data-i18n="s2">Battery life</span></div>
+      <div class="spec"><b data-i18n="s3v">100 m</b><span data-i18n="s3">Water resistance</span></div>
+      <div class="spec"><b data-i18n="s4v">3.2 g</b><span data-i18n="s4">Weight</span></div>
+    </div>
+  </section>
+</main>
+
+<footer class="wrap">
+  <span data-i18n="foot">© 2026 Lunarix Labs. Designed for the quiet hours.</span>
+  <span class="mono" data-i18n="footB">Lunarix One · Light study 001</span>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+  var LANG = document.documentElement.lang === 'fa' ? 'fa' : 'en';
+  var FA = LANG === 'fa';
+  var REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var I18N = {
+    en: {
+      nDesign: 'Design', nScience: 'Science', nFinish: 'Finishes', nSpecs: 'Specs', preorder: 'Pre-order', menu: 'Menu',
+      study: 'Light study · 001', eyebrow: 'Smart ring · Series One',
+      tagline: 'Every heartbeat, breath and motion — rendered as light.',
+      lead: 'The Lunarix One smart ring merges design, emotion and science — turning every heartbeat, breath and motion into an elegant symphony of light.',
+      ctaBuy: 'Pre-order · $349', ctaSci: 'Explore the science', live: 'Live signal',
+      mHeart: 'Heartbeat', mBreath: 'Breath', mMotion: 'Motion',
+      cornerA: 'Titanium · 3.2 g', cornerB: '7-day battery', hint: 'Move cursor over the ring',
+      h2a: 'Three signals.<br>One symphony.',
+      h2aP: 'Worn day and night, Lunarix One listens quietly — then translates your body into light you can read at a glance.',
+      f1t: 'Design', f1p: 'Sculpted in aerospace titanium, 2.4 mm thin and 3.2 grams. A ring first, a sensor second.',
+      f2t: 'Emotion', f2p: 'Stress, calm and recovery mapped through heart-rate variability — gently, without a screen.',
+      f3t: 'Science', f3p: 'Clinical-grade sensors validated against lab polysomnography for accurate sleep staging.',
+      h2b: 'Choose your light.', h2bP: 'Three finishes, eight sizes, one inner glow. Every ring ships with a free sizing kit.',
+      finish: 'Finish', size: 'Size', sizeNote: "Not sure? We'll send a free sizing kit first.",
+      ship: 'free shipping', reserve: 'Reserve yours',
+      h2c: 'Quietly extraordinary.',
+      s1v: '2.4 mm', s1: 'Thickness', s2v: '7 days', s2: 'Battery life', s3v: '100 m', s3: 'Water resistance', s4v: '3.2 g', s4: 'Weight',
+      foot: '© 2026 Lunarix Labs. Designed for the quiet hours.', footB: 'Lunarix One · Light study 001',
+      price: '$349', needSize: 'Pick a size first.',
+      done: function (s, f) { return 'Reserved — size ' + s + ', ' + f + ". We'll be in touch."; },
+      finishes: { silver: 'Lunar Silver', black: 'Eclipse Black', gold: 'Aurora Gold' },
+      modes: {
+        heart: { unit: 'BPM', cap: 'Optical PPG sampled 128 times a second.' },
+        breath: { unit: 'br/min', cap: 'Respiration read from subtle shifts in pulse rhythm.' },
+        motion: { unit: 'steps', cap: 'A 6-axis IMU traces every gesture and step.' }
+      }
+    },
+    fa: {
+      nDesign: 'طراحی', nScience: 'علم', nFinish: 'رنگ‌ها', nSpecs: 'مشخصات', preorder: 'پیش‌خرید', menu: 'منو',
+      study: 'مطالعهٔ نور · ۰۰۱', eyebrow: 'حلقهٔ هوشمند · سری یک',
+      tagline: 'هر تپش، هر نفس، هر حرکت — به زبان نور.',
+      lead: 'حلقهٔ هوشمند Lunarix One طراحی، احساس و علم را در هم می‌آمیزد و هر تپش قلب، هر نفس و هر حرکت را به سمفونی ظریفی از نور بدل می‌کند.',
+      ctaBuy: 'پیش‌خرید · ۳۴۹ دلار', ctaSci: 'علمِ پشتِ آن', live: 'سیگنال زنده',
+      mHeart: 'تپش', mBreath: 'نفس', mMotion: 'حرکت',
+      cornerA: 'تیتانیوم · ۳٫۲ گرم', cornerB: 'باتری هفت‌روزه', hint: 'نشانگر را روی حلقه ببرید',
+      h2a: 'سه سیگنال،<br>یک سمفونی.',
+      h2aP: 'Lunarix One شب و روز آرام گوش می‌دهد و بعد بدن شما را به نوری ترجمه می‌کند که با یک نگاه خوانده می‌شود.',
+      f1t: 'طراحی', f1p: 'تراشیده از تیتانیوم هوافضایی، با ضخامت ۲٫۴ میلی‌متر و وزن ۳٫۲ گرم. اول یک حلقه، بعد یک حسگر.',
+      f2t: 'احساس', f2p: 'استرس، آرامش و بازیابی از روی تغییرپذیری ضربان قلب سنجیده می‌شوند — آرام و بی‌نیاز به صفحه‌نمایش.',
+      f3t: 'علم', f3p: 'حسگرهایی در سطح بالینی که برای تشخیص دقیق مراحل خواب با پلی‌سومنوگرافی آزمایشگاهی سنجیده شده‌اند.',
+      h2b: 'نور خودتان را انتخاب کنید.', h2bP: 'سه رنگ‌بندی، هشت سایز، یک درخشش درونی. همراه هر حلقه یک کیت رایگان سایز ارسال می‌شود.',
+      finish: 'رنگ‌بندی', size: 'سایز', sizeNote: 'مطمئن نیستید؟ اول کیت رایگان سایز را برایتان می‌فرستیم.',
+      ship: 'ارسال رایگان', reserve: 'رزرو کنید',
+      h2c: 'بی‌صدا، فوق‌العاده.',
+      s1v: '۲٫۴ میلی‌متر', s1: 'ضخامت', s2v: '۷ روز', s2: 'عمر باتری', s3v: '۱۰۰ متر', s3: 'مقاومت در آب', s4v: '۳٫۲ گرم', s4: 'وزن',
+      foot: '© ۲۰۲۶ Lunarix Labs. ساخته‌شده برای ساعت‌های آرام.', footB: 'Lunarix One · مطالعهٔ نور ۰۰۱',
+      price: '۳۴۹ دلار', needSize: 'اول سایز را انتخاب کنید.',
+      done: function (s, f) { return 'رزرو شد — سایز ' + s + '، ' + f + '. به‌زودی با شما تماس می‌گیریم.'; },
+      finishes: { silver: 'نقره‌ای ماه', black: 'مشکی کسوف', gold: 'طلایی شفق' },
+      modes: {
+        heart: { unit: 'ضربان در دقیقه', cap: 'حسگر نوری PPG، ۱۲۸ نمونه در ثانیه.' },
+        breath: { unit: 'نفس در دقیقه', cap: 'تنفس از تغییرات ظریف ریتم نبض خوانده می‌شود.' },
+        motion: { unit: 'قدم', cap: 'حسگر حرکتی شش‌محوره هر اشاره و هر قدم را دنبال می‌کند.' }
+      }
+    }
+  };
+  var T = I18N[LANG];
+  var num = function (n, d) { return Number(n).toLocaleString(FA ? 'fa-IR' : 'en-US', { maximumFractionDigits: d || 0 }); };
+
+  document.querySelectorAll('[data-i18n]').forEach(function (el) {
+    var v = T[el.getAttribute('data-i18n')];
+    if (typeof v === 'string') el.innerHTML = v;
+  });
+  document.querySelectorAll('[data-i18n-aria]').forEach(function (el) {
+    var v = T[el.getAttribute('data-i18n-aria')];
+    if (typeof v === 'string') el.setAttribute('aria-label', v);
+  });
+  document.querySelector('.price').innerHTML = T.price + '<small>' + T.ship + '</small>';
+  document.querySelectorAll('.sw').forEach(function (b) { b.setAttribute('aria-label', T.finishes[b.dataset.f]); });
+
+  /* ---------- mobile menu ---------- */
+  var menuBtn = document.getElementById('menuBtn');
+  var drawer = document.getElementById('drawer');
+  function setMenu(open) {
+    menuBtn.setAttribute('aria-expanded', String(open));
+    drawer.classList.toggle('open', open);
+  }
+  menuBtn.addEventListener('click', function () { setMenu(menuBtn.getAttribute('aria-expanded') !== 'true'); });
+  drawer.addEventListener('click', function (e) { if (e.target.closest('a')) setMenu(false); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
+
+  /* ---------- starfield ---------- */
+  var stars = document.getElementById('stars');
+  var sctx = stars.getContext('2d');
+  function drawStars() {
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var w = innerWidth, h = innerHeight;
+    stars.width = w * dpr; stars.height = h * dpr;
+    sctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var g = sctx.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0, '#06071a'); g.addColorStop(.55, '#0c1036'); g.addColorStop(1, '#141a52');
+    sctx.fillStyle = g; sctx.fillRect(0, 0, w, h);
+    var n = Math.round(w * h / 1400), seed = 7;
+    function rnd() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
+    for (var i = 0; i < n; i++) {
+      var r = rnd() < .03 ? 1.3 : .6;
+      sctx.globalAlpha = .15 + rnd() * .55;
+      sctx.fillStyle = rnd() < .2 ? '#b8c4ff' : '#ffffff';
+      sctx.fillRect(rnd() * w, rnd() * h, r, r);
+    }
+    sctx.globalAlpha = 1;
+  }
+
+  /* ---------- particle ring ---------- */
+  var CONFIG = { particles: 7000, mobileParticles: 3800, cursorRadius: 110, bpm: 72, breathPeriod: 4.3, trail: 0.32 };
+  var card = document.getElementById('card');
+  var cyl = card.querySelector('.cyl');
+  var cv = document.getElementById('fx');
+  var ctx = cv.getContext('2d');
+  var W = 0, H = 0, DPR = 1, CX = 0, CY = 0, S = 100;
+  var PAL = ['#5fd2ff', '#7fe3ff', '#8f86ff', '#c9d6ff', '#ffb36b'];
+  var N, P;
+
+  function gauss() { return (Math.random() + Math.random() + Math.random() - 1.5) / 1.5; }
+  function build() {
+    N = innerWidth < 640 ? CONFIG.mobileParticles : CONFIG.particles;
+    P = new Array(N);
+    for (var i = 0; i < N; i++) {
+      var b = Math.random();
+      P[i] = {
+        u: Math.random(), s1: gauss(), s2: gauss(), s3: Math.random(),
+        b: b < .05 ? 4 : b < .3 ? 0 : b < .55 ? 1 : b < .85 ? 2 : 3,
+        x: 0, y: 0, vx: 0, vy: 0, heat: 0, init: false
+      };
+    }
+  }
+
+  function resize() {
+    var r = card.getBoundingClientRect();
+    var c = cyl.getBoundingClientRect();
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = r.width; H = r.height;
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    CX = c.left - r.left + c.width / 2;
+    CY = c.top - r.top + Math.min(c.height, Math.max(380, innerHeight - 140)) * 0.48;
+    S = Math.min(c.width * 0.4, c.height * 0.4, 260);
+    if (P) P.forEach(function (p) { p.init = false; });
+  }
+
+  var mode = 'heart', modeMix = { heart: 1, breath: 0, motion: 0 };
+  var TILT = 0.42, cosT = Math.cos(TILT), sinT = Math.sin(TILT);
+  function beatAmp(t) {
+    var ph = (t * CONFIG.bpm / 60) % 1;
+    return Math.exp(-Math.pow((ph - .06) / .045, 2)) + .55 * Math.exp(-Math.pow((ph - .24) / .06, 2));
+  }
+  function project(x, y, z, out) {
+    var yy = y * cosT - z * sinT, zz = y * sinT + z * cosT;
+    var f = 3.2 / (3.2 + zz / S);
+    out[0] = CX + x * f; out[1] = CY + yy * f; out[2] = zz / S; return out;
+  }
+  var tmp = [0, 0, 0];
+  function target(m, p, t, out) {
+    var x, y, z, ang, R;
+    if (m === 'heart') {
+      var a = beatAmp(t);
+      R = S * (1 + .1 * a);
+      ang = p.u * 6.2832 + t * .22;
+      var band = S * (.035 + .05 * a) * p.s1;
+      x = (R + band) * Math.cos(ang); z = (R + band) * Math.sin(ang);
+      y = p.s2 * S * (.03 + .04 * a);
+      if (p.b === 4) { y -= S * (.15 + .5 * p.s3); x = S * .06 * p.s1 + S * .02 * Math.sin(t * 3 + p.s3 * 9); z = R; }
+    } else if (m === 'breath') {
+      var br = Math.sin(t * 6.2832 / CONFIG.breathPeriod);
+      R = S * (.86 + .2 * br);
+      ang = p.u * 6.2832 + t * .08;
+      var mist = S * (.12 + .1 * (br + 1)) * p.s1;
+      x = (R + mist) * Math.cos(ang); z = (R + mist) * Math.sin(ang);
+      y = p.s2 * S * (.18 + .06 * br) + Math.sin(ang * 3 + t) * S * .08;
+      if (p.b === 4) { y = -S * 1.05 * p.s3 + S * .05; x *= .15; z *= .15; }
+    } else {
+      var q = (p.u + t * .07) % 1;
+      ang = q * 6.2832;
+      var spread = S * (.03 + .14 * Math.pow(Math.sin(ang * .5), 2));
+      x = S * 1.15 * Math.sin(ang) + p.s1 * spread;
+      y = S * .62 * Math.sin(2 * ang) + p.s2 * spread;
+      z = S * .7 * Math.cos(ang) + p.s1 * spread * .5;
+      var rot = t * .3, cr = Math.cos(rot), sr = Math.sin(rot);
+      var nx = x * cr - z * sr; z = x * sr + z * cr; x = nx;
+      if (p.b === 4) { x = S * .03 * p.s1; y = -S * (.2 + .7 * p.s3); z = S * .9; }
+    }
+    return project(x, y, z, out);
+  }
+
+  var mouse = { x: -9999, y: -9999, on: false };
+  function pointer(e) {
+    var r = cv.getBoundingClientRect();
+    mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top; mouse.on = true;
+  }
+  card.addEventListener('pointermove', pointer);
+  card.addEventListener('pointerdown', pointer);
+  card.addEventListener('pointerleave', function () { mouse.on = false; });
+
+  var tPrev = performance.now(), T0 = tPrev, running = false, raf = 0, visible = true;
+  var buckets = [[], [], [], [], []];
+  function frame(now, still) {
+    var t = (now - T0) / 1000;
+    var dt = Math.min(.05, (now - tPrev) / 1000); tPrev = now;
+    // mode crossfade
+    ['heart', 'breath', 'motion'].forEach(function (k) {
+      var goal = k === mode ? 1 : 0;
+      modeMix[k] += (goal - modeMix[k]) * Math.min(1, dt * 3);
+    });
+    if (still) ctx.clearRect(0, 0, W, H);
+    else {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.fillStyle = 'rgba(0,0,0,' + CONFIG.trail + ')';
+      ctx.fillRect(0, 0, W, H);
+    }
+    ctx.globalCompositeOperation = 'lighter';
+    var R2 = CONFIG.cursorRadius * CONFIG.cursorRadius;
+    for (var b = 0; b < 5; b++) buckets[b].length = 0;
+    var ease = still ? 1 : Math.min(1, dt * 5.5);
+    for (var i = 0; i < N; i++) {
+      var p = P[i];
+      var tx = 0, ty = 0, tz = 0;
+      for (var k in modeMix) {
+        var w = modeMix[k]; if (w < .002) continue;
+        target(k, p, t, tmp); tx += tmp[0] * w; ty += tmp[1] * w; tz += tmp[2] * w;
+      }
+      var sum = modeMix.heart + modeMix.breath + modeMix.motion;
+      tx /= sum; ty /= sum; tz /= sum;
+      if (!p.init || still) { p.x = tx; p.y = ty; p.init = true; }
+      p.x += (tx - p.x) * ease + p.vx; p.y += (ty - p.y) * ease + p.vy;
+      p.vx *= .9; p.vy *= .9;
+      if (mouse.on && !still) {
+        var dx = p.x - mouse.x, dy = p.y - mouse.y, d2 = dx * dx + dy * dy;
+        if (d2 < R2) {
+          var d = Math.sqrt(d2) + .001, f = (1 - d / CONFIG.cursorRadius);
+          p.vx += (dx / d * 1.6 - dy / d * 2.2) * f; p.vy += (dy / d * 1.6 + dx / d * 2.2) * f;
+          p.heat = Math.min(1, p.heat + f * .5);
+        }
+      }
+      p.heat *= .95;
+      p.z = tz;
+      buckets[p.b].push(p);
+    }
+    var hb = modeMix.heart * beatAmp(t);
+    for (b = 0; b < 5; b++) {
+      ctx.fillStyle = PAL[b];
+      var arr = buckets[b];
+      for (var j = 0; j < arr.length; j++) {
+        var q = arr[j];
+        var depth = Math.max(0, Math.min(1, .55 - q.z * .45));
+        var a = .12 + depth * .5 + q.heat * .6 + hb * .25;
+        ctx.globalAlpha = a > 1 ? 1 : a;
+        var sz = .8 + depth * 1.1 + q.heat * 1.2;
+        ctx.fillRect(q.x, q.y, sz, sz);
+        if (q.heat > .3) { ctx.fillStyle = '#ffffff'; ctx.fillRect(q.x, q.y, sz * .8, sz * .8); ctx.fillStyle = PAL[b]; }
+      }
+    }
+    // hot core glow at the front of the ring / head of the ribbon
+    ctx.globalAlpha = 1;
+    var gx = 0, gy = 0, probe = { u: 0, s1: 0, s2: 0, s3: 0, b: 0 };
+    probe.u = modeMix.motion > .5 ? (1 - (t * .07) % 1 + .02) % 1 : ((.75 - (t * .22 / 6.2832) % 1) + 1) % 1;
+    var mm = modeMix.motion > .5 ? 'motion' : modeMix.breath > .5 ? 'breath' : 'heart';
+    target(mm, probe, t, tmp); gx = tmp[0]; gy = tmp[1];
+    var gr = S * (.55 + hb * .35 + modeMix.breath * .2);
+    var g = ctx.createRadialGradient(gx, gy, 0, gx, gy, gr);
+    g.addColorStop(0, 'rgba(255,255,255,' + (.28 + hb * .25) + ')');
+    g.addColorStop(.25, 'rgba(150,215,255,.16)');
+    g.addColorStop(1, 'rgba(120,110,255,0)');
+    ctx.fillStyle = g; ctx.fillRect(gx - gr, gy - gr, gr * 2, gr * 2);
+    if (mouse.on && !still) {
+      var mg = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, CONFIG.cursorRadius);
+      mg.addColorStop(0, 'rgba(127,227,255,.10)'); mg.addColorStop(1, 'rgba(127,227,255,0)');
+      ctx.fillStyle = mg; ctx.fillRect(mouse.x - CONFIG.cursorRadius, mouse.y - CONFIG.cursorRadius, CONFIG.cursorRadius * 2, CONFIG.cursorRadius * 2);
+    }
+    ctx.globalCompositeOperation = 'source-over';
+    updateReadout(t, still);
+  }
+  function loop(now) {
+    frame(now, false);
+    raf = running ? requestAnimationFrame(loop) : 0;
+  }
+  function start() { if (REDUCED || running || !visible || document.hidden) return; running = true; tPrev = performance.now(); raf = requestAnimationFrame(loop); }
+  function stop() { running = false; if (raf) cancelAnimationFrame(raf); raf = 0; }
+  function still() { frame(performance.now(), true); }
+
+  /* ---------- readout / sparkline ---------- */
+  var valEl = document.getElementById('val'), unitEl = document.getElementById('unit'), capEl = document.getElementById('cap');
+  var spark = document.getElementById('sparkPath');
+  var steps = 8432, lastTick = 0;
+  function sparkPath(t) {
+    var d = '', n = 60;
+    for (var i = 0; i <= n; i++) {
+      var x = i / n * 300, tt = t - (n - i) * .045, y;
+      if (mode === 'heart') y = 26 - beatAmp(tt) * 20;
+      else if (mode === 'breath') y = 17 - Math.sin(tt * 6.2832 / CONFIG.breathPeriod) * 11;
+      else y = 17 - (Math.sin(tt * 7) * 6 + Math.sin(tt * 13.3) * 4 + Math.sin(tt * 2.1) * 3);
+      d += (i ? 'L' : 'M') + x.toFixed(1) + ' ' + y.toFixed(1);
+    }
+    return d;
+  }
+  function updateReadout(t, force) {
+    spark.setAttribute('d', sparkPath(t));
+    if (!force && t - lastTick < .9) return;
+    lastTick = t;
+    var v;
+    if (mode === 'heart') v = num(force ? 72 : 70 + Math.round(Math.sin(t * .7) * 2 + Math.random() * 2));
+    else if (mode === 'breath') v = num(force ? 14 : 13 + Math.round(Math.random() * 2));
+    else { if (!force) steps += 1 + Math.round(Math.random() * 2); v = num(steps); }
+    valEl.textContent = v;
+  }
+  function setMode(m, focus) {
+    mode = m;
+    var tabs = document.querySelectorAll('.tab');
+    tabs.forEach(function (tb, i) {
+      var on = tb.dataset.mode === m;
+      tb.setAttribute('aria-selected', String(on));
+      tb.tabIndex = on ? 0 : -1;
+      if (on) {
+        document.getElementById('pill').style.transform = 'translateX(' + (FA ? -i : i) * 100 + '%) translateX(' + (FA ? -i : i) * 4 + 'px)';
+        if (focus) tb.focus();
+      }
+    });
+    unitEl.textContent = T.modes[m].unit;
+    capEl.textContent = T.modes[m].cap;
+    if (REDUCED) { modeMix = { heart: 0, breath: 0, motion: 0 }; modeMix[m] = 1; }
+    lastTick = -9;
+    if (REDUCED || !running) { still(); }
+  }
+  var tabList = Array.prototype.slice.call(document.querySelectorAll('.tab'));
+  tabList.forEach(function (tb, i) {
+    tb.addEventListener('click', function () { setMode(tb.dataset.mode); });
+    tb.addEventListener('keydown', function (e) {
+      var dir = 0;
+      if (e.key === 'ArrowRight') dir = FA ? -1 : 1;
+      if (e.key === 'ArrowLeft') dir = FA ? 1 : -1;
+      if (!dir) return;
+      e.preventDefault();
+      setMode(tabList[(i + dir + 3) % 3].dataset.mode, true);
+    });
+  });
+
+  /* ---------- configurator ---------- */
+  var FIN = {
+    silver: ['#f4f6ff', '#9aa1bd', '#e2e6f5'],
+    black: ['#5a5e74', '#15161f', '#3a3d4f'],
+    gold: ['#fff0cf', '#c08a45', '#ffd99a']
+  };
+  var finish = 'silver', size = null;
+  var sws = Array.prototype.slice.call(document.querySelectorAll('.sw'));
+  function setFinish(f, focus) {
+    finish = f;
+    sws.forEach(function (s) { var on = s.dataset.f === f; s.setAttribute('aria-checked', String(on)); s.tabIndex = on ? 0 : -1; if (on && focus) s.focus(); });
+    ['m1', 'm2', 'm3'].forEach(function (id, i) { document.getElementById(id).setAttribute('stop-color', FIN[f][i]); });
+    document.getElementById('finishName').textContent = T.finishes[f];
+  }
+  function radioKeys(list, getKey, setter) {
+    list.forEach(function (el, i) {
+      el.addEventListener('keydown', function (e) {
+        var dir = 0;
+        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') dir = (e.key === 'ArrowRight' && FA) ? -1 : 1;
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') dir = (e.key === 'ArrowLeft' && FA) ? 1 : -1;
+        if (!dir) return;
+        e.preventDefault();
+        setter(getKey(list[(i + dir + list.length) % list.length]), true);
+      });
+    });
+  }
+  sws.forEach(function (s) { s.addEventListener('click', function () { setFinish(s.dataset.f); }); });
+  radioKeys(sws, function (el) { return el.dataset.f; }, setFinish);
+
+  var sizesEl = document.getElementById('sizes');
+  for (var s = 6; s <= 13; s++) {
+    var btn = document.createElement('button');
+    btn.className = 'sz'; btn.setAttribute('role', 'radio'); btn.setAttribute('aria-checked', 'false');
+    btn.dataset.s = s; btn.textContent = num(s); btn.tabIndex = s === 6 ? 0 : -1;
+    sizesEl.appendChild(btn);
+  }
+  var szs = Array.prototype.slice.call(sizesEl.children);
+  var msg = document.getElementById('msg');
+  function setSize(v, focus) {
+    size = v;
+    szs.forEach(function (b) { var on = b.dataset.s === String(v); b.setAttribute('aria-checked', String(on)); b.tabIndex = on ? 0 : -1; if (on && focus) b.focus(); });
+    document.getElementById('sizeName').textContent = num(v);
+    msg.textContent = ''; msg.classList.remove('err');
+  }
+  szs.forEach(function (b) { b.addEventListener('click', function () { setSize(b.dataset.s); }); });
+  radioKeys(szs, function (el) { return el.dataset.s; }, setSize);
+  document.getElementById('reserve').addEventListener('click', function () {
+    if (!size) { msg.textContent = T.needSize; msg.classList.add('err'); szs[0].focus(); return; }
+    msg.classList.remove('err');
+    msg.textContent = T.done(num(size), T.finishes[finish]);
+  });
+  setFinish('silver');
+
+  /* ---------- feature card glow ---------- */
+  document.querySelectorAll('.feat').forEach(function (f) {
+    f.addEventListener('pointermove', function (e) {
+      var r = f.getBoundingClientRect();
+      var x = FA ? r.right - e.clientX : e.clientX - r.left;
+      f.style.setProperty('--mx', x + 'px'); f.style.setProperty('--my', (e.clientY - r.top) + 'px');
+    });
+  });
+
+  /* ---------- reveal ---------- */
+  var revealIO = null;
+  if (REDUCED || !('IntersectionObserver' in window)) document.querySelectorAll('.reveal').forEach(function (el) { el.classList.add('in'); });
+  else {
+    revealIO = new IntersectionObserver(function (ents) {
+      ents.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); revealIO.unobserve(en.target); } });
+    }, { threshold: .15 });
+    document.querySelectorAll('.reveal').forEach(function (el) { revealIO.observe(el); });
+  }
+
+  /* ---------- boot ---------- */
+  drawStars();
+  build();
+  resize();
+  setMode('heart');
+  var visIO = null;
+  if ('IntersectionObserver' in window) {
+    visIO = new IntersectionObserver(function (ents) {
+      visible = ents[0].isIntersecting;
+      if (visible) start(); else stop();
+    });
+    visIO.observe(card);
+  }
+  document.addEventListener('visibilitychange', function () { if (document.hidden) stop(); else start(); });
+  var rT = 0;
+  function onResize() {
+    clearTimeout(rT);
+    rT = setTimeout(function () { drawStars(); resize(); if (!running) still(); }, 120);
+  }
+  window.addEventListener('resize', onResize);
+  var cardRO = null;
+  if ('ResizeObserver' in window) { cardRO = new ResizeObserver(onResize); cardRO.observe(card); }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(onResize);
+  if (REDUCED) still(); else start();
+  window.addEventListener('pagehide', function () { stop(); if (visIO) visIO.disconnect(); if (revealIO) revealIO.disconnect(); if (cardRO) cardRO.disconnect(); });
+})();
+</script>
+</body>
+</html>

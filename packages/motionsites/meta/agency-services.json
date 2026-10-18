@@ -1,0 +1,20 @@
+{
+  "title": { "en": "Agency numbered services section", "fa": "بخش خدمات شماره‌دار آژانس" },
+  "oneLiner": {
+    "en": "A white, rounded-top card on a near-black page: a giant Kanit Black “Services” heading over five numbered service rows with oversized digits, thin dividers and staggered fade-up entrances on scroll.",
+    "fa": "کارتی سفید با گوشه‌های بالایی گرد روی صفحه‌ای تقریباً سیاه: تیتر عظیم «خدمات» بالای پنج ردیف خدمت با شماره‌های درشت، خط‌های جداکنندهٔ ظریف و ورودِ پلکانیِ محو و رو‌به‌بالا هنگام اسکرول."
+  },
+  "js": true,
+  "props": [
+    { "name": "--page-bg", "type": "color", "default": "#0C0C0C",
+      "note": { "en": "Dark page colour showing behind the rounded card corners.", "fa": "رنگ تیرهٔ صفحه که پشت گوشه‌های گرد کارت دیده می‌شود." } },
+    { "name": "--ink", "type": "color", "default": "#0C0C0C",
+      "note": { "en": "Colour of the heading, numbers, names and descriptions.", "fa": "رنگ تیتر، شماره‌ها، نام‌ها و توضیحات." } },
+    { "name": "--radius", "type": "length", "default": "40px",
+      "note": { "en": "Top corner radius of the card (grows to 50px and 60px on wider screens).", "fa": "شعاع گوشه‌های بالای کارت (در صفحه‌های پهن‌تر به ۵۰ و ۶۰ پیکسل می‌رسد)." } },
+    { "name": "--divider", "type": "color", "default": "rgba(12, 12, 12, 0.15)",
+      "note": { "en": "Hairline between service rows.", "fa": "خط نازک میان ردیف‌های خدمات." } },
+    { "name": "--fade-duration", "type": "time", "default": "0.7s",
+      "note": { "en": "Length of each fade-up entrance; rows are staggered by 0.1s.", "fa": "مدت هر ورود محو و رو‌به‌بالا؛ ردیف‌ها با فاصلهٔ ۰٫۱ ثانیه پشت هم می‌آیند." } }
+  ]
+}

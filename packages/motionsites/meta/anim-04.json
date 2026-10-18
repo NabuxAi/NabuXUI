@@ -1,0 +1,20 @@
+{
+  "title": { "en": "Orbitly SaaS hero with interactive product tour", "fa": "هیروی SaaS اوربیتلی با تور تعاملی محصول" },
+  "oneLiner": {
+    "en": "A dark/light SaaS hero with a gradient-serif headline over a glowing particle backdrop, and a 3D-tilting app window whose tabs (analytics, automations, AI chat) switch through skeleton loaders, driven by a playable chaptered tour, with floating glass stat cards drifting around it.",
+    "fa": "هیروی SaaS با پوستهٔ تیره و روشن: تیتری با گرادیان روی پس‌زمینه‌ای از ذرات درخشان، و پنجرهٔ اپی که با نشانگر سه‌بعدی کج می‌شود و زبانه‌هایش (تحلیل، خودکارسازی، گفت‌وگوی هوشمند) با اسکلت بارگذاری عوض می‌شوند؛ همراه با تور فصل‌بندی‌شدهٔ قابل پخش و کارت‌های شیشه‌ای شناور در اطرافش."
+  },
+  "js": true,
+  "props": [
+    { "name": "--accent", "type": "color", "default": "#7c6cff",
+      "note": { "en": "Primary violet for the headline gradient, glow, chart line and progress bars.", "fa": "بنفش اصلیِ گرادیان تیتر، درخشش، خط نمودار و نوارهای پیشرفت." } },
+    { "name": "--accent-2", "type": "color", "default": "#22d3ee",
+      "note": { "en": "Cyan secondary accent used in gradients, running workflow states and particles.", "fa": "فیروزه‌ای دوم در گرادیان‌ها، وضعیت در حال اجرای گردش‌کار و ذرات." } },
+    { "name": "--tour-step", "type": "number", "default": "5000",
+      "note": { "en": "Milliseconds each tour chapter plays before switching to the next tab.", "fa": "مدت هر فصل تور به میلی‌ثانیه پیش از رفتن به زبانهٔ بعدی." } },
+    { "name": "--particle-count", "type": "number", "default": "70",
+      "note": { "en": "Number of glowing particles in the backdrop at 1280px (scaled down on narrow screens).", "fa": "تعداد ذرات درخشان پس‌زمینه در عرض ۱۲۸۰ پیکسل (در صفحه‌های باریک کمتر می‌شود)." } },
+    { "name": "--float-dur", "type": "time", "default": "6s",
+      "note": { "en": "Period of the floating bob on the glass cards around the app window.", "fa": "دورهٔ حرکت شناور کارت‌های شیشه‌ای اطراف پنجرهٔ اپ." } }
+  ]
+}

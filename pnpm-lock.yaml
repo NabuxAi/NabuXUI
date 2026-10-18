@@ -41,6 +41,9 @@ importers:
       '@nabuxai/ui-core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@nabuxai/ui-svelte':
+        specifier: workspace:*
+        version: link:../../packages/svelte
       svelte:
         specifier: ^5.16.0
         version: 5.57.1
@@ -63,6 +66,9 @@ importers:
       '@nabuxai/ui-core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@nabuxai/ui-vue':
+        specifier: workspace:*
+        version: link:../../packages/vue
       vue:
         specifier: ^3.5.13
         version: 3.5.43(typescript@5.9.3)
@@ -203,6 +209,62 @@ importers:
       vitest:
         specifier: ^3.2.0
         version: 3.2.7(happy-dom@20.14.5)
+
+  packages/svelte:
+    dependencies:
+      '@nabuxai/ui-core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@sveltejs/vite-plugin-svelte':
+        specifier: ^6.0.0
+        version: 6.2.4(svelte@5.57.1)(vite@7.3.6)
+      happy-dom:
+        specifier: ^20.0.0
+        version: 20.14.5
+      svelte:
+        specifier: ^5.16.0
+        version: 5.57.1
+      svelte-check:
+        specifier: ^4.1.0
+        version: 4.7.6(svelte@5.57.1)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.9.0
+        version: 5.9.3
+      vite:
+        specifier: ^7.1.0
+        version: 7.3.6
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.7(happy-dom@20.14.5)
+
+  packages/vue:
+    dependencies:
+      '@nabuxai/ui-core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@vitejs/plugin-vue':
+        specifier: ^6.0.0
+        version: 6.0.9(vite@7.3.6)(vue@3.5.43)
+      happy-dom:
+        specifier: ^20.0.0
+        version: 20.14.5
+      typescript:
+        specifier: ^5.9.0
+        version: 5.9.3
+      vite:
+        specifier: ^7.1.0
+        version: 7.3.6
+      vitest:
+        specifier: ^3.2.0
+        version: 3.2.7(happy-dom@20.14.5)
+      vue:
+        specifier: ^3.5.13
+        version: 3.5.43(typescript@5.9.3)
+      vue-tsc:
+        specifier: ^3.0.0
+        version: 3.3.11(typescript@5.9.3)
 
 packages:
 

@@ -1,0 +1,18 @@
+{
+  "title": { "en": "Superdesign prompt-to-mockup flow generator", "fa": "مولد جریان پرامپت به ماکاپ سوپردیزاین" },
+  "oneLiner": {
+    "en": "A live prompt widget with a shimmering conic-gradient border and pill tags (type, style, accent) that streams syntax-highlighted UI code token by token, fades a skeleton loader into a live mockup, then branches it into three selectable variants over animated wires. Includes a desktop/mobile preview switch and a light/dark theme toggle.",
+    "fa": "ویجت پرامپت زنده با حاشیهٔ گرادیانی مخروطیِ درخشان و برچسب‌های قرصی (نوع، سبک، رنگ) که کد رابط را با رنگ‌آمیزی نحوی توکن‌به‌توکن جاری می‌کند، اسکلتِ بارگذاری را به ماکاپی زنده تبدیل می‌کند و بعد آن را با سیم‌های متحرک به سه نسخهٔ قابل انتخاب شاخه می‌زند. سوییچ پیش‌نمایش دسکتاپ/موبایل و تغییر پوستهٔ روشن و تیره هم دارد."
+  },
+  "js": true,
+  "props": [
+    { "name": "--shimmer-a / --shimmer-b / --shimmer-c", "type": "color", "default": "#7c5cff / #ff5ca8 / #22d3ee",
+      "note": { "en": "The three stops of the rotating prompt border, headline gradient and Generate button.", "fa": "سه رنگ حاشیهٔ چرخان پرامپت، گرادیان تیتر و دکمهٔ ساختن." } },
+    { "name": "--shimmer-speed", "type": "time", "default": "4s",
+      "note": { "en": "One full rotation of the border gradient while idle (it speeds up to 1.4s while streaming).", "fa": "مدت یک دور کامل گرادیان حاشیه در حالت عادی (هنگام ساخت به ۱٫۴ ثانیه تند می‌شود)." } },
+    { "name": "--stream-cps", "type": "number", "default": 140,
+      "note": { "en": "Characters per second streamed into the code panel.", "fa": "تعداد نویسه‌هایی که در هر ثانیه در پنل کد جاری می‌شود." } },
+    { "name": "--accent", "type": "color", "default": "#7c5cff",
+      "note": { "en": "UI accent for focus, step spinners and wires; follows the selected accent pill.", "fa": "رنگ تأکید برای فوکوس، چرخنده‌های مراحل و سیم‌ها؛ با برچسب رنگِ انتخاب‌شده عوض می‌شود." } }
+  ]
+}

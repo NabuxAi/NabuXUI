@@ -1,0 +1,20 @@
+{
+  "title": { "en": "Acreage customer feedback carousel", "fa": "اسلایدر نظر مشتریان Acreage" },
+  "oneLiner": {
+    "en": "A white, editorial testimonial section for a harvesting brand: hairline dividers draw in from the edge, each large light quote types itself in character by character, and round arrow buttons spring the next quote in from the side while the author row fades through.",
+    "fa": "بخش سفید و ادیتوریال نظر مشتریان برای یک برند برداشت محصول: خط‌های باریک از لبه کشیده می‌شوند، هر نقل‌قول درشت و سبک کلمه‌به‌کلمه تایپ می‌شود و دکمه‌های گرد پیکان، نقل‌قول بعدی را با حرکتی فنری از کنار وارد می‌کنند و ردیف نویسنده محو و ظاهر می‌شود."
+  },
+  "js": true,
+  "props": [
+    { "name": "--line", "type": "color", "default": "#D9D9D9",
+      "note": { "en": "Colour of the two hairline dividers that scale in.", "fa": "رنگ دو خط جداکنندهٔ باریک که با انیمیشن کشیده می‌شوند." } },
+    { "name": "--btn", "type": "color", "default": "#D9D9D9",
+      "note": { "en": "Fill of the round previous/next arrow buttons (hover uses --btn-hover).", "fa": "رنگ دکمه‌های گرد قبلی/بعدی (در حالت هاور از ‎--btn-hover‎ استفاده می‌شود)." } },
+    { "name": "--type-speed", "type": "number", "default": 0.012,
+      "note": { "en": "Seconds between each revealed character of the typewriter effect.", "fa": "فاصلهٔ زمانی (ثانیه) میان آشکار شدن هر حرف در افکت ماشین‌تحریر." } },
+    { "name": "SPRING", "type": "object", "default": "{ stiffness: 300, damping: 30 }",
+      "note": { "en": "Spring used to slide quotes in and out horizontally.", "fa": "فنری که نقل‌قول‌ها را افقی به داخل و بیرون می‌لغزاند." } },
+    { "name": "SLIDE_OFFSET", "type": "number", "default": 100,
+      "note": { "en": "Horizontal distance in px a quote travels when entering or leaving.", "fa": "فاصلهٔ افقی (پیکسل) که نقل‌قول هنگام ورود یا خروج طی می‌کند." } }
+  ]
+}

@@ -16,6 +16,7 @@ import LangMenu from './components/LangMenu.vue';
 import Toaster from './components/Toaster.vue';
 import DashboardPage from './pages/dashboard.vue';
 import UsersPage from './pages/users.vue';
+import ComponentsPage from './pages/Components.vue';
 import KanbanPage from './pages/kanban.vue';
 import SettingsPage from './pages/settings.vue';
 import AuthPage from './pages/auth.vue';
@@ -37,6 +38,7 @@ const PANEL: readonly PanelPage[] = [
   { id: 'dash', group: 'main', icon: 'grid', Component: DashboardPage },
   { id: 'analytics', group: 'main', icon: 'chart', Component: AnalyticsPage },
   { id: 'users', group: 'main', icon: 'users', Component: UsersPage },
+  { id: 'components', group: 'main', icon: 'sparkles', Component: ComponentsPage },
   { id: 'kanban', group: 'work', icon: 'layers', Component: KanbanPage },
   { id: 'calendar', group: 'work', icon: 'grid', Component: CalendarPage },
   { id: 'chat', group: 'work', icon: 'message', Component: ChatPage },

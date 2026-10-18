@@ -1,0 +1,15 @@
+{
+  "title": { "en": "Aurel liquid identity hero", "fa": "هیروی هویت مایع Aurel" },
+  "oneLiner": {
+    "en": "A cinematic studio hero framed in black glass: a luminous triangular monolith rises over rippling water that warps its reflection, beside editorial serif type and a glass new-business form.",
+    "fa": "هیروی سینمایی یک استودیو در قابی از شیشهٔ سیاه: ستونی مثلثی و درخشان بر فراز آبی موج‌دار که بازتابش را می‌لرزاند، کنار تایپوگرافی سریف مجله‌ای و فرم شیشه‌ای همکاری تازه."
+  },
+  "js": true,
+  "props": [
+    { "name": "--glow", "type": "color", "default": "#e8ecf2", "note": { "en": "Light tone of the monolith glow and beam.", "fa": "رنگ روشن درخشش ستون و پرتو نور." } },
+    { "name": "--bg-top", "type": "color", "default": "#4a4f57", "note": { "en": "Top colour of the ambient page gradient behind the frame.", "fa": "رنگ بالای گرادیان محیطی پشت قاب." } },
+    { "name": "--panel", "type": "color", "default": "#050608", "note": { "en": "Base colour of the inner hero panel.", "fa": "رنگ پایهٔ پنل داخلی هیرو." } },
+    { "name": "baseFrequency (#turb)", "type": "string", "default": "0.012 0.09", "note": { "en": "Turbulence frequency of the water ripple filter; higher values give finer waves.", "fa": "بسامد آشفتگی فیلتر موج آب؛ مقدار بیشتر موج‌های ریزتر می‌سازد." } },
+    { "name": "scale (#waterWarp)", "type": "number", "default": "18", "note": { "en": "Displacement strength of the reflection; boosted when the pointer moves.", "fa": "شدت جابه‌جایی بازتاب؛ با حرکت نشانگر بیشتر می‌شود." } }
+  ]
+}

@@ -73,6 +73,10 @@
                         <x-nx::card interactive wire:key="demo-{{ $demo['group'] }}-{{ $demo['slug'] }}"
                             :href="'/components/'.$demo['group'].'/'.$demo['slug']" wire:navigate
                             :icon="$demo['icon'] ?? 'grid'" :title="$demo['title']" :description="$demo['oneLiner']">
+                            @if ($demo['thumb'])
+                                <img src="{{ $demo['thumb'] }}" alt="" loading="lazy" decoding="async" width="640" height="400"
+                                    style="display: block; inline-size: 100%; block-size: auto; aspect-ratio: 16 / 10; object-fit: cover; border-radius: var(--nx-radius-md); border: 1px solid var(--nx-border)">
+                            @endif
                             <x-slot:footer>
                                 <div class="pg-row" style="gap: .5rem">
                                     <x-nx::badge tone="neutral" size="sm">{{ DemoCatalog::pick($groups[$demo['group']]['label']) }}</x-nx::badge>
@@ -86,6 +90,13 @@
                         </x-nx::card>
                     @endforeach
                 </x-nx::grid>
+                @if ($matching > count($demos))
+                    <div class="pg-row" style="justify-content: center" wire:key="demos-more">
+                        <x-nx::button variant="secondary" icon="chevron-down" wire:click="showMore">
+                            {{ $say('Show more', 'نمایش بیشتر') }} · {{ NabuXUI::formatNumber(count($demos)) }} / {{ NabuXUI::formatNumber($matching) }}
+                        </x-nx::button>
+                    </div>
+                @endif
             @endif
         </div>
     </main>

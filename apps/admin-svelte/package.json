@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@nabuxai/ui-core": "workspace:*",
+    "@nabuxai/ui-svelte": "workspace:*",
     "svelte": "^5.16.0"
   },
   "devDependencies": {

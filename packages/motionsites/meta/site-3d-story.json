@@ -1,0 +1,18 @@
+{
+  "title": { "en": "Veldara scroll-scrubbed 3D story landing", "fa": "لندینگ داستانی سه‌بعدی Veldara با ویدیوی وابسته به اسکرول" },
+  "oneLiner": {
+    "en": "A dark cinematic landing for a 3D web framework: a blooming-flower video scrubs frame by frame with scroll under drifting star particles, feature cards wipe in through a moving mask, and a blurred \"Veldara 8\" reveal closes the story.",
+    "fa": "لندینگ سینمایی و تیره برای یک فریم‌ورک سه‌بعدی وب: ویدیوی شکفتن گل با اسکرول فریم‌به‌فریم جلو می‌رود و ذره‌های ستاره‌ای در پس‌زمینه شناورند. کارت‌های ویژگی با یک ماسک متحرک پدیدار می‌شوند و در پایان «Veldara 8» از دل تاری بیرون می‌آید."
+  },
+  "js": true,
+  "props": [
+    { "name": "--accent", "type": "color", "default": "#2C5C88",
+      "note": { "en": "Underline bar under \"3D worlds\", the prompt glyph and the Get Started button.", "fa": "رنگ خط زیر «جهان‌های سه‌بعدی»، علامت خط فرمان و دکمهٔ «شروع کنید»." } },
+    { "name": "--accent-hover", "type": "color", "default": "#3a7aad",
+      "note": { "en": "Button background on hover.", "fa": "پس‌زمینهٔ دکمه هنگام هاور." } },
+    { "name": "--particle-density", "type": "number", "default": 12000,
+      "note": { "en": "Pixels of viewport area per star particle; lower means more stars.", "fa": "مساحت صفحه (پیکسل) به ازای هر ذرهٔ ستاره؛ عدد کمتر یعنی ستارهٔ بیشتر." } },
+    { "name": "#scroll-video[src]", "type": "url", "default": "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260616_212935_bbf608da-62d1-4f25-9be4-c346e4d09cc8.mp4",
+      "note": { "en": "MP4 that is scrubbed by scroll progress (an SVG bloom shows until it decodes).", "fa": "ویدیوی MP4 که با پیشرفت اسکرول جلو و عقب می‌رود (تا بارگذاری‌اش یک گل SVG نمایش داده می‌شود)." } }
+  ]
+}

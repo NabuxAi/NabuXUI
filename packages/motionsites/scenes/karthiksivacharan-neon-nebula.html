@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neon Nebula — animated ASCII wave background</title>
+<script>
+  (function () {
+    var p = new URLSearchParams(location.search);
+    var l = p.get('lang') === 'fa' ? 'fa' : 'en';
+    document.documentElement.lang = l;
+    document.documentElement.dir = l === 'fa' ? 'rtl' : 'ltr';
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Geist:wght@400;500;600&family=Vazirmatn:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #000000;
+    --fg: #f4efff;
+    --muted: #9b8fb8;
+    --line: rgba(167, 139, 250, .16);
+    --nebula-hue: 268;
+    --cell: 16px;
+    --speed: 1;
+    --radius: 14px;
+    --font: 'Geist', ui-sans-serif, system-ui, sans-serif;
+    --mono: 'Geist Mono', ui-monospace, Menlo, monospace;
+  }
+  html[lang="fa"] { --font: 'Vazirmatn', 'Geist', sans-serif; --mono: 'Vazirmatn', 'Geist Mono', monospace; }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--fg); font-family: var(--font); overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; }
+  :focus-visible { outline: 2px solid hsl(var(--nebula-hue) 90% 72%); outline-offset: 3px; border-radius: 6px; }
+
+  /* ---------- hero ---------- */
+  .hero { position: relative; min-height: 100vh; min-height: 100svh; overflow: hidden; isolation: isolate; display: flex; flex-direction: column; }
+  .hero canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: -1; cursor: crosshair; }
+  .hero .vignette { position: absolute; inset: 0; z-index: -1; pointer-events: none;
+    background: radial-gradient(ellipse 70% 60% at 50% 50%, transparent 40%, rgba(0,0,0,.7) 100%); }
+
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px clamp(16px, 4vw, 40px); }
+  .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 600; letter-spacing: -.01em; }
+  .brand svg { width: 22px; height: 22px; }
+  .brand small { font-family: var(--mono); font-weight: 400; color: var(--muted); font-size: 12px; }
+  .chip { font-family: var(--mono); font-size: 11px; color: hsl(var(--nebula-hue) 90% 80%); border: 1px solid var(--line); background: rgba(10,4,20,.5);
+    padding: 5px 11px; border-radius: 99px; white-space: nowrap; backdrop-filter: blur(6px); }
+  .chip .dot { display: inline-block; width: 6px; height: 6px; margin-inline-end: 7px; border-radius: 1px; background: hsl(var(--nebula-hue) 90% 70%); box-shadow: 0 0 8px hsl(var(--nebula-hue) 90% 65%); vertical-align: 1px; }
+
+  .hero-body { flex: 1; display: grid; align-content: end; gap: 22px; padding: 0 clamp(16px, 4vw, 40px) clamp(28px, 6vh, 56px); max-width: 1280px; width: 100%; margin: 0 auto; }
+  .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  html[lang="fa"] .eyebrow { letter-spacing: 0; }
+  h1 { margin: 0; font-weight: 500; font-size: clamp(40px, 7.4vw, 104px); line-height: .95; letter-spacing: -.045em; max-width: 12ch; }
+  html[lang="fa"] h1 { letter-spacing: 0; line-height: 1.25; font-weight: 700; }
+  h1 em { font-style: normal; color: hsl(var(--nebula-hue) 90% 78%); text-shadow: 0 0 40px hsl(var(--nebula-hue) 90% 55% / .55); }
+  .eyebrow, .lede, h1 { text-shadow: 0 1px 12px rgba(0,0,0,.9); }
+  .lede { margin: 0; max-width: 46ch; color: #c9bfe0; font-size: clamp(15px, 1.4vw, 17px); line-height: 1.6; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .btn { appearance: none; border: 1px solid var(--line); background: rgba(16,8,30,.6); color: var(--fg); font: 500 14px/1 var(--font);
+    padding: 12px 18px; border-radius: 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; backdrop-filter: blur(8px);
+    transition: background .2s, border-color .2s, transform .2s; text-decoration: none; }
+  .btn:hover { border-color: hsl(var(--nebula-hue) 90% 70% / .6); background: rgba(40,18,70,.6); }
+  .btn:active { transform: translateY(1px); }
+  .btn.primary { background: hsl(var(--nebula-hue) 85% 72%); color: #12051f; border-color: transparent; }
+  .btn.primary:hover { background: hsl(var(--nebula-hue) 90% 80%); }
+  .btn svg { width: 16px; height: 16px; }
+  .cmd { font-family: 'Geist Mono', monospace; font-size: 13px; direction: ltr; }
+
+  /* control dock */
+  .dock { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; padding: 10px 14px; border: 1px solid var(--line); border-radius: 12px;
+    background: rgba(8,3,16,.62); backdrop-filter: blur(10px); width: fit-content; max-width: 100%; font-size: 12px; color: var(--muted); font-family: var(--mono); }
+  .dock label { display: inline-flex; align-items: center; gap: 8px; }
+  .dock input[type=range] { width: 92px; accent-color: hsl(var(--nebula-hue) 90% 72%); }
+  .swatches { display: inline-flex; gap: 6px; }
+  .sw { width: 18px; height: 18px; border-radius: 4px; border: 1px solid rgba(255,255,255,.2); cursor: pointer; padding: 0; }
+  .sw[aria-pressed="true"] { box-shadow: 0 0 0 2px #000, 0 0 0 3px #fff; }
+  .icon-btn { appearance: none; background: transparent; border: 1px solid var(--line); color: var(--fg); width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; cursor: pointer; }
+  .icon-btn svg { width: 14px; height: 14px; }
+  .hint { font-family: var(--mono); font-size: 11px; color: var(--muted); opacity: .8; }
+
+  /* ---------- variants ---------- */
+  main { max-width: 1280px; margin: 0 auto; padding: clamp(48px, 8vw, 96px) clamp(16px, 4vw, 40px); }
+  .sec-head { display: flex; justify-content: space-between; align-items: end; gap: 16px; flex-wrap: wrap; margin-bottom: 28px; }
+  h2 { margin: 0; font-weight: 500; font-size: clamp(26px, 3.4vw, 40px); letter-spacing: -.03em; }
+  html[lang="fa"] h2 { letter-spacing: 0; }
+  .sec-head p { margin: 0; color: var(--muted); max-width: 44ch; line-height: 1.6; }
+  .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .card { position: relative; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; min-height: 300px; background: #05020a; isolation: isolate; display: flex; flex-direction: column; justify-content: flex-end; }
+  .card canvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; }
+  .card .shade { position: absolute; inset: 0; z-index: -1; background: linear-gradient(to top, rgba(0,0,0,.92) 18%, transparent 70%); }
+  .card-body { padding: 20px; }
+  .card h3 { margin: 0 0 6px; font-weight: 500; font-size: 18px; }
+  .card p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.55; }
+  .tag { display: inline-block; font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: hsl(var(--nebula-hue) 90% 80%); margin-bottom: 10px; }
+  html[lang="fa"] .tag { letter-spacing: 0; }
+  .price { font-size: 34px; font-weight: 500; letter-spacing: -.03em; margin: 4px 0 2px; direction: ltr; text-align: start; }
+
+  .term { justify-content: flex-start; }
+  .term .bar { display: flex; gap: 6px; padding: 12px 14px; border-bottom: 1px solid var(--line); background: rgba(0,0,0,.6); direction: ltr; }
+  .term .bar i { width: 10px; height: 10px; border-radius: 50%; background: #2a2236; }
+  .term pre { margin: 0; padding: 16px; font: 12.5px/1.75 'Geist Mono', monospace; color: #d8ccf5; direction: ltr; text-align: left; white-space: pre-wrap; background: rgba(0,0,0,.45); flex: 1; }
+  .term pre b { color: hsl(var(--nebula-hue) 90% 76%); font-weight: 500; }
+  .term pre .ok { color: #8be9b4; }
+  .caret { display: inline-block; width: 7px; height: 14px; background: hsl(var(--nebula-hue) 90% 76%); vertical-align: -2px; animation: blink 1s steps(2) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .copied { position: fixed; inset-block-end: 20px; inset-inline-start: 50%; transform: translate(-50%, 20px); opacity: 0; transition: .3s; background: #1a0d2e; border: 1px solid var(--line);
+    padding: 10px 16px; border-radius: 10px; font-size: 13px; z-index: 10; pointer-events: none; }
+  html[dir="rtl"] .copied { transform: translate(50%, 20px); }
+  .copied.show { opacity: 1; transform: translate(-50%, 0); }
+  html[dir="rtl"] .copied.show { transform: translate(50%, 0); }
+
+  footer { border-top: 1px solid var(--line); padding: 22px clamp(16px, 4vw, 40px); color: var(--muted); font-size: 13px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+
+  @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } .card { min-height: 260px; } }
+  @media (max-width: 560px) { .brand small { display: none; } .hint { display: none; } .dock input[type=range] { width: 74px; } }
+  @media (prefers-reduced-motion: reduce) {
+    .caret { animation: none; }
+    .btn, .copied { transition: none; }
+  }
+</style>
+</head>
+<body>
+<section class="hero" aria-labelledby="h1">
+  <canvas id="nebula" aria-hidden="true"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+  <header>
+    <a class="brand" href="#" aria-label="Neon Nebula">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1" opacity=".5"/><rect x="3" y="14" width="7" height="7" rx="1" opacity=".5"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Neon Nebula <small>/ karthiksivacharan</small>
+    </a>
+    <span class="chip"><span class="dot" aria-hidden="true"></span><span data-i18n="chip">ASCII · Stars · Wave</span></span>
+  </header>
+  <div class="hero-body">
+    <p class="eyebrow" data-i18n="eyebrow">Animated ASCII background</p>
+    <h1 id="h1" data-i18n-html="title">A nebula made of <em>tiny stars.</em></h1>
+    <p class="lede" data-i18n="lede">Thousands of square glyphs breathe in a slow violet wave. Move the pointer to pull the glow, click anywhere to send a ripple through the field.</p>
+    <div class="actions">
+      <button class="btn primary" id="copy" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        <span data-i18n="copy">Copy install</span>
+      </button>
+      <span class="btn cmd" aria-label="install command">npx shadcn add neon-nebula</span>
+    </div>
+    <div class="dock" role="group" aria-label="Nebula controls" data-i18n-aria="dockAria">
+      <button class="icon-btn" id="play" type="button" aria-label="Pause" data-state="playing">
+        <svg id="ico-pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+        <svg id="ico-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" hidden><path d="M7 5v14l12-7z"/></svg>
+      </button>
+      <label><span data-i18n="speed">Speed</span> <input id="speed" type="range" min="0.2" max="2.5" step="0.1" value="1"></label>
+      <label><span data-i18n="density">Density</span> <input id="density" type="range" min="10" max="22" step="1" value="16"></label>
+      <span class="swatches" role="group" aria-label="Hue" data-i18n-aria="hueAria">
+        <button class="sw" type="button" data-hue="268" aria-pressed="true" style="background:hsl(268 85% 65%)" aria-label="Violet"></button>
+        <button class="sw" type="button" data-hue="200" aria-pressed="false" style="background:hsl(200 85% 60%)" aria-label="Cyan"></button>
+        <button class="sw" type="button" data-hue="320" aria-pressed="false" style="background:hsl(320 85% 65%)" aria-label="Magenta"></button>
+        <button class="sw" type="button" data-hue="150" aria-pressed="false" style="background:hsl(150 70% 55%)" aria-label="Green"></button>
+      </span>
+      <span class="hint" data-i18n="hint">click = ripple</span>
+    </div>
+  </div>
+</section>
+
+<main>
+  <div class="sec-head">
+    <h2 data-i18n="usesTitle">Drop it anywhere</h2>
+    <p data-i18n="usesLede">The same zero-dependency field behind a pricing card, a feature tile and a retro terminal.</p>
+  </div>
+  <div class="grid">
+    <article class="card">
+      <canvas class="mini" data-seed="1.7" aria-hidden="true"></canvas><div class="shade" aria-hidden="true"></div>
+      <div class="card-body">
+        <span class="tag" data-i18n="t1tag">Pricing card</span>
+        <div class="price">$19<small style="font-size:14px;color:var(--muted)"> /mo</small></div>
+        <h3 data-i18n="t1h">Pro plan</h3>
+        <p data-i18n="t1p">Unlimited exports, custom palettes and priority rendering.</p>
+      </div>
+    </article>
+    <article class="card">
+      <canvas class="mini" data-seed="4.2" aria-hidden="true"></canvas><div class="shade" aria-hidden="true"></div>
+      <div class="card-body">
+        <span class="tag" data-i18n="t2tag">Feature tile</span>
+        <h3 data-i18n="t2h">Looping by design</h3>
+        <p data-i18n="t2p">The wave is periodic, so it loops forever without a visible seam.</p>
+      </div>
+    </article>
+    <article class="card term">
+      <canvas class="mini" data-seed="8.9" aria-hidden="true"></canvas>
+      <div class="bar" aria-hidden="true"><i></i><i></i><i></i></div>
+<pre><b>~</b> npx shadcn@latest add neon-nebula
+<span class="ok">✔</span> <span data-i18n="l1">Checking registry.</span>
+<span class="ok">✔</span> <span data-i18n="l2">Writing components/ui/neon-nebula.tsx</span>
+<span class="ok">✔</span> <span data-i18n="l3">Done. Zero dependencies added.</span>
+<b>~</b> <span class="caret" aria-hidden="true"></span></pre>
+    </article>
+  </div>
+</main>
+<footer>
+  <span data-i18n="foot">Neon Nebula — ASCII art in the Stars style.</span>
+  <span>21st.dev / karthiksivacharan</span>
+</footer>
+<div class="copied" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  var I18N = {
+    en: {},
+    fa: {
+      chip: 'اسکی · ستاره‌ها · موج',
+      eyebrow: 'پس‌زمینهٔ اسکی متحرک',
+      title: 'سحابی‌ای ساخته از <em>ستاره‌های ریز.</em>',
+      lede: 'هزاران نویسهٔ مربعی در موجی آرام و بنفش نفس می‌کشند. نشانگر را حرکت دهید تا درخشش را با خود بکشید و هر جا کلیک کنید تا موجی در میدان بپیچد.',
+      copy: 'کپی دستور نصب',
+      speed: 'سرعت', density: 'تراکم', hint: 'کلیک = موج',
+      dockAria: 'کنترل‌های سحابی', hueAria: 'رنگ',
+      usesTitle: 'هر جا که بخواهید بگذاریدش',
+      usesLede: 'همان میدان بی‌وابستگی، پشت یک کارت قیمت، یک کاشی معرفی ویژگی و یک ترمینال قدیمی.',
+      t1tag: 'کارت قیمت', t1h: 'پلن حرفه‌ای', t1p: 'خروجی نامحدود، پالت‌های دلخواه و رندر با اولویت.',
+      t2tag: 'کاشی ویژگی', t2h: 'حلقه‌ای از پایه', t2p: 'موج تناوبی است، پس بی‌پایان و بدون هیچ درزی تکرار می‌شود.',
+      l1: 'بررسی رجیستری.', l2: 'نوشتن components/ui/neon-nebula.tsx', l3: 'تمام شد. هیچ وابستگی‌ای اضافه نشد.',
+      foot: 'نئون نبولا — هنر اسکی به سبک ستاره‌ها.',
+      copied: 'دستور نصب کپی شد', pause: 'توقف', play: 'پخش'
+    }
+  };
+  var EN = { copied: 'Install command copied', pause: 'Pause', play: 'Play' };
+  var lang = document.documentElement.lang === 'fa' ? 'fa' : 'en';
+  var T = function (k) { return (I18N[lang] && I18N[lang][k]) || EN[k] || ''; };
+  if (lang === 'fa') {
+    document.querySelectorAll('[data-i18n]').forEach(function (el) { var v = I18N.fa[el.getAttribute('data-i18n')]; if (v) el.textContent = v; });
+    document.querySelectorAll('[data-i18n-html]').forEach(function (el) { var v = I18N.fa[el.getAttribute('data-i18n-html')]; if (v) el.innerHTML = v; });
+    document.querySelectorAll('[data-i18n-aria]').forEach(function (el) { var v = I18N.fa[el.getAttribute('data-i18n-aria')]; if (v) el.setAttribute('aria-label', v); });
+    var price = document.querySelector('.price'); if (price) price.innerHTML = '۱۹$<small style="font-size:14px;color:var(--muted)"> / ماه</small>';
+    var pb = document.getElementById('play'); if (pb) pb.setAttribute('aria-label', T('pause'));
+  }
+
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var root = document.documentElement;
+  var cfg = { hue: 268, speed: 1, cell: 16 };
+
+  /* ---------- the field ---------- */
+  function field(x, y, t, seed, px, py, ripples, now, ax, ay) {
+    // x,y in px-normalised units. One bright core with square-ish concentric bands, a faint halo, pointer glow and ripples.
+    var v = 0;
+    var bx = ax + 0.035 * Math.sin(t * 0.21 + seed), by = ay + 0.03 * Math.cos(t * 0.17 + seed);
+    var dx = x - bx, dy = y - by, r2 = dx * dx + dy * dy;
+    var core = 1.15 * Math.exp(-r2 / 0.018);
+    var halo = 0.3 * Math.exp(-r2 / 0.05);
+    var cheb = Math.max(Math.abs(dx), Math.abs(dy)), d = Math.sqrt(r2);
+    var ring = 0.5 + 0.5 * Math.sin((cheb * 0.6 + d * 0.4) * 48 - t * 2.4);
+    var cross = 0.5 + 0.5 * Math.cos(dx * 70) * Math.cos(dy * 70 + t * 0.4);
+    v = core * (0.12 + 0.5 * ring + 0.55 * ring * cross) + halo * (0.25 + 0.75 * ring * (0.4 + 0.6 * cross));
+    var cx = bx + 0.2 + 0.05 * Math.cos(t * 0.13 + seed * 2), cy = by - 0.08 + 0.04 * Math.sin(t * 0.19);
+    dx = x - cx; dy = y - cy; v += 0.22 * Math.exp(-(dx * dx + dy * dy) / 0.02) * (0.5 + 0.5 * Math.sin(x * 40 + t));
+    if (px > -1) { dx = x - px; dy = y - py; v += 0.55 * Math.exp(-(dx * dx + dy * dy) / 0.012); }
+    for (var i = 0; i < ripples.length; i++) {
+      var r = ripples[i], age = (now - r.t) / 1000, rd = Math.sqrt((x - r.x) * (x - r.x) + (y - r.y) * (y - r.y));
+      var band = rd - age * 0.55;
+      v += 0.9 * Math.exp(-band * band / 0.0012) * Math.max(0, 1 - age / 2.2);
+    }
+    return v;
+  }
+
+  function Nebula(canvas, opts) {
+    this.c = canvas; this.ctx = canvas.getContext('2d'); this.seed = opts.seed || 0; this.hero = !!opts.hero;
+    this.px = -9; this.py = -9; this.tpx = -9; this.tpy = -9; this.ripples = []; this.t = opts.seed * 3 || 0; this.visible = true;
+    this.resize();
+  }
+  Nebula.prototype.resize = function () {
+    var r = this.c.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2);
+    this.w = Math.max(1, r.width); this.h = Math.max(1, r.height); this.dpr = dpr;
+    this.c.width = Math.round(this.w * dpr); this.c.height = Math.round(this.h * dpr);
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+  // nebula anchor: hero sits on the trailing side (desktop) or top (phone), cards centred
+  Nebula.prototype.ax = function () { var sc = Math.max(this.w, this.h); if (!this.hero) return (this.w * 0.5) / sc; return (this.w > 760 ? this.w * 0.68 : this.w * 0.5) / sc; };
+  Nebula.prototype.ay = function () { var sc = Math.max(this.w, this.h); if (!this.hero) return (this.h * 0.38) / sc; return (this.w > 760 ? this.h * 0.46 : this.h * 0.24) / sc; };
+  Nebula.prototype.draw = function (now) {
+    var ctx = this.ctx, w = this.w, h = this.h, cell = this.hero ? cfg.cell : Math.max(11, cfg.cell - 3);
+    var hue = cfg.hue, t = this.t;
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
+    this.px += (this.tpx - this.px) * 0.08; this.py += (this.tpy - this.py) * 0.08;
+    var scale = Math.max(w, h), cols = Math.ceil(w / cell) + 1, rows = Math.ceil(h / cell) + 1;
+    var ox = (w - (cols - 1) * cell) / 2, oy = (h - (rows - 1) * cell) / 2;
+    var rtl = this.hero && root.dir === 'rtl';
+    this.ripples = this.ripples.filter(function (r) { return now - r.t < 2200; });
+    var fills = [
+      'hsla(' + hue + ',85%,40%,.6)', 'hsla(' + hue + ',85%,55%,.9)', 'hsla(' + hue + ',85%,66%,1)', 'hsla(' + hue + ',95%,86%,1)'
+    ];
+    ctx.lineWidth = 1;
+    for (var j = 0; j < rows; j++) {
+      for (var i = 0; i < cols; i++) {
+        var X = ox + i * cell, Y = oy + j * cell;
+        var nx = (rtl ? (w - X) : X) / scale, ny = Y / scale;
+        var v = field(nx, ny, t, this.seed, this.px, this.py, this.ripples, now, this.ax(), this.ay());
+        // sparse dither: hash flicker
+        var hsh = Math.sin(i * 12.9898 + j * 78.233 + Math.floor(t * 3) * 0.37) * 43758.5453; hsh -= Math.floor(hsh);
+        v += (hsh - 0.5) * 0.16;
+        if (v < 0.14) continue;
+        var lvl = v < 0.28 ? 0 : v < 0.5 ? 1 : v < 0.8 ? 2 : 3;
+        var s = Math.round(cell * (lvl === 0 ? 0.28 : lvl === 1 ? 0.38 : lvl === 2 ? 0.44 : 0.5));
+        var sx = Math.round(X - s / 2) + 0.5, sy = Math.round(Y - s / 2) + 0.5;
+        ctx.strokeStyle = fills[lvl];
+        ctx.strokeRect(sx, sy, s, s);
+        if (lvl === 3) { ctx.fillStyle = 'hsla(' + hue + ',100%,92%,.9)'; ctx.fillRect(sx + 1.5, sy + 1.5, s - 3, s - 3); }
+        else if (lvl === 2 && hsh > 0.7) { ctx.fillStyle = fills[1]; ctx.fillRect(sx + 2, sy + 2, s - 4, s - 4); }
+      }
+    }
+  };
+
+  var heroCanvas = document.getElementById('nebula');
+  var all = [];
+  if (heroCanvas && heroCanvas.getContext) {
+    var hero = new Nebula(heroCanvas, { seed: 0, hero: true });
+    all.push(hero);
+    var setPointer = function (e) {
+      var r = heroCanvas.getBoundingClientRect(), sc = Math.max(r.width, r.height);
+      var X = e.clientX - r.left, Y = e.clientY - r.top;
+      if (root.dir === 'rtl') X = r.width - X;
+      hero.tpx = X / sc; hero.tpy = Y / sc;
+      if (hero.px < -1) { hero.px = hero.tpx; hero.py = hero.tpy; }
+    };
+    var heroEl = heroCanvas.parentElement;
+    heroEl.addEventListener('pointermove', setPointer);
+    heroEl.addEventListener('pointerleave', function () { hero.tpx = hero.tpy = -9; hero.px = hero.py = -9; });
+    heroEl.addEventListener('pointerdown', function (e) {
+      if (e.target.closest('button, a, input, .dock')) return;
+      setPointer(e); hero.ripples.push({ x: hero.tpx, y: hero.tpy, t: performance.now() });
+      if (reduce || paused) hero.draw(performance.now());
+    });
+  }
+  document.querySelectorAll('canvas.mini').forEach(function (c) {
+    if (c.getContext) all.push(new Nebula(c, { seed: parseFloat(c.dataset.seed) || 1 }));
+  });
+
+  var paused = false, last = performance.now(), raf = 0;
+  function frame(now) {
+    var dt = Math.min(0.05, (now - last) / 1000); last = now;
+    all.forEach(function (n) { if (!n.visible) return; n.t += dt * cfg.speed; n.draw(now); });
+    raf = requestAnimationFrame(frame);
+  }
+  function start() { if (reduce || paused || raf) return; last = performance.now(); raf = requestAnimationFrame(frame); }
+  function stop() { if (raf) cancelAnimationFrame(raf); raf = 0; }
+  function redrawAll() { var n = performance.now(); all.forEach(function (x) { x.draw(n); }); }
+
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (es) { es.forEach(function (e) { all.forEach(function (n) { if (n.c === e.target) n.visible = e.isIntersecting; }); }); });
+    all.forEach(function (n) { io.observe(n.c); });
+    window.addEventListener('pagehide', function () { io.disconnect(); });
+  }
+  document.addEventListener('visibilitychange', function () { document.hidden ? stop() : start(); });
+  var rt; window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(function () { all.forEach(function (n) { n.resize(); }); redrawAll(); }, 80); });
+
+  redrawAll();
+  start();
+
+  /* ---------- controls ---------- */
+  var play = document.getElementById('play');
+  if (play) {
+    if (reduce) { paused = true; play.setAttribute('aria-label', T('play')); document.getElementById('ico-pause').hidden = true; document.getElementById('ico-play').hidden = false; }
+    play.addEventListener('click', function () {
+      paused = !paused;
+      document.getElementById('ico-pause').hidden = paused; document.getElementById('ico-play').hidden = !paused;
+      play.setAttribute('aria-label', paused ? T('play') : T('pause'));
+      if (paused) stop(); else { reduce = false; start(); }
+    });
+  }
+  var sp = document.getElementById('speed');
+  if (sp) sp.addEventListener('input', function () { cfg.speed = parseFloat(sp.value); root.style.setProperty('--speed', sp.value); });
+  var de = document.getElementById('density');
+  if (de) de.addEventListener('input', function () { cfg.cell = 32 - parseInt(de.value, 10); root.style.setProperty('--cell', cfg.cell + 'px'); if (!raf) redrawAll(); });
+  document.querySelectorAll('.sw').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('.sw').forEach(function (o) { o.setAttribute('aria-pressed', 'false'); });
+      b.setAttribute('aria-pressed', 'true');
+      cfg.hue = parseInt(b.dataset.hue, 10); root.style.setProperty('--nebula-hue', cfg.hue);
+      if (!raf) redrawAll();
+    });
+  });
+
+  var toast = document.getElementById('toast'), tt;
+  var copy = document.getElementById('copy');
+  if (copy) copy.addEventListener('click', function () {
+    var txt = 'npx shadcn@latest add https://21st.dev/r/karthiksivacharan/neon-nebula';
+    var done = function () { toast.textContent = T('copied'); toast.classList.add('show'); clearTimeout(tt); tt = setTimeout(function () { toast.classList.remove('show'); }, 1800); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done, done); else done();
+  });
+})();
+</script>
+</body>
+</html>

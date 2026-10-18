@@ -1,0 +1,20 @@
+{
+  "title": { "en": "All About The Benjamins flicker-ASCII money fan", "fa": "بادبزن پول با اسکی چشمک‌زن «همه‌چیز دربارهٔ بنجامین‌ها»" },
+  "oneLiner": {
+    "en": "A fan of hundred-dollar bills drawn procedurally and rendered as green, Bayer-dithered ASCII that flickers on paper or a dark terminal. The fan breathes and follows the pointer, deals in again on demand, and is shown as a hero background, a pricing card and a terminal panel.",
+    "fa": "بادبزنی از اسکناس‌های صد دلاری که به‌صورت رویه‌ای کشیده می‌شود و با اسکی سبز و دیزر بایر روی کاغذ یا ترمینال تیره چشمک می‌زند. بادبزن نفس می‌کشد، دنبال نشانگر می‌رود، با یک کلیک دوباره پخش می‌شود و در قالب پس‌زمینهٔ هیرو، کارت قیمت و پنل ترمینال هم نمایش داده می‌شود."
+  },
+  "js": true,
+  "props": [
+    { "name": "--cell", "type": "length", "default": "10px",
+      "note": { "en": "Glyph cell height; smaller means a denser ASCII grid (the Density slider).", "fa": "ارتفاع خانهٔ هر کاراکتر؛ کوچک‌تر یعنی شبکهٔ اسکی متراکم‌تر (اسلایدر تراکم)." } },
+    { "name": "--ink", "type": "color", "default": "#11a14a",
+      "note": { "en": "Green of the ASCII glyphs on the paper palette.", "fa": "رنگ سبز کاراکترهای اسکی در پالت کاغذی." } },
+    { "name": "--paper", "type": "color", "default": "#eef3ee",
+      "note": { "en": "Background of the ASCII stage in the paper palette.", "fa": "پس‌زمینهٔ صحنهٔ اسکی در پالت کاغذی." } },
+    { "name": "BILLS", "type": "number", "default": 10,
+      "note": { "en": "Number of bills fanned out in the scene.", "fa": "تعداد اسکناس‌هایی که در بادبزن باز می‌شوند." } },
+    { "name": "RAMP", "type": "string", "default": " .,:-=+*o#%@",
+      "note": { "en": "Glyph ramp from light to dark used by the dither.", "fa": "طیف کاراکترها از روشن به تیره که دیزر از آن استفاده می‌کند." } }
+  ]
+}

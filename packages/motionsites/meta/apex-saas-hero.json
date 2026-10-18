@@ -1,0 +1,14 @@
+{
+  "title": { "en": "Apex SaaS revenue hero", "fa": "هیروی درآمد SaaS اپکس" },
+  "oneLiner": {
+    "en": "A dark violet SaaS landing hero with a floating liquid-glass navbar and dropdowns, a launch badge and twin CTAs, over a social-proof band where a blue glass-ribbon video fades in behind trust stats and an endless logo marquee.",
+    "fa": "هیروی تیرهٔ یک محصول SaaS با منوی شناور شیشه‌ای و زیرمنوهای بازشو، نشان معرفی محصول و دو دکمهٔ اقدام، بالای بخشی از اعتبار اجتماعی که ویدیوی نوارهای شیشه‌ای آبی پشت آمارها و نوار بی‌پایان لوگوها به‌آرامی ظاهر می‌شود."
+  },
+  "js": true,
+  "props": [
+    { "name": "--primary", "type": "string", "default": "262 83% 58%", "note": { "en": "HSL triplet of the violet accent used by Sign Up and the main CTA.", "fa": "مقدار HSL رنگ بنفش اصلی که دکمهٔ ثبت‌نام و اقدام اصلی از آن استفاده می‌کنند." } },
+    { "name": "--background", "type": "string", "default": "260 87% 3%", "note": { "en": "HSL triplet of the near-black page background and the video fade edges.", "fa": "مقدار HSL پس‌زمینهٔ تقریباً سیاه صفحه و لبه‌های محوشدن ویدیو." } },
+    { "name": "--marquee-duration", "type": "time", "default": "20s", "note": { "en": "Duration of one full loop of the logo marquee.", "fa": "مدت یک دور کامل نوار لوگوها." } },
+    { "name": "--video-fade", "type": "time", "default": "500ms", "note": { "en": "Fade-in and fade-out time of the background video at each loop.", "fa": "زمان ظاهر و محو شدن ویدیوی پس‌زمینه در هر دور پخش." } }
+  ]
+}

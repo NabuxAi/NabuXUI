@@ -1,0 +1,18 @@
+{
+  "title": { "en": "Aethera Studio cinematic video hero", "fa": "هیروی سینمایی ویدیویی استودیو Aethera" },
+  "oneLiner": {
+    "en": "A white, editorial agency hero: an Instrument Serif headline with grey italic accents rises in over a pastoral landscape video that fades in and out on a hand-rolled loop. Includes a working mobile menu and CTA feedback.",
+    "fa": "هیروی سفید و ادیتوریال یک آژانس: تیتر سریفی با تأکیدهای خاکستری روی ویدیوی منظرهٔ روستایی بالا می‌آید و ویدیو در حلقه‌ای دست‌ساز نرم محو و ظاهر می‌شود. منوی موبایل و بازخورد دکمهٔ فراخوان کار می‌کنند."
+  },
+  "js": true,
+  "props": [
+    { "name": "--video-top", "type": "length", "default": "300px",
+      "note": { "en": "Distance from the top of the page where the video layer begins.", "fa": "فاصلهٔ شروع لایهٔ ویدیو از بالای صفحه." } },
+    { "name": "--muted", "type": "color", "default": "#6F6F6F",
+      "note": { "en": "Grey for italic headline accents, menu items and the description.", "fa": "خاکستریِ تأکیدهای تیتر، آیتم‌های منو و توضیحات." } },
+    { "name": "--ink", "type": "color", "default": "#000000",
+      "note": { "en": "Headline, logo and button colour.", "fa": "رنگ تیتر، لوگو و دکمه‌ها." } },
+    { "name": "FADE", "type": "number", "default": 0.5,
+      "note": { "en": "Seconds of opacity fade at the start and end of each video loop.", "fa": "مدت محوشدن (ثانیه) در آغاز و پایان هر دور ویدیو." } }
+  ]
+}

@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acreage — Customer feedback</title>
+<script>
+  (function () {
+    var p = new URLSearchParams(location.search);
+    var l = p.get('lang') === 'fa' ? 'fa' : 'en';
+    document.documentElement.lang = l;
+    document.documentElement.dir = l === 'fa' ? 'rtl' : 'ltr';
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Instrument+Serif:ital@0;1&family=Vazirmatn:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ffffff;
+    --page: #000000;
+    --ink: #000000;
+    --muted: #6b7280;
+    --line: #D9D9D9;
+    --btn: #D9D9D9;
+    --btn-hover: #c9c9c9;
+    --type-speed: 0.012;
+    --font-sans: "Barlow", ui-sans-serif, system-ui, sans-serif;
+    --font-dm-serif: "Instrument Serif", serif;
+  }
+  html[lang="fa"] {
+    --font-sans: "Vazirmatn", "Barlow", ui-sans-serif, system-ui, sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--page);
+    color: #fff;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* Section */
+  #feedback {
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100svh;
+    background: var(--bg);
+    color: var(--ink);
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+  }
+  @media (min-width: 768px) { #feedback { padding: 96px 48px; } }
+  @media (min-width: 1024px) { #feedback { padding-inline: 120px; } }
+
+  .wrap { width: 100%; }
+
+  /* reveal states (staggered children of the wrapper) */
+  .rv { opacity: 0; transform: translateY(20px); transition: opacity .6s ease-out, transform .6s ease-out; }
+  .rv-line { transform: scaleX(0); transition: transform .8s ease-out; }
+  .wrap.in .rv { opacity: 1; transform: none; }
+  .wrap.in .rv-line { transform: scaleX(1); }
+
+  h2.title {
+    margin: 0 0 24px;
+    font-size: .875rem;
+    line-height: 1.25rem;
+    font-weight: 500;
+    letter-spacing: .025em;
+  }
+  @media (min-width: 768px) { h2.title { font-size: 1rem; line-height: 1.5rem; } }
+  html[lang="fa"] h2.title { letter-spacing: 0; }
+
+  .line {
+    width: 100%;
+    height: 1px;
+    background: var(--line);
+    transform-origin: left center;
+  }
+  html[dir="rtl"] .line { transform-origin: right center; }
+  .line.top { margin-bottom: 48px; }
+  .line.bottom { margin-top: 48px; margin-bottom: 32px; }
+  @media (min-width: 768px) {
+    .line.top { margin-bottom: 80px; }
+    .line.bottom { margin-top: 80px; }
+  }
+
+  .stage {
+    position: relative;
+    overflow: hidden;
+    min-height: 300px;
+    display: flex;
+    align-items: center;
+    touch-action: pan-y;
+  }
+  @media (min-width: 768px) { .stage { min-height: 250px; } }
+  .slide { width: 100%; position: relative; z-index: 1; }
+
+  .quote {
+    margin: 0;
+    font-size: 1.5rem;
+    line-height: 1.375;
+    font-weight: 300;
+    letter-spacing: -0.025em;
+    text-align: end;
+  }
+  @media (min-width: 768px) { .quote { font-size: 2.25rem; line-height: 1.25; } }
+  @media (min-width: 1024px) { .quote { font-size: 44px; } }
+  html[lang="fa"] .quote { letter-spacing: 0; line-height: 1.7; font-size: 1.35rem; }
+  @media (min-width: 768px) { html[lang="fa"] .quote { font-size: 2rem; line-height: 1.6; } }
+  @media (min-width: 1024px) { html[lang="fa"] .quote { font-size: 38px; } }
+
+  /* typewriter pieces */
+  .tw > span { opacity: 0; transition: opacity .12s linear; }
+  .tw.on > span { opacity: 1; }
+
+  .row {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+  }
+  @media (min-width: 640px) { .row { flex-direction: row; } }
+
+  .author {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    min-height: 56px;
+  }
+  @media (min-width: 640px) { .author { width: auto; } }
+  .avatar {
+    width: 56px; height: 56px;
+    border-radius: 9999px;
+    object-fit: cover;
+    flex: none;
+    background: linear-gradient(135deg, #cfd8c4, #8a9a6f);
+  }
+  .author h3 { margin: 0; font-size: 1.125rem; line-height: 1.75rem; font-weight: 500; }
+  .author p { margin: 0; font-size: .875rem; line-height: 1.25rem; color: var(--muted); }
+
+  .nav { display: flex; gap: 8px; width: 100%; justify-content: flex-end; }
+  @media (min-width: 640px) { .nav { width: auto; } }
+  .nav button {
+    width: 56px; height: 56px;
+    border: 0;
+    border-radius: 9999px;
+    background: var(--btn);
+    color: #000;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: background-color .15s, transform .15s;
+    padding: 0;
+  }
+  .nav button:hover { background: var(--btn-hover); }
+  .nav button:active { transform: scale(.95); }
+  .nav button:focus-visible { outline: 2px solid #000; outline-offset: 3px; }
+  .nav svg { width: 24px; height: 24px; }
+  html[dir="rtl"] .nav svg { transform: scaleX(-1); }
+
+  .dots { display: flex; gap: 6px; margin-inline-end: auto; align-items: center; }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rv, .rv-line, .tw > span, .nav button { transition: none !important; }
+    .rv { opacity: 1; transform: none; }
+    .rv-line { transform: none; }
+    .tw > span { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <section id="feedback" aria-labelledby="fb-title">
+    <div class="wrap" id="wrap">
+      <h2 class="title rv" id="fb-title"><span class="tw" data-tw="heading" data-delay="0"></span></h2>
+      <div class="line top rv-line" aria-hidden="true"></div>
+
+      <div class="stage rv" id="stage" role="region" aria-roledescription="carousel" aria-live="polite">
+        <div class="slide" id="slide">
+          <p class="quote"><span class="tw" id="quote"></span></p>
+        </div>
+      </div>
+
+      <div class="line bottom rv-line" aria-hidden="true"></div>
+
+      <div class="row rv">
+        <div class="author" id="author">
+          <img class="avatar" id="avatar" alt="" width="56" height="56" referrerpolicy="no-referrer">
+          <div>
+            <h3><span class="tw" id="name"></span></h3>
+            <p><span class="tw" id="role"></span></p>
+          </div>
+        </div>
+        <div class="nav">
+          <button type="button" id="prev">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+          </button>
+          <button type="button" id="next">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </button>
+        </div>
+      </div>
+      <p class="sr-only" id="status"></p>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var LANG = document.documentElement.lang === 'fa' ? 'fa' : 'en';
+  var RTL = LANG === 'fa';
+  var REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var SPEED = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--type-speed')) || 0.012;
+  var SPRING = { stiffness: 300, damping: 30, mass: 1 };
+  var SLIDE_OFFSET = 100;
+
+  var AVATARS = [
+    'https://picsum.photos/seed/maranda/100/100',
+    'https://picsum.photos/seed/john/100/100',
+    'https://picsum.photos/seed/sarah/100/100'
+  ];
+
+  var I18N = {
+    en: {
+      heading: 'Customer Feedback',
+      prev: 'Previous feedback',
+      next: 'Next feedback',
+      carousel: 'Customer testimonials',
+      status: function (i, n) { return 'Feedback ' + i + ' of ' + n; },
+      items: [
+        { quote: '«Working with the Acreage Ag team gave us a competitive edge in bringing our crops to market. Their technical expertise, machinery, and customer service are outstanding. We consider them a key partner for all our harvesting needs»',
+          author: 'Maranda Walsh', title: 'Operations Manager, GreenAcres Farms' },
+        { quote: '«The team’s dedication and innovative approach transformed our farm operations. They delivered a high-quality harvest on time and within budget. We highly recommend their services.»',
+          author: 'John Doe', title: 'Owner, Valley Wheat Producers' },
+        { quote: '«Exceptional service and outstanding yields. The operators were highly skilled and integrated seamlessly with our in-house farm hands. A truly remarkable partnership.»',
+          author: 'Sarah Smith', title: 'Chief Agronomist, HarvestYield Co.' }
+      ]
+    },
+    fa: {
+      heading: 'نظر مشتریان',
+      prev: 'نظر قبلی',
+      next: 'نظر بعدی',
+      carousel: 'نظرهای مشتریان',
+      status: function (i, n) { return 'نظر ' + toFa(i) + ' از ' + toFa(n); },
+      items: [
+        { quote: '«همکاری با تیم Acreage Ag در رساندن محصول‌مان به بازار برتری واقعی به ما داد. دانش فنی، ماشین‌آلات و خدمات پس از فروششان بی‌نظیر است. آن‌ها را شریک اصلی‌مان در همهٔ کارهای برداشت می‌دانیم.»',
+          author: 'ماراندا والش', title: 'مدیر عملیات، GreenAcres Farms' },
+        { quote: '«تعهد و نگاه نوآورانهٔ این تیم شیوهٔ کار مزرعهٔ ما را از اساس عوض کرد. برداشتی باکیفیت، سر وقت و در چارچوب بودجه تحویل دادند. خدماتشان را بی‌تردید پیشنهاد می‌کنیم.»',
+          author: 'جان دو', title: 'مالک، Valley Wheat Producers' },
+        { quote: '«خدماتی استثنایی و محصولی فراتر از انتظار. اپراتورها کاملاً کاربلد بودند و بی‌دردسر با کارگران خود مزرعه هماهنگ شدند. یک همکاری واقعاً ماندگار.»',
+          author: 'سارا اسمیت', title: 'سرپرست کشاورزی، HarvestYield Co.' }
+      ]
+    }
+  };
+  function toFa(n) { return String(n).replace(/\d/g, function (d) { return '۰۱۲۳۴۵۶۷۸۹'[d]; }); }
+  var T = I18N[LANG];
+
+  var $ = function (id) { return document.getElementById(id); };
+  var wrap = $('wrap'), stage = $('stage'), slide = $('slide');
+  var quoteEl = $('quote'), nameEl = $('name'), roleEl = $('role');
+  var author = $('author'), avatar = $('avatar');
+  var prevBtn = $('prev'), nextBtn = $('next'), statusEl = $('status');
+  if (!wrap || !stage || !slide || !quoteEl || !prevBtn || !nextBtn) return;
+
+  prevBtn.setAttribute('aria-label', T.prev);
+  nextBtn.setAttribute('aria-label', T.next);
+  stage.setAttribute('aria-label', T.carousel);
+
+  /* ---------- Typewriter ----------
+     Latin text reveals per character. Persian is revealed per word so the
+     letters keep their joined (cursive) shapes. */
+  var timers = [];
+  function typeInto(el, text, delay) {
+    el.classList.remove('on');
+    el.textContent = '';
+    var parts = RTL ? text.split(/(\s+)/) : Array.from(text);
+    var step = RTL ? SPEED * 4 : SPEED;
+    var frag = document.createDocumentFragment();
+    parts.forEach(function (ch, i) {
+      if (!ch) return;
+      var s = document.createElement('span');
+      s.textContent = ch;
+      s.style.transitionDelay = REDUCED ? '0s' : (delay + i * step).toFixed(3) + 's';
+      frag.appendChild(s);
+    });
+    el.appendChild(frag);
+    if (REDUCED) { el.classList.add('on'); return; }
+    // force style flush so the transition runs
+    void el.offsetWidth;
+    el.classList.add('on');
+  }
+
+  /* ---------- Spring keyframes (x) ---------- */
+  function springFrames(from, to, cfg) {
+    var k = cfg.stiffness, c = cfg.damping, m = cfg.mass;
+    var x = from, v = 0, dt = 1 / 120, frames = [], t = 0;
+    for (var i = 0; i < 240; i++) {
+      var a = (-k * (x - to) - c * v) / m;
+      v += a * dt; x += v * dt; t += dt;
+      if (i % 2 === 0) frames.push(x);
+      if (Math.abs(x - to) < 0.3 && Math.abs(v) < 2) break;
+    }
+    frames.push(to);
+    return { frames: frames, duration: t * 1000 };
+  }
+  function animateX(el, from, to) {
+    var s = springFrames(from, to, SPRING);
+    var kf = s.frames.map(function (x) { return { transform: 'translateX(' + x.toFixed(2) + 'px)' }; });
+    var ax = el.animate(kf, { duration: s.duration, easing: 'linear', fill: 'both' });
+    return ax;
+  }
+
+  /* ---------- Carousel ---------- */
+  var current = 0, busy = false, queued = null;
+  var N = T.items.length;
+
+  function renderAuthor(i, delayBase) {
+    var it = T.items[i];
+    if (avatar) {
+      avatar.src = AVATARS[i];
+      avatar.alt = it.author;
+    }
+    if (nameEl) typeInto(nameEl, it.author, delayBase + 0.4);
+    if (roleEl) typeInto(roleEl, it.title, delayBase + 0.5);
+  }
+  function renderQuote(i) { typeInto(quoteEl, T.items[i].quote, 0.2); }
+  function announce() { if (statusEl) statusEl.textContent = T.status(current + 1, N); }
+
+  if (avatar) avatar.addEventListener('error', function () { avatar.removeAttribute('src'); });
+
+  function go(dir) {
+    if (busy) { queued = dir; return; }
+    var next = (current + dir + N) % N;
+    if (REDUCED || !slide.animate) {
+      current = next; renderQuote(current); renderAuthor(current, 0); announce(); return;
+    }
+    busy = true;
+    var sign = RTL ? -1 : 1;
+    // exit (mode="wait"): slide moves opposite to direction, fades in 0.2s
+    var exitX = (dir < 0 ? SLIDE_OFFSET : -SLIDE_OFFSET) * sign;
+    slide.style.zIndex = '0';
+    var exitMove = animateX(slide, 0, exitX);
+    var exitFade = slide.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, fill: 'both' });
+    var authorOut = author.animate(
+      [{ opacity: 1, transform: 'translateY(0)' }, { opacity: 0, transform: 'translateY(-10px)' }],
+      { duration: 200, fill: 'both' });
+
+    authorOut.finished.then(function () {
+      renderAuthor(next, -0.0);
+      var aIn = author.animate(
+        [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'translateY(0)' }],
+        { duration: 200, fill: 'both' });
+      aIn.finished.then(function () { aIn.cancel(); authorOut.cancel(); });
+    });
+
+    Promise.all([exitMove.finished, exitFade.finished]).then(function () {
+      current = next;
+      renderQuote(current);
+      announce();
+      slide.style.zIndex = '1';
+      exitMove.cancel(); exitFade.cancel();
+      var enterX = (dir > 0 ? SLIDE_OFFSET : -SLIDE_OFFSET) * sign;
+      var inMove = animateX(slide, enterX, 0);
+      var inFade = slide.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, fill: 'both' });
+      return Promise.all([inMove.finished, inFade.finished]).then(function () {
+        inMove.cancel(); inFade.cancel();
+      });
+    }).catch(function () {}).then(function () {
+      busy = false;
+      if (queued !== null) { var q = queued; queued = null; go(q); }
+    });
+  }
+
+  prevBtn.addEventListener('click', function () { go(-1); });
+  nextBtn.addEventListener('click', function () { go(1); });
+
+  // keyboard arrows (visual direction respects RTL)
+  stage.tabIndex = 0;
+  stage.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowRight') { e.preventDefault(); go(RTL ? -1 : 1); }
+    else if (e.key === 'ArrowLeft') { e.preventDefault(); go(RTL ? 1 : -1); }
+  });
+  stage.style.outlineOffset = '6px';
+
+  // swipe
+  var sx = null, sy = null;
+  stage.addEventListener('pointerdown', function (e) { sx = e.clientX; sy = e.clientY; });
+  stage.addEventListener('pointerup', function (e) {
+    if (sx === null) return;
+    var dx = e.clientX - sx, dy = e.clientY - sy;
+    sx = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+      var forward = dx < 0;
+      if (RTL) forward = !forward;
+      go(forward ? 1 : -1);
+    }
+  });
+  stage.addEventListener('pointercancel', function () { sx = null; });
+
+  /* ---------- Initial reveal (whileInView, once, stagger 0.05) ---------- */
+  var heading = document.querySelector('[data-tw="heading"]');
+  var staggered = wrap.querySelectorAll('.rv, .rv-line');
+  Array.prototype.forEach.call(staggered, function (el, i) {
+    if (!REDUCED) el.style.transitionDelay = (i * 0.05).toFixed(2) + 's';
+  });
+
+  var started = false;
+  function start() {
+    if (started) return;
+    started = true;
+    wrap.classList.add('in');
+    if (heading) typeInto(heading, T.heading, 0);
+    renderQuote(current);
+    renderAuthor(current, 0);
+    announce();
+  }
+  if (REDUCED || !('IntersectionObserver' in window)) {
+    start();
+  } else {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) { start(); io.disconnect(); }
+      });
+    }, { rootMargin: '0px 0px -100px 0px' });
+    io.observe(wrap);
+    // safety net: tiny viewports where -100px margin never intersects
+    setTimeout(start, 1200);
+  }
+})();
+</script>
+</body>
+</html>

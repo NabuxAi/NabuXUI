@@ -1,0 +1,20 @@
+{
+  "title": { "en": "ClearInvoice video hero", "fa": "هیروی ویدیویی ClearInvoice" },
+  "oneLiner": {
+    "en": "Dark SaaS hero over a full-bleed iridescent HLS video, with a tri-colour top bar, staggered fade-up entrance, glowing gradient CTA with a slide-in arrow and a working mobile menu.",
+    "fa": "هیروی تیرهٔ یک محصول SaaS روی ویدیوی HLS رنگین‌کمانیِ تمام‌صفحه، با نوار گرادیانی سه‌رنگ بالای صفحه، ورود پله‌ای محوشونده، دکمهٔ گرادیانی درخشان با فلشی که می‌لغزد و منوی موبایل کارا."
+  },
+  "js": true,
+  "props": [
+    { "name": "STREAM", "type": "url", "default": "https://stream.mux.com/hUT6X11m1Vkw1QMxPOLgI761x2cfpi9bHFbi5cNg4014.m3u8",
+      "note": { "en": "HLS stream played as the background video (hls.js or native HLS).", "fa": "استریم HLS که به‌عنوان ویدیوی پس‌زمینه پخش می‌شود (hls.js یا HLS بومی)." } },
+    { "name": "--accent-from", "type": "color", "default": "#FF3300",
+      "note": { "en": "Start colour of the primary button gradient and logo mark.", "fa": "رنگ آغاز گرادیان دکمهٔ اصلی و نشان لوگو." } },
+    { "name": "--accent-to", "type": "color", "default": "#EE7926",
+      "note": { "en": "End colour of the primary button gradient.", "fa": "رنگ پایان گرادیان دکمهٔ اصلی." } },
+    { "name": "--topbar", "type": "gradient", "default": "linear-gradient(90deg, #ccf, #e7d04c, #31fb78)",
+      "note": { "en": "The 5px gradient strip at the very top of the page.", "fa": "نوار گرادیانی ۵ پیکسلی بالای صفحه." } },
+    { "name": "--stagger", "type": "time", "default": "120ms",
+      "note": { "en": "Delay between each element's fade-up entrance.", "fa": "فاصلهٔ زمانی بین ورود محوشوندهٔ هر عنصر." } }
+  ]
+}

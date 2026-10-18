@@ -1,0 +1,20 @@
+{
+  "title": { "en": "Zyno particle-study landing page", "fa": "صفحهٔ فرود مطالعهٔ ذرات Zyno" },
+  "oneLiner": {
+    "en": "A starry, premium landing page whose hero is a glass column of thousands of glowing particles that morph between flow, wing and vortex formations and scatter away from the cursor. Below: count-up stats, tilting glass feature cards, a billing toggle and a validated waitlist form.",
+    "fa": "صفحهٔ فرودی پرستاره و لوکس که قهرمانش ستونی شیشه‌ای از هزاران ذرهٔ درخشان است؛ ذرات میان آرایش جریان، بال و گرداب تغییر شکل می‌دهند و از نشانگر دور می‌شوند. پایین‌تر: آمار شمارشی، کارت‌های شیشه‌ای کج‌شونده، کلید دورهٔ پرداخت و فرم فهرست انتظار با اعتبارسنجی."
+  },
+  "js": true,
+  "props": [
+    { "name": "N", "type": "number", "default": 5200,
+      "note": { "en": "Particle count on desktop (half on phones).", "fa": "تعداد ذرات در دسکتاپ (در گوشی نصف آن)." } },
+    { "name": "--cyan", "type": "color", "default": "#6fe3ff",
+      "note": { "en": "Accent glow for the particle core, hint dot and eyebrows.", "fa": "رنگ درخشش هستهٔ ذرات، نقطهٔ راهنما و برچسب‌ها." } },
+    { "name": "--violet", "type": "color", "default": "#9a7bff",
+      "note": { "en": "Second gradient stop for headlines and the billing switch.", "fa": "رنگ دوم گرادیان تیترها و کلید پرداخت." } },
+    { "name": "--stage-b", "type": "color", "default": "#262a66",
+      "note": { "en": "Centre colour of the hero stage's radial backdrop.", "fa": "رنگ مرکز پس‌زمینهٔ شعاعی صحنهٔ قهرمان." } },
+    { "name": "mode", "type": "enum", "default": "flow",
+      "note": { "en": "Starting formation: flow, wings or vortex.", "fa": "آرایش آغازین: جریان، بال‌ها یا گرداب." } }
+  ]
+}

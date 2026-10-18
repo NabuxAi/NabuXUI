@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acreage Farming — Roots in Sustainability</title>
+<script>
+  (function () {
+    var p = new URLSearchParams(location.search);
+    var l = p.get('lang') === 'fa' ? 'fa' : 'en';
+    document.documentElement.lang = l;
+    document.documentElement.dir = l === 'fa' ? 'rtl' : 'ltr';
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,500;1,700&family=Vazirmatn:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f0e8;
+    --dark: #0d1f0e;
+    --mid: #2d5a30;
+    --accent: #7dc47f;
+    --gold: #c9a84c;
+    --muted: #5a6b5c;
+    --sand: #e8e0d0;
+    --reveal-dur: 0.7s;
+    --serif: "Playfair Display", Georgia, serif;
+    --sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+    --pad: clamp(20px, 5vw, 72px);
+  }
+  html[lang="fa"] {
+    --serif: "Vazirmatn", "Playfair Display", serif;
+    --sans: "Vazirmatn", "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--dark);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    line-height: 1.6;
+  }
+  img { display: block; max-width: 100%; }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+  .latin { font-family: "Playfair Display", Georgia, serif; }
+  .ltr { direction: ltr; unicode-bidi: isolate; display: inline-block; }
+  .wrap { max-width: 1280px; margin-inline: auto; padding-inline: var(--pad); }
+  section { position: relative; overflow-x: clip; }
+  .eyebrow {
+    font-size: 0.78rem; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--accent); font-weight: 500; margin: 0 0 14px;
+  }
+  .eyebrow.dk { color: var(--mid); }
+  html[lang="fa"] .eyebrow { letter-spacing: 0.02em; font-size: 0.9rem; }
+  h1, h2, h3 { font-family: var(--serif); margin: 0; line-height: 1.1; }
+  html[lang="fa"] h2, html[lang="fa"] h3 { line-height: 1.5; }
+  .arrow { display: inline-block; transition: transform .3s ease; }
+  html[dir="rtl"] .arrow { transform: scaleX(-1); }
+  a:hover .arrow, button:hover .arrow { transform: translateX(4px); }
+  html[dir="rtl"] a:hover .arrow, html[dir="rtl"] button:hover .arrow { transform: scaleX(-1) translateX(4px); }
+
+  /* buttons */
+  .btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    border: 1px solid transparent; border-radius: 999px;
+    padding: 12px 24px; font-weight: 500; font-size: 0.95rem;
+    transition: background .3s ease, color .3s ease, border-color .3s ease, transform .3s ease, box-shadow .3s ease;
+  }
+  .btn-green { background: var(--accent); color: var(--dark); }
+  .btn-green:hover { background: #95d497; transform: translateY(-2px); box-shadow: 0 10px 24px -10px rgba(125,196,127,.7); }
+  .btn-dark { background: var(--dark); color: #fff; padding: 14px 28px; }
+  .btn-dark:hover { background: var(--mid); }
+  .btn-outline { border-color: rgba(255,255,255,.45); color: #fff; }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* NAV */
+  .nav {
+    position: fixed; inset-block-start: 0; inset-inline: 0; z-index: 50;
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    background: rgba(13,31,14,0.05);
+    transition: background .45s ease, box-shadow .45s ease, padding .45s ease;
+    padding-block: 18px;
+  }
+  .nav.scrolled { background: rgba(13,31,14,0.92); box-shadow: 0 8px 30px -12px rgba(0,0,0,.5); padding-block: 12px; }
+  .nav .wrap { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+  .logo { font-family: "Playfair Display", Georgia, serif; font-weight: 700; font-size: 1.35rem; color: #fff; display: inline-flex; align-items: center; gap: 10px; white-space: nowrap; }
+  .logo svg { width: 26px; height: 26px; color: var(--accent); flex: none; }
+  .nav-links { display: flex; gap: 34px; list-style: none; margin: 0; padding: 0; }
+  .nav-links a { color: rgba(255,255,255,.82); font-size: 0.92rem; position: relative; padding-block: 4px; transition: color .3s; }
+  .nav-links a::after { content: ""; position: absolute; inset-inline-start: 0; inset-block-end: 0; width: 0; height: 1px; background: var(--accent); transition: width .3s ease; }
+  .nav-links a:hover { color: #fff; }
+  .nav-links a:hover::after { width: 100%; }
+  .nav-cta { display: flex; align-items: center; gap: 12px; }
+  .burger { display: none; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.06); color: #fff; align-items: center; justify-content: center; }
+  .burger span, .burger span::before, .burger span::after { display: block; width: 18px; height: 1.5px; background: currentColor; position: relative; transition: transform .3s ease, background .3s; }
+  .burger span::before, .burger span::after { content: ""; position: absolute; inset-inline-start: 0; }
+  .burger span::before { top: -6px; } .burger span::after { top: 6px; }
+  .burger[aria-expanded="true"] span { background: transparent; }
+  .burger[aria-expanded="true"] span::before { transform: translateY(6px) rotate(45deg); }
+  .burger[aria-expanded="true"] span::after { transform: translateY(-6px) rotate(-45deg); }
+  .mobile-panel {
+    display: none; position: fixed; inset: 0; z-index: 45; background: rgba(13,31,14,.97);
+    padding: 110px var(--pad) 40px; flex-direction: column; gap: 6px;
+    opacity: 0; visibility: hidden; transition: opacity .35s ease, visibility .35s;
+  }
+  .mobile-panel.open { opacity: 1; visibility: visible; }
+  .mobile-panel a { font-family: var(--serif); color: #fff; font-size: 2rem; padding: 10px 0; border-bottom: 1px solid rgba(125,196,127,.15); }
+  .mobile-panel .btn { margin-top: 24px; align-self: flex-start; font-family: var(--sans); font-size: 1rem; border-bottom: 0; padding: 14px 28px; }
+
+  /* HERO */
+  .hero { position: relative; height: 100vh; height: 100svh; min-height: 620px; overflow: hidden; background: radial-gradient(120% 80% at 30% 20%, #5f7b63 0%, #2d5a30 45%, #0d1f0e 100%); color: #fff; }
+  .hero video, .cine video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
+  .hero .overlay { position: absolute; inset: 0; z-index: 1; background: linear-gradient(to top, rgba(13,31,14,0.95) 0%, rgba(13,31,14,0.35) 60%, transparent 100%); }
+  .hero .content {
+    position: relative; z-index: 2; height: 100%;
+    display: grid; grid-template-columns: 1.35fr 1fr; align-items: end; gap: 48px;
+    padding-block: 120px 110px;
+  }
+  .hero h1 { font-size: clamp(5rem, 10vw, 9rem); font-weight: 900; color: #fff; line-height: 0.92; letter-spacing: -0.02em; font-family: "Playfair Display", Georgia, serif; }
+  .hero h1 em { font-style: italic; font-weight: 700; color: var(--accent); display: block; }
+  .hero-right { padding-block-end: 14px; }
+  .hero-right p { color: rgba(255,255,255,.75); font-size: 1.05rem; max-width: 440px; margin: 0 0 28px; }
+  .pills { display: flex; flex-wrap: wrap; gap: 12px; }
+  .pill { display: inline-flex; align-items: baseline; gap: 8px; border-radius: 999px; padding: 10px 20px; font-size: 0.85rem; animation: floaty 5s ease-in-out infinite; }
+  .pill b { font-family: "Playfair Display", Georgia, serif; font-size: 1.15rem; font-weight: 700; }
+  html[lang="fa"] .pill b { font-family: var(--serif); }
+  .pill.gold { background: var(--gold); color: var(--dark); }
+  .pill.glass { background: rgba(255,255,255,.1); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,.2); animation-delay: -2.5s; }
+  @keyframes floaty { 0%,100% { translate: 0 0; } 50% { translate: 0 -6px; } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+  .fu { opacity: 0; animation: fadeUp .8s ease forwards; }
+  .fu.d1 { animation-delay: .2s; } .fu.d2 { animation-delay: .4s; } .fu.d3 { animation-delay: .6s; } .fu.d4 { animation-delay: .8s; }
+  .scroll-ind { position: absolute; z-index: 2; inset-block-end: 28px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 10px; color: rgba(255,255,255,.6); font-size: 0.7rem; letter-spacing: .25em; text-transform: uppercase; }
+  .scroll-ind i { width: 1px; height: 40px; background: linear-gradient(to bottom, var(--accent), transparent); animation: pulse 2.4s ease-in-out infinite; transform-origin: top; }
+  @keyframes pulse { 0%,100% { opacity: .35; transform: scaleY(.6); } 50% { opacity: 1; transform: scaleY(1); } }
+  .vid-toggle { position: absolute; z-index: 3; inset-block-end: 28px; inset-inline-end: var(--pad); width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,.3); background: rgba(13,31,14,.35); color: #fff; display: grid; place-items: center; backdrop-filter: blur(8px); }
+  .vid-toggle svg { width: 14px; height: 14px; }
+
+  /* STATS */
+  .stats { background: var(--dark); color: #fff; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
+  .stat { padding: 54px 24px; text-align: center; border-inline-start: 1px solid rgba(125,196,127,.18); }
+  .stat:first-child { border-inline-start: 0; }
+  .stat .num { font-family: "Playfair Display", Georgia, serif; color: var(--accent); font-size: clamp(2.2rem, 4vw, 3.4rem); font-weight: 700; line-height: 1; display: block; font-variant-numeric: tabular-nums; }
+  html[lang="fa"] .stat .num { font-family: var(--serif); font-weight: 800; }
+  .stat .lbl { display: block; margin-top: 12px; text-transform: uppercase; letter-spacing: .18em; font-size: .72rem; color: rgba(255,255,255,.6); }
+  html[lang="fa"] .stat .lbl { letter-spacing: 0; font-size: .9rem; }
+
+  /* reveal */
+  .rv { opacity: 0; transform: translateY(40px); transition: opacity var(--reveal-dur) ease, transform var(--reveal-dur) ease; transition-delay: calc(var(--i, 0) * 0.1s); }
+  .rv.left { transform: translateX(-50px); }
+  .rv.right { transform: translateX(50px); }
+  html[dir="rtl"] .rv.left { transform: translateX(50px); }
+  html[dir="rtl"] .rv.right { transform: translateX(-50px); }
+  .rv.scale { transform: scale(.95); }
+  .rv.visible { opacity: 1; transform: none; }
+
+  /* ABOUT */
+  .about { padding-block: clamp(80px, 11vw, 140px); }
+  .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(40px, 7vw, 100px); align-items: center; }
+  .stack { position: relative; padding-block-end: 70px; padding-inline-end: 70px; }
+  .stack .main { border-radius: 14px; overflow: hidden; aspect-ratio: 4/5; background: linear-gradient(160deg, #7d9a6a, #2d5a30); }
+  .stack .main img, .stack .over img { width: 100%; height: 100%; object-fit: cover; }
+  .stack .over { position: absolute; inset-inline-end: 0; inset-block-end: 0; width: 52%; aspect-ratio: 1; border-radius: 14px; overflow: hidden; border: 6px solid var(--bg); background: linear-gradient(160deg, #c9a84c, #7a6a2e); box-shadow: 0 30px 50px -25px rgba(13,31,14,.5); }
+  .stack .since { position: absolute; inset-block-start: 26px; inset-inline-start: -18px; background: var(--dark); color: #fff; border-radius: 12px; padding: 14px 18px; box-shadow: 0 20px 40px -20px rgba(0,0,0,.5); }
+  .stack .since b { display: block; font-family: "Playfair Display", serif; color: var(--accent); font-size: 1.8rem; line-height: 1; }
+  html[lang="fa"] .stack .since b { font-family: var(--serif); }
+  .stack .since span { font-size: .75rem; color: rgba(255,255,255,.7); }
+  .about h2 { font-size: clamp(2.2rem, 4vw, 3.6rem); font-weight: 700; margin-bottom: 24px; }
+  .about h2 em { color: var(--mid); }
+  .about p { color: var(--muted); font-size: 1.05rem; margin: 0 0 18px; max-width: 520px; }
+  .checks { list-style: none; padding: 0; margin: 26px 0 34px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px 20px; }
+  .checks li { display: flex; gap: 10px; align-items: center; font-size: .95rem; }
+  .checks svg { width: 18px; height: 18px; color: var(--mid); flex: none; }
+
+  /* SERVICES */
+  .services { background: #fff; padding-block: clamp(80px, 10vw, 130px); }
+  .head-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 48px; flex-wrap: wrap; }
+  .head-row h2 { font-size: clamp(2.2rem, 4.5vw, 3.8rem); font-weight: 700; }
+  .link { display: inline-flex; gap: 8px; align-items: center; font-weight: 500; color: var(--mid); border-bottom: 1px solid currentColor; padding-bottom: 3px; }
+  .cards3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .scard { position: relative; aspect-ratio: 3/4; border-radius: 14px; overflow: hidden; color: #fff; background: linear-gradient(160deg, #6f8f5b, #0d1f0e); isolation: isolate; }
+  .scard img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .8s cubic-bezier(.2,.7,.2,1); z-index: -2; }
+  .scard::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(to top, rgba(13,31,14,.92) 0%, rgba(13,31,14,.35) 45%, transparent 70%); }
+  .scard .body { position: absolute; inset-inline: 0; inset-block-end: 0; padding: 28px; }
+  .scard .num-tag { position: absolute; inset-block-start: 22px; inset-inline-start: 24px; font-family: "Playfair Display", serif; font-size: .95rem; color: rgba(255,255,255,.8); }
+  .tag { display: inline-block; font-size: .7rem; letter-spacing: .16em; text-transform: uppercase; padding: 5px 12px; border-radius: 999px; background: rgba(125,196,127,.18); border: 1px solid rgba(125,196,127,.45); color: var(--accent); margin-bottom: 12px; }
+  html[lang="fa"] .tag { letter-spacing: 0; font-size: .8rem; }
+  .scard h3 { font-size: 1.8rem; font-weight: 700; }
+  .scard .desc { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows .5s ease, opacity .5s ease, margin .5s ease; color: rgba(255,255,255,.8); font-size: .95rem; }
+  .scard .desc > span { overflow: hidden; }
+  .scard:hover img, .scard:focus-within img { transform: scale(1.05); }
+  .scard:hover .desc, .scard:focus-within .desc { grid-template-rows: 1fr; opacity: 1; margin-top: 10px; }
+
+  /* CINEMATIC */
+  .cine { position: relative; height: 60vh; min-height: 420px; overflow: hidden; color: #fff; display: grid; place-items: center; text-align: center; background: linear-gradient(160deg, #3e5a3f, #0d1f0e); }
+  .cine video { inset-block: -12%; height: 124%; will-change: transform; }
+  .cine .overlay { position: absolute; inset: 0; background: rgba(13,31,14,0.65); z-index: 1; }
+  .cine .q { position: relative; z-index: 2; padding-inline: var(--pad); opacity: 0; transform: translateY(24px); transition: opacity 1.2s ease, transform 1.2s ease; }
+  .cine .q.visible { opacity: 1; transform: none; }
+  .cine blockquote { margin: 0 auto; font-family: var(--serif); font-style: italic; font-size: clamp(1.9rem, 4.6vw, 4rem); line-height: 1.2; max-width: 980px; }
+  html[lang="fa"] .cine blockquote { font-style: normal; font-weight: 500; line-height: 1.6; }
+  .cine .lab { margin-top: 26px; color: var(--accent); font-size: .78rem; letter-spacing: .24em; text-transform: uppercase; }
+  html[lang="fa"] .cine .lab { letter-spacing: 0; font-size: .9rem; }
+
+  /* PORTFOLIO */
+  .portfolio { background: var(--sand); padding-block: clamp(80px, 10vw, 130px); overflow: hidden; }
+  .portfolio .head-row { position: relative; }
+  .watermark { font-family: "Playfair Display", serif; font-size: clamp(4rem, 11vw, 9rem); font-weight: 900; color: rgba(13,31,14,.07); line-height: .8; user-select: none; }
+  .pgrid { display: grid; grid-template-columns: 1.3fr 1fr 1fr; grid-template-rows: 300px 300px; gap: 20px; }
+  .pitem { position: relative; border-radius: 14px; overflow: hidden; background: linear-gradient(160deg, #8a9c6a, #2d5a30); }
+  .pitem:first-child { grid-row: span 2; }
+  .pitem:nth-child(2) { grid-column: 2 / span 2; }
+  .pitem:nth-child(3) { grid-column: 2 / span 2; }
+  .pitem img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s cubic-bezier(.2,.7,.2,1); }
+  .pitem figcaption { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; padding: 26px; color: #fff; background: linear-gradient(to top, rgba(13,31,14,.85), transparent 60%); opacity: 0; transition: opacity .45s ease; }
+  .pitem figcaption small { color: var(--accent); font-size: .78rem; letter-spacing: .14em; text-transform: uppercase; display: inline-flex; gap: 6px; align-items: center; }
+  html[lang="fa"] .pitem figcaption small { letter-spacing: 0; font-size: .85rem; }
+  .pitem figcaption small svg { width: 13px; height: 13px; }
+  .pitem figcaption b { font-family: var(--serif); font-size: 1.5rem; font-weight: 700; }
+  .pitem:hover img, .pitem:focus-within img { transform: scale(1.03); }
+  .pitem:hover figcaption, .pitem:focus-within figcaption { opacity: 1; }
+  .pitem a { position: absolute; inset: 0; z-index: 2; }
+
+  /* EVENT */
+  .event { background: #fff; padding-block: clamp(80px, 10vw, 130px); }
+  .ecard { display: grid; grid-template-columns: 1fr 1fr; border-radius: 12px; overflow: hidden; box-shadow: 0 30px 70px -35px rgba(13,31,14,.45); }
+  .ecard .img { min-height: 460px; background: linear-gradient(160deg, #6f8f5b, #2d5a30); }
+  .ecard .img img { width: 100%; height: 100%; object-fit: cover; }
+  .ecard .panel { background: var(--dark); color: #fff; padding: clamp(32px, 5vw, 64px); display: flex; flex-direction: column; justify-content: center; }
+  .date-badge { align-self: flex-start; display: inline-flex; flex-direction: column; align-items: center; background: rgba(125,196,127,.12); border: 1px solid rgba(125,196,127,.4); border-radius: 10px; padding: 8px 16px; margin-bottom: 22px; color: var(--accent); font-weight: 500; }
+  .ecard h3 { font-size: clamp(1.7rem, 2.8vw, 2.5rem); font-weight: 700; margin-bottom: 22px; }
+  .meta-row { display: flex; flex-wrap: wrap; gap: 10px 26px; color: rgba(255,255,255,.6); font-size: .92rem; margin-bottom: 30px; }
+  .meta-row span { display: inline-flex; align-items: center; gap: 8px; }
+  .meta-row svg { width: 16px; height: 16px; color: var(--accent); }
+  .ecard .btn { align-self: flex-start; }
+  .seats { margin-top: 18px; font-size: .85rem; color: rgba(255,255,255,.55); min-height: 1.4em; }
+  .seats b { color: var(--accent); font-weight: 500; }
+
+  /* BLOG */
+  .blog { background: var(--bg); padding-block: clamp(80px, 10vw, 130px); }
+  .bgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .bcard { background: #fff; border-radius: 14px; overflow: hidden; display: grid; grid-template-columns: 42% 1fr; transition: transform .4s ease, box-shadow .4s ease; }
+  .bcard:hover { transform: translateY(-6px); box-shadow: 0 26px 50px -28px rgba(13,31,14,.45); }
+  .bcard .bimg { background: linear-gradient(160deg, #a0b58a, #2d5a30); overflow: hidden; min-height: 240px; }
+  .bcard .bimg img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s ease; }
+  .bcard:hover .bimg img { transform: scale(1.05); }
+  .bcard .bbody { padding: 24px; display: flex; flex-direction: column; }
+  .bcard .tag { align-self: flex-start; background: rgba(45,90,48,.08); border-color: rgba(45,90,48,.25); color: var(--mid); }
+  .bcard h3 { font-size: 1.28rem; font-weight: 700; margin-bottom: 10px; }
+  .bcard p { color: var(--muted); font-size: .92rem; margin: 0 0 18px; }
+  .bfoot { margin-top: auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: .82rem; color: var(--muted); border-top: 1px solid rgba(13,31,14,.08); padding-top: 14px; }
+  .bfoot a { color: var(--mid); font-weight: 500; display: inline-flex; gap: 6px; align-items: center; }
+
+  /* WHY */
+  .why { background: var(--dark); color: #fff; padding-block: clamp(80px, 10vw, 130px); overflow: hidden; }
+  .why::before { content: ""; position: absolute; inset-block-start: -200px; left: 50%; width: 700px; height: 700px; transform: translateX(-50%); background: radial-gradient(circle, rgba(125,196,127,.16), transparent 65%); pointer-events: none; }
+  .why h2 { text-align: center; font-size: clamp(2rem, 4.2vw, 3.5rem); font-weight: 700; max-width: 860px; margin: 0 auto 60px; }
+  .why h2 em { color: var(--accent); }
+  .why .eyebrow { text-align: center; }
+  .wgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; position: relative; }
+  .wcard { background: rgba(255,255,255,.05); border: 1px solid rgba(125,196,127,.2); border-radius: 16px; padding: 36px 30px; backdrop-filter: blur(8px); transition: transform .4s ease, border-color .4s ease, box-shadow .4s ease, opacity var(--reveal-dur) ease; }
+  .wcard.rv.visible:hover { transform: translateY(-8px); border-color: rgba(125,196,127,.6); box-shadow: 0 0 40px -6px rgba(125,196,127,.35); }
+  .wicon { width: 54px; height: 54px; border-radius: 14px; display: grid; place-items: center; background: rgba(125,196,127,.12); color: var(--accent); margin-bottom: 24px; }
+  .wicon svg { width: 26px; height: 26px; }
+  .wcard h3 { font-size: 1.5rem; font-weight: 700; margin-bottom: 12px; }
+  .wcard p { color: rgba(255,255,255,.65); margin: 0; font-size: .97rem; }
+
+  /* CTA */
+  .cta { background: var(--dark); color: #fff; text-align: center; padding-block: clamp(100px, 13vw, 170px); overflow: hidden; }
+  .cta .bgimg { position: absolute; inset: 0; background: url("https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1920&q=80") center/cover no-repeat; opacity: .2; }
+  .cta .inner { position: relative; z-index: 2; }
+  .cta h2 { font-size: clamp(2.4rem, 6vw, 5.2rem); font-weight: 700; max-width: 900px; margin: 0 auto 24px; }
+  .cta h2 em { color: var(--accent); font-style: italic; }
+  html[lang="fa"] .cta h2 em { font-style: normal; }
+  .cta p { color: rgba(255,255,255,.72); max-width: 580px; margin: 0 auto 38px; font-size: 1.07rem; }
+  .cta .btns { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
+  .leaves { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
+  .leaf { position: absolute; inset-block-start: -40px; width: 18px; height: 18px; color: var(--accent); opacity: .55; animation: fall linear infinite; }
+  .leaf svg { width: 100%; height: 100%; }
+  .leaf:nth-child(1) { inset-inline-start: 8%; animation-duration: 14s; animation-delay: -2s; }
+  .leaf:nth-child(2) { inset-inline-start: 22%; animation-duration: 18s; animation-delay: -9s; width: 12px; height: 12px; }
+  .leaf:nth-child(3) { inset-inline-start: 38%; animation-duration: 16s; animation-delay: -5s; color: var(--gold); }
+  .leaf:nth-child(4) { inset-inline-start: 57%; animation-duration: 20s; animation-delay: -12s; width: 22px; height: 22px; }
+  .leaf:nth-child(5) { inset-inline-start: 71%; animation-duration: 15s; animation-delay: -7s; width: 14px; height: 14px; color: var(--gold); }
+  .leaf:nth-child(6) { inset-inline-start: 86%; animation-duration: 17s; animation-delay: -3s; }
+  .leaf:nth-child(7) { inset-inline-start: 93%; animation-duration: 22s; animation-delay: -15s; width: 10px; height: 10px; }
+  .leaf:nth-child(8) { inset-inline-start: 46%; animation-duration: 19s; animation-delay: -1s; width: 11px; height: 11px; }
+  @keyframes fall {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    25% { transform: translate(30px, 25vh) rotate(90deg); }
+    50% { transform: translate(-20px, 50vh) rotate(200deg); }
+    75% { transform: translate(25px, 75vh) rotate(280deg); }
+    100% { transform: translate(0, 110vh) rotate(360deg); }
+  }
+
+  /* FOOTER */
+  footer { background: var(--dark); color: rgba(255,255,255,.7); border-top: 2px solid var(--accent); padding-block: 80px 0; overflow: hidden; }
+  .fgrid { display: grid; grid-template-columns: 2fr 1fr 1fr 1.2fr; gap: 40px; }
+  footer .logo { margin-bottom: 18px; }
+  footer p { margin: 0 0 24px; max-width: 360px; font-size: .95rem; }
+  footer h4 { color: #fff; font-family: var(--serif); font-size: 1.1rem; margin: 0 0 18px; font-weight: 700; }
+  footer ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; font-size: .93rem; }
+  footer ul a:hover { color: var(--accent); }
+  .socials { display: flex; gap: 10px; }
+  .socials a { width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(125,196,127,.3); display: grid; place-items: center; color: #fff; transition: background .3s, color .3s, border-color .3s; }
+  .socials a:hover { background: var(--accent); color: var(--dark); border-color: var(--accent); }
+  .socials svg { width: 16px; height: 16px; }
+  .fbottom { margin-top: 64px; border-top: 1px solid rgba(255,255,255,.08); padding-top: 22px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; font-size: .82rem; }
+  .bigmark { font-family: "Playfair Display", serif; font-weight: 900; font-size: clamp(3.4rem, 13vw, 12rem); line-height: .85; color: rgba(125,196,127,.08); white-space: nowrap; text-align: center; margin-top: 30px; margin-bottom: -0.12em; user-select: none; direction: ltr; }
+
+  /* RESPONSIVE */
+  @media (max-width: 1020px) {
+    .nav-links { display: none; }
+    .burger { display: inline-flex; }
+    .mobile-panel { display: flex; }
+    .nav-cta .btn { display: none; }
+    .hero .content { grid-template-columns: 1fr; gap: 26px; padding-block-end: 100px; }
+    .bcard { grid-template-columns: 1fr; }
+    .bcard .bimg { min-height: 0; aspect-ratio: 16/10; }
+    .fgrid { grid-template-columns: 1fr 1fr; }
+    .fgrid > :first-child { grid-column: 1 / -1; }
+  }
+  @media (max-width: 767px) {
+    .hero h1 { font-size: clamp(3.4rem, 17vw, 5rem); }
+    .hero-right p { font-size: .98rem; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .stat { padding: 34px 12px; }
+    .stat:nth-child(3) { border-inline-start: 0; }
+    .stat:nth-child(n+3) { border-top: 1px solid rgba(125,196,127,.18); }
+    .about-grid, .cards3, .ecard, .bgrid, .wgrid { grid-template-columns: 1fr; }
+    .stack { padding-inline-end: 40px; padding-block-end: 50px; }
+    .stack .since { inset-inline-start: 10px; }
+    .checks { grid-template-columns: 1fr; }
+    .pgrid { grid-template-columns: 1fr; grid-template-rows: none; grid-auto-rows: 240px; }
+    .pitem:first-child { grid-row: auto; }
+    .pitem:nth-child(2), .pitem:nth-child(3) { grid-column: auto; }
+    .pitem figcaption { opacity: 1; }
+    .scard .desc { grid-template-rows: 1fr; opacity: 1; margin-top: 8px; }
+    .ecard .img { min-height: 260px; }
+    .watermark { position: absolute; inset-inline-end: 0; inset-block-start: -10px; }
+    .fgrid { grid-template-columns: 1fr 1fr; gap: 32px; }
+    .fgrid > :last-child { grid-column: 1 / -1; }
+    .vid-toggle { inset-block-end: 22px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation: none !important; transition-duration: 0.01ms !important; transition-delay: 0s !important; }
+    .fu, .rv, .cine .q { opacity: 1 !important; transform: none !important; }
+    .leaves { display: none; }
+    .cine video { transform: none !important; }
+  }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-sprout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-9"/><path d="M12 12C12 7 8.5 4 3.5 4c0 5 3.5 8 8.5 8z"/><path d="M12 14c0-4 3-7 8.5-7 0 4.5-3.5 7-8.5 7z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M7.8 12.2l2.8 2.8 5.6-5.6"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.3-6 6.5-6s5.9 2.4 6.5 6"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18.5 14.5c1.6.9 2.7 2.8 3 5.5"/></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
+    <symbol id="i-leaf" viewBox="0 0 24 24" fill="currentColor"><path d="M20.5 3.5C11 3.5 4 8.5 4 16c0 1.6.4 3 1 4.2C7 13.5 11 9.8 16 8c-4.3 2.6-7.6 6.5-9.3 12.2 1.3.6 2.7.8 4.1.8 7.2 0 9.7-7.2 9.7-17.5z"/></symbol>
+  </defs>
+</svg>
+
+<header class="nav" id="nav">
+  <div class="wrap">
+    <a href="#top" class="logo" aria-label="Acreage Farming">
+      <svg aria-hidden="true"><use href="#i-sprout"/></svg>Acreage Farming
+    </a>
+    <nav aria-label="Primary">
+      <ul class="nav-links">
+        <li><a href="#about" data-i18n="nav.about">About</a></li>
+        <li><a href="#services" data-i18n="nav.services">Services</a></li>
+        <li><a href="#portfolio" data-i18n="nav.portfolio">Portfolio</a></li>
+        <li><a href="#events" data-i18n="nav.events">Events</a></li>
+        <li><a href="#blog" data-i18n="nav.blog">Blog</a></li>
+      </ul>
+    </nav>
+    <div class="nav-cta">
+      <a href="#join" class="btn btn-green" data-i18n="cta.start">Get Started</a>
+      <button class="burger" id="burger" aria-expanded="false" aria-controls="mpanel" data-i18n-aria="nav.menu" aria-label="Open menu"><span></span></button>
+    </div>
+  </div>
+</header>
+<div class="mobile-panel" id="mpanel" aria-hidden="true">
+  <a href="#about" data-i18n="nav.about">About</a>
+  <a href="#services" data-i18n="nav.services">Services</a>
+  <a href="#portfolio" data-i18n="nav.portfolio">Portfolio</a>
+  <a href="#events" data-i18n="nav.events">Events</a>
+  <a href="#blog" data-i18n="nav.blog">Blog</a>
+  <a href="#join" class="btn btn-green" data-i18n="cta.start">Get Started</a>
+</div>
+
+<main id="top">
+  <!-- HERO -->
+  <section class="hero" aria-labelledby="hero-title">
+    <video id="heroVideo" muted loop playsinline preload="auto" aria-hidden="true">
+      <source src="https://cdn.pixabay.com/video/2025/01/22/254016_large.mp4" type="video/mp4">
+    </video>
+    <div class="overlay" aria-hidden="true"></div>
+    <div class="content wrap">
+      <div>
+        <p class="eyebrow fu d1" data-i18n="hero.eyebrow">// Roots in Sustainability</p>
+        <h1 id="hero-title" class="fu d2">Acreage <em>Farming</em></h1>
+      </div>
+      <div class="hero-right">
+        <p class="fu d3" data-i18n="hero.desc">We partner with growers across six continents to rebuild living soil, save every drop of water we can, and bring in harvests that feed communities today without borrowing from tomorrow.</p>
+        <div class="pills fu d4">
+          <span class="pill gold"><b data-i18n="hero.p1">$14 Billion</b><span data-i18n="hero.p1s">output</span></span>
+          <span class="pill glass"><b data-i18n="hero.p2">126,000+</b><span data-i18n="hero.p2s">farmer partners</span></span>
+        </div>
+      </div>
+    </div>
+    <div class="scroll-ind" aria-hidden="true"><span data-i18n="hero.scroll">Scroll</span><i></i></div>
+    <button class="vid-toggle" id="vidToggle" aria-pressed="false" data-i18n-aria="hero.pause" aria-label="Pause background video">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" id="vidIcon"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
+    </button>
+  </section>
+
+  <!-- STATS -->
+  <section class="stats" aria-label="Key figures" data-i18n-aria="stats.aria">
+    <div class="wrap stats-grid">
+      <div class="stat rv" style="--i:0"><span class="num" data-count="40" data-fmt="plus">40+</span><span class="lbl" data-i18n="stats.1">Harvesting Legacy</span></div>
+      <div class="stat rv" style="--i:1"><span class="num" data-count="190" data-fmt="plus">190+</span><span class="lbl" data-i18n="stats.2">Topographies</span></div>
+      <div class="stat rv" style="--i:2"><span class="num" data-count="126000" data-fmt="plus">126,000+</span><span class="lbl" data-i18n="stats.3">Farmer Partners</span></div>
+      <div class="stat rv" style="--i:3"><span class="num" data-count="14" data-fmt="bn">$14 Billion</span><span class="lbl" data-i18n="stats.4">Agricultural Output</span></div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section class="about" id="about" aria-labelledby="about-title">
+    <div class="wrap about-grid">
+      <div class="stack rv left">
+        <div class="main"><img src="https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=800&q=80" alt="Rows of green crops stretching across a sunlit field" data-i18n-alt="about.alt1" loading="lazy"></div>
+        <div class="over"><img src="https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&q=80" alt="Golden wheat ready for harvest" data-i18n-alt="about.alt2" loading="lazy"></div>
+        <div class="since"><b data-i18n="about.since">1984</b><span data-i18n="about.sinceL">Family-rooted since</span></div>
+      </div>
+      <div class="rv right">
+        <p class="eyebrow dk" data-i18n="about.eyebrow">// Harvesting Legacy</p>
+        <h2 id="about-title" data-i18n-html="about.title">Rooted in Tradition, <em>Growing for the Future</em></h2>
+        <p data-i18n="about.p1">For four decades we have worked the land the way our grandparents taught us — with patience, crop rotation and respect for the seasons — and paired it with the soil science and precision tools of today.</p>
+        <p data-i18n="about.p2">The result is farmland that grows richer every year: higher yields, cleaner rivers downstream, and partner families who can plan for the next generation.</p>
+        <ul class="checks">
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg><span data-i18n="about.c1">Regenerative soil programs</span></li>
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg><span data-i18n="about.c2">Water-smart irrigation</span></li>
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg><span data-i18n="about.c3">Fair-trade grower network</span></li>
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg><span data-i18n="about.c4">Certified organic inputs</span></li>
+        </ul>
+        <a href="#portfolio" class="btn btn-dark"><span data-i18n="about.cta">Explore Our Story</span><span class="arrow" aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section class="services" id="services" aria-labelledby="svc-title">
+    <div class="wrap">
+      <div class="head-row rv">
+        <div>
+          <p class="eyebrow dk" data-i18n="svc.eyebrow">// Our Services</p>
+          <h2 id="svc-title" data-i18n="svc.title">What We Do</h2>
+        </div>
+        <a href="#services" class="link"><span data-i18n="svc.all">All Services</span><span class="arrow" aria-hidden="true">→</span></a>
+      </div>
+      <div class="cards3">
+        <article class="scard rv scale" style="--i:0" tabindex="0">
+          <img src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=600&q=80" alt="" loading="lazy">
+          <span class="num-tag ltr">01</span>
+          <div class="body">
+            <span class="tag" data-i18n="svc.t1">Advisory</span>
+            <h3 data-i18n="svc.h1">Crop Consulting</h3>
+            <div class="desc"><span data-i18n="svc.d1">Agronomists walk your fields, test your soil and build a season plan matched to your climate and market.</span></div>
+          </div>
+        </article>
+        <article class="scard rv scale" style="--i:1" tabindex="0">
+          <img src="https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=600&q=80" alt="" loading="lazy">
+          <span class="num-tag ltr">02</span>
+          <div class="body">
+            <span class="tag" data-i18n="svc.t2">Operations</span>
+            <h3 data-i18n="svc.h2">Field Management</h3>
+            <div class="desc"><span data-i18n="svc.d2">From planting windows to harvest crews, we run day-to-day operations so every acre works at its best.</span></div>
+          </div>
+        </article>
+        <article class="scard rv scale" style="--i:2" tabindex="0">
+          <img src="https://images.unsplash.com/photo-1472141521881-95d0e87e2e76?w=600&q=80" alt="" loading="lazy">
+          <span class="num-tag ltr">03</span>
+          <div class="body">
+            <span class="tag" data-i18n="svc.t3">Data</span>
+            <h3 data-i18n="svc.h3">Yield Analysis</h3>
+            <div class="desc"><span data-i18n="svc.d3">Satellite imagery and sensor data turned into clear reports on what grew, why, and what to change next year.</span></div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- CINEMATIC -->
+  <section class="cine" aria-label="Philosophy" data-i18n-aria="cine.aria">
+    <video id="cineVideo" muted loop playsinline preload="metadata" aria-hidden="true">
+      <source src="https://cdn.pixabay.com/video/2025/01/22/254016_large.mp4" type="video/mp4">
+    </video>
+    <div class="overlay" aria-hidden="true"></div>
+    <div class="q" id="cineQ">
+      <blockquote data-i18n="cine.quote">“Farming is not just work — it is a way of life.”</blockquote>
+      <p class="lab" data-i18n="cine.label">// Acreage Farming Philosophy</p>
+    </div>
+  </section>
+
+  <!-- PORTFOLIO -->
+  <section class="portfolio" id="portfolio" aria-labelledby="pf-title">
+    <div class="wrap">
+      <div class="head-row rv">
+        <div>
+          <p class="eyebrow dk" data-i18n="pf.eyebrow">// Selected Projects</p>
+          <h2 id="pf-title" data-i18n="pf.title">Portfolio</h2>
+        </div>
+        <span class="watermark" aria-hidden="true" data-i18n="pf.year">//2023</span>
+      </div>
+      <div class="pgrid">
+        <figure class="pitem rv scale" style="--i:0; margin:0">
+          <img src="https://images.unsplash.com/photo-1560493676-04071c5f467b?w=800&q=80" alt="Farmer inspecting young plants in a field" data-i18n-alt="pf.alt1" loading="lazy">
+          <figcaption><small><svg aria-hidden="true"><use href="#i-pin"/></svg><span data-i18n="pf.l1">Napa Valley, California</span></small><b data-i18n="pf.n1">Vineyard Soil Regeneration</b></figcaption>
+          <a href="#portfolio" aria-label="Vineyard Soil Regeneration" data-i18n-aria="pf.n1"></a>
+        </figure>
+        <figure class="pitem rv scale" style="--i:1; margin:0">
+          <img src="https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600&q=80" alt="Seedlings being watered in a garden" data-i18n-alt="pf.alt2" loading="lazy">
+          <figcaption><small><svg aria-hidden="true"><use href="#i-pin"/></svg><span data-i18n="pf.l2">Kyoto, Japan</span></small><b data-i18n="pf.n2">Terraced Greenhouse Network</b></figcaption>
+          <a href="#portfolio" aria-label="Terraced Greenhouse Network" data-i18n-aria="pf.n2"></a>
+        </figure>
+        <figure class="pitem rv scale" style="--i:2; margin:0">
+          <img src="https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=600&q=80" alt="Tractor working a wide field" data-i18n-alt="pf.alt3" loading="lazy">
+          <figcaption><small><svg aria-hidden="true"><use href="#i-pin"/></svg><span data-i18n="pf.l3">Canterbury, New Zealand</span></small><b data-i18n="pf.n3">Wheat Belt Crop Rotation</b></figcaption>
+          <a href="#portfolio" aria-label="Wheat Belt Crop Rotation" data-i18n-aria="pf.n3"></a>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- EVENT -->
+  <section class="event" id="events" aria-labelledby="ev-title">
+    <div class="wrap">
+      <article class="ecard rv scale">
+        <div class="img"><img src="https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800&q=80" alt="Hands holding a young plant in soil" data-i18n-alt="ev.alt" loading="lazy"></div>
+        <div class="panel">
+          <p class="eyebrow" data-i18n="ev.eyebrow">// Event</p>
+          <span class="date-badge"><svg width="18" height="18" aria-hidden="true"><use href="#i-cal"/></svg><span data-i18n="ev.date">Jan 2024</span></span>
+          <h3 id="ev-title" data-i18n="ev.title">The Sustainable Agriculture Innovation and Practices Symposium</h3>
+          <div class="meta-row">
+            <span><svg aria-hidden="true"><use href="#i-pin"/></svg><span data-i18n="ev.loc">Rotterdam Expo Centre, Netherlands</span></span>
+            <span><svg aria-hidden="true"><use href="#i-users"/></svg><span data-i18n="ev.cap">1,200 seats · 3 days</span></span>
+          </div>
+          <button class="btn btn-green" id="regBtn" type="button"><span id="regLabel" data-i18n="ev.cta">Register Now</span><span class="arrow" aria-hidden="true">→</span></button>
+          <p class="seats" id="seats" aria-live="polite"></p>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- BLOG -->
+  <section class="blog" id="blog" aria-labelledby="blog-title">
+    <div class="wrap">
+      <div class="head-row rv">
+        <div>
+          <p class="eyebrow dk" data-i18n="blog.eyebrow">// Field Notes</p>
+          <h2 id="blog-title" data-i18n="blog.title">Our Blog</h2>
+        </div>
+        <a href="#blog" class="link"><span data-i18n="blog.all">View All</span><span class="arrow" aria-hidden="true">→</span></a>
+      </div>
+      <div class="bgrid">
+        <article class="bcard rv" style="--i:0">
+          <div class="bimg"><img src="https://images.unsplash.com/photo-1523741543316-beb7fc7023d8?w=600&q=80" alt="" loading="lazy"></div>
+          <div class="bbody"><span class="tag" data-i18n="blog.c1">Soil Health</span><h3 data-i18n="blog.h1">Nurturing the Land for Future Generations</h3><p data-i18n="blog.e1">Cover crops, composting and fewer passes of the plough — small habits that keep topsoil alive for decades.</p><div class="bfoot"><time data-i18n="blog.d1">Mar 12, 2024</time><a href="#blog"><span data-i18n="blog.more">Learn More</span><span class="arrow" aria-hidden="true">→</span></a></div></div>
+        </article>
+        <article class="bcard rv" style="--i:1">
+          <div class="bimg"><img src="https://images.unsplash.com/photo-1530836369250-ef72a3f5cda8?w=600&q=80" alt="" loading="lazy"></div>
+          <div class="bbody"><span class="tag" data-i18n="blog.c2">Organic</span><h3 data-i18n="blog.h2">The Journey to Organic: A Farmer's Perspective</h3><p data-i18n="blog.e2">Three years of transition, one certificate, and the lessons a fourth-generation grower wishes she'd known sooner.</p><div class="bfoot"><time data-i18n="blog.d2">Feb 28, 2024</time><a href="#blog"><span data-i18n="blog.more">Learn More</span><span class="arrow" aria-hidden="true">→</span></a></div></div>
+        </article>
+        <article class="bcard rv" style="--i:2">
+          <div class="bimg"><img src="https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=600&q=80" alt="" loading="lazy"></div>
+          <div class="bbody"><span class="tag" data-i18n="blog.c3">AgroTech</span><h3 data-i18n="blog.h3">AgroTech Innovations Revolutionizing Modern Farming</h3><p data-i18n="blog.e3">Drones, soil probes and variable-rate seeding: the tools that are paying for themselves on working farms.</p><div class="bfoot"><time data-i18n="blog.d3">Feb 9, 2024</time><a href="#blog"><span data-i18n="blog.more">Learn More</span><span class="arrow" aria-hidden="true">→</span></a></div></div>
+        </article>
+        <article class="bcard rv" style="--i:3">
+          <div class="bimg"><img src="https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2?w=600&q=80" alt="" loading="lazy"></div>
+          <div class="bbody"><span class="tag" data-i18n="blog.c4">Community</span><h3 data-i18n="blog.h4">Breaking Stereotypes, Cultivating Success</h3><p data-i18n="blog.e4">Meet the young growers rewriting what a farmer looks like — and the co-ops helping them get started.</p><div class="bfoot"><time data-i18n="blog.d4">Jan 22, 2024</time><a href="#blog"><span data-i18n="blog.more">Learn More</span><span class="arrow" aria-hidden="true">→</span></a></div></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY -->
+  <section class="why" aria-labelledby="why-title">
+    <div class="wrap">
+      <p class="eyebrow rv" data-i18n="why.eyebrow">// Why Us</p>
+      <h2 id="why-title" class="rv" data-i18n-html="why.title">Why Choose <em>Acreage Farming</em> for Your Agricultural Journey?</h2>
+      <div class="wgrid">
+        <div class="wcard rv scale" style="--i:0">
+          <div class="wicon"><svg aria-hidden="true"><use href="#i-sprout"/></svg></div>
+          <h3 data-i18n="why.h1">Quality Assurance</h3>
+          <p data-i18n="why.p1">ISO-certified processes and rigorous quality checks at every stage, from seed selection to the loading dock.</p>
+        </div>
+        <div class="wcard rv scale" style="--i:1">
+          <div class="wicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 19H4.8a1.8 1.8 0 0 1-1.6-2.7L5.5 12"/><path d="M11 19h8.2a1.8 1.8 0 0 0 1.6-2.7l-1.2-2"/><path d="M14 16l-3 3 3 3"/><path d="M8.3 8.5 10.4 5a1.8 1.8 0 0 1 3.1 0l2.3 4"/><path d="M12.7 9.5l3.1.3.3-3.1"/><path d="M5.6 12l-2.8-1.6.9-3"/></svg></div>
+          <h3 data-i18n="why.h2">Sustainability Focus</h3>
+          <p data-i18n="why.p2">Carbon neutral by 2030, with eco-friendly methods that protect pollinators, waterways and the soil itself.</p>
+        </div>
+        <div class="wcard rv scale" style="--i:2">
+          <div class="wicon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.5 21c.8-4 3.8-6.5 7.5-6.5s6.7 2.5 7.5 6.5"/></svg></div>
+          <h3 data-i18n="why.h3">Expert Guidance</h3>
+          <p data-i18n="why.p3">More than 40 years of agricultural expertise, with a dedicated agronomist who knows your fields by name.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta" id="join" aria-labelledby="cta-title">
+    <div class="bgimg" aria-hidden="true"></div>
+    <div class="leaves" aria-hidden="true">
+      <span class="leaf"><svg><use href="#i-leaf"/></svg></span><span class="leaf"><svg><use href="#i-leaf"/></svg></span><span class="leaf"><svg><use href="#i-leaf"/></svg></span><span class="leaf"><svg><use href="#i-leaf"/></svg></span><span class="leaf"><svg><use href="#i-leaf"/></svg></span><span class="leaf"><svg><use href="#i-leaf"/></svg></span><span class="leaf"><svg><use href="#i-leaf"/></svg></span><span class="leaf"><svg><use href="#i-leaf"/></svg></span>
+    </div>
+    <div class="wrap inner rv">
+      <h2 id="cta-title" data-i18n-html="cta.title">Join the Agricultural <em>Revolution</em></h2>
+      <p data-i18n="cta.p">Whether you farm ten acres or ten thousand, we'll help you grow more with less — and leave your land healthier than you found it.</p>
+      <div class="btns">
+        <a href="#top" class="btn btn-green"><span data-i18n="cta.start">Get Started</span><span class="arrow" aria-hidden="true">→</span></a>
+        <a href="#about" class="btn btn-outline" data-i18n="cta.more">Learn More</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="fgrid">
+      <div>
+        <a href="#top" class="logo"><svg aria-hidden="true"><use href="#i-sprout"/></svg>Acreage Farming</a>
+        <p data-i18n="ft.tag">Sustainable agriculture for a growing world — rooted in tradition, guided by science, shared with 126,000 partner farmers.</p>
+        <div class="socials">
+          <a href="#top" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg></a>
+          <a href="#top" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9.5h4v11H3zM9.5 9.5h3.8v1.6h.1c.5-1 1.8-2 3.8-2 4 0 4.8 2.6 4.8 6v5.4h-4v-4.8c0-1.2 0-2.6-1.6-2.6s-1.9 1.2-1.9 2.5v4.9h-4z"/></svg></a>
+          <a href="#top" aria-label="YouTube"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.6 7.2a2.5 2.5 0 0 0-1.8-1.8C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.8 1.8C5.8 19 12 19 12 19s6.2 0 7.8-.4a2.5 2.5 0 0 0 1.8-1.8A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8zM10 15V9l5.2 3z"/></svg></a>
+          <a href="#top" aria-label="X"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.8 3h3.1l-6.8 7.8L22 21h-6.2l-4.9-6.4L5.3 21H2.2l7.3-8.3L2 3h6.4l4.4 5.8zm-1.1 16.2h1.7L7.4 4.7H5.6z"/></svg></a>
+        </div>
+      </div>
+      <nav aria-label="Company" data-i18n-aria="ft.company">
+        <h4 data-i18n="ft.company">Company</h4>
+        <ul><li><a href="#about" data-i18n="nav.about">About</a></li><li><a href="#services" data-i18n="nav.services">Services</a></li><li><a href="#portfolio" data-i18n="nav.portfolio">Portfolio</a></li><li><a href="#top" data-i18n="ft.careers">Careers</a></li></ul>
+      </nav>
+      <nav aria-label="Resources" data-i18n-aria="ft.res">
+        <h4 data-i18n="ft.res">Resources</h4>
+        <ul><li><a href="#blog" data-i18n="nav.blog">Blog</a></li><li><a href="#events" data-i18n="nav.events">Events</a></li><li><a href="#portfolio" data-i18n="ft.cases">Case Studies</a></li><li><a href="#top" data-i18n="ft.faq">FAQ</a></li></ul>
+      </nav>
+      <div>
+        <h4 data-i18n="ft.contact">Contact</h4>
+        <ul>
+          <li><a href="mailto:hello@acreagefarming.com" class="ltr">hello@acreagefarming.com</a></li>
+          <li><span class="ltr">+1 (555) 014-2290</span></li>
+          <li data-i18n="ft.addr">214 Prairie Road, Boulder, Colorado</li>
+        </ul>
+      </div>
+    </div>
+    <div class="fbottom">
+      <span data-i18n="ft.copy">© 2024 Acreage Farming. All rights reserved.</span>
+      <span data-i18n="ft.legal">Privacy · Terms · Cookies</span>
+    </div>
+    <div class="bigmark" aria-hidden="true">Acreage Farming</div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var lang = document.documentElement.lang === 'fa' ? 'fa' : 'en';
+  var I18N = {
+    en: {},
+    fa: {
+      'nav.about': 'درباره ما', 'nav.services': 'خدمات', 'nav.portfolio': 'نمونه‌کارها', 'nav.events': 'رویدادها', 'nav.blog': 'وبلاگ', 'nav.menu': 'باز کردن منو',
+      'cta.start': 'شروع کنید',
+      'hero.eyebrow': '// ریشه در پایداری',
+      'hero.desc': 'در کنار کشاورزانی از شش قاره، خاک زنده را دوباره می‌سازیم، هر قطره آب را که بشود نگه می‌داریم و محصولی برداشت می‌کنیم که امروزِ مردم را سیر کند، بی‌آنکه از سهم فردا بردارد.',
+      'hero.p1': '۱۴ میلیارد دلار', 'hero.p1s': 'ارزش تولید', 'hero.p2': '۱۲۶٬۰۰۰+', 'hero.p2s': 'کشاورز همراه',
+      'hero.scroll': 'پایین بروید', 'hero.pause': 'توقف ویدیوی پس‌زمینه', 'hero.play': 'پخش ویدیوی پس‌زمینه',
+      'stats.aria': 'آمار کلیدی', 'stats.1': 'سال میراث برداشت', 'stats.2': 'گونهٔ زمین و اقلیم', 'stats.3': 'کشاورز همراه', 'stats.4': 'ارزش تولید کشاورزی',
+      'about.alt1': 'ردیف‌های محصول سبز در مزرعه‌ای آفتابی', 'about.alt2': 'گندم طلایی آمادهٔ برداشت',
+      'about.since': '۱۹۸۴', 'about.sinceL': 'ریشه در خانواده از سال',
+      'about.eyebrow': '// میراث برداشت',
+      'about.title': 'ریشه در سنت، <em>رو به آینده</em>',
+      'about.p1': 'چهار دهه است که زمین را همان‌طور کشت می‌کنیم که پدربزرگ‌ها یادمان دادند — با حوصله، تناوب کشت و احترام به فصل‌ها — و آن را با دانش خاک و ابزارهای دقیق امروز همراه کرده‌ایم.',
+      'about.p2': 'نتیجه، زمینی است که هر سال پربارتر می‌شود: محصول بیشتر، رودخانه‌های پاک‌تر در پایین‌دست و خانواده‌هایی که می‌توانند برای نسل بعد برنامه بریزند.',
+      'about.c1': 'برنامه‌های احیای خاک', 'about.c2': 'آبیاری هوشمند و کم‌مصرف', 'about.c3': 'شبکهٔ کشاورزان تجارت منصفانه', 'about.c4': 'نهاده‌های ارگانیک دارای گواهی',
+      'about.cta': 'داستان ما را بخوانید',
+      'svc.eyebrow': '// خدمات ما', 'svc.title': 'کار ما چیست', 'svc.all': 'همهٔ خدمات',
+      'svc.t1': 'مشاوره', 'svc.h1': 'مشاورهٔ کشت', 'svc.d1': 'کارشناسان زراعت در مزرعهٔ شما قدم می‌زنند، خاک را آزمایش می‌کنند و برنامهٔ فصلی متناسب با اقلیم و بازارتان می‌نویسند.',
+      'svc.t2': 'عملیات', 'svc.h2': 'مدیریت مزرعه', 'svc.d2': 'از زمان کاشت تا گروه‌های برداشت، کارهای روزمره را خودمان پیش می‌بریم تا هر جریب بهترین بازده را داشته باشد.',
+      'svc.t3': 'داده', 'svc.h3': 'تحلیل بازده', 'svc.d3': 'تصاویر ماهواره‌ای و داده‌های حسگرها را به گزارش‌های روشن تبدیل می‌کنیم: چه رشد کرد، چرا، و سال بعد چه باید تغییر کند.',
+      'cine.aria': 'فلسفهٔ ما', 'cine.quote': '«کشاورزی فقط یک شغل نیست؛ یک شیوهٔ زندگی است.»', 'cine.label': '// فلسفهٔ Acreage Farming',
+      'pf.eyebrow': '// پروژه‌های منتخب', 'pf.title': 'نمونه‌کارها', 'pf.year': '//۲۰۲۳',
+      'pf.alt1': 'کشاورزی در حال بررسی نهال‌ها در مزرعه', 'pf.alt2': 'آب دادن به نهال‌ها در باغچه', 'pf.alt3': 'تراکتور در حال کار در مزرعه‌ای وسیع',
+      'pf.l1': 'دره ناپا، کالیفرنیا', 'pf.n1': 'احیای خاک تاکستان',
+      'pf.l2': 'کیوتو، ژاپن', 'pf.n2': 'شبکهٔ گلخانه‌های پلکانی',
+      'pf.l3': 'کانتربری، نیوزیلند', 'pf.n3': 'تناوب کشت در کمربند گندم',
+      'ev.alt': 'دست‌هایی که نهالی را در خاک نگه داشته‌اند', 'ev.eyebrow': '// رویداد', 'ev.date': 'ژانویهٔ ۲۰۲۴',
+      'ev.title': 'همایش نوآوری‌ها و شیوه‌های کشاورزی پایدار',
+      'ev.loc': 'مرکز نمایشگاهی روتردام، هلند', 'ev.cap': '۱٬۲۰۰ صندلی · سه روز',
+      'ev.cta': 'همین حالا ثبت‌نام کنید', 'ev.done': 'جای شما رزرو شد', 'ev.left': 'صندلی باقی‌مانده: ', 'ev.undo': 'برای لغو دوباره بزنید.',
+      'blog.eyebrow': '// یادداشت‌های مزرعه', 'blog.title': 'وبلاگ ما', 'blog.all': 'مشاهدهٔ همه', 'blog.more': 'بیشتر بخوانید',
+      'blog.c1': 'سلامت خاک', 'blog.h1': 'پرورش زمین برای نسل‌های آینده', 'blog.e1': 'گیاهان پوششی، کمپوست و شخم کمتر — عادت‌های کوچکی که خاک سطحی را تا دهه‌ها زنده نگه می‌دارند.', 'blog.d1': '۱۲ مارس ۲۰۲۴',
+      'blog.c2': 'ارگانیک', 'blog.h2': 'مسیر ارگانیک شدن از نگاه یک کشاورز', 'blog.e2': 'سه سال گذار، یک گواهی‌نامه و درس‌هایی که کشاورزی از نسل چهارم کاش زودتر می‌دانست.', 'blog.d2': '۲۸ فوریه ۲۰۲۴',
+      'blog.c3': 'فناوری کشاورزی', 'blog.h3': 'نوآوری‌هایی که کشاورزی مدرن را دگرگون می‌کنند', 'blog.e3': 'پهپادها، کاوشگرهای خاک و بذرپاشی با نرخ متغیر: ابزارهایی که در مزرعه‌های واقعی هزینهٔ خودشان را درمی‌آورند.', 'blog.d3': '۹ فوریه ۲۰۲۴',
+      'blog.c4': 'جامعه', 'blog.h4': 'شکستن کلیشه‌ها، کاشتن موفقیت', 'blog.e4': 'با کشاورزان جوانی آشنا شوید که تصویر کشاورز را از نو می‌سازند — و تعاونی‌هایی که شروع کار را برایشان آسان می‌کنند.', 'blog.d4': '۲۲ ژانویه ۲۰۲۴',
+      'why.eyebrow': '// چرا ما', 'why.title': 'چرا <em>Acreage Farming</em> را برای مسیر کشاورزی‌تان انتخاب کنید؟',
+      'why.h1': 'تضمین کیفیت', 'why.p1': 'فرایندهای دارای گواهی ISO و کنترل کیفیت دقیق در هر مرحله، از انتخاب بذر تا بارگیری.',
+      'why.h2': 'تمرکز بر پایداری', 'why.p2': 'کربن‌خنثی تا سال ۲۰۳۰، با روش‌هایی دوستدار محیط زیست که از گرده‌افشان‌ها، آب‌راه‌ها و خودِ خاک محافظت می‌کنند.',
+      'why.h3': 'راهنمایی کارشناسانه', 'why.p3': 'بیش از ۴۰ سال تجربهٔ کشاورزی، همراه با کارشناس زراعتی که مزرعه‌های شما را با نام می‌شناسد.',
+      'cta.title': 'به <em>انقلاب</em> کشاورزی بپیوندید', 'cta.p': 'چه ده جریب کشت کنید چه ده هزار، کمکتان می‌کنیم با منابع کمتر بیشتر برداشت کنید — و زمین را سالم‌تر از روز اول تحویل دهید.', 'cta.more': 'بیشتر بدانید',
+      'ft.tag': 'کشاورزی پایدار برای جهانی رو به رشد — ریشه در سنت، با راهنمایی علم، در کنار ۱۲۶٬۰۰۰ کشاورز همراه.',
+      'ft.company': 'شرکت', 'ft.careers': 'فرصت‌های شغلی', 'ft.res': 'منابع', 'ft.cases': 'مطالعات موردی', 'ft.faq': 'پرسش‌های پرتکرار', 'ft.contact': 'تماس',
+      'ft.addr': 'جادهٔ پریری، پلاک ۲۱۴، بولدر، کلرادو', 'ft.copy': '© ۲۰۲۴ Acreage Farming. همهٔ حقوق محفوظ است.', 'ft.legal': 'حریم خصوصی · شرایط · کوکی‌ها'
+    }
+  };
+  var EN_EXTRA = { 'hero.pause': 'Pause background video', 'hero.play': 'Play background video', 'nav.menu': 'Open menu', 'ev.cta': 'Register Now', 'ev.done': "You're registered", 'ev.left': 'Seats left: ', 'ev.undo': 'Tap again to cancel.' };
+  function t(k) { return (I18N[lang] && I18N[lang][k]) || EN_EXTRA[k] || null; }
+  var faDigits = '۰۱۲۳۴۵۶۷۸۹';
+  function num(n) {
+    var s = Math.round(n).toLocaleString('en-US');
+    if (lang !== 'fa') return s;
+    return s.replace(/,/g, '٬').replace(/\d/g, function (d) { return faDigits[d]; });
+  }
+
+  if (lang === 'fa') {
+    document.querySelectorAll('[data-i18n]').forEach(function (el) { var v = t(el.getAttribute('data-i18n')); if (v) el.textContent = v; });
+    document.querySelectorAll('[data-i18n-html]').forEach(function (el) { var v = t(el.getAttribute('data-i18n-html')); if (v) el.innerHTML = v; });
+    document.querySelectorAll('[data-i18n-alt]').forEach(function (el) { var v = t(el.getAttribute('data-i18n-alt')); if (v) el.alt = v; });
+    document.querySelectorAll('[data-i18n-aria]').forEach(function (el) { var v = t(el.getAttribute('data-i18n-aria')); if (v) el.setAttribute('aria-label', v); });
+    document.title = 'Acreage Farming — ریشه در پایداری';
+  }
+
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* nav scroll state */
+  var nav = document.getElementById('nav');
+  function onScroll() { if (nav) nav.classList.toggle('scrolled', window.scrollY > 40); }
+  window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
+
+  /* mobile menu */
+  var burger = document.getElementById('burger'), panel = document.getElementById('mpanel');
+  function setMenu(open) {
+    if (!burger || !panel) return;
+    burger.setAttribute('aria-expanded', String(open));
+    panel.classList.toggle('open', open);
+    panel.setAttribute('aria-hidden', String(!open));
+    document.body.style.overflow = open ? 'hidden' : '';
+    if (open) nav.classList.add('scrolled'); else onScroll();
+  }
+  if (burger && panel) {
+    burger.addEventListener('click', function () { setMenu(burger.getAttribute('aria-expanded') !== 'true'); });
+    panel.querySelectorAll('a').forEach(function (a) { a.addEventListener('click', function () { setMenu(false); }); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
+    window.addEventListener('resize', function () { if (window.innerWidth > 1020) setMenu(false); });
+  }
+
+  /* videos */
+  var hv = document.getElementById('heroVideo'), cv = document.getElementById('cineVideo');
+  var toggle = document.getElementById('vidToggle'), icon = document.getElementById('vidIcon');
+  var userPaused = reduce;
+  function play(v) { if (!v) return; var p = v.play(); if (p && p.catch) p.catch(function () {}); }
+  function setToggle() {
+    if (!toggle) return;
+    toggle.setAttribute('aria-pressed', String(userPaused));
+    toggle.setAttribute('aria-label', t(userPaused ? 'hero.play' : 'hero.pause'));
+    if (icon) icon.innerHTML = userPaused ? '<path d="M7 4l13 8-13 8z"/>' : '<path d="M6 4h4v16H6zM14 4h4v16h-4z"/>';
+  }
+  [hv, cv].forEach(function (v) { if (v) { v.muted = true; v.addEventListener('error', function () { v.style.display = 'none'; }, true); } });
+  var vio = 'IntersectionObserver' in window ? new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) { if (e.isIntersecting && !userPaused) play(e.target); else e.target.pause(); });
+  }, { threshold: 0.05 }) : null;
+  [hv, cv].forEach(function (v) { if (v && vio) vio.observe(v); });
+  if (!reduce && !vio) { play(hv); play(cv); }
+  if (toggle) toggle.addEventListener('click', function () {
+    userPaused = !userPaused;
+    if (userPaused) { if (hv) hv.pause(); if (cv) cv.pause(); } else { play(hv); }
+    setToggle();
+  });
+  setToggle();
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) { if (hv) hv.pause(); if (cv) cv.pause(); }
+  });
+
+  /* count-up */
+  function fmt(el, n) {
+    var kind = el.getAttribute('data-fmt');
+    if (kind === 'bn') return lang === 'fa' ? num(n) + ' میلیارد دلار' : '$' + num(n) + ' Billion';
+    return num(n) + '+';
+  }
+  var nums = document.querySelectorAll('[data-count]');
+  nums.forEach(function (el) { el.textContent = fmt(el, +el.getAttribute('data-count')); });
+  function countUp(el) {
+    var target = +el.getAttribute('data-count'), dur = 1800, t0 = null;
+    function step(ts) {
+      if (!t0) t0 = ts;
+      var p = Math.min(1, (ts - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+      el.textContent = fmt(el, target * e);
+      if (p < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  /* reveals */
+  var rvs = document.querySelectorAll('.rv'), q = document.getElementById('cineQ');
+  if (reduce || !('IntersectionObserver' in window)) {
+    rvs.forEach(function (el) { el.classList.add('visible'); });
+    if (q) q.classList.add('visible');
+  } else {
+    nums.forEach(function (el) { el.textContent = fmt(el, 0); });
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        e.target.classList.add('visible');
+        var n = e.target.querySelector('[data-count]');
+        if (n) countUp(n);
+        io.unobserve(e.target);
+      });
+    }, { threshold: 0.15 });
+    rvs.forEach(function (el) { io.observe(el); });
+    if (q) io.observe(q);
+  }
+
+  /* cinematic parallax */
+  var cine = document.querySelector('.cine');
+  if (!reduce && cine && cv) {
+    var ticking = false;
+    function para() {
+      ticking = false;
+      var r = cine.getBoundingClientRect(), vh = window.innerHeight;
+      if (r.bottom < 0 || r.top > vh) return;
+      var prog = (r.top + r.height / 2 - vh / 2) / (vh / 2 + r.height / 2);
+      cv.style.transform = 'translate3d(0,' + (prog * -8).toFixed(2) + '%,0)';
+    }
+    window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(para); } }, { passive: true });
+    para();
+  }
+
+  /* event registration */
+  var reg = document.getElementById('regBtn'), regL = document.getElementById('regLabel'), seats = document.getElementById('seats');
+  var left = 214, registered = false;
+  function renderSeats() {
+    if (!seats) return;
+    var b = document.createElement('b'); b.textContent = num(left);
+    seats.textContent = t('ev.left');
+    seats.appendChild(b);
+    if (registered) seats.appendChild(document.createTextNode(' · ' + t('ev.undo')));
+  }
+  if (reg && regL) {
+    reg.addEventListener('click', function () {
+      registered = !registered; left += registered ? -1 : 1;
+      regL.textContent = t(registered ? 'ev.done' : 'ev.cta');
+      reg.setAttribute('aria-pressed', String(registered));
+      renderSeats();
+    });
+    reg.setAttribute('aria-pressed', 'false');
+  }
+  renderSeats();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "title": { "en": "Acreage contact form with inline validation", "fa": "فرم تماس Acreage با اعتبارسنجی درجا" },
+  "oneLiner": {
+    "en": "A clean white contact section for a precision-harvesting brand: the headline types itself in character by character with an Instrument Serif italic accent, underline fields fade up in sequence, and each field shows a green tick or red cross as you leave it.",
+    "fa": "بخش تماس سفید و خلوت برای یک برند برداشت دقیق: تیتر حرف‌به‌حرف تایپ می‌شود، فیلدهای خط‌دار یکی‌یکی بالا می‌آیند و هر فیلد پس از ترک‌شدن تیک سبز یا ضربدر قرمز نشان می‌دهد."
+  },
+  "js": true,
+  "props": [
+    { "name": "--valid", "type": "color", "default": "#27BD09",
+      "note": { "en": "Valid-field tick and the submit button hover colour.", "fa": "رنگ تیک فیلد معتبر و رنگ هاور دکمهٔ ارسال." } },
+    { "name": "--invalid", "type": "color", "default": "#FF1F1F",
+      "note": { "en": "Cross icon shown on invalid required fields.", "fa": "رنگ آیکون ضربدر روی فیلدهای الزامیِ نامعتبر." } },
+    { "name": "--line", "type": "color", "default": "#D9D9D9",
+      "note": { "en": "Field underline and placeholder colour.", "fa": "رنگ خط زیر فیلدها و متن راهنما." } },
+    { "name": "SPEED", "type": "number", "default": 0.012,
+      "note": { "en": "Seconds between characters in the typewriter headline.", "fa": "فاصلهٔ زمانی (ثانیه) بین حروف در تایپ تیتر." } }
+  ]
+}

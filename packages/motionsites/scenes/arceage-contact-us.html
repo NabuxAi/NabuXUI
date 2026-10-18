@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acreage — Contact us</title>
+<script>
+  (function () {
+    var p = new URLSearchParams(location.search);
+    var l = p.get('lang') === 'fa' ? 'fa' : 'en';
+    document.documentElement.lang = l;
+    document.documentElement.dir = l === 'fa' ? 'rtl' : 'ltr';
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Instrument+Serif:ital@0;1&family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ffffff;
+    --ink: #000000;
+    --muted: #1f2937;
+    --line: #D9D9D9;
+    --valid: #27BD09;
+    --invalid: #FF1F1F;
+    --reveal-stagger: 0.1s;
+    --font-sans: "Barlow", ui-sans-serif, system-ui, sans-serif;
+    --font-serif: "Instrument Serif", serif;
+    --tick: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M7.75 12l2.83 2.83 5.67-5.66'/%3E%3C/svg%3E");
+    --cross: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M9.17 14.83l5.66-5.66M14.83 14.83L9.17 9.17'/%3E%3C/svg%3E");
+  }
+  html[lang="fa"] {
+    --font-sans: "Vazirmatn", "Barlow", ui-sans-serif, system-ui, sans-serif;
+    --font-serif: "Vazirmatn", serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+
+  /* Section */
+  #contact {
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100svh;
+    background: var(--bg);
+    color: var(--ink);
+    padding: 96px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  @media (min-width: 768px) { #contact { padding-inline: 48px; } }
+  @media (min-width: 1024px) { #contact { padding-inline: 120px; } }
+
+  .wrap {
+    width: 100%;
+    max-width: 768px;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* Header */
+  .head { text-align: center; margin-bottom: 64px; width: 100%; }
+  .head h2 {
+    font-size: clamp(1.5rem, 4vw, 3.5rem);
+    font-weight: 500;
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+    margin: 0 0 24px;
+  }
+  .head h2 .accent {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 400;
+    color: var(--ink);
+    letter-spacing: 0;
+  }
+  html[lang="fa"] .head h2 { letter-spacing: 0; line-height: 1.45; font-weight: 600; font-size: clamp(1.4rem, 3.4vw, 3rem); }
+  html[lang="fa"] .head h2 .accent { font-style: normal; font-weight: 300; }
+  .head p {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
+    color: var(--muted);
+    margin: 0;
+  }
+  @media (min-width: 768px) { .head p { font-size: 1.25rem; } }
+
+  /* Typewriter */
+  .tw-c { opacity: 0; transition: opacity .25s linear; }
+  .tw.on .tw-c { opacity: 1; }
+  .tw-w { white-space: nowrap; }
+
+  /* Form */
+  form {
+    max-width: 672px;
+    width: 100%;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 8px;
+    transition: border-color .3s, opacity .6s ease-out, transform .6s ease-out;
+  }
+  .field:hover, .field:focus-within { border-color: var(--ink); }
+  .field label { font-size: .875rem; line-height: 1.25rem; font-weight: 500; }
+  .control { position: relative; width: 100%; }
+  .control input {
+    width: 100%;
+    background: transparent;
+    border: 0;
+    outline: none;
+    font: inherit;
+    font-size: 1rem;
+    line-height: 1.5rem;
+    color: var(--ink);
+    padding: 0;
+    padding-inline-end: 32px;
+    transition: color .3s;
+  }
+  .control input::placeholder { color: var(--line); transition: color .3s; opacity: 1; }
+  .control input:focus::placeholder { color: #6b7280; }
+  .control input:focus-visible { box-shadow: none; }
+  .field:focus-within label { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+  html[lang="fa"] .control input[dir="ltr"] { text-align: right; padding-right: 0; padding-left: 32px; }
+  html[lang="fa"] .control input[dir="ltr"]:not(:placeholder-shown) { text-align: left; }
+
+  .icon {
+    position: absolute;
+    inset-inline-end: 0;
+    top: 50%;
+    width: 20px;
+    height: 20px;
+    transform: translateY(-50%) scale(.4);
+    opacity: 0;
+    pointer-events: none;
+    -webkit-mask-size: contain; mask-size: contain;
+    -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+    -webkit-mask-position: center; mask-position: center;
+    transition: opacity .25s ease, transform .3s cubic-bezier(.34,1.56,.64,1);
+  }
+  .icon.ok { background: var(--valid); -webkit-mask-image: var(--tick); mask-image: var(--tick); }
+  .icon.bad { background: var(--invalid); -webkit-mask-image: var(--cross); mask-image: var(--cross); }
+  .icon.ok, .icon.bad { opacity: 1; transform: translateY(-50%) scale(1); }
+
+  .actions { margin-top: 32px; display: flex; flex-direction: column; align-items: center; gap: 14px;
+    transition: opacity .6s ease-out, transform .6s ease-out; }
+  .btn {
+    background: var(--ink);
+    color: #fff;
+    border: 0;
+    padding: 10px 24px;
+    min-height: 44px;
+    border-radius: 9999px;
+    font: inherit;
+    font-size: .875rem;
+    letter-spacing: .025em;
+    cursor: pointer;
+    transition: background-color .3s;
+  }
+  .btn:hover { background: var(--valid); }
+  .btn:focus-visible { outline: 2px solid var(--valid); outline-offset: 3px; }
+  html[lang="fa"] .btn { letter-spacing: 0; }
+  .status { min-height: 1.4em; margin: 0; font-size: .875rem; color: #4b5563; text-align: center; }
+  .status.ok { color: var(--valid); }
+  .status.bad { color: var(--invalid); }
+
+  /* Reveal (formVariants) */
+  .rv { opacity: 0; transform: translateY(20px); }
+  .wrap.in .rv { opacity: 1; transform: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rv { opacity: 1; transform: none; }
+    .tw-c { opacity: 1; transition: none; }
+    .field, .actions, .icon, .btn, .control input { transition: none; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <section id="contact" aria-labelledby="contact-title">
+    <div class="wrap" id="wrap">
+      <div class="head">
+        <h2 id="contact-title">
+          <span class="accent"><span class="tw" data-tw="h1" data-delay="0"></span></span>
+          <span class="tw" data-tw="h2" data-delay="0.2"></span><br>
+          <span class="tw" data-tw="h3" data-delay="0.4"></span>
+        </h2>
+        <p><span class="tw" data-tw="sub" data-delay="0.6"></span></p>
+      </div>
+
+      <form id="form" novalidate>
+        <div class="field rv">
+          <label for="f-name" data-i18n="lName"></label>
+          <div class="control">
+            <input id="f-name" name="name" type="text" required autocomplete="name" data-ph="pName" aria-describedby="i-name">
+            <div class="icon" id="i-name" aria-hidden="true"></div>
+          </div>
+        </div>
+        <div class="field rv">
+          <label for="f-email" data-i18n="lEmail"></label>
+          <div class="control">
+            <input id="f-email" name="email" type="email" dir="ltr" required autocomplete="email" data-ph="pEmail">
+            <div class="icon" id="i-email" aria-hidden="true"></div>
+          </div>
+        </div>
+        <div class="field rv">
+          <label for="f-phone" data-i18n="lPhone"></label>
+          <div class="control">
+            <input id="f-phone" name="phone" type="tel" dir="ltr" required autocomplete="tel" data-ph="pPhone">
+            <div class="icon" id="i-phone" aria-hidden="true"></div>
+          </div>
+        </div>
+        <div class="field rv">
+          <label for="f-farm" data-i18n="lFarm"></label>
+          <div class="control">
+            <input id="f-farm" name="farm" type="text" autocomplete="organization" data-ph="pFarm">
+            <div class="icon" id="i-farm" aria-hidden="true"></div>
+          </div>
+        </div>
+        <div class="field rv">
+          <label for="f-message" data-i18n="lMsg"></label>
+          <div class="control">
+            <input id="f-message" name="message" type="text" data-ph="pMsg">
+            <div class="icon" id="i-message" aria-hidden="true"></div>
+          </div>
+        </div>
+        <div class="actions rv">
+          <button class="btn" type="submit" data-i18n="send"></button>
+          <p class="status" id="status" role="status" aria-live="polite"></p>
+        </div>
+      </form>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var I18N = {
+    en: {
+      h1: "Let's grow!", h2: 'Fill in the form', h3: "and we'll be in touch",
+      sub: 'Ask us about our precision harvesting services',
+      lName: 'Your Name*', pName: "Who's reaching out?",
+      lEmail: 'Email*', pEmail: 'Where can we reach you?',
+      lPhone: 'Phone Number*', pPhone: 'Best number to call you on?',
+      lFarm: 'Farm / Company', pFarm: 'Your farm or organization?',
+      lMsg: 'Tell Us More', pMsg: 'What crops or acreage would you like to discuss?',
+      send: 'Send Message', sent: 'Message Sent',
+      fix: 'Please check the highlighted fields — phone numbers start with +.',
+      thanks: "Thanks, {name}! We'll be in touch shortly."
+    },
+    fa: {
+      h1: 'بیایید با هم رشد کنیم!', h2: 'فرم را پر کنید', h3: 'تا به‌زودی با شما تماس بگیریم',
+      sub: 'دربارهٔ خدمات برداشت دقیق ما بپرسید',
+      lName: 'نام شما*', pName: 'چه کسی پیام می‌دهد؟',
+      lEmail: 'ایمیل*', pEmail: 'از چه راهی به شما برسیم؟',
+      lPhone: 'شمارهٔ تلفن*', pPhone: 'بهترین شماره برای تماس با شما؟',
+      lFarm: 'مزرعه / شرکت', pFarm: 'نام مزرعه یا سازمان شما؟',
+      lMsg: 'بیشتر برایمان بگویید', pMsg: 'دربارهٔ کدام محصول یا چه وسعتی از زمین می‌خواهید صحبت کنیم؟',
+      send: 'ارسال پیام', sent: 'پیام فرستاده شد',
+      fix: 'لطفاً فیلدهای مشخص‌شده را بررسی کنید؛ شمارهٔ تلفن با + شروع می‌شود.',
+      thanks: '{name}، ممنون! به‌زودی با شما در تماس خواهیم بود.'
+    }
+  };
+  var lang = document.documentElement.lang === 'fa' ? 'fa' : 'en';
+  var T = I18N[lang];
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var SPEED = 0.012; // seconds between characters (Typewriter speed)
+
+  document.title = lang === 'fa' ? 'Acreage — تماس با ما' : 'Acreage — Contact us';
+  document.querySelectorAll('[data-i18n]').forEach(function (el) { el.textContent = T[el.getAttribute('data-i18n')]; });
+  document.querySelectorAll('[data-ph]').forEach(function (el) { el.placeholder = T[el.getAttribute('data-ph')]; });
+
+  /* Typewriter: per-character in Latin; per-word in Persian so letters stay joined */
+  var tws = [];
+  document.querySelectorAll('[data-tw]').forEach(function (el) {
+    var text = T[el.getAttribute('data-tw')];
+    var delay = parseFloat(el.getAttribute('data-delay')) || 0;
+    el.setAttribute('aria-label', text);
+    var frag = document.createDocumentFragment();
+    var i = 0;
+    var words = text.split(' ');
+    words.forEach(function (w, wi) {
+      var ws = document.createElement('span');
+      ws.className = 'tw-w';
+      ws.setAttribute('aria-hidden', 'true');
+      if (lang === 'fa') {
+        var c = document.createElement('span');
+        c.className = 'tw-c';
+        c.textContent = w;
+        c.style.transitionDelay = (delay + i * SPEED * 4) + 's';
+        i += w.length;
+        ws.appendChild(c);
+      } else {
+        Array.prototype.forEach.call(w, function (ch) {
+          var c = document.createElement('span');
+          c.className = 'tw-c';
+          c.textContent = ch;
+          c.style.transitionDelay = (delay + i * SPEED) + 's';
+          i++;
+          ws.appendChild(c);
+        });
+      }
+      frag.appendChild(ws);
+      if (wi < words.length - 1) { frag.appendChild(document.createTextNode(' ')); i++; }
+    });
+    el.appendChild(frag);
+    tws.push(el);
+  });
+
+  /* Staggered reveal of form fields */
+  var wrap = document.getElementById('wrap');
+  var rvs = wrap ? wrap.querySelectorAll('.rv') : [];
+  Array.prototype.forEach.call(rvs, function (el, idx) {
+    el.style.transitionDelay = reduced ? '0s' : (0.3 + idx * 0.1) + 's';
+    el.addEventListener('transitionend', function once(e) {
+      if (e.propertyName === 'transform') { el.style.transitionDelay = ''; el.removeEventListener('transitionend', once); }
+    });
+  });
+  function reveal() {
+    if (wrap) wrap.classList.add('in');
+    tws.forEach(function (t) { t.classList.add('on'); });
+  }
+  if (reduced || !('IntersectionObserver' in window)) {
+    reveal();
+  } else {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) { reveal(); io.disconnect(); }
+      });
+    }, { rootMargin: '0px 0px -100px 0px' });
+    if (wrap) io.observe(wrap);
+  }
+
+  /* Form state + validation */
+  var form = document.getElementById('form');
+  var status = document.getElementById('status');
+  if (!form) return;
+  var FIELDS = { name: true, email: true, phone: true, farm: false, message: false };
+  var formData = { name: '', email: '', phone: '', farm: '', message: '' };
+  var touched = { name: false, email: false, phone: false, farm: false, message: false };
+
+  function toLatinDigits(s) {
+    return s.replace(/[۰-۹]/g, function (d) { return String(d.charCodeAt(0) - 0x06F0); })
+            .replace(/[٠-٩]/g, function (d) { return String(d.charCodeAt(0) - 0x0660); });
+  }
+  function validations() {
+    return {
+      name: formData.name.trim().length > 0,
+      email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email),
+      phone: /^\+[\d\s\-\(\)]{7,20}$/.test(toLatinDigits(formData.phone)),
+      farm: formData.farm.trim().length > 0,
+      message: formData.message.trim().length > 0
+    };
+  }
+  function renderIcon(name) {
+    var icon = document.getElementById('i-' + name);
+    var input = form.elements[name];
+    if (!icon || !input) return;
+    icon.classList.remove('ok', 'bad');
+    input.removeAttribute('aria-invalid');
+    if (!touched[name]) return;
+    var v = validations()[name];
+    var required = FIELDS[name];
+    if (v && (required || formData[name].length > 0)) icon.classList.add('ok');
+    else if (!v && required) { icon.classList.add('bad'); input.setAttribute('aria-invalid', 'true'); }
+  }
+  function handleChange(e) {
+    var n = e.target.name;
+    if (!(n in formData)) return;
+    formData[n] = e.target.value;
+    renderIcon(n);
+    if (status && status.textContent && status.classList.contains('bad')) { status.textContent = ''; status.className = 'status'; }
+  }
+  function handleBlur(e) {
+    var n = e.target.name;
+    if (!(n in touched)) return;
+    touched[n] = true;
+    renderIcon(n);
+  }
+  form.addEventListener('input', handleChange);
+  form.addEventListener('focusout', handleBlur);
+
+  var btn = form.querySelector('.btn');
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    Object.keys(touched).forEach(function (k) { touched[k] = true; renderIcon(k); });
+    var v = validations();
+    var bad = Object.keys(FIELDS).filter(function (k) { return FIELDS[k] && !v[k]; });
+    if (bad.length) {
+      if (status) { status.className = 'status bad'; status.textContent = T.fix; }
+      var first = form.elements[bad[0]];
+      if (first) first.focus();
+      return;
+    }
+    if (status) {
+      status.className = 'status ok';
+      status.textContent = T.thanks.replace('{name}', formData.name.trim().split(/\s+/)[0]);
+    }
+    if (btn) {
+      btn.textContent = T.sent;
+      setTimeout(function () { btn.textContent = T.send; }, 2600);
+    }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "title": { "en": "Red In Black flow-field shader background", "fa": "پس‌زمینهٔ شیدری میدان جریان «سرخ در سیاه»" },
+  "oneLiner": {
+    "en": "A full-screen WebGL flow field of crimson smoke folding through black, with a cursor spotlight that bends the current. Includes palette swaps, speed, pause and spotlight controls.",
+    "fa": "میدان جریان تمام‌صفحهٔ WebGL که دود ارغوانی را در دل سیاهی تا می‌زند و نورافکنِ نشانگر جریان را خم می‌کند. پالت، سرعت، توقف و نورافکن قابل تنظیم‌اند."
+  },
+  "js": true,
+  "props": [
+    { "name": "--c3", "type": "color", "default": "#a3123f",
+      "note": { "en": "Main crimson tone of the smoke (palette slot 3 of 4).", "fa": "رنگ اصلی ارغوانیِ دود (خانهٔ سوم از چهار رنگ پالت)." } },
+    { "name": "--c4", "type": "color", "default": "#f08a6e",
+      "note": { "en": "Highlight colour on the brightest folds.", "fa": "رنگ هایلایت روی روشن‌ترین چین‌ها." } },
+    { "name": "--speed", "type": "number", "default": 1,
+      "note": { "en": "Flow speed multiplier for the animation clock.", "fa": "ضریب سرعت جریان در ساعت انیمیشن." } },
+    { "name": "--spot-radius", "type": "number", "default": 0.35,
+      "note": { "en": "Radius of the cursor spotlight in shader units.", "fa": "شعاع نورافکن نشانگر بر حسب واحد شیدر." } }
+  ]
+}

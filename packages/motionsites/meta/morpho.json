@@ -1,0 +1,20 @@
+{
+  "title": { "en": "MORPHO particle butterfly simulator", "fa": "شبیه‌ساز پروانهٔ ذره‌ای مورفو" },
+  "oneLiner": {
+    "en": "A WebGL butterfly of tens of thousands of shimmering blue, violet and gold particles inside a glass column; the wings flap, swirl and light up around your cursor, with palette tabs, light sweep, scatter and wind controls.",
+    "fa": "پروانه‌ای WebGL از ده‌ها هزار ذرهٔ درخشان آبی، بنفش و طلایی درون یک ستون شیشه‌ای؛ بال‌ها می‌تپند و دور نشانگر می‌چرخند و روشن می‌شوند، همراه با زبانه‌های پالت، جاروی نور، پراکندن ذرات و کنترل باد."
+  },
+  "js": true,
+  "props": [
+    { "name": "CONFIG.particles", "type": "number", "default": 34000,
+      "note": { "en": "Particle count on desktop (18,000 under 640px).", "fa": "تعداد ذرات در دسکتاپ (زیر ۶۴۰ پیکسل ۱۸٬۰۰۰)." } },
+    { "name": "CONFIG.cursorRadius", "type": "number", "default": 0.75,
+      "note": { "en": "World-space radius in which the cursor swirls and lights the particles.", "fa": "شعاع اثر نشانگر در فضای صحنه که ذرات در آن می‌چرخند و روشن می‌شوند." } },
+    { "name": "CONFIG.flapAmp", "type": "number", "default": 0.42,
+      "note": { "en": "Maximum wing fold angle in radians while flapping.", "fa": "بیشینهٔ زاویهٔ تاشدن بال‌ها هنگام بال‌زدن (رادیان)." } },
+    { "name": "--accent", "type": "color", "default": "#7fd6ff",
+      "note": { "en": "UI accent for active controls; follows the selected palette.", "fa": "رنگ تأکید کنترل‌های فعال؛ همراه پالت انتخاب‌شده عوض می‌شود." } },
+    { "name": "--stage-b", "type": "color", "default": "#2b2c63",
+      "note": { "en": "Centre colour of the indigo stage gradient.", "fa": "رنگ مرکز گرادیان نیلی صحنه." } }
+  ]
+}

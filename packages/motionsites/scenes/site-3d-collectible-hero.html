@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TOONHUB — 3D Collectible Hero</title>
+<script>
+  (function () {
+    var p = new URLSearchParams(location.search);
+    var l = p.get('lang') === 'fa' ? 'fa' : 'en';
+    document.documentElement.lang = l;
+    document.documentElement.dir = l === 'fa' ? 'rtl' : 'ltr';
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=Vazirmatn:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F4845F;
+    --ease: cubic-bezier(0.4, 0, 0.2, 1);
+    --dur: 650ms;
+    --ink: #ffffff;
+    --font-body: 'Inter', sans-serif;
+    --font-display: 'Anton', sans-serif;
+  }
+  html[lang="fa"] {
+    --font-body: 'Vazirmatn', 'Inter', sans-serif;
+    --font-display: 'Vazirmatn', 'Anton', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: var(--font-body); overflow-x: hidden; }
+
+  .hero {
+    position: relative; width: 100%; overflow: hidden;
+    background-color: var(--bg);
+    transition: background-color var(--dur) var(--ease);
+  }
+  .stage { position: relative; width: 100%; height: 100vh; height: 100svh; min-height: 520px; overflow: hidden; }
+
+  .grain {
+    position: absolute; inset: 0; pointer-events: none; z-index: 50; opacity: .4;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.08'/%3E%3C/svg%3E");
+    background-size: 200px 200px; background-repeat: repeat;
+  }
+
+  .ghost {
+    position: absolute; inset-inline: 0; top: 18%; z-index: 2;
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none; user-select: none;
+    font-family: var(--font-display); font-size: clamp(90px, 28vw, 380px);
+    font-weight: 900; color: #fff; line-height: 1; text-transform: uppercase;
+    letter-spacing: -0.02em; white-space: nowrap; margin: 0;
+  }
+  html[lang="fa"] .ghost { font-size: clamp(80px, 24vw, 330px); letter-spacing: 0; line-height: 1.1; top: 14%; }
+
+  .brand {
+    position: absolute; top: 24px; inset-inline-start: 16px; z-index: 60;
+    font-size: 12px; font-weight: 600; text-transform: uppercase;
+    opacity: .9; letter-spacing: .18em; color: #fff; text-decoration: none; font-family: 'Inter', sans-serif;
+  }
+
+  .carousel { position: absolute; inset: 0; z-index: 3; margin: 0; padding: 0; list-style: none; }
+  .item {
+    position: absolute; aspect-ratio: 0.6 / 1;
+    transition: transform var(--dur) var(--ease), filter var(--dur) var(--ease),
+                opacity var(--dur) var(--ease), left var(--dur) var(--ease),
+                height var(--dur) var(--ease), bottom var(--dur) var(--ease);
+    will-change: transform, filter, opacity;
+  }
+  .item img {
+    display: block; width: 100%; height: 100%; object-fit: contain; object-position: bottom center;
+    -webkit-user-drag: none; user-select: none;
+  }
+  .item::after { /* soft floor shadow, visible while the PNG streams in */
+    content: ""; position: absolute; left: 15%; right: 15%; bottom: -1%; height: 4%;
+    background: radial-gradient(closest-side, rgba(0,0,0,.18), transparent); z-index: -1;
+  }
+  .item[data-role="side"], .item[data-role="back"] { cursor: pointer; }
+
+  .info {
+    position: absolute; bottom: 24px; inset-inline-start: 16px; z-index: 60; max-width: 320px;
+  }
+  .info h1 {
+    margin: 0 0 8px; font-size: 16px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .02em; opacity: .95; line-height: 1.2;
+  }
+  .info p { display: none; margin: 0 0 16px; font-size: 12px; line-height: 1.6; opacity: .85; }
+  .nav { display: flex; gap: 12px; }
+  .btn {
+    width: 48px; height: 48px; border-radius: 50%; border: 2px solid #fff; background: transparent;
+    color: #fff; display: grid; place-items: center; cursor: pointer; padding: 0;
+    transition: transform 150ms, background-color 150ms;
+  }
+  .btn:hover { transform: scale(1.08); background: rgba(255,255,255,.12); }
+  .btn:focus-visible, .discover:focus-visible, .brand:focus-visible { outline: 2px solid #fff; outline-offset: 4px; }
+  .btn svg { width: 26px; height: 26px; }
+  html[dir="rtl"] .btn svg, html[dir="rtl"] .discover svg { transform: scaleX(-1); }
+
+  .discover {
+    position: absolute; bottom: 24px; inset-inline-end: 16px; z-index: 60;
+    display: flex; align-items: center; gap: .25em;
+    font-family: var(--font-display); font-size: clamp(20px, 4vw, 56px); font-weight: 400;
+    color: #fff; opacity: .95; letter-spacing: -0.02em; line-height: 1; text-transform: uppercase;
+    text-decoration: none; transition: opacity 200ms;
+  }
+  html[lang="fa"] .discover { font-weight: 900; letter-spacing: 0; line-height: 1.3; }
+  .discover:hover { opacity: 1; }
+  .discover svg { width: 20px; height: 20px; flex: none; }
+
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  @media (min-width: 640px) {
+    .brand { inset-inline-start: 32px; }
+    .info { bottom: 80px; inset-inline-start: 96px; }
+    .info h1 { margin-bottom: 12px; font-size: 22px; }
+    .info p { display: block; font-size: 14px; margin-bottom: 20px; }
+    .btn { width: 64px; height: 64px; }
+    .discover { bottom: 80px; inset-inline-end: 40px; }
+    .discover svg { width: 32px; height: 32px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero, .item, .btn, .discover { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<main class="hero" id="hero">
+  <section class="stage" aria-roledescription="carousel" aria-labelledby="ttl">
+    <div class="grain" aria-hidden="true"></div>
+
+    <p class="ghost" aria-hidden="true" data-i18n="ghost">3D SHAPE</p>
+
+    <a class="brand" href="#hero">TOONHUB</a>
+
+    <ul class="carousel" id="carousel" aria-live="polite"></ul>
+
+    <div class="info">
+      <h1 id="ttl" data-i18n="title">TOONHUB FIGURINES</h1>
+      <p data-i18n="desc">The artwork is stunning, shipped fully prepared. The finish is a vision, the 3D craft is flawless. Many thanks! Wishing you the win. Order now.</p>
+      <div class="nav">
+        <button class="btn" type="button" id="prev" data-i18n-aria="prev" aria-label="Previous figurine">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+        </button>
+        <button class="btn" type="button" id="next" data-i18n-aria="next" aria-label="Next figurine">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </button>
+      </div>
+      <span class="sr-only" id="status" aria-live="polite"></span>
+    </div>
+
+    <a class="discover" href="#hero" id="discover">
+      <span data-i18n="discover">DISCOVER IT</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+    </a>
+  </section>
+</main>
+
+<script>
+(function () {
+  var BASE = 'https://fifth-gentle-45902158.figma.site/_components/v2/4de492f6d9cf8244ad5293233e5c6f52407d42fc/';
+  var IMAGES = [
+    { src: BASE + '1.02464a56.png', bg: '#F4845F', panel: '#F79B7F' },
+    { src: BASE + '2.b977faab.png', bg: '#6BBF7A', panel: '#85CC92' },
+    { src: BASE + '3.4df853b4.png', bg: '#E882B4', panel: '#ED9DC4' },
+    { src: BASE + '4.4457fbce.png', bg: '#6EB5FF', panel: '#8DC4FF' }
+  ];
+  var LOCK_MS = 650;
+  var MOBILE_BP = 640;
+
+  var I18N = {
+    en: {
+      ghost: '3D SHAPE', title: 'TOONHUB FIGURINES',
+      desc: 'The artwork is stunning, shipped fully prepared. The finish is a vision, the 3D craft is flawless. Many thanks! Wishing you the win. Order now.',
+      discover: 'DISCOVER IT', prev: 'Previous figurine', next: 'Next figurine',
+      fig: 'TOONHUB figurine', of: function (a, b) { return 'Figurine ' + a + ' of ' + b; }
+    },
+    fa: {
+      ghost: 'سه‌بعدی', title: 'فیگورهای TOONHUB',
+      desc: 'طراحی‌اش خیره‌کننده است و کاملاً آماده به دستت می‌رسد. پرداختش رؤیایی است و ساخت سه‌بعدی‌اش بی‌نقص. صمیمانه ممنونیم و برایت بهترین‌ها را آرزو می‌کنیم. همین حالا سفارش بده.',
+      discover: 'کشفش کن', prev: 'فیگور قبلی', next: 'فیگور بعدی',
+      fig: 'فیگور TOONHUB', of: function (a, b) { return 'فیگور ' + toFa(a) + ' از ' + toFa(b); }
+    }
+  };
+  function toFa(n) { return String(n).replace(/\d/g, function (d) { return '۰۱۲۳۴۵۶۷۸۹'[d]; }); }
+
+  var lang = document.documentElement.lang === 'fa' ? 'fa' : 'en';
+  var rtl = document.documentElement.dir === 'rtl';
+  var T = I18N[lang];
+  document.querySelectorAll('[data-i18n]').forEach(function (el) {
+    var k = el.getAttribute('data-i18n'); if (typeof T[k] === 'string') el.textContent = T[k];
+  });
+  document.querySelectorAll('[data-i18n-aria]').forEach(function (el) {
+    var k = el.getAttribute('data-i18n-aria'); if (T[k]) el.setAttribute('aria-label', T[k]);
+  });
+
+  var hero = document.getElementById('hero');
+  var list = document.getElementById('carousel');
+  var status = document.getElementById('status');
+  if (!hero || !list) return;
+
+  var activeIndex = 0, isAnimating = false;
+  var isMobile = window.innerWidth < MOBILE_BP;
+
+  // preload
+  IMAGES.forEach(function (im) { var i = new Image(); i.src = im.src; });
+
+  var items = IMAGES.map(function (im, i) {
+    var li = document.createElement('li');
+    li.className = 'item';
+    var img = document.createElement('img');
+    img.src = im.src; img.alt = T.fig + ' ' + (lang === 'fa' ? toFa(i + 1) : (i + 1));
+    img.draggable = false; img.decoding = 'async';
+    li.appendChild(img);
+    li.addEventListener('click', function () {
+      var r = li.dataset.pos;
+      if (r === 'right') navigate(rtl ? 'prev' : 'next');
+      else if (r === 'left') navigate(rtl ? 'next' : 'prev');
+      else if (r === 'back') navigate('next');
+    });
+    list.appendChild(li);
+    return li;
+  });
+
+  function styleFor(role) {
+    var m = isMobile;
+    if (role === 'center') return { t: 'translateX(-50%) scale(' + (m ? 1.25 : 1.68) + ')', f: 'none', o: 1, z: 20, l: '50%', h: m ? '60%' : '92%', b: m ? '22%' : '0%' };
+    if (role === 'left') return { t: 'translateX(-50%) scale(1)', f: 'blur(2px)', o: .85, z: 10, l: m ? '20%' : '30%', h: m ? '16%' : '28%', b: m ? '32%' : '12%' };
+    if (role === 'right') return { t: 'translateX(-50%) scale(1)', f: 'blur(2px)', o: .85, z: 10, l: m ? '80%' : '70%', h: m ? '16%' : '28%', b: m ? '32%' : '12%' };
+    return { t: 'translateX(-50%) scale(1)', f: 'blur(4px)', o: 1, z: 5, l: '50%', h: m ? '13%' : '22%', b: m ? '32%' : '12%' };
+  }
+
+  function render() {
+    var n = IMAGES.length;
+    var roles = {};
+    roles[activeIndex] = 'center';
+    // "prev" figure sits on the reading-start side, "next" on the reading-end side
+    roles[(activeIndex + 3) % n] = rtl ? 'right' : 'left';
+    roles[(activeIndex + 1) % n] = rtl ? 'left' : 'right';
+    roles[(activeIndex + 2) % n] = 'back';
+    items.forEach(function (li, i) {
+      var r = roles[i], s = styleFor(r);
+      li.dataset.pos = r;
+      li.dataset.role = r === 'center' ? 'center' : (r === 'back' ? 'back' : 'side');
+      li.style.transform = s.t; li.style.filter = s.f; li.style.opacity = s.o;
+      li.style.zIndex = s.z; li.style.left = s.l; li.style.height = s.h; li.style.bottom = s.b;
+      li.setAttribute('aria-hidden', r === 'center' ? 'false' : 'true');
+    });
+    hero.style.setProperty('--bg', IMAGES[activeIndex].bg);
+    document.body.style.setProperty('--bg', IMAGES[activeIndex].bg);
+    if (status) status.textContent = T.of(activeIndex + 1, n);
+  }
+
+  function navigate(dir) {
+    if (isAnimating) return;
+    isAnimating = true;
+    var n = IMAGES.length;
+    activeIndex = dir === 'next' ? (activeIndex + 1) % n : (activeIndex + n - 1) % n;
+    render();
+    setTimeout(function () { isAnimating = false; }, LOCK_MS);
+  }
+
+  var prev = document.getElementById('prev'), next = document.getElementById('next');
+  if (prev) prev.addEventListener('click', function () { navigate('prev'); });
+  if (next) next.addEventListener('click', function () { navigate('next'); });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowRight') navigate(rtl ? 'prev' : 'next');
+    else if (e.key === 'ArrowLeft') navigate(rtl ? 'next' : 'prev');
+  });
+
+  // swipe
+  var sx = null;
+  list.addEventListener('pointerdown', function (e) { sx = e.clientX; });
+  window.addEventListener('pointerup', function (e) {
+    if (sx === null) return;
+    var dx = e.clientX - sx; sx = null;
+    if (Math.abs(dx) > 50) navigate((dx < 0) !== rtl ? 'next' : 'prev');
+  });
+
+  var rt;
+  window.addEventListener('resize', function () {
+    clearTimeout(rt);
+    rt = setTimeout(function () {
+      var m = window.innerWidth < MOBILE_BP;
+      if (m !== isMobile) { isMobile = m; render(); }
+    }, 80);
+  });
+
+  var disc = document.getElementById('discover');
+  if (disc) disc.addEventListener('click', function (e) { e.preventDefault(); navigate('next'); });
+
+  render();
+})();
+</script>
+</body>
+</html>

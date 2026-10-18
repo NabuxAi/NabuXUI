@@ -1,0 +1,20 @@
+{
+  "title": { "en": "Acreage Farming agricultural landing page", "fa": "صفحهٔ فرود کشاورزی Acreage Farming" },
+  "oneLiner": {
+    "en": "A premium sustainable-farming site: a misty aerial video hero with a giant Playfair headline, gold and glass stat pills and a pulsing scroll line, then count-up stats, hover-reveal service cards, a parallax video quote, portfolio, event registration, blog, glass 'why us' cards and a CTA with drifting leaves.",
+    "fa": "سایتی شیک برای کشاورزی پایدار: هیروی ویدیویی هوایی و مه‌آلود با تیتر سریفِ عظیم، قرص‌های آماری طلایی و شیشه‌ای و خط پیمایشِ تپنده؛ سپس آمارهای شمارنده، کارت‌های خدمات با توضیح در هاور، نقل‌قولی روی ویدیوی پارالاکس، نمونه‌کارها، ثبت‌نام رویداد، وبلاگ، کارت‌های شیشه‌ای «چرا ما» و فراخوانی با برگ‌های شناور."
+  },
+  "js": true,
+  "props": [
+    { "name": "--accent", "type": "color", "default": "#7dc47f",
+      "note": { "en": "Light green for eyebrows, stat numbers, highlights and the primary buttons.", "fa": "سبز روشنِ برچسب‌ها، اعداد آمار، تأکیدها و دکمه‌های اصلی." } },
+    { "name": "--dark", "type": "color", "default": "#0d1f0e",
+      "note": { "en": "Deep forest green used for the stats bar, event panel, 'why us', CTA and footer.", "fa": "سبز جنگلیِ تیره برای نوار آمار، پنل رویداد، بخش «چرا ما»، فراخوان و پانویس." } },
+    { "name": "--gold", "type": "color", "default": "#c9a84c",
+      "note": { "en": "Gold of the hero output pill and some falling leaves.", "fa": "طلاییِ قرص ارزش تولید در هیرو و برخی برگ‌های شناور." } },
+    { "name": "--bg", "type": "color", "default": "#f5f0e8",
+      "note": { "en": "Warm cream page background.", "fa": "زمینهٔ کرمیِ گرم صفحه." } },
+    { "name": "--reveal-dur", "type": "time", "default": "0.7s",
+      "note": { "en": "Duration of the scroll fade-up / slide-in reveals (staggered 0.1s per item).", "fa": "مدت ظاهرشدن بخش‌ها هنگام پیمایش (با فاصلهٔ ۰٫۱ ثانیه بین آیتم‌ها)." } }
+  ]
+}

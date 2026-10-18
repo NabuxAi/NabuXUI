@@ -1,0 +1,20 @@
+{
+  "title": { "en": "Hand prosthesis 3D simulator", "fa": "شبیه‌ساز سه‌بعدی پروتز دست" },
+  "oneLiner": {
+    "en": "A dark three.js configurator for a robotic prosthetic hand: tune position, wall thickness, flexibility, wrist rotation and grip force live, pick and hide layers, switch wireframe/solid/X-ray, and play a cinematic intro, a print-reveal sweep and an exploded view over a drifting gold particle landscape.",
+    "fa": "پیکربندی‌کنندهٔ تیرهٔ three.js برای یک دست مصنوعی رباتیک: موقعیت، ضخامت دیواره، انعطاف، چرخش مچ و نیروی گرفتن را زنده تنظیم کنید، لایه‌ها را انتخاب یا پنهان کنید، بین حالت سیمی، توپر و اشعهٔ ایکس جابه‌جا شوید و ورود سینمایی، نمایش چاپ لایه‌به‌لایه و نمای انفجاری را روی چشم‌اندازی از ذرات طلایی ببینید."
+  },
+  "js": true,
+  "props": [
+    { "name": "--accent", "type": "color", "default": "#ff3d1f",
+      "note": { "en": "Signal red for slider thumbs, toggles, the primary tool and the selection ring.", "fa": "قرمز شاخص برای دستگیرهٔ اسلایدرها، سوئیچ‌ها، ابزار اصلی و حلقهٔ انتخاب." } },
+    { "name": "--gold", "type": "color", "default": "#d6a531",
+      "note": { "en": "Tone of the gold particle terrain behind the app frame.", "fa": "رنگ چشم‌انداز ذرات طلایی پشت قاب برنامه." } },
+    { "name": "--left-w", "type": "length", "default": "280px",
+      "note": { "en": "Width of the Position / Parameters column.", "fa": "پهنای ستون موقعیت و پارامترها." } },
+    { "name": "--right-w", "type": "length", "default": "252px",
+      "note": { "en": "Width of the floating Layers / Animations panels.", "fa": "پهنای پنل‌های شناور لایه‌ها و انیمیشن‌ها." } },
+    { "name": "S.grip", "type": "number", "default": 85,
+      "note": { "en": "Initial grip force (%) — drives finger curl and the max-load badge.", "fa": "نیروی گرفتن اولیه (درصد) که خم شدن انگشت‌ها و نشان بار حداکثر را تعیین می‌کند." } }
+  ]
+}

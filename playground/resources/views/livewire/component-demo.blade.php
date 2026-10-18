@@ -21,6 +21,12 @@
     // should read fully English, the copyable snippet included — or a
     // per-framework map, which must stay intact for the renderer below.
     $code = $demo['code'] ?? null;
+    // A MotionSites demo (generated ms-* manifests) carries a `scene` slug: the
+    // stage frames the standalone scene and the snippet is its HTML source.
+    $scene = $demo['scene'] ?? null;
+    if (is_string($scene) && $code === null) {
+        $code = \App\Support\MotionSites::source($scene);
+    }
     if (is_array($code) && (isset($code['fa']) || isset($code['en']))) {
         $code = DemoCatalog::pick($code, $locale);
     }
@@ -82,7 +88,9 @@
                         {{ $say('The component as it is used in a product — not a specimen grid.', 'کامپوننت همان‌طور که در محصول به‌کار می‌رود — نه یک گرید نمونه‌وار.') }}
                     </p>
                 </div>
-                @if ($hasScenarios)
+                @if (is_string($scene) && \App\Support\MotionSites::sceneFile($scene) !== null)
+                    @include('demos.motionsites.stage', ['scene' => $scene])
+                @elseif ($hasScenarios)
                     @include(DemoCatalog::viewName($group, $slug))
                 @else
                     <x-nx::empty-state icon="wand" :title="$say('Demo in the making', 'دمو در راه است')"
@@ -157,7 +165,7 @@
                         <h2 class="pg-title" id="demo-snippet-title" style="margin: 0">{{ $say('Snippet', 'تکه‌کد') }}</h2>
                         <x-nx::copy-button :value="$code" variant="secondary" size="sm">{{ $say('Copy', 'کپی') }}</x-nx::copy-button>
                     </div>
-                    <pre dir="ltr" style="margin: 0; padding: 1rem 1.25rem; overflow-x: auto; border: 1px solid var(--nx-border); border-radius: var(--nx-radius-lg); background: var(--nx-surface-2); font: 500 var(--nx-text-sm) / 1.7 var(--nx-font-mono)"><code>{{ $code }}</code></pre>
+                    <pre dir="ltr" style="margin: 0; padding: 1rem 1.25rem; overflow-x: auto; border: 1px solid var(--nx-border); border-radius: var(--nx-radius-lg); background: var(--nx-surface-2); font: 500 var(--nx-text-sm) / 1.7 var(--nx-font-mono){{ is_string($scene) ? '; max-block-size: 32rem' : '' }}"><code>{{ $code }}</code></pre>
                 </section>
             @endif
 

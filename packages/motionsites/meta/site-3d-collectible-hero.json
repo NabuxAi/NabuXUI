@@ -1,0 +1,20 @@
+{
+  "title": { "en": "TOONHUB 3D collectible figurine carousel hero", "fa": "هیروی چرخ‌وفلکی فیگورهای سه‌بعدی TOONHUB" },
+  "oneLiner": {
+    "en": "A full-viewport figurine carousel: a giant Anton “3D SHAPE” sits behind four 3D characters that rotate between centre, side and back slots, with blur, scale and the page colour crossfading over 650 ms. Arrow buttons, keyboard arrows, swipe and clicking a side figure all rotate it.",
+    "fa": "یک چرخ‌وفلک تمام‌صفحه برای فیگورها: نوشتهٔ غول‌آسای «سه‌بعدی» پشت چهار شخصیت سه‌بعدی می‌نشیند و آن‌ها بین جایگاه وسط، کناره‌ها و پشت می‌چرخند؛ تاری، مقیاس و رنگ پس‌زمینه در ۶۵۰ میلی‌ثانیه نرم عوض می‌شوند. دکمه‌های فلش، کلیدهای جهت‌نما، کشیدن انگشت و کلیک روی فیگور کناری همه آن را می‌چرخانند."
+  },
+  "js": true,
+  "props": [
+    { "name": "IMAGES", "type": "array", "default": "4 × { src, bg, panel }",
+      "note": { "en": "The figurine PNGs and the page colour each one brings (#F4845F, #6BBF7A, #E882B4, #6EB5FF).", "fa": "تصاویر PNG فیگورها و رنگ پس‌زمینه‌ای که هرکدام همراه دارد." } },
+    { "name": "--dur", "type": "time", "default": "650ms",
+      "note": { "en": "Length of the crossfade for positions, blur, opacity and background.", "fa": "مدت جابه‌جایی نرم موقعیت، تاری، شفافیت و رنگ پس‌زمینه." } },
+    { "name": "--ease", "type": "string", "default": "cubic-bezier(0.4, 0, 0.2, 1)",
+      "note": { "en": "Easing curve shared by every carousel transition.", "fa": "منحنی شتاب مشترک همهٔ گذارهای چرخ‌وفلک." } },
+    { "name": "LOCK_MS", "type": "number", "default": 650,
+      "note": { "en": "Milliseconds navigation stays locked after each step.", "fa": "مدت قفل‌بودن ناوبری پس از هر جابه‌جایی (میلی‌ثانیه)." } },
+    { "name": "MOBILE_BP", "type": "number", "default": 640,
+      "note": { "en": "Below this width the figures switch to the compact mobile layout.", "fa": "زیر این عرض، فیگورها به چیدمان فشردهٔ موبایل می‌روند." } }
+  ]
+}

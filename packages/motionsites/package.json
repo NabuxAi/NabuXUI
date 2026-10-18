@@ -1,0 +1,16 @@
+{
+  "name": "@nabuxai/motionsites",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The MotionSites prompt collection ported to live, bilingual NabuXUI scenes",
+  "type": "module",
+  "files": ["catalog.json", "scenes", "meta", "thumbs"],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "check": "node scripts/check.mjs",
+    "thumbs": "node scripts/thumbs.mjs"
+  },
+  "devDependencies": {
+    "playwright-core": "1.56.1"
+  }
+}

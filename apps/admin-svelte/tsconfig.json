@@ -10,6 +10,9 @@
     "paths": {
       "@nabuxai/ui-core": [
         "../../packages/core/src/js/index.ts"
+      ],
+      "@nabuxai/ui-svelte": [
+        "../../packages/svelte/src/index.ts"
       ]
     }
   },

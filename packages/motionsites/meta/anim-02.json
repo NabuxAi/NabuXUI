@@ -1,0 +1,20 @@
+{
+  "title": { "en": "Lumen glassmorphism dashboard suite", "fa": "مجموعهٔ داشبورد شیشه‌ای Lumen" },
+  "oneLiner": {
+    "en": "A glassmorphic design-system dashboard over drifting aurora blobs: backdrop-blur sidebar and cards with white/10 hairlines, spinning neon borders, count-up stats, a range-switching chart with tooltip, validating multi-state form controls, a loader state machine, a draggable vector canvas with live matrix, and a dark/frosted-light theme switch.",
+    "fa": "داشبورد سیستم طراحی به سبک شیشه‌ای روی لکه‌های رنگی شناور: سایدبار و کارت‌هایی با تاری پس‌زمینه و حاشیهٔ مویی سفید، لبه‌های نئونی چرخان، آمارهای شمارنده، نمودار با تغییر بازه و راهنمای شناور، کنترل‌های چندحالتهٔ فرم با اعتبارسنجی، ماشین حالت لودرها، بوم وکتور کشیدنی با ماتریس زنده و جابه‌جایی بین پوستهٔ تیره و روشن مات."
+  },
+  "js": true,
+  "props": [
+    { "name": "--blur", "type": "length", "default": "18px",
+      "note": { "en": "Backdrop blur radius of every glass surface (also driven by the in-page slider).", "fa": "شعاع تاری پس‌زمینهٔ همهٔ سطوح شیشه‌ای (اسلایدر داخل صفحه هم آن را تغییر می‌دهد)." } },
+    { "name": "--border", "type": "color", "default": "rgba(255, 255, 255, .10)",
+      "note": { "en": "The 1px white/10 hairline around cards, inputs and controls.", "fa": "خط مویی یک‌پیکسلی سفید با شفافیت ده درصد دور کارت‌ها و کنترل‌ها." } },
+    { "name": "--neon", "type": "color", "default": "#7c5cff",
+      "note": { "en": "Primary neon accent for buttons, focus rings and the spinning border.", "fa": "رنگ نئونی اصلی دکمه‌ها، حلقهٔ فوکوس و لبهٔ چرخان." } },
+    { "name": "--neon-2", "type": "color", "default": "#22e1ff",
+      "note": { "en": "Secondary cyan accent for the chart line, active nav and loaders.", "fa": "رنگ تأکید فیروزه‌ای برای خط نمودار، منوی فعال و لودرها." } },
+    { "name": "--glass", "type": "color", "default": "rgba(255, 255, 255, .055)",
+      "note": { "en": "Translucent fill of glass surfaces.", "fa": "رنگ نیمه‌شفاف سطوح شیشه‌ای." } }
+  ]
+}

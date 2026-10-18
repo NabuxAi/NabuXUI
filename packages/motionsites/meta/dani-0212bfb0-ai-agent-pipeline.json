@@ -1,0 +1,20 @@
+{
+  "title": { "en": "AI agent pipeline live monitor", "fa": "پایشگر زندهٔ خط لولهٔ ایجنت هوش مصنوعی" },
+  "oneLiner": {
+    "en": "A dark, monospace ops card that animates a request flowing from trigger through vector search into an LLM agent, then fanning out into parallel tool calls with status dots, a typing execution log and live stats. Pause, step, change speed, simulate a tool failure or click any node to jump the run.",
+    "fa": "کارتی تیره با حال‌وهوای کنسول که مسیر یک درخواست را از تریگر و جست‌وجوی برداری تا ایجنت LLM و سپس انشعاب به فراخوانی‌های هم‌زمان ابزارها نشان می‌دهد؛ با نقطه‌های وضعیت، گزارش اجرای زنده و آمار لحظه‌ای. می‌توانید اجرا را متوقف کنید، گام‌به‌گام جلو بروید، سرعت را عوض کنید، خطای ابزار را شبیه‌سازی کنید یا با کلیک روی هر گره به آن مرحله بپرید."
+  },
+  "js": true,
+  "props": [
+    { "name": "--accent", "type": "color", "default": "#2f5cff",
+      "note": { "en": "Electric blue for wires, travelling pulses and the LLM node glow.", "fa": "آبی برقی برای سیم‌ها، پالس‌های روان و درخشش گره LLM." } },
+    { "name": "--ok", "type": "color", "default": "#22c55e",
+      "note": { "en": "Live indicator and completed tool-call dots.", "fa": "نشانگر زنده و نقطهٔ ابزارهای کامل‌شده." } },
+    { "name": "--hot", "type": "color", "default": "#f59e0b",
+      "note": { "en": "Dot colour of the tool call currently running.", "fa": "رنگ نقطهٔ ابزاری که در حال اجراست." } },
+    { "name": "STEP_MS", "type": "number", "default": 1700,
+      "note": { "en": "Milliseconds per pipeline stage at 1× speed.", "fa": "مدت هر مرحلهٔ خط لوله به میلی‌ثانیه در سرعت ۱×." } },
+    { "name": "BASE_WORKFLOWS", "type": "number", "default": 1397,
+      "note": { "en": "Starting value of the workflows counter, incremented after every completed run.", "fa": "مقدار آغازین شمارندهٔ گردش‌کارها که پس از هر اجرای کامل یکی بالا می‌رود." } }
+  ]
+}

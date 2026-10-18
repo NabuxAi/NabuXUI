@@ -1,0 +1,18 @@
+{
+  "title": { "en": "NEXOVA planet 404 page", "fa": "صفحهٔ ۴۰۴ سیاره‌ای نکسووا" },
+  "oneLiner": {
+    "en": "A full-viewport 404 page for a hosting brand: a looping Earth-from-space video behind a glowing giant 404, a liquid-glass return button, a staggered mobile menu and a six-column footer with a validated newsletter form.",
+    "fa": "صفحهٔ خطای ۴۰۴ تمام‌صفحه برای یک برند هاستینگ: ویدیوی چرخان زمین از فضا پشت عدد درخشان و غول‌پیکر ۴۰۴، دکمهٔ بازگشت شیشه‌ای، منوی موبایل با ورود پله‌ای و فوتر شش‌ستونه با فرم خبرنامهٔ اعتبارسنجی‌شده."
+  },
+  "js": true,
+  "props": [
+    { "name": "--grad-from", "type": "color", "default": "#34d399",
+      "note": { "en": "Start colour of the emerald-to-cyan gradient on LOG IN and SEND IT.", "fa": "رنگ شروع گرادیان زمردی به فیروزه‌ای در دکمه‌های ورود و ارسال." } },
+    { "name": "--grad-to", "type": "color", "default": "#06b6d4",
+      "note": { "en": "End colour of the button gradient.", "fa": "رنگ پایان گرادیان دکمه‌ها." } },
+    { "name": "--glow", "type": "color", "default": "rgba(255, 255, 255, 0.3)",
+      "note": { "en": "Inner text-shadow glow around the giant 404.", "fa": "هالهٔ درخشش داخلی دور عدد بزرگ ۴۰۴." } },
+    { "name": "#bgv src", "type": "url", "default": "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260613_180732_a54afbf6-b30d-470e-861f-669871f09f67.mp4",
+      "note": { "en": "Background Earth-from-space video; a CSS planet shows if it fails.", "fa": "ویدیوی پس‌زمینهٔ زمین از فضا؛ اگر بارگذاری نشود سیارهٔ CSS نمایش داده می‌شود." } }
+  ]
+}

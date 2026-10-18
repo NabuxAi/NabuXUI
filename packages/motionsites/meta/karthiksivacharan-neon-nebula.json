@@ -1,0 +1,18 @@
+{
+  "title": { "en": "Neon Nebula animated ASCII star field", "fa": "میدان ستاره‌ای اسکی متحرک «نئون نبولا»" },
+  "oneLiner": {
+    "en": "A violet nebula drawn from thousands of square ASCII 'star' glyphs that breathe in a looping wave; the glow follows the pointer, clicks send ripples, and speed, density and hue are adjustable. Shown as a hero plus pricing-card, feature-tile and terminal backgrounds.",
+    "fa": "سحابی بنفشی که از هزاران نویسهٔ مربعی اسکی به سبک «ستاره» ساخته شده و در موجی حلقه‌ای نفس می‌کشد؛ درخشش دنبال نشانگر می‌رود، کلیک موج می‌فرستد و سرعت، تراکم و رنگ قابل تنظیم‌اند. در قالب هیرو و پس‌زمینهٔ کارت قیمت، کاشی ویژگی و ترمینال نمایش داده می‌شود."
+  },
+  "js": true,
+  "props": [
+    { "name": "--nebula-hue", "type": "number", "default": "268",
+      "note": { "en": "Hue of the glyph field and every accent (violet by default).", "fa": "فام رنگ میدان نویسه‌ها و همهٔ تأکیدها (پیش‌فرض بنفش)." } },
+    { "name": "--cell", "type": "length", "default": "16px",
+      "note": { "en": "Grid pitch of the ASCII cells; smaller means a denser field.", "fa": "فاصلهٔ شبکهٔ خانه‌های اسکی؛ کوچک‌تر یعنی میدانی متراکم‌تر." } },
+    { "name": "--speed", "type": "number", "default": "1",
+      "note": { "en": "Multiplier for the wave and drift animation speed.", "fa": "ضریب سرعت موج و جابه‌جایی سحابی." } },
+    { "name": "--radius", "type": "length", "default": "14px",
+      "note": { "en": "Corner radius of the variant cards.", "fa": "شعاع گوشهٔ کارت‌های نمونه." } }
+  ]
+}

@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Super Travel — high-contrast landing page</title>
+<script>
+  (function () {
+    var p = new URLSearchParams(location.search);
+    var lang = p.get('lang') === 'fa' ? 'fa' : 'en';
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'fa' ? 'rtl' : 'ltr';
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Manrope:wght@300;400;500;700;800&family=Instrument+Serif:ital@0;1&family=Noto+Naskh+Arabic:wght@500;700&family=Vazirmatn:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f2f2f2;
+    --bg-2: #f6f6f6;
+    --ink: #111111;
+    --line: #1e1e1e;
+    --muted: #b6b5b5;
+    --muted-2: #838282;
+    --echo-1: #bfbfbf;
+    --echo-2: #c9c9c9;
+    --echo-3: #d1d1d1;
+    --echo-4: #d9d9d9;
+    --echo-step: 0.04em;
+    --reveal: 700ms;
+    --ease: cubic-bezier(0.77, 0, 0.175, 1);
+    --nav-h: 80px;
+    --display: 'Archivo', 'Arial Black', sans-serif;
+    --body: 'Manrope', system-ui, sans-serif;
+    --serif: 'Instrument Serif', Georgia, serif;
+  }
+  html[lang="fa"] {
+    --display: 'Vazirmatn', 'Archivo', sans-serif;
+    --body: 'Vazirmatn', 'Manrope', sans-serif;
+    --serif: 'Noto Naskh Arabic', 'Vazirmatn', serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body);
+    font-weight: 500;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+  .wrap { width: min(1280px, 100%); margin-inline: auto; padding-inline: clamp(16px, 3vw, 32px); }
+  .display {
+    font-family: var(--display);
+    font-weight: 800;
+    font-stretch: 125%;
+    letter-spacing: -0.05em;
+    line-height: 0.9;
+  }
+  html[lang="fa"] .display { font-weight: 900; letter-spacing: 0; line-height: 1.15; font-stretch: normal; }
+
+  /* ---------- Navigation ---------- */
+  .nav {
+    position: sticky; top: 0; z-index: 50;
+    height: var(--nav-h);
+    background: rgba(242, 242, 242, 0.9);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(30, 30, 30, 0.06);
+  }
+  .nav .wrap { height: 100%; display: flex; align-items: center; gap: clamp(20px, 3.3vw, 42px); }
+  .nav .brand { margin-inline-end: auto; }
+  .brand { font-family: 'Archivo', sans-serif; font-weight: 900; font-stretch: 125%; font-size: 20px; letter-spacing: -0.06em; white-space: nowrap; }
+  .links { display: flex; align-items: center; gap: clamp(20px, 3.3vw, 42px); list-style: none; }
+  .links a {
+    font-size: 14px; text-transform: uppercase; letter-spacing: 0.02em;
+    transition: color 120ms linear;
+  }
+  html[lang="fa"] .links a { font-size: 15px; }
+  .links a:hover { color: var(--muted); }
+  .pill-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    height: 34px; padding-inline: 21px;
+    border: 1px solid var(--line); border-radius: 999px;
+    font-size: 14px; text-transform: uppercase; letter-spacing: 0.02em;
+    transition: background-color 200ms ease, color 200ms ease;
+  }
+  .pill-btn:hover, .pill-btn:focus-visible { background: var(--line); color: var(--bg); }
+  .menu-btn { display: none; width: 44px; height: 44px; align-items: center; justify-content: center; border-radius: 999px; border: 1px solid var(--line); }
+  .menu-btn span { position: relative; display: block; width: 18px; height: 1.5px; background: var(--ink); transition: transform 300ms var(--ease), background 200ms; }
+  .menu-btn span::before, .menu-btn span::after { content: ""; position: absolute; inset-inline: 0; height: 1.5px; background: var(--ink); transition: transform 300ms var(--ease); }
+  .menu-btn span::before { transform: translateY(-6px); }
+  .menu-btn span::after { transform: translateY(6px); }
+  .nav.open .menu-btn span { background: transparent; }
+  .nav.open .menu-btn span::before { transform: rotate(45deg); }
+  .nav.open .menu-btn span::after { transform: rotate(-45deg); }
+  .drawer {
+    position: fixed; inset: var(--nav-h) 0 auto 0; z-index: 49;
+    background: var(--bg); border-bottom: 1px solid rgba(30,30,30,.1);
+    clip-path: inset(0 0 100% 0);
+    transition: clip-path 600ms var(--ease);
+    visibility: hidden;
+  }
+  .drawer.open { clip-path: inset(0 0 0 0); visibility: visible; }
+  .drawer ul { list-style: none; padding: 16px clamp(16px, 3vw, 32px) 28px; }
+  .drawer li a { display: block; padding: 14px 0; border-bottom: 1px solid rgba(30,30,30,.1); font-family: var(--display); font-weight: 800; font-stretch: 125%; font-size: 30px; letter-spacing: -0.04em; text-transform: uppercase; }
+  html[lang="fa"] .drawer li a { font-weight: 900; letter-spacing: 0; }
+  .drawer .pill-btn { margin-top: 22px; height: 44px; }
+
+  /* ---------- Hero / echo stack ---------- */
+  .hero {
+    position: relative;
+    min-height: clamp(460px, 82vh, 1000px);
+    display: grid; place-items: center;
+    overflow: hidden;
+    border-bottom: 1px solid rgba(30,30,30,.04);
+  }
+  .echo {
+    position: relative;
+    font-size: min(11.5vw, 180px);
+    text-transform: uppercase;
+    white-space: nowrap;
+    user-select: none;
+  }
+  html[lang="fa"] .echo { font-size: min(20vw, 220px); }
+  .echo span { display: block; }
+  .echo .layer {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    transform: translate(calc(var(--dx, -1) * var(--i) * var(--echo-step) * var(--spread, 1)), calc(var(--dy, -1) * var(--i) * var(--echo-step) * var(--spread, 1)));
+    will-change: transform;
+  }
+  .echo .layer:nth-child(1) { color: var(--echo-4); z-index: 1; }
+  .echo .layer:nth-child(2) { color: var(--echo-3); z-index: 2; }
+  .echo .layer:nth-child(3) { color: var(--echo-2); z-index: 3; }
+  .echo .layer:nth-child(4) { color: var(--echo-1); z-index: 4; }
+  .echo .top { position: relative; z-index: 5; color: var(--ink); }
+  .hero-meta {
+    position: absolute; inset-inline: 0; bottom: clamp(18px, 4vh, 40px);
+    display: flex; justify-content: space-between; align-items: flex-end; gap: 16px;
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted-2);
+  }
+  html[lang="fa"] .hero-meta { letter-spacing: 0; font-size: 13px; }
+  .hero-meta p { max-width: 30ch; }
+  .scroll-cue { display: inline-flex; align-items: center; gap: 10px; }
+  .scroll-cue i { display: block; width: 1px; height: 34px; background: var(--muted-2); transform-origin: top; animation: cue 2.2s var(--ease) infinite; }
+  @keyframes cue { 0% { transform: scaleY(0); } 50% { transform: scaleY(1); transform-origin: top; } 51% { transform-origin: bottom; } 100% { transform: scaleY(0); transform-origin: bottom; } }
+
+  /* ---------- Philosophy ---------- */
+  .philo { background: var(--bg-2); text-align: center; padding-bottom: clamp(80px, 12vw, 160px); }
+  .hairline { width: 1px; height: 84px; margin-inline: auto; background: rgba(30,30,30,.1); }
+  .qmark { display: block; margin: 40px auto 26px; width: 28px; height: 28px; color: var(--muted); }
+  .quote {
+    font-family: var(--display); font-weight: 600; font-stretch: 112%;
+    font-size: clamp(34px, 5.2vw, 64px); letter-spacing: -0.035em; line-height: 1.04;
+    max-width: 18ch; margin-inline: auto;
+  }
+  html[lang="fa"] .quote { font-weight: 800; letter-spacing: 0; line-height: 1.45; font-stretch: normal; max-width: 20ch; }
+  .quote em { font-family: var(--serif); font-style: italic; font-weight: 400; letter-spacing: -0.01em; font-stretch: normal; }
+  html[lang="fa"] .quote em { font-style: normal; font-weight: 700; }
+  .cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; margin-top: clamp(56px, 8vw, 96px); text-align: start; }
+  .cols article { border-top: 1px solid rgba(30,30,30,.12); padding-top: 22px; }
+  .cols .n { font-size: 12px; color: var(--muted-2); letter-spacing: 0.12em; }
+  .cols h3 { font-family: var(--display); font-weight: 800; font-stretch: 112%; font-size: 24px; letter-spacing: -0.03em; margin: 12px 0 10px; }
+  html[lang="fa"] .cols h3 { font-weight: 800; letter-spacing: 0; }
+  .cols p { font-weight: 300; color: #4a4a4a; line-height: 1.65; font-size: 16px; }
+  html[lang="fa"] .cols p { line-height: 1.95; }
+
+  /* ---------- Showcase ---------- */
+  .section-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin-bottom: 40px; }
+  .eyebrow { font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted-2); }
+  html[lang="fa"] .eyebrow { letter-spacing: 0; font-size: 13px; }
+  .h2 { font-size: clamp(44px, 7vw, 104px); text-transform: uppercase; margin-top: 10px; }
+  .section-head p { max-width: 34ch; color: #4a4a4a; font-weight: 400; line-height: 1.6; }
+  .showcase { padding-block: clamp(70px, 9vw, 120px); }
+  .grid12 { display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; }
+  .tile { position: relative; overflow: hidden; display: block; isolation: isolate; }
+  .tile .media {
+    position: absolute; inset: 0;
+    filter: grayscale(0.2);
+    transition: filter var(--reveal) var(--ease), transform var(--reveal) var(--ease);
+  }
+  .tile .media svg { width: 100%; height: 100%; display: block; }
+  .tile:hover .media, .tile:focus-visible .media { filter: grayscale(0); transform: scale(1.05); }
+  .reveal { clip-path: inset(100% 0 0 0); transition: clip-path var(--reveal) var(--ease); }
+  .reveal.in { clip-path: inset(0 0 0 0); }
+  .t-rect { grid-column: span 8; height: 500px; border-radius: 2px; }
+  .t-pill { grid-column: span 4; height: 500px; border-radius: 9999px; }
+  .t-circle { grid-column: span 5; aspect-ratio: 1; border-radius: 50%; }
+  .t-wide { grid-column: span 7; align-self: center; height: 360px; border-radius: 2px; }
+  .reveal.t-pill.in, .reveal.t-circle.in { clip-path: inset(0 0 0 0 round 9999px); }
+  .cap {
+    position: absolute; inset-inline-start: 20px; bottom: 20px; z-index: 2;
+    display: flex; flex-direction: column; gap: 4px; color: #fff;
+    text-shadow: 0 1px 12px rgba(0,0,0,.25);
+  }
+  .cap b { font-family: var(--display); font-weight: 800; font-stretch: 112%; font-size: 28px; letter-spacing: -0.03em; line-height: 1; }
+  html[lang="fa"] .cap b { letter-spacing: 0; line-height: 1.4; }
+  .cap small { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; opacity: .85; }
+  html[lang="fa"] .cap small { letter-spacing: 0; font-size: 13px; }
+  .t-circle .cap { inset-inline-start: 50%; bottom: 14%; transform: translateX(-50%); align-items: center; text-align: center; }
+  html[dir="rtl"] .t-circle .cap { transform: translateX(50%); }
+  .orb {
+    position: absolute; z-index: 3; top: 50%; left: 50%;
+    width: 150px; height: 150px; margin: -75px 0 0 -75px;
+    border-radius: 50%; border: 1px solid rgba(255,255,255,.85);
+    display: grid; place-items: center; text-align: center;
+    color: #fff; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; line-height: 1.5;
+    background: rgba(17,17,17,.12);
+    -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+    opacity: 0; transform: scale(.85);
+    transition: opacity 500ms var(--ease), transform 500ms var(--ease);
+  }
+  html[lang="fa"] .orb { letter-spacing: 0; font-size: 13px; }
+  .t-pill:hover .orb, .t-pill:focus-visible .orb { opacity: 1; transform: scale(1); }
+
+  /* ---------- Services ---------- */
+  .services { padding-block: clamp(70px, 9vw, 120px); border-top: 1px solid rgba(30,30,30,.08); }
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .card {
+    display: flex; flex-direction: column; gap: 18px;
+    padding: 36px 32px 32px; min-height: 360px;
+    border: 1px solid rgba(30,30,30,.1); border-radius: 2px;
+    background: transparent;
+    transition: background-color 400ms ease, border-color 400ms ease;
+  }
+  .card:hover, .card:focus-within { background: #fff; border-color: rgba(30,30,30,.16); }
+  .ico {
+    width: 64px; height: 64px; display: grid; place-items: center;
+    border: 1px solid var(--line);
+    transition: transform 500ms var(--ease), background-color 300ms, color 300ms;
+  }
+  .card:hover .ico { transform: rotate(12deg); background: var(--ink); color: var(--bg); }
+  .card:hover .ico svg * { stroke: var(--bg); }
+  .card h3 { font-family: var(--display); font-weight: 800; font-stretch: 112%; font-size: 26px; letter-spacing: -0.03em; margin-top: 14px; }
+  html[lang="fa"] .card h3 { letter-spacing: 0; }
+  .card p { font-weight: 300; color: #4a4a4a; line-height: 1.65; flex: 1; }
+  html[lang="fa"] .card p { line-height: 1.95; }
+  .cta { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; width: fit-content; }
+  html[lang="fa"] .cta { letter-spacing: 0; font-size: 14px; }
+  .cta svg { transition: transform 300ms var(--ease); }
+  html[dir="rtl"] .cta svg { transform: scaleX(-1); }
+  .cta:hover svg { transform: translateX(6px); }
+  html[dir="rtl"] .cta:hover svg { transform: scaleX(-1) translateX(6px); }
+
+  /* ---------- Contact band ---------- */
+  .band { padding-block: clamp(70px, 10vw, 140px); text-align: center; }
+  .band .eyebrow { display: block; }
+  .band .echo { font-size: min(11vw, 150px); display: inline-block; }
+  html[lang="fa"] .band .echo { font-size: min(16vw, 170px); }
+  .band form { margin: 48px auto 0; display: flex; gap: 10px; max-width: 520px; }
+  .band input {
+    flex: 1; min-width: 0; height: 52px; padding-inline: 22px;
+    border-radius: 999px; border: 1px solid rgba(30,30,30,.25); background: transparent;
+    font: inherit; color: var(--ink);
+  }
+  .band input:focus { outline: none; border-color: var(--ink); background: #fff; }
+  .band input[aria-invalid="true"] { border-color: #b00020; }
+  .band button.pill-btn { height: 52px; padding-inline: 28px; background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .band button.pill-btn:hover { background: transparent; color: var(--ink); }
+  .msg { min-height: 24px; margin-top: 14px; font-size: 14px; color: var(--muted-2); }
+  .msg.err { color: #b00020; }
+
+  /* ---------- Footer ---------- */
+  footer { background: #1e1e1e; color: rgba(246,246,246,.6); border-top: 1px solid rgba(255,255,255,.05); padding-block: 80px 36px; }
+  .fgrid { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1.3fr; gap: 40px; }
+  footer .brand { color: #f6f6f6; font-size: 24px; }
+  footer h4 { color: #f6f6f6; font-size: 12px; letter-spacing: .16em; text-transform: uppercase; font-weight: 700; margin-bottom: 20px; }
+  html[lang="fa"] footer h4 { letter-spacing: 0; font-size: 14px; }
+  footer p { line-height: 1.7; font-weight: 400; margin-top: 18px; max-width: 32ch; }
+  footer ul { list-style: none; display: grid; gap: 12px; }
+  footer ul a { transition: color 120ms linear; }
+  footer ul a:hover { color: #f6f6f6; }
+  .contact li { display: flex; align-items: center; gap: 12px; }
+  .contact svg { flex: none; }
+  .ltr { direction: ltr; unicode-bidi: isolate; }
+  .fbottom { margin-top: 64px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,.05); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: 13px; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 960px) {
+    .t-rect, .t-wide { grid-column: span 12; }
+    .t-pill { grid-column: span 6; }
+    .t-circle { grid-column: span 6; align-self: center; }
+    .t-wide { height: 320px; }
+    .cards { grid-template-columns: 1fr 1fr; }
+    .fgrid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 760px) {
+    .links, .nav .wrap > .pill-btn { display: none; }
+    .menu-btn { display: inline-flex; }
+    .cols { grid-template-columns: 1fr; }
+    .section-head { flex-direction: column; align-items: flex-start; }
+    .t-rect { height: 340px; }
+    .t-pill, .t-circle { grid-column: span 12; }
+    .t-pill { height: 460px; width: min(100%, 300px); justify-self: center; }
+    .t-circle { width: min(100%, 340px); justify-self: center; }
+    .t-wide { height: 240px; }
+    .cards { grid-template-columns: 1fr; }
+    .card { min-height: 0; }
+    .hero-meta p { display: none; }
+    .hero-meta { justify-content: center; }
+    .band form { flex-direction: column; }
+    .fgrid { grid-template-columns: 1fr; gap: 36px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation: none !important; transition-duration: 0.01ms !important; }
+    .reveal { clip-path: none !important; }
+    .scroll-cue i { transform: none; }
+  }
+</style>
+</head>
+<body>
+  <header class="nav" id="nav">
+    <div class="wrap">
+      <a class="brand" href="#top" aria-label="Super Travel">SUPER TRAVEL</a>
+      <nav aria-label="Primary">
+        <ul class="links">
+          <li><a href="#journeys" data-i18n="nJourneys">Journeys</a></li>
+          <li><a href="#services" data-i18n="nServices">Services</a></li>
+          <li><a href="#about" data-i18n="nAbout">About</a></li>
+        </ul>
+      </nav>
+      <a class="pill-btn" href="#contact" data-i18n="nContact">Contact</a>
+      <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="drawer" data-i18n-label="menu" aria-label="Open menu"><span></span></button>
+    </div>
+  </header>
+  <div class="drawer" id="drawer">
+    <ul>
+      <li><a href="#journeys" data-i18n="nJourneys">Journeys</a></li>
+      <li><a href="#services" data-i18n="nServices">Services</a></li>
+      <li><a href="#about" data-i18n="nAbout">About</a></li>
+      <li><a class="pill-btn" href="#contact" data-i18n="nContact">Contact</a></li>
+    </ul>
+  </div>
+
+  <main id="top">
+    <section class="hero" aria-labelledby="heroTitle">
+      <h1 class="echo display" id="heroEcho" data-echo="hero">
+        <span class="layer" aria-hidden="true" style="--i:4" data-i18n="hero">Journeys</span>
+        <span class="layer" aria-hidden="true" style="--i:3" data-i18n="hero">Journeys</span>
+        <span class="layer" aria-hidden="true" style="--i:2" data-i18n="hero">Journeys</span>
+        <span class="layer" aria-hidden="true" style="--i:1" data-i18n="hero">Journeys</span>
+        <span class="top" id="heroTitle" data-i18n="hero">Journeys</span>
+      </h1>
+      <div class="hero-meta wrap">
+        <p data-i18n="heroL">Private itineraries for travellers who prefer silence to spectacle.</p>
+        <a class="scroll-cue" href="#about"><i aria-hidden="true"></i><span data-i18n="scroll">Scroll</span></a>
+        <p data-i18n="heroR">Est. 2009 — six continents, one quiet standard.</p>
+      </div>
+    </section>
+
+    <section class="philo" id="about" aria-labelledby="quoteTitle">
+      <div class="hairline" aria-hidden="true"></div>
+      <svg class="qmark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg>
+      <div class="wrap">
+        <h2 class="quote" id="quoteTitle" data-i18n-html="quote">"True luxury is not just about the destination, but the <em>stories</em> you carry home."</h2>
+        <div class="cols">
+          <article><span class="n">01</span><h3 data-i18n="c1t">Curated Paths</h3><p data-i18n="c1p">Every route is walked by our scouts first. We keep only the roads worth remembering and quietly drop the rest.</p></article>
+          <article><span class="n">02</span><h3 data-i18n="c2t">Quiet Luxury</h3><p data-i18n="c2p">No queues, no crowds, no noise. Small houses, private guides and the kind of service you barely notice.</p></article>
+          <article><span class="n">03</span><h3 data-i18n="c3t">Lasting Stories</h3><p data-i18n="c3p">We design for the moment you get home: the people you met, the meals you shared, the silence you found.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="showcase" id="journeys" aria-labelledby="showTitle">
+      <div class="wrap">
+        <div class="section-head">
+          <div><span class="eyebrow" data-i18n="showEy">Selected journeys — 2026</span><h2 class="h2 display" id="showTitle" data-i18n="showT">Elsewhere</h2></div>
+          <p data-i18n="showP">Four places we keep returning to. Hover to bring them to full colour.</p>
+        </div>
+        <div class="grid12">
+          <a class="tile t-rect reveal" href="#contact">
+            <div class="media" aria-hidden="true">
+              <svg viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4b27a"/><stop offset=".55" stop-color="#f7d9b3"/><stop offset="1" stop-color="#f1e6d6"/></linearGradient><linearGradient id="g1d" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c9773f"/><stop offset="1" stop-color="#8d4a24"/></linearGradient></defs><rect width="800" height="500" fill="url(#g1)"/><circle cx="560" cy="190" r="56" fill="#fff4e0" opacity=".9"/><path d="M0 330 Q160 250 330 320 T640 300 T800 290 V500 H0Z" fill="#e2a46a"/><path d="M0 380 Q200 300 420 380 T800 360 V500 H0Z" fill="url(#g1d)"/><path d="M0 440 Q260 390 520 450 T800 430 V500 H0Z" fill="#6e3518"/></svg>
+            </div>
+            <span class="cap"><small data-i18n="t1s">Desert crossing · 9 days</small><b data-i18n="t1">Sahara Silence</b></span>
+          </a>
+          <a class="tile t-pill reveal" href="#contact">
+            <div class="media" aria-hidden="true">
+              <svg viewBox="0 0 400 500" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9cc8e8"/><stop offset="1" stop-color="#e8f2f8"/></linearGradient></defs><rect width="400" height="500" fill="url(#g2)"/><path d="M-20 330 L90 150 L170 260 L250 110 L420 330Z" fill="#5b7387"/><path d="M215 170 L250 110 L285 170 L265 160 L250 175 L232 162Z" fill="#fff"/><path d="M60 200 L90 150 L118 195 L100 190 L88 200Z" fill="#fff"/><path d="M-20 360 L120 260 L260 350 L420 280 V500 H-20Z" fill="#2f4a3a"/><rect y="400" width="400" height="100" fill="#1d3428"/></svg>
+            </div>
+            <span class="orb" data-i18n-html="orb">Alpine<br>Retreats</span>
+          </a>
+          <a class="tile t-circle reveal" href="#contact">
+            <div class="media" aria-hidden="true">
+              <svg viewBox="0 0 500 500" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="g3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2bb3c0"/><stop offset=".5" stop-color="#7fd8d4"/><stop offset=".5" stop-color="#1a8aa0"/><stop offset="1" stop-color="#0d5170"/></linearGradient></defs><rect width="500" height="500" fill="url(#g3)"/><circle cx="250" cy="250" r="44" fill="#fff6d8"/><path d="M0 250 H500" stroke="#fff" stroke-opacity=".5"/><path d="M60 310 h120 M260 340 h170 M120 380 h220 M40 420 h140" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-linecap="round"/><path d="M330 250 c10-60 20-80 34-90 m-34 90 c-20-40-46-52-70-50 m70 50 c30-30 60-30 78-20" stroke="#0e3b2f" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M300 250 q40-30 80 0Z" fill="#e9d29a"/></svg>
+            </div>
+            <span class="cap"><small data-i18n="t3s">Island hopping · 12 days</small><b data-i18n="t3">Open Water</b></span>
+          </a>
+          <a class="tile t-wide reveal" href="#contact">
+            <div class="media" aria-hidden="true">
+              <svg viewBox="0 0 700 360" preserveAspectRatio="xMidYMid slice"><defs><linearGradient id="g4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3c2a6b"/><stop offset=".6" stop-color="#d0667a"/><stop offset="1" stop-color="#f6b37a"/></linearGradient></defs><rect width="700" height="360" fill="url(#g4)"/><circle cx="520" cy="250" r="60" fill="#ffd9a0" opacity=".8"/><path d="M0 360 V250 h40 v-60 h30 v40 h40 v-110 h50 v120 h30 v-70 h46 v100 h28 v-150 h40 v150 h40 v-80 h50 v90 h30 v-50 h44 v70 h40 v-120 h46 v130 h40 v-60 h46 v70 h40 V360Z" fill="#1d1430"/><g fill="#ffcf7a" opacity=".85"><rect x="125" y="160" width="6" height="8"/><rect x="140" y="190" width="6" height="8"/><rect x="290" y="130" width="6" height="8"/><rect x="305" y="170" width="6" height="8"/><rect x="460" y="230" width="6" height="8"/><rect x="575" y="200" width="6" height="8"/><rect x="590" y="240" width="6" height="8"/></g></svg>
+            </div>
+            <span class="cap"><small data-i18n="t4s">City after dark · 5 days</small><b data-i18n="t4">Neon Harbour</b></span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="services" id="services" aria-labelledby="servTitle">
+      <div class="wrap">
+        <div class="section-head">
+          <div><span class="eyebrow" data-i18n="servEy">Bespoke services</span><h2 class="h2 display" id="servTitle" data-i18n="servT">Crafted</h2></div>
+          <p data-i18n="servP">Three ways to travel with us — each one planned from a blank page.</p>
+        </div>
+        <div class="cards">
+          <article class="card">
+            <div class="ico" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5"><rect x="4" y="4" width="16" height="16"/></svg></div>
+            <h3 data-i18n="s1t">Private Expeditions</h3>
+            <p data-i18n="s1p">A dedicated planner, a private guide and a route drawn around your pace — never around a timetable.</p>
+            <a class="cta" href="#contact"><span data-i18n="more">Explore</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+          </article>
+          <article class="card">
+            <div class="ico" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5"><circle cx="12" cy="12" r="8.5"/></svg></div>
+            <h3 data-i18n="s2t">Slow Residencies</h3>
+            <p data-i18n="s2p">Stay a month, not a weekend. Homes with keys, neighbours and a local table waiting for you.</p>
+            <a class="cta" href="#contact"><span data-i18n="more">Explore</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+          </article>
+          <article class="card">
+            <div class="ico" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#111" stroke-width="1.5"><path d="M12 3.5 21 20H3Z"/></svg></div>
+            <h3 data-i18n="s3t">Celebration Journeys</h3>
+            <p data-i18n="s3p">Anniversaries, proposals and milestones staged in places that make the moment feel inevitable.</p>
+            <a class="cta" href="#contact"><span data-i18n="more">Explore</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="band" id="contact" aria-labelledby="bandTitle">
+      <div class="wrap">
+        <span class="eyebrow" data-i18n="bandEy">Begin a conversation</span>
+        <h2 class="echo display" data-echo="band" style="margin-top:20px">
+          <span class="layer" aria-hidden="true" style="--i:4" data-i18n="bandT">Depart</span>
+          <span class="layer" aria-hidden="true" style="--i:3" data-i18n="bandT">Depart</span>
+          <span class="layer" aria-hidden="true" style="--i:2" data-i18n="bandT">Depart</span>
+          <span class="layer" aria-hidden="true" style="--i:1" data-i18n="bandT">Depart</span>
+          <span class="top" id="bandTitle" data-i18n="bandT">Depart</span>
+        </h2>
+        <form id="form" novalidate>
+          <label for="email" class="sr" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)" data-i18n="emailL">Email address</label>
+          <input id="email" type="email" autocomplete="email" data-i18n-ph="emailPh" placeholder="your@email.com" aria-describedby="msg">
+          <button class="pill-btn" type="submit" data-i18n="send">Request itinerary</button>
+        </form>
+        <p class="msg" id="msg" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div class="fgrid">
+        <div>
+          <span class="brand">SUPER TRAVEL</span>
+          <p data-i18n="fAbout">An independent studio designing private journeys for people who would rather feel a place than photograph it.</p>
+        </div>
+        <nav aria-label="Footer">
+          <h4 data-i18n="fNav">Navigate</h4>
+          <ul>
+            <li><a href="#journeys" data-i18n="nJourneys">Journeys</a></li>
+            <li><a href="#services" data-i18n="nServices">Services</a></li>
+            <li><a href="#about" data-i18n="nAbout">About</a></li>
+          </ul>
+        </nav>
+        <div>
+          <h4 data-i18n="fCo">Company</h4>
+          <ul>
+            <li><a href="#about" data-i18n="fStory">Our story</a></li>
+            <li><a href="#about" data-i18n="fCareers">Careers</a></li>
+            <li><a href="#about" data-i18n="fPress">Press</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 data-i18n="fContact">Contact</h4>
+          <ul class="contact">
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg><a class="ltr" href="mailto:hello@supertravel.example">hello@supertravel.example</a></li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg><span class="ltr" data-i18n="phone">+44 20 7946 0000</span></li>
+            <li><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg><span data-i18n="addr">Lisbon · Kyoto · Cape Town</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="fbottom"><span data-i18n="copy">© 2026 Super Travel. All rights reserved.</span><span data-i18n="tag">Designed in monochrome.</span></div>
+    </div>
+  </footer>
+
+<script>
+(function () {
+  var I18N = {
+    en: {
+      nJourneys: 'Journeys', nServices: 'Services', nAbout: 'About', nContact: 'Contact', menu: 'Open menu', menuClose: 'Close menu',
+      hero: 'Journeys', heroL: 'Private itineraries for travellers who prefer silence to spectacle.', heroR: 'Est. 2009 — six continents, one quiet standard.', scroll: 'Scroll',
+      quote: '"True luxury is not just about the destination, but the <em>stories</em> you carry home."',
+      c1t: 'Curated Paths', c1p: 'Every route is walked by our scouts first. We keep only the roads worth remembering and quietly drop the rest.',
+      c2t: 'Quiet Luxury', c2p: 'No queues, no crowds, no noise. Small houses, private guides and the kind of service you barely notice.',
+      c3t: 'Lasting Stories', c3p: 'We design for the moment you get home: the people you met, the meals you shared, the silence you found.',
+      showEy: 'Selected journeys — 2026', showT: 'Elsewhere', showP: 'Four places we keep returning to. Hover to bring them to full colour.',
+      t1: 'Sahara Silence', t1s: 'Desert crossing · 9 days', orb: 'Alpine<br>Retreats', t3: 'Open Water', t3s: 'Island hopping · 12 days', t4: 'Neon Harbour', t4s: 'City after dark · 5 days',
+      servEy: 'Bespoke services', servT: 'Crafted', servP: 'Three ways to travel with us — each one planned from a blank page.',
+      s1t: 'Private Expeditions', s1p: 'A dedicated planner, a private guide and a route drawn around your pace — never around a timetable.',
+      s2t: 'Slow Residencies', s2p: 'Stay a month, not a weekend. Homes with keys, neighbours and a local table waiting for you.',
+      s3t: 'Celebration Journeys', s3p: 'Anniversaries, proposals and milestones staged in places that make the moment feel inevitable.',
+      more: 'Explore', bandEy: 'Begin a conversation', bandT: 'Depart', emailL: 'Email address', emailPh: 'your@email.com', send: 'Request itinerary',
+      ok: 'Thank you. A planner will write to you within a day.', bad: 'Please enter a valid email address.',
+      fAbout: 'An independent studio designing private journeys for people who would rather feel a place than photograph it.',
+      fNav: 'Navigate', fCo: 'Company', fStory: 'Our story', fCareers: 'Careers', fPress: 'Press', fContact: 'Contact',
+      phone: '+44 20 7946 0000', addr: 'Lisbon · Kyoto · Cape Town', copy: '© 2026 Super Travel. All rights reserved.', tag: 'Designed in monochrome.'
+    },
+    fa: {
+      nJourneys: 'سفرها', nServices: 'خدمات', nAbout: 'درباره ما', nContact: 'تماس', menu: 'باز کردن منو', menuClose: 'بستن منو',
+      hero: 'سفرها', heroL: 'برنامه‌سفرهای خصوصی برای کسانی که سکوت را به هیاهو ترجیح می‌دهند.', heroR: 'از ۲۰۰۹ — شش قاره، یک استاندارد آرام.', scroll: 'اسکرول',
+      quote: '«تجمل واقعی فقط رسیدن به مقصد نیست؛ <em>قصه‌هایی</em> است که با خودتان به خانه می‌برید.»',
+      c1t: 'مسیرهای گزیده', c1p: 'هر مسیر را اول پیشروهای ما قدم‌به‌قدم می‌روند. فقط راه‌هایی می‌مانند که ارزش به‌یادماندن دارند.',
+      c2t: 'تجمل بی‌صدا', c2p: 'نه صفی، نه شلوغی‌ای، نه سروصدایی. خانه‌های کوچک، راهنمای خصوصی و خدمتی که تقریباً حسش نمی‌کنید.',
+      c3t: 'قصه‌های ماندگار', c3p: 'ما برای لحظهٔ برگشتن به خانه طراحی می‌کنیم: آدم‌هایی که دیدید، غذاهایی که شریک شدید، سکوتی که پیدا کردید.',
+      showEy: 'سفرهای منتخب — ۲۰۲۶', showT: 'جایی دیگر', showP: 'چهار جایی که مدام به آن برمی‌گردیم. نشانگر را رویشان ببرید تا رنگ بگیرند.',
+      t1: 'سکوت صحرا', t1s: 'گذر از کویر · ۹ روز', orb: 'پناهگاه‌های<br>آلپ', t3: 'آب‌های باز', t3s: 'جزیره‌گردی · ۱۲ روز', t4: 'بندر نئون', t4s: 'شهر در شب · ۵ روز',
+      servEy: 'خدمات سفارشی', servT: 'دست‌ساز', servP: 'سه شیوهٔ سفر با ما — هر کدام از یک صفحهٔ سفید برنامه‌ریزی می‌شود.',
+      s1t: 'سفرهای اکتشافی خصوصی', s1p: 'برنامه‌ریزی اختصاصی، راهنمایی خصوصی و مسیری که دور ریتم شما کشیده شده — نه دور یک جدول زمانی.',
+      s2t: 'اقامت‌های آهسته', s2p: 'یک ماه بمانید، نه یک آخر هفته. خانه‌ای با کلید، همسایه و سفره‌ای محلی که منتظرتان است.',
+      s3t: 'سفرهای جشن', s3p: 'سالگردها، خواستگاری‌ها و نقطه‌عطف‌ها، در جاهایی که آن لحظه را ناگزیر می‌کنند.',
+      more: 'بیشتر ببینید', bandEy: 'گفت‌وگو را شروع کنید', bandT: 'حرکت', emailL: 'نشانی ایمیل', emailPh: 'ایمیل شما', send: 'درخواست برنامه سفر',
+      ok: 'سپاسگزاریم. برنامه‌ریز ما تا یک روز دیگر برایتان می‌نویسد.', bad: 'لطفاً یک نشانی ایمیل معتبر وارد کنید.',
+      fAbout: 'استودیویی مستقل که سفرهای خصوصی طراحی می‌کند؛ برای کسانی که ترجیح می‌دهند یک مکان را حس کنند تا از آن عکس بگیرند.',
+      fNav: 'پیمایش', fCo: 'شرکت', fStory: 'داستان ما', fCareers: 'فرصت‌های شغلی', fPress: 'رسانه‌ها', fContact: 'تماس',
+      phone: '+۴۴ ۲۰ ۷۹۴۶ ۰۰۰۰', addr: 'لیسبون · کیوتو · کیپ‌تاون', copy: '© ۲۰۲۶ سوپر تراول. همهٔ حقوق محفوظ است.', tag: 'طراحی‌شده در تک‌رنگ.'
+    }
+  };
+  var lang = document.documentElement.lang === 'fa' ? 'fa' : 'en';
+  var T = I18N[lang];
+  document.querySelectorAll('[data-i18n]').forEach(function (el) { var k = el.getAttribute('data-i18n'); if (T[k] != null) el.textContent = T[k]; });
+  document.querySelectorAll('[data-i18n-html]').forEach(function (el) { var k = el.getAttribute('data-i18n-html'); if (T[k] != null) el.innerHTML = T[k]; });
+  document.querySelectorAll('[data-i18n-ph]').forEach(function (el) { el.placeholder = T[el.getAttribute('data-i18n-ph')]; });
+  document.querySelectorAll('[data-i18n-label]').forEach(function (el) { el.setAttribute('aria-label', T[el.getAttribute('data-i18n-label')]); });
+  if (lang === 'fa') {
+    document.querySelectorAll('.cols .n').forEach(function (n, i) { n.textContent = '۰' + '۱۲۳'[i]; });
+  }
+
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var rtl = lang === 'fa';
+
+  /* Mobile menu */
+  var nav = document.getElementById('nav'), btn = document.getElementById('menuBtn'), drawer = document.getElementById('drawer');
+  function setMenu(open) {
+    if (!nav || !btn || !drawer) return;
+    nav.classList.toggle('open', open); drawer.classList.toggle('open', open);
+    btn.setAttribute('aria-expanded', String(open)); btn.setAttribute('aria-label', open ? T.menuClose : T.menu);
+  }
+  if (btn) btn.addEventListener('click', function () { setMenu(!nav.classList.contains('open')); });
+  if (drawer) drawer.addEventListener('click', function (e) { if (e.target.closest('a')) setMenu(false); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
+  window.addEventListener('resize', function () { if (window.innerWidth > 760) setMenu(false); });
+
+  /* Echo stack: layers fan out on load, then lean away from the pointer */
+  var echoes = Array.prototype.slice.call(document.querySelectorAll('.echo'));
+  var baseDx = rtl ? 1 : -1;
+  echoes.forEach(function (e) { e.style.setProperty('--dx', baseDx); e.style.setProperty('--dy', -1); });
+  if (!reduce) {
+    echoes.forEach(function (e) {
+      var layers = e.querySelectorAll('.layer');
+      layers.forEach(function (l) {
+        var i = +getComputedStyle(l).getPropertyValue('--i') || 1;
+        l.animate([{ transform: 'translate(0,0)', opacity: 0 }, { opacity: 1, offset: 0.3 }, { transform: getComputedStyle(l).transform, opacity: 1 }],
+          { duration: 1100, delay: 250 + (5 - i) * 110, easing: 'cubic-bezier(0.77, 0, 0.175, 1)', fill: 'backwards' });
+      });
+      var top = e.querySelector('.top');
+      if (top) top.animate([{ clipPath: 'inset(0 0 100% 0)', transform: 'translateY(0.12em)' }, { clipPath: 'inset(0 0 0 0)', transform: 'none' }],
+        { duration: 900, easing: 'cubic-bezier(0.77, 0, 0.175, 1)', fill: 'backwards' });
+    });
+
+    var hero = document.getElementById('heroEcho');
+    var target = { x: baseDx, y: -1 }, cur = { x: baseDx, y: -1 }, raf = 0;
+    function tick() {
+      cur.x += (target.x - cur.x) * 0.08; cur.y += (target.y - cur.y) * 0.08;
+      if (hero) { hero.style.setProperty('--dx', cur.x.toFixed(3)); hero.style.setProperty('--dy', cur.y.toFixed(3)); }
+      if (Math.abs(target.x - cur.x) > 0.002 || Math.abs(target.y - cur.y) > 0.002) raf = requestAnimationFrame(tick); else raf = 0;
+    }
+    var heroSec = document.querySelector('.hero');
+    if (heroSec && hero) {
+      heroSec.addEventListener('pointermove', function (ev) {
+        var r = heroSec.getBoundingClientRect();
+        var nx = (ev.clientX - r.left) / r.width * 2 - 1, ny = (ev.clientY - r.top) / r.height * 2 - 1;
+        target.x = -nx * 1.6; target.y = -ny * 1.6;
+        if (!raf) raf = requestAnimationFrame(tick);
+      });
+      heroSec.addEventListener('pointerleave', function () { target.x = baseDx; target.y = -1; if (!raf) raf = requestAnimationFrame(tick); });
+    }
+  }
+
+  /* Clip-path reveals */
+  var reveals = document.querySelectorAll('.reveal');
+  if (reduce || !('IntersectionObserver' in window)) {
+    reveals.forEach(function (r) { r.classList.add('in'); });
+  } else {
+    // Observe an unclipped proxy: a fully clipped element never reports as intersecting.
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        var tile = en.target.__tile;
+        if (tile) tile.classList.add('in');
+        io.unobserve(en.target); en.target.remove();
+      });
+    }, { threshold: 0, rootMargin: '0px 0px -12% 0px' });
+    reveals.forEach(function (r) {
+      var probe = document.createElement('span');
+      probe.setAttribute('aria-hidden', 'true');
+      probe.style.cssText = 'grid-area:auto;position:absolute;pointer-events:none;';
+      r.parentNode.style.position = 'relative';
+      probe.__tile = r;
+      probe.style.left = r.offsetLeft + 'px'; probe.style.top = r.offsetTop + 'px';
+      probe.style.width = r.offsetWidth + 'px'; probe.style.height = Math.max(1, r.offsetHeight * 0.3) + 'px';
+      r.parentNode.appendChild(probe);
+      io.observe(probe);
+    });
+  }
+
+  /* Contact form */
+  var form = document.getElementById('form'), email = document.getElementById('email'), msg = document.getElementById('msg');
+  if (form && email && msg) {
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.value.trim());
+      email.setAttribute('aria-invalid', String(!ok));
+      msg.classList.toggle('err', !ok);
+      msg.textContent = ok ? T.ok : T.bad;
+      if (ok) email.value = '';
+      else email.focus();
+    });
+    email.addEventListener('input', function () { email.removeAttribute('aria-invalid'); msg.textContent = ''; msg.classList.remove('err'); });
+  }
+})();
+</script>
+</body>
+</html>

@@ -39,6 +39,7 @@ import { EntrancesBlocks } from './blocks/entrances';
 import { HoverFxBlocks } from './blocks/hover-fx';
 import { KineticBlocks } from './blocks/kinetic';
 import { MicroFxBlocks } from './blocks/micro-fx';
+import { MotionSitesBlocks } from './blocks/motionsites';
 
 const SECTIONS: Array<{ id: string; fa: string; en: string; icon: NonNullable<NavItem['children']>[number]['icon'] }> = [
   { id: 'text', fa: 'متن', en: 'Text', icon: 'edit' },
@@ -86,6 +87,7 @@ const BLOCK_GROUPS: Array<{ id: string; fa: string; en: string; icon: NonNullabl
   { id: 'hover-fx-blocks', fa: 'هاورها', en: 'Hover FX', icon: 'zap' },
   { id: 'kinetic-blocks', fa: 'تایپوگرافی جنبشی', en: 'Kinetic type', icon: 'wand' },
   { id: 'micro-fx-blocks', fa: 'ریزتعامل‌ها', en: 'Micro FX', icon: 'heart' },
+  { id: 'motionsites-blocks', fa: 'مجموعهٔ موشن‌سایتس', en: 'MotionSites collection', icon: 'sparkles' },
 ];
 
 function readLang(): Lang {
@@ -263,6 +265,7 @@ export function App() {
             <HoverFxBlocks />
             <KineticBlocks />
             <MicroFxBlocks />
+            <MotionSitesBlocks />
           </main>
           <footer className="sc-footer">
             <div className="sc-container">

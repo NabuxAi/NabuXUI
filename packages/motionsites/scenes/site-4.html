@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Datacore — Your Networks. One Rapid Interface.</title>
+<script>
+  (function () {
+    var p = new URLSearchParams(location.search);
+    var l = p.get('lang') === 'fa' ? 'fa' : 'en';
+    document.documentElement.lang = l;
+    document.documentElement.dir = l === 'fa' ? 'rtl' : 'ltr';
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cabin:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700&family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #7b39fc;
+    --primary-hover: #6a2ce0;
+    --secondary: #2b2344;
+    --secondary-hover: #352b54;
+    --accent: #f87b52;
+    --glass-border: rgba(164,132,215,0.5);
+    --glass-bg: rgba(85,80,110,0.4);
+    --overlay: rgba(0,0,0,0.6);
+    --font-body: 'Manrope', sans-serif;
+    --font-head: 'Inter', sans-serif;
+    --font-btn: 'Cabin', sans-serif;
+    --font-serif: 'Instrument Serif', serif;
+  }
+  html[lang="fa"] {
+    --font-body: 'Vazirmatn', 'Manrope', sans-serif;
+    --font-head: 'Vazirmatn', 'Inter', sans-serif;
+    --font-btn: 'Vazirmatn', 'Cabin', sans-serif;
+    --font-serif: 'Vazirmatn', 'Instrument Serif', serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    min-height: 100vh; background: #050308; color: #fff;
+    font-family: var(--font-body); overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+  :focus-visible { outline: 2px solid #c4a8ff; outline-offset: 3px; border-radius: 8px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  svg { display: block; }
+
+  /* ---------- Background video ---------- */
+  .bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; background:
+      radial-gradient(60% 50% at 70% 30%, rgba(123,57,252,.45), transparent 70%),
+      radial-gradient(50% 45% at 20% 75%, rgba(248,123,82,.22), transparent 70%),
+      linear-gradient(180deg, #120b24 0%, #07050d 100%); }
+  .bg video, .bg .poster { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .bg video { opacity: 0; transition: opacity 1s ease; }
+  .bg.playing video { opacity: 1; }
+  .bg .poster { background-size: cover; background-position: center; transition: opacity 1s ease; }
+  .bg.playing .poster { opacity: 0; }
+  .bg::after { content: ""; position: absolute; inset: 0; background: var(--overlay); }
+
+  /* ---------- Layout ---------- */
+  .page { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* ---------- Navbar ---------- */
+  .nav { display: flex; align-items: center; justify-content: space-between; gap: 24px;
+    max-width: 1280px; width: 100%; margin: 0 auto; padding: 22px 32px; }
+  .logo { display: inline-flex; align-items: center; gap: 10px; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 18px; letter-spacing: -0.01em; direction: ltr; }
+  .logo-box { width: 34px; height: 34px; border-radius: 9px; background: #fff; color: #000; display: grid; place-items: center; }
+  .links { display: flex; align-items: center; gap: 6px; list-style: none; margin: 0; padding: 0; }
+  .links a, .links button { display: inline-flex; align-items: center; gap: 4px; padding: 8px 14px; border-radius: 10px;
+    font-size: 15px; font-weight: 500; color: rgba(255,255,255,.82); transition: color .2s, background .2s; }
+  .links a:hover, .links button:hover { color: #fff; background: rgba(255,255,255,.06); }
+  .svc { position: relative; }
+  .svc .chev { transition: transform .25s ease; }
+  .svc[data-open="true"] .chev { transform: rotate(180deg); }
+  .dropdown { position: absolute; top: calc(100% + 10px); inset-inline-start: 50%; transform: translateX(-50%) translateY(-6px);
+    min-width: 240px; padding: 8px; border-radius: 14px; background: rgba(20,16,34,.92); border: 1px solid var(--glass-border);
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); opacity: 0; visibility: hidden; transition: opacity .2s, transform .2s, visibility .2s; list-style: none; margin: 0; }
+  html[dir="rtl"] .dropdown { transform: translateX(50%) translateY(-6px); }
+  .svc[data-open="true"] .dropdown { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+  html[dir="rtl"] .svc[data-open="true"] .dropdown { transform: translateX(50%) translateY(0); }
+  .dropdown a { display: block; width: 100%; padding: 10px 12px; border-radius: 9px; }
+  .dropdown a strong { display: block; font-size: 14px; color: #fff; font-weight: 600; }
+  .dropdown a span { display: block; font-size: 12.5px; color: rgba(255,255,255,.6); margin-top: 2px; }
+
+  .actions { display: flex; align-items: center; gap: 10px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-family: var(--font-btn); font-weight: 500;
+    font-size: 15px; border-radius: 10px; padding: 10px 18px; transition: background .2s, transform .2s, box-shadow .2s; white-space: nowrap; }
+  .btn:active { transform: translateY(1px) scale(.98); }
+  .btn-glass { background: var(--glass-bg); border: 1px solid var(--glass-border); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+  .btn-glass:hover { background: rgba(105,98,135,.5); }
+  .btn-primary { background: var(--primary); box-shadow: 0 8px 28px -8px rgba(123,57,252,.7), inset 0 1px 0 rgba(255,255,255,.2); }
+  .btn-primary:hover { background: var(--primary-hover); }
+  .btn-dark { background: var(--secondary); box-shadow: inset 0 1px 0 rgba(255,255,255,.08); }
+  .btn-dark:hover { background: var(--secondary-hover); }
+  .btn-lg { padding: 14px 26px; font-size: 16px; border-radius: 12px; }
+  .btn-lg svg { transition: transform .2s; }
+  .btn-lg:hover svg { transform: translateX(3px); }
+  html[dir="rtl"] .btn-lg svg { transform: scaleX(-1); }
+  html[dir="rtl"] .btn-lg:hover svg { transform: scaleX(-1) translateX(3px); }
+
+  .menu-toggle { display: none; width: 42px; height: 42px; border-radius: 10px; place-items: center; background: var(--glass-bg); border: 1px solid var(--glass-border); }
+
+  /* ---------- Mobile overlay ---------- */
+  .overlay { position: fixed; inset: 0; z-index: 20; background: #000; display: flex; flex-direction: column; padding: 22px 20px 32px;
+    opacity: 0; visibility: hidden; transition: opacity .3s ease, visibility .3s; }
+  .overlay.open { opacity: 1; visibility: visible; }
+  .overlay-top { display: flex; justify-content: space-between; align-items: center; }
+  .overlay nav ul { list-style: none; margin: 48px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .overlay nav a { display: flex; align-items: center; justify-content: space-between; font-family: var(--font-head); font-size: 30px; font-weight: 500; padding: 12px 0;
+    border-bottom: 1px solid rgba(255,255,255,.08); opacity: 0; transform: translateY(12px); transition: opacity .4s ease, transform .4s ease; }
+  .overlay.open nav a { opacity: 1; transform: none; }
+  .overlay.open nav li:nth-child(2) a { transition-delay: .05s; }
+  .overlay.open nav li:nth-child(3) a { transition-delay: .1s; }
+  .overlay.open nav li:nth-child(4) a { transition-delay: .15s; }
+  .overlay-cta { margin-top: auto; display: grid; gap: 10px; }
+  .overlay-cta .btn { padding: 14px; font-size: 16px; }
+
+  /* ---------- Hero ---------- */
+  .hero { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+    padding: 40px 24px 96px; max-width: 1000px; margin: 0 auto; width: 100%; }
+  .badge { display: inline-flex; align-items: center; gap: 10px; padding: 5px 14px 5px 5px; border-radius: 999px;
+    background: var(--glass-bg); border: 1px solid var(--glass-border); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    font-family: var(--font-btn); font-size: 14px; color: rgba(255,255,255,.92); transition: background .2s; }
+  html[dir="rtl"] .badge { padding: 5px 5px 5px 14px; }
+  .badge:hover { background: rgba(105,98,135,.5); }
+  .badge .tag { background: var(--accent); color: #fff; font-weight: 600; font-size: 12.5px; padding: 3px 10px; border-radius: 999px; }
+  .badge .ver { direction: ltr; unicode-bidi: isolate; }
+  h1 { font-family: var(--font-head); font-weight: 600; font-size: 76px; line-height: 1.05; letter-spacing: -0.035em; margin: 28px 0 0; }
+  h1 .line { display: block; }
+  h1 em { font-family: var(--font-serif); font-style: italic; font-weight: 400; letter-spacing: -0.01em;
+    background: linear-gradient(90deg, #d9c6ff, #fff 60%); -webkit-background-clip: text; background-clip: text; color: transparent; padding-inline-end: 3px; margin-inline-end: -4px; }
+  html[lang="fa"] h1 { letter-spacing: 0; line-height: 1.35; font-weight: 700; font-size: 64px; }
+  html[lang="fa"] h1 em { font-style: normal; font-weight: 300; }
+  .sub { font-size: 18px; line-height: 1.6; color: rgba(255,255,255,.72); max-width: 520px; margin: 22px auto 0; }
+  html[lang="fa"] .sub { line-height: 1.9; }
+  .ctas { display: flex; gap: 12px; margin-top: 36px; flex-wrap: wrap; justify-content: center; }
+
+  /* entrance */
+  .rise { opacity: 0; transform: translateY(18px); filter: blur(6px); animation: rise .9s cubic-bezier(.2,.7,.2,1) forwards; }
+  .d1 { animation-delay: .1s; } .d2 { animation-delay: .22s; } .d3 { animation-delay: .34s; } .d4 { animation-delay: .46s; } .d5 { animation-delay: .58s; }
+  @keyframes rise { to { opacity: 1; transform: none; filter: none; } }
+
+  /* trust strip */
+  .trust { position: relative; z-index: 1; padding: 0 24px 36px; text-align: center; }
+  .trust p { font-size: 13px; color: rgba(255,255,255,.5); margin: 0 0 14px; letter-spacing: .02em; }
+  .logos { display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; direction: ltr; color: rgba(255,255,255,.5); font-family: 'Inter', sans-serif; font-weight: 600; font-size: 17px; letter-spacing: -0.01em; }
+
+  @media (max-width: 960px) {
+    .links, .actions .btn { display: none; }
+    .menu-toggle { display: grid; }
+    h1 { font-size: 56px; }
+    html[lang="fa"] h1 { font-size: 48px; }
+  }
+  @media (max-width: 560px) {
+    .nav { padding: 18px 16px; }
+    .hero { padding: 32px 16px 72px; }
+    h1 { font-size: 40px; letter-spacing: -0.03em; }
+    html[lang="fa"] h1 { font-size: 36px; }
+    .sub { font-size: 16px; }
+    .ctas { flex-direction: column; width: 100%; max-width: 340px; }
+    .ctas .btn { width: 100%; }
+    .logos { gap: 22px; font-size: 15px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .rise { opacity: 1; transform: none; filter: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="bg" id="bg" aria-hidden="true">
+    <div class="poster" style="background-image:url('https://customer-cbeadsgr09pnsezs.cloudflarestream.com/257c7359efd4b4aaebcc03aa8fc78a36/thumbnails/thumbnail.jpg')"></div>
+    <video id="bgVideo" muted playsinline autoplay loop preload="auto"
+      poster="https://customer-cbeadsgr09pnsezs.cloudflarestream.com/257c7359efd4b4aaebcc03aa8fc78a36/thumbnails/thumbnail.jpg"></video>
+  </div>
+
+  <div class="page">
+    <header>
+      <nav class="nav" aria-label="Primary" data-i18n-aria="navLabel">
+        <a href="#" class="logo" aria-label="Datacore">
+          <span class="logo-box">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3"/></svg>
+          </span>
+          Datacore
+        </a>
+        <ul class="links">
+          <li><a href="#" data-i18n="home">Home</a></li>
+          <li class="svc" id="svc" data-open="false">
+            <button type="button" id="svcBtn" aria-expanded="false" aria-controls="svcMenu"><span data-i18n="services">Services</span>
+              <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <ul class="dropdown" id="svcMenu">
+              <li><a href="#"><strong data-i18n="s1t">Access Control</strong><span data-i18n="s1d">Roles, SSO and fine-grained policies</span></a></li>
+              <li><a href="#"><strong data-i18n="s2t">Log Streams</strong><span data-i18n="s2d">Search every event in real time</span></a></li>
+              <li><a href="#"><strong data-i18n="s3t">Server Fleet</strong><span data-i18n="s3d">Provision, patch and monitor nodes</span></a></li>
+            </ul>
+          </li>
+          <li><a href="#" data-i18n="reviews">Reviews</a></li>
+          <li><a href="#" data-i18n="contact">Contact us</a></li>
+        </ul>
+        <div class="actions">
+          <a href="#" class="btn btn-glass" data-i18n="signin">Sign In</a>
+          <a href="#" class="btn btn-primary" data-i18n="getStarted">Get Started</a>
+          <button type="button" class="menu-toggle" id="menuOpen" aria-label="Open menu" aria-expanded="false" aria-controls="overlay" data-i18n-aria="openMenu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+        </div>
+      </nav>
+    </header>
+
+    <main class="hero">
+      <a href="#" class="badge rise d1">
+        <span class="tag" data-i18n="new">New</span>
+        <span data-i18n-html="badge">Say Hello to <span class="ver">Datacore v3.2</span></span>
+      </a>
+      <h1 class="rise d2">
+        <span class="line" data-i18n="h1a">Your Networks.</span>
+        <span class="line" data-i18n-html="h1b">One Rapid <em>Interface</em>.</span>
+      </h1>
+      <p class="sub rise d3" data-i18n="sub">Platform helps admins control access, logs, and servers with purpose.</p>
+      <div class="ctas rise d4">
+        <a href="#" class="btn btn-primary btn-lg"><span data-i18n="demo">Book a Free Demo</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+        <a href="#" class="btn btn-dark btn-lg" data-i18n="startNow">Get Started Now</a>
+      </div>
+    </main>
+
+    <section class="trust rise d5" aria-label="Trusted by" data-i18n-aria="trustLabel">
+      <p data-i18n="trust">Trusted by infrastructure teams at</p>
+      <div class="logos" aria-hidden="true"><span>Northwind</span><span>Kestrel</span><span>Lumen&nbsp;Labs</span><span>Orbitly</span><span>Hexa</span></div>
+    </section>
+  </div>
+
+  <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-label="Menu" data-i18n-aria="menu" inert>
+    <div class="overlay-top">
+      <span class="logo"><span class="logo-box"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3"/></svg></span>Datacore</span>
+      <button type="button" class="menu-toggle" style="display:grid" id="menuClose" aria-label="Close menu" data-i18n-aria="closeMenu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <nav aria-label="Mobile" data-i18n-aria="mobileNav">
+      <ul>
+        <li><a href="#" data-close data-i18n="home">Home</a></li>
+        <li><a href="#" data-close data-i18n="services">Services</a></li>
+        <li><a href="#" data-close data-i18n="reviews">Reviews</a></li>
+        <li><a href="#" data-close data-i18n="contact">Contact us</a></li>
+      </ul>
+    </nav>
+    <div class="overlay-cta">
+      <a href="#" class="btn btn-glass" data-close data-i18n="signin">Sign In</a>
+      <a href="#" class="btn btn-primary" data-close data-i18n="getStarted">Get Started</a>
+    </div>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js"></script>
+<script>
+(function () {
+  var lang = document.documentElement.lang === 'fa' ? 'fa' : 'en';
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var VIDEO_SRC = 'https://stream.mux.com/4IMYGcL01xjs7ek5ANO17JC4VQVUTsojZlnw4fXzwSxc.m3u8';
+
+  var I18N = {
+    en: {
+      navLabel: 'Primary', home: 'Home', services: 'Services', reviews: 'Reviews', contact: 'Contact us',
+      s1t: 'Access Control', s1d: 'Roles, SSO and fine-grained policies',
+      s2t: 'Log Streams', s2d: 'Search every event in real time',
+      s3t: 'Server Fleet', s3d: 'Provision, patch and monitor nodes',
+      signin: 'Sign In', getStarted: 'Get Started', openMenu: 'Open menu', closeMenu: 'Close menu', menu: 'Menu', mobileNav: 'Mobile',
+      'new': 'New', badge: 'Say Hello to <span class="ver">Datacore v3.2</span>',
+      h1a: 'Your Networks.', h1b: 'One Rapid <em>Interface</em>.',
+      sub: 'Platform helps admins control access, logs, and servers with purpose.',
+      demo: 'Book a Free Demo', startNow: 'Get Started Now',
+      trustLabel: 'Trusted by', trust: 'Trusted by infrastructure teams at'
+    },
+    fa: {
+      navLabel: 'ناوبری اصلی', home: 'خانه', services: 'خدمات', reviews: 'نظرات', contact: 'تماس با ما',
+      s1t: 'کنترل دسترسی', s1d: 'نقش‌ها، ورود یکپارچه و سیاست‌های دقیق',
+      s2t: 'جریان لاگ‌ها', s2d: 'جست‌وجوی لحظه‌ای در همهٔ رویدادها',
+      s3t: 'ناوگان سرورها', s3d: 'راه‌اندازی، به‌روزرسانی و پایش گره‌ها',
+      signin: 'ورود', getStarted: 'شروع کنید', openMenu: 'باز کردن منو', closeMenu: 'بستن منو', menu: 'منو', mobileNav: 'ناوبری موبایل',
+      'new': 'تازه', badge: 'به <span class="ver">Datacore v3.2</span> سلام کنید',
+      h1a: 'همهٔ شبکه‌هایتان.', h1b: 'در یک <em>رابط</em> سریع.',
+      sub: 'پلتفرمی که به مدیران کمک می‌کند دسترسی‌ها، لاگ‌ها و سرورها را هدفمند کنترل کنند.',
+      demo: 'رزرو دموی رایگان', startNow: 'همین حالا شروع کنید',
+      trustLabel: 'مورد اعتماد', trust: 'مورد اعتماد تیم‌های زیرساخت در'
+    }
+  };
+  var T = I18N[lang];
+  document.querySelectorAll('[data-i18n]').forEach(function (el) { var k = el.getAttribute('data-i18n'); if (T[k] != null) el.textContent = T[k]; });
+  document.querySelectorAll('[data-i18n-html]').forEach(function (el) { var k = el.getAttribute('data-i18n-html'); if (T[k] != null) el.innerHTML = T[k]; });
+  document.querySelectorAll('[data-i18n-aria]').forEach(function (el) { var k = el.getAttribute('data-i18n-aria'); if (T[k] != null) el.setAttribute('aria-label', T[k]); });
+
+  /* ---------- Services dropdown ---------- */
+  var svc = document.getElementById('svc'), svcBtn = document.getElementById('svcBtn');
+  function setSvc(open) { if (!svc || !svcBtn) return; svc.setAttribute('data-open', String(open)); svcBtn.setAttribute('aria-expanded', String(open)); }
+  if (svcBtn) {
+    svcBtn.addEventListener('click', function (e) { e.stopPropagation(); setSvc(svc.getAttribute('data-open') !== 'true'); });
+    document.addEventListener('click', function (e) { if (!svc.contains(e.target)) setSvc(false); });
+  }
+
+  /* ---------- Mobile overlay ---------- */
+  var overlay = document.getElementById('overlay'), openBtn = document.getElementById('menuOpen'), closeBtn = document.getElementById('menuClose');
+  function setMenu(open) {
+    if (!overlay) return;
+    overlay.classList.toggle('open', open);
+    if (open) overlay.removeAttribute('inert'); else overlay.setAttribute('inert', '');
+    if (openBtn) openBtn.setAttribute('aria-expanded', String(open));
+    document.body.style.overflow = open ? 'hidden' : '';
+    if (open && closeBtn) closeBtn.focus(); else if (!open && openBtn && overlay.contains(document.activeElement)) openBtn.focus();
+  }
+  if (openBtn) openBtn.addEventListener('click', function () { setMenu(true); });
+  if (closeBtn) closeBtn.addEventListener('click', function () { setMenu(false); });
+  if (overlay) overlay.querySelectorAll('[data-close]').forEach(function (a) { a.addEventListener('click', function (e) { e.preventDefault(); setMenu(false); }); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { setMenu(false); setSvc(false); } });
+  window.addEventListener('resize', function () { if (window.innerWidth > 960 && overlay && overlay.classList.contains('open')) setMenu(false); });
+
+  /* ---------- Background HLS video ---------- */
+  var bg = document.getElementById('bg'), video = document.getElementById('bgVideo'), hls = null;
+  if (video && bg) {
+    video.addEventListener('playing', function () { bg.classList.add('playing'); });
+    if (reduce) {
+      video.removeAttribute('autoplay');
+    } else {
+      try {
+        if (video.canPlayType('application/vnd.apple.mpegurl')) {
+          video.src = VIDEO_SRC;
+        } else if (window.Hls && window.Hls.isSupported()) {
+          hls = new window.Hls({ capLevelToPlayerSize: true });
+          hls.loadSource(VIDEO_SRC);
+          hls.attachMedia(video);
+          hls.on(window.Hls.Events.ERROR, function (_, d) { if (d && d.fatal) { hls.destroy(); hls = null; bg.classList.remove('playing'); } });
+        }
+        var p = video.play(); if (p && p.catch) p.catch(function () {});
+      } catch (err) { /* poster + gradient fallback stays */ }
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden) video.pause(); else { var q = video.play(); if (q && q.catch) q.catch(function () {}); }
+      });
+    }
+    window.addEventListener('pagehide', function () { if (hls) { hls.destroy(); hls = null; } });
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Red In Black — flow-field shader background</title>
+<script>
+  (function () {
+    var p = new URLSearchParams(location.search);
+    var l = p.get('lang') === 'fa' ? 'fa' : 'en';
+    document.documentElement.lang = l;
+    document.documentElement.dir = l === 'fa' ? 'rtl' : 'ltr';
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Vazirmatn:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* palette: deepest → highlight */
+    --c1: #000000;
+    --c2: #3a0516;
+    --c3: #a3123f;
+    --c4: #f08a6e;
+    --speed: 1;
+    --spot-radius: 0.35;
+    --fg: #fff3f4;
+    --muted: rgba(255, 228, 232, .66);
+    --glass: rgba(10, 0, 4, .42);
+    --line: rgba(255, 200, 210, .16);
+    --sans: "Inter", system-ui, sans-serif;
+    --serif: "Instrument Serif", Georgia, serif;
+  }
+  :root[lang="fa"] { --sans: "Vazirmatn", "Inter", system-ui, sans-serif; --serif: "Vazirmatn", "Instrument Serif", serif; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; background: #000; color: var(--fg); font-family: var(--sans); }
+  body { min-height: 100vh; min-height: 100svh; overflow-x: hidden; }
+
+  .bg {
+    position: fixed; inset: 0; z-index: 0;
+    background:
+      radial-gradient(60% 50% at 70% 20%, rgba(240, 138, 110, .35), transparent 60%),
+      radial-gradient(70% 60% at 25% 70%, rgba(163, 18, 63, .55), transparent 65%),
+      radial-gradient(90% 80% at 50% 50%, #3a0516, #000 80%);
+  }
+  .bg canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .vignette {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: radial-gradient(120% 90% at 50% 45%, transparent 55%, rgba(0,0,0,.55) 100%);
+  }
+
+  header, main, .dock { position: relative; z-index: 2; }
+  header {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 22px clamp(16px, 4vw, 48px);
+  }
+  .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: -.01em; text-decoration: none; color: var(--fg); }
+  .brand svg { width: 22px; height: 22px; }
+  .chip {
+    font-size: 12px; color: var(--muted); border: 1px solid var(--line);
+    padding: 6px 12px; border-radius: 999px; background: var(--glass);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  }
+  .install {
+    display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+    font: 500 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace; direction: ltr;
+    color: var(--fg); border: 1px solid var(--line); background: var(--glass);
+    padding: 9px 12px; border-radius: 10px;
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    transition: border-color .2s, background .2s;
+  }
+  .install:hover { border-color: rgba(255,200,210,.4); background: rgba(40,0,12,.55); }
+  .install svg { width: 14px; height: 14px; flex: none; }
+  .install .txt { max-width: 38ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  main {
+    min-height: calc(100svh - 170px);
+    display: grid; align-content: center;
+    padding: 24px clamp(16px, 4vw, 48px) 40px;
+  }
+  .hero { max-width: 760px; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted);
+    margin-block-end: 20px;
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--c4); box-shadow: 0 0 12px var(--c4); }
+  h1 {
+    margin: 0; font-family: var(--serif); font-weight: 400;
+    font-size: clamp(56px, 11vw, 148px); line-height: .92; letter-spacing: -.02em;
+    text-shadow: 0 10px 60px rgba(0,0,0,.45);
+  }
+  :root[lang="fa"] h1 { font-weight: 700; letter-spacing: 0; line-height: 1.15; font-size: clamp(48px, 9vw, 120px); }
+  h1 em { font-style: italic; color: #ffb3a3; }
+  :root[lang="fa"] h1 em { font-style: normal; }
+  .lede { margin: 22px 0 0; max-width: 52ch; font-size: clamp(15px, 1.6vw, 18px); line-height: 1.65; color: var(--muted); }
+  .ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-block-start: 32px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+    font: 500 15px/1 var(--sans); padding: 14px 22px; border-radius: 999px; text-decoration: none;
+    border: 1px solid transparent; transition: transform .2s, background .2s, border-color .2s;
+  }
+  .btn svg { width: 16px; height: 16px; }
+  :root[dir="rtl"] .btn .arrow { transform: scaleX(-1); }
+  .btn-primary { background: var(--fg); color: #1a0007; }
+  .btn-primary:hover { transform: translateY(-1px); background: #fff; }
+  .btn-ghost { background: var(--glass); color: var(--fg); border-color: var(--line); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+  .btn-ghost:hover { border-color: rgba(255,200,210,.45); }
+
+  .dock {
+    margin: 0 auto 24px; width: min(980px, calc(100% - 32px));
+    display: flex; flex-wrap: wrap; align-items: center; gap: 14px 20px;
+    padding: 14px 16px; border-radius: 18px;
+    background: var(--glass); border: 1px solid var(--line);
+    backdrop-filter: blur(16px) saturate(140%); -webkit-backdrop-filter: blur(16px) saturate(140%);
+  }
+  .group { display: flex; align-items: center; gap: 10px; }
+  .label { font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .icon-btn {
+    width: 38px; height: 38px; display: grid; place-items: center; cursor: pointer;
+    border-radius: 12px; border: 1px solid var(--line); background: rgba(255,255,255,.04); color: var(--fg);
+  }
+  .icon-btn svg { width: 16px; height: 16px; }
+  .swatches { display: flex; gap: 8px; }
+  .swatch {
+    width: 30px; height: 30px; border-radius: 50%; cursor: pointer; padding: 0;
+    border: 2px solid transparent; outline-offset: 2px;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.18);
+  }
+  .swatch[aria-pressed="true"] { border-color: var(--fg); }
+  input[type="range"] { width: 120px; accent-color: var(--c3); }
+  .val { font: 500 12px/1 ui-monospace, Menlo, monospace; min-width: 3.2em; color: var(--fg); }
+  :root[lang="fa"] .val { font-family: var(--sans); }
+  .switch {
+    position: relative; width: 42px; height: 24px; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--line); background: rgba(255,255,255,.08); padding: 0;
+    transition: background .2s;
+  }
+  .switch::after {
+    content: ""; position: absolute; top: 2px; inset-inline-start: 2px; width: 18px; height: 18px; border-radius: 50%;
+    background: var(--fg); transition: inset-inline-start .2s;
+  }
+  .switch[aria-checked="true"] { background: var(--c3); }
+  .switch[aria-checked="true"]::after { inset-inline-start: 20px; }
+  .spacer { flex: 1; }
+  .fps { font-size: 12px; color: var(--muted); }
+
+  .toast {
+    position: fixed; z-index: 5; inset-block-end: 24px; inset-inline-start: 50%;
+    transform: translate(-50%, 20px); opacity: 0; pointer-events: none;
+    background: #fff3f4; color: #1a0007; font-size: 13px; font-weight: 500;
+    padding: 10px 16px; border-radius: 999px; transition: opacity .25s, transform .25s;
+  }
+  :root[dir="rtl"] .toast { transform: translate(50%, 20px); }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  :root[dir="rtl"] .toast.show { transform: translate(50%, 0); }
+
+  [hidden] { display: none !important; }
+  :focus-visible { outline: 2px solid #ffb3a3; outline-offset: 3px; }
+
+  .reveal { opacity: 0; transform: translateY(14px); animation: rise .9s cubic-bezier(.2,.7,.2,1) forwards; }
+  .reveal:nth-child(2) { animation-delay: .08s; }
+  .reveal:nth-child(3) { animation-delay: .16s; }
+  .reveal:nth-child(4) { animation-delay: .24s; }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+
+  @media (max-width: 720px) {
+    .install .txt { max-width: 18ch; }
+    .chip { display: none; }
+    .dock { gap: 12px 14px; }
+    .spacer, .fps { display: none; }
+    input[type="range"] { width: 100px; }
+  }
+  @media (max-width: 420px) {
+    .install .txt { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { animation: none; opacity: 1; transform: none; }
+    .btn, .switch, .switch::after, .toast { transition: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="bg" aria-hidden="true"><canvas id="shader"></canvas></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <header>
+    <a class="brand" href="#" aria-label="Red In Black">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#000" stroke="#a3123f" stroke-width="2"/><path d="M6 14c3-6 9-6 12-2" stroke="#f08a6e" stroke-width="2" stroke-linecap="round"/></svg>
+      <span>Red In Black</span>
+    </a>
+    <span class="chip" data-i18n="chip">WebGL · Flow field · by ashish.indora</span>
+    <button class="install" id="copy" type="button" aria-label="Copy install command">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      <span class="txt">npx shadcn@latest add https://21st.dev/r/ashish.indora/red-in-black</span>
+    </button>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="title">
+      <p class="eyebrow reveal"><span class="dot" aria-hidden="true"></span><span data-i18n="eyebrow">Cursor-reactive shader background</span></p>
+      <h1 id="title" class="reveal" data-i18n-html="title">Red in <em>Black</em></h1>
+      <p class="lede reveal" data-i18n="lede">A slow, liquid flow field of crimson smoke folding through pure black. Move your cursor to pull a spotlight through the current — drop it behind any hero section.</p>
+      <div class="ctas reveal">
+        <a class="btn btn-primary" href="#controls">
+          <span data-i18n="cta1">Tune the flow</span>
+          <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <button class="btn btn-ghost" id="hideUi" type="button" aria-pressed="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span data-i18n="cta2">View fullscreen</span>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <section class="dock" id="controls" aria-label="Shader controls">
+    <div class="group">
+      <button class="icon-btn" id="play" type="button" aria-label="Pause">
+        <svg id="icoPause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+        <svg id="icoPlay" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" hidden><path d="M7 5v14l12-7z"/></svg>
+      </button>
+    </div>
+    <div class="group" role="group" aria-labelledby="palLabel">
+      <span class="label" id="palLabel" data-i18n="palette">Palette</span>
+      <div class="swatches">
+        <button class="swatch" type="button" data-pal="red" aria-pressed="true" style="background:conic-gradient(#000,#3a0516,#a3123f,#f08a6e,#000)" aria-label="Red in black"></button>
+        <button class="swatch" type="button" data-pal="violet" aria-pressed="false" style="background:conic-gradient(#02010A,#04052E,#3D2C8D,#916BBF,#02010A)" aria-label="Midnight violet"></button>
+        <button class="swatch" type="button" data-pal="ember" aria-pressed="false" style="background:conic-gradient(#000,#2b0a00,#c2410c,#fcd34d,#000)" aria-label="Ember"></button>
+      </div>
+    </div>
+    <div class="group">
+      <label class="label" for="speed" data-i18n="speed">Speed</label>
+      <input id="speed" type="range" min="0.2" max="3" step="0.1" value="1">
+      <output class="val" id="speedVal" for="speed">1.0×</output>
+    </div>
+    <div class="group">
+      <span class="label" id="spotLabel" data-i18n="spot">Spotlight</span>
+      <button class="switch" id="spot" type="button" role="switch" aria-checked="true" aria-labelledby="spotLabel"></button>
+    </div>
+    <span class="spacer"></span>
+    <span class="fps" id="status" aria-live="polite"></span>
+  </section>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  var lang = document.documentElement.lang === 'fa' ? 'fa' : 'en';
+  var I18N = {
+    en: {
+      chip: 'WebGL · Flow field · by ashish.indora',
+      eyebrow: 'Cursor-reactive shader background',
+      title: 'Red in <em>Black</em>',
+      lede: 'A slow, liquid flow field of crimson smoke folding through pure black. Move your cursor to pull a spotlight through the current — drop it behind any hero section.',
+      cta1: 'Tune the flow', cta2: 'View fullscreen', cta2off: 'Show interface',
+      palette: 'Palette', speed: 'Speed', spot: 'Spotlight',
+      copied: 'Install command copied', copyFail: 'Copy failed — select the text manually',
+      pause: 'Pause', play: 'Play', controls: 'Shader controls', copyLbl: 'Copy install command',
+      pal: { red: 'Red in black', violet: 'Midnight violet', ember: 'Ember' },
+      live: 'Live', paused: 'Paused', still: 'Still frame (reduced motion)', fallback: 'Static fallback'
+    },
+    fa: {
+      chip: 'WebGL · میدان جریان · اثر ashish.indora',
+      eyebrow: 'پس‌زمینهٔ شیدری که به نشانگر واکنش نشان می‌دهد',
+      title: 'سرخ در <em>سیاه</em>',
+      lede: 'میدان جریانی آرام و سیال از دود ارغوانی که در دل سیاهی مطلق تا می‌خورد. نشانگر را حرکت دهید تا نوری از میان جریان عبور کند؛ آن را پشت هر بخش هیرویی بگذارید.',
+      cta1: 'تنظیم جریان', cta2: 'نمایش تمام‌صفحه', cta2off: 'نمایش رابط',
+      palette: 'پالت', speed: 'سرعت', spot: 'نورافکن',
+      copied: 'دستور نصب کپی شد', copyFail: 'کپی نشد؛ متن را دستی انتخاب کنید',
+      pause: 'توقف', play: 'پخش', controls: 'کنترل‌های شیدر', copyLbl: 'کپی دستور نصب',
+      pal: { red: 'سرخ در سیاه', violet: 'بنفش نیمه‌شب', ember: 'اخگر' },
+      live: 'زنده', paused: 'متوقف', still: 'قاب ثابت (حرکت کاهش‌یافته)', fallback: 'نسخهٔ ایستای جایگزین'
+    }
+  };
+  var T = I18N[lang];
+  var fa = lang === 'fa';
+  function num(s) { return fa ? String(s).replace(/\d/g, function (d) { return '۰۱۲۳۴۵۶۷۸۹'[d]; }).replace('.', '٫') : String(s); }
+
+  document.querySelectorAll('[data-i18n]').forEach(function (el) { var k = el.getAttribute('data-i18n'); if (T[k]) el.textContent = T[k]; });
+  document.querySelectorAll('[data-i18n-html]').forEach(function (el) { var k = el.getAttribute('data-i18n-html'); if (T[k]) el.innerHTML = T[k]; });
+  var dock = document.getElementById('controls'); if (dock) dock.setAttribute('aria-label', T.controls);
+  var copyBtn = document.getElementById('copy'); if (copyBtn) copyBtn.setAttribute('aria-label', T.copyLbl);
+  document.querySelectorAll('.swatch').forEach(function (b) { b.setAttribute('aria-label', T.pal[b.dataset.pal]); b.title = T.pal[b.dataset.pal]; });
+
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var PALETTES = {
+    red:    ['#000000', '#3a0516', '#a3123f', '#f08a6e'],
+    violet: ['#02010A', '#04052E', '#3D2C8D', '#916BBF'],
+    ember:  ['#000000', '#2b0a00', '#c2410c', '#fcd34d']
+  };
+  function hex(h) { h = h.trim().replace('#', ''); return [parseInt(h.substr(0,2),16)/255, parseInt(h.substr(2,2),16)/255, parseInt(h.substr(4,2),16)/255]; }
+  var cs = getComputedStyle(document.documentElement);
+  var state = {
+    colors: ['--c1','--c2','--c3','--c4'].map(function (v) { return hex(cs.getPropertyValue(v) || '#000000'); }),
+    target: null,
+    speed: parseFloat(cs.getPropertyValue('--speed')) || 1,
+    spotRadius: parseFloat(cs.getPropertyValue('--spot-radius')) || 0.35,
+    spot: true, spotAmt: 1, playing: !reduce,
+    mouse: [0.5, 0.5], smooth: [0.5, 0.5], t: 7.0
+  };
+
+  var status = document.getElementById('status');
+  function setStatus(s) { if (status) status.textContent = s; }
+
+  var canvas = document.getElementById('shader');
+  var gl = null;
+  try { gl = canvas && (canvas.getContext('webgl', { antialias: false, premultipliedAlpha: false }) || canvas.getContext('experimental-webgl')); } catch (e) { gl = null; }
+
+  var VS = 'attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}';
+  var FS = [
+    'precision highp float;',
+    'uniform vec2 uRes;uniform float uTime;uniform vec2 uMouse;uniform float uSpot;uniform float uRadius;',
+    'uniform vec3 uC1;uniform vec3 uC2;uniform vec3 uC3;uniform vec3 uC4;',
+    'float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}',
+    'float n(vec2 p){vec2 i=floor(p),f=fract(p);vec2 u=f*f*(3.-2.*f);',
+    ' return mix(mix(h(i),h(i+vec2(1,0)),u.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),u.x),u.y);}',
+    'float fbm(vec2 p){float v=0.,a=.5;mat2 r=mat2(.8,.6,-.6,.8);for(int i=0;i<5;i++){v+=a*n(p);p=r*p*2.02;a*=.5;}return v;}',
+    'void main(){',
+    ' vec2 uv=gl_FragCoord.xy/uRes;vec2 p=(gl_FragCoord.xy-.5*uRes)/min(uRes.x,uRes.y);',
+    ' float t=uTime*.06;',
+    ' vec2 m=(uMouse-.5)*vec2(uRes.x/min(uRes.x,uRes.y),uRes.y/min(uRes.x,uRes.y));',
+    ' float md=length(p-m);',
+    ' vec2 q=vec2(fbm(p*1.1+vec2(0.,t)),fbm(p*1.1+vec2(5.2,1.3)-t));',
+    ' q+=uSpot*.35*exp(-md*md*5.)*(p-m);',
+    ' vec2 r=vec2(fbm(p*1.1+3.*q+vec2(1.7,9.2)+t*1.4),fbm(p*1.1+3.*q+vec2(8.3,2.8)-t*1.1));',
+    ' float f=fbm(p*1.1+3.2*r);',
+    ' float s=smoothstep(.2,1.05,f*f*1.5+.3*length(q)-.15);',
+    ' vec3 col=mix(uC1,uC2,smoothstep(.0,.35,s));',
+    ' col=mix(col,uC3,smoothstep(.35,.8,s)*.9);',
+    ' col=mix(col,uC4,smoothstep(.85,1.,s)*.45*length(r));',
+    ' float spot=exp(-md*md/(uRadius*uRadius));',
+    ' col+=uSpot*spot*(uC3*.22+uC4*.08)*(.3+s);',
+    ' col*=1.-.35*length(uv-.5);',
+    ' col+=(h(gl_FragCoord.xy+fract(uTime))-.5)*.02;',
+    ' gl_FragColor=vec4(col,1.);',
+    '}'
+  ].join('\n');
+
+  var prog, U = {}, raf = 0, visible = true, last = 0, dpr = 1, lastSize = '';
+  function compile(type, src) { var s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; }
+  try {
+    if (!gl) throw new Error('no webgl');
+    prog = gl.createProgram();
+    gl.attachShader(prog, compile(gl.VERTEX_SHADER, VS));
+    gl.attachShader(prog, compile(gl.FRAGMENT_SHADER, FS));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error('link');
+    gl.useProgram(prog);
+    var buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+    var loc = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    ['uRes','uTime','uMouse','uSpot','uRadius','uC1','uC2','uC3','uC4'].forEach(function (k) { U[k] = gl.getUniformLocation(prog, k); });
+  } catch (e) {
+    gl = null; if (canvas) canvas.style.display = 'none';
+  }
+
+  function resize() {
+    if (!gl) return;
+    dpr = Math.min(window.devicePixelRatio || 1, 2) * 0.75; /* flow fields are soft: render below native for perf */
+    var w = Math.max(1, Math.floor(canvas.clientWidth * dpr)), hgt = Math.max(1, Math.floor(canvas.clientHeight * dpr));
+    var key = w + 'x' + hgt;
+    if (key !== lastSize) { canvas.width = w; canvas.height = hgt; lastSize = key; gl.viewport(0, 0, w, hgt); }
+  }
+
+  function draw() {
+    if (!gl) return;
+    resize();
+    // ease toward target palette & spotlight
+    if (state.target) {
+      var done = true;
+      for (var i = 0; i < 4; i++) for (var j = 0; j < 3; j++) {
+        var d = state.target[i][j] - state.colors[i][j];
+        state.colors[i][j] += d * (reduce ? 1 : 0.08);
+        if (Math.abs(d) > 0.002) done = false;
+      }
+      if (done) { state.colors = state.target.map(function (c) { return c.slice(); }); state.target = null; }
+    }
+    state.spotAmt += ((state.spot ? 1 : 0) - state.spotAmt) * (reduce ? 1 : 0.08);
+    state.smooth[0] += (state.mouse[0] - state.smooth[0]) * (reduce ? 1 : 0.08);
+    state.smooth[1] += (state.mouse[1] - state.smooth[1]) * (reduce ? 1 : 0.08);
+    gl.uniform2f(U.uRes, canvas.width, canvas.height);
+    gl.uniform1f(U.uTime, state.t);
+    gl.uniform2f(U.uMouse, state.smooth[0], state.smooth[1]);
+    gl.uniform1f(U.uSpot, state.spotAmt);
+    gl.uniform1f(U.uRadius, state.spotRadius);
+    gl.uniform3fv(U.uC1, state.colors[0]); gl.uniform3fv(U.uC2, state.colors[1]);
+    gl.uniform3fv(U.uC3, state.colors[2]); gl.uniform3fv(U.uC4, state.colors[3]);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+
+  function needsFrames() { return state.playing || state.target || Math.abs(state.spotAmt - (state.spot ? 1 : 0)) > 0.002 || Math.abs(state.mouse[0]-state.smooth[0]) + Math.abs(state.mouse[1]-state.smooth[1]) > 0.001; }
+  function loop(now) {
+    raf = 0;
+    var dt = last ? Math.min((now - last) / 1000, 0.05) : 0; last = now;
+    if (state.playing) state.t += dt * state.speed;
+    draw();
+    if (visible && !document.hidden && needsFrames()) raf = requestAnimationFrame(loop); else last = 0;
+  }
+  function kick() { if (gl && !raf && visible && !document.hidden) raf = requestAnimationFrame(loop); }
+
+  function updateStatus() {
+    if (!gl) return setStatus(T.fallback);
+    if (reduce && !state.playing) return setStatus(T.still);
+    setStatus(state.playing ? T.live : T.paused);
+  }
+
+  if (gl) {
+    draw();
+    kick();
+    var io = 'IntersectionObserver' in window ? new IntersectionObserver(function (es) { visible = es[0].isIntersecting; if (visible) kick(); }) : null;
+    if (io) io.observe(canvas);
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) kick(); });
+    window.addEventListener('resize', function () { draw(); kick(); });
+    window.addEventListener('pointermove', function (e) {
+      state.mouse[0] = e.clientX / window.innerWidth;
+      state.mouse[1] = 1 - e.clientY / window.innerHeight;
+      kick();
+    }, { passive: true });
+    window.addEventListener('pagehide', function () { if (io) io.disconnect(); if (raf) cancelAnimationFrame(raf); });
+  }
+  updateStatus();
+
+  // play / pause
+  var playBtn = document.getElementById('play');
+  var icoPause = document.getElementById('icoPause'), icoPlay = document.getElementById('icoPlay');
+  function syncPlay() {
+    if (!playBtn) return;
+    playBtn.setAttribute('aria-label', state.playing ? T.pause : T.play);
+    if (icoPause) icoPause.hidden = !state.playing;
+    if (icoPlay) icoPlay.hidden = state.playing;
+    updateStatus();
+  }
+  syncPlay();
+  if (playBtn) playBtn.addEventListener('click', function () { state.playing = !state.playing; syncPlay(); kick(); });
+
+  // palette
+  document.querySelectorAll('.swatch').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('.swatch').forEach(function (o) { o.setAttribute('aria-pressed', String(o === b)); });
+      var pal = PALETTES[b.dataset.pal];
+      state.target = pal.map(hex);
+      var root = document.documentElement.style;
+      root.setProperty('--c3', pal[2]); root.setProperty('--c4', pal[3]);
+      if (!gl) { var bg = document.querySelector('.bg'); if (bg) bg.style.background = 'radial-gradient(60% 50% at 70% 20%,' + pal[3] + '55,transparent 60%),radial-gradient(70% 60% at 25% 70%,' + pal[2] + '88,transparent 65%),radial-gradient(90% 80% at 50% 50%,' + pal[1] + ',' + pal[0] + ' 80%)'; }
+      kick();
+    });
+  });
+
+  // speed
+  var speed = document.getElementById('speed'), speedVal = document.getElementById('speedVal');
+  function syncSpeed() { if (speedVal) speedVal.textContent = num(state.speed.toFixed(1)) + '×'; }
+  if (speed) { speed.value = state.speed; speed.addEventListener('input', function () { state.speed = parseFloat(speed.value) || 1; syncSpeed(); }); }
+  syncSpeed();
+
+  // spotlight
+  var spot = document.getElementById('spot');
+  if (spot) spot.addEventListener('click', function () { state.spot = !state.spot; spot.setAttribute('aria-checked', String(state.spot)); kick(); });
+
+  // fullscreen-ish: hide UI
+  var hideBtn = document.getElementById('hideUi');
+  var uiHidden = false;
+  function setUi(hidden) {
+    uiHidden = hidden;
+    ['header', 'main', '.dock'].forEach(function (s) { var el = document.querySelector(s); if (!el) return; el.style.transition = reduce ? 'none' : 'opacity .4s'; el.style.opacity = hidden ? '0' : '1'; el.style.pointerEvents = hidden ? 'none' : ''; });
+    if (hideBtn) { hideBtn.setAttribute('aria-pressed', String(hidden)); hideBtn.style.pointerEvents = 'auto'; hideBtn.style.opacity = '1'; var s = hideBtn.querySelector('span'); if (s) s.textContent = hidden ? T.cta2off : T.cta2; }
+  }
+  if (hideBtn) hideBtn.addEventListener('click', function (e) { e.stopPropagation(); setUi(!uiHidden); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && uiHidden) setUi(false); });
+  document.addEventListener('click', function (e) { if (uiHidden && e.target === document.body || uiHidden && e.target === document.documentElement) setUi(false); });
+
+  // copy install command
+  var toast = document.getElementById('toast'), tt = 0;
+  function showToast(msg) { if (!toast) return; toast.textContent = msg; toast.classList.add('show'); clearTimeout(tt); tt = setTimeout(function () { toast.classList.remove('show'); }, 1800); }
+  if (copyBtn) copyBtn.addEventListener('click', function () {
+    var txt = 'npx shadcn@latest add https://21st.dev/r/ashish.indora/red-in-black';
+    var p = navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(txt) : Promise.reject();
+    p.then(function () { showToast(T.copied); }, function () { showToast(T.copyFail); });
+  });
+})();
+</script>
+</body>
+</html>

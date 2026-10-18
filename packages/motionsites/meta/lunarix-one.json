@@ -1,0 +1,20 @@
+{
+  "title": { "en": "Lunarix One smart ring landing", "fa": "صفحهٔ معرفی حلقهٔ هوشمند Lunarix One" },
+  "oneLiner": {
+    "en": "A starry, glassmorphic product page for a smart ring: thousands of cyan-violet particles inside a glass column form a ring of light that pulses with a heartbeat, breathes, or streams as a motion ribbon, swirling around your cursor; with live-signal tabs, a finish and size configurator and spec grid.",
+    "fa": "صفحهٔ محصولی شیشه‌ای و پرستاره برای یک حلقهٔ هوشمند: هزاران ذرهٔ فیروزه‌ای و بنفش درون یک ستون شیشه‌ای حلقه‌ای از نور می‌سازند که با ضربان می‌تپد، نفس می‌کشد یا مثل نواری از حرکت جاری می‌شود و دور نشانگر می‌چرخد؛ همراه با زبانه‌های سیگنال زنده، انتخاب رنگ و سایز و جدول مشخصات."
+  },
+  "js": true,
+  "props": [
+    { "name": "CONFIG.particles", "type": "number", "default": 7000,
+      "note": { "en": "Particle count on desktop (3,800 under 640px).", "fa": "تعداد ذرات در دسکتاپ (زیر ۶۴۰ پیکسل ۳٬۸۰۰)." } },
+    { "name": "CONFIG.bpm", "type": "number", "default": 72,
+      "note": { "en": "Heartbeat tempo that drives the ring pulse in Heartbeat mode.", "fa": "ضرباهنگ قلب که تپش حلقه را در حالت «تپش» می‌سازد." } },
+    { "name": "CONFIG.cursorRadius", "type": "number", "default": 110,
+      "note": { "en": "Pixel radius in which the cursor swirls and lights particles.", "fa": "شعاع اثر نشانگر به پیکسل که ذرات را می‌چرخاند و روشن می‌کند." } },
+    { "name": "--accent", "type": "color", "default": "#7fe3ff",
+      "note": { "en": "Cyan accent for labels, focus rings and the sparkline.", "fa": "رنگ فیروزه‌ای برچسب‌ها، حلقهٔ فوکوس و نمودار کوچک." } },
+    { "name": "--stage-b", "type": "color", "default": "#2a2c66",
+      "note": { "en": "Centre colour of the indigo hero card gradient.", "fa": "رنگ مرکز گرادیان نیلی کارت اصلی." } }
+  ]
+}

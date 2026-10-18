@@ -1,0 +1,20 @@
+{
+  "title": { "en": "Lumina Neo-Brutalist SaaS landing page", "fa": "لندینگ نئوبروتالیست SaaS لومینا" },
+  "oneLiner": {
+    "en": "A loud yellow Neo-Brutalist SaaS landing: hard-shadow push buttons, a dotted hero with an outlined keyword and a live dashboard mockup that counts up and tilts, a brand marquee, feature, how-it-works, persona and testimonial sections, and a validated signup form.",
+    "fa": "لندینگ SaaS نئوبروتالیست با زرد پررنگ: دکمه‌هایی با سایهٔ سخت که فشرده می‌شوند، هیروی نقطه‌دار با کلیدواژهٔ توخالی و ماکت داشبوردی زنده که عددهایش بالا می‌رود و با نشانگر کج می‌شود، نوار برندهای متحرک، بخش‌های امکانات، مراحل کار، کاربران و نظرها و فرم ثبت‌نام با اعتبارسنجی."
+  },
+  "js": true,
+  "props": [
+    { "name": "--yellow", "type": "color", "default": "#ffe17c",
+      "note": { "en": "Primary brand yellow for the nav, hero, feature band and CTA.", "fa": "زرد اصلی برند برای ناوبری، هیرو، بخش امکانات و فراخوان." } },
+    { "name": "--charcoal", "type": "color", "default": "#171e19",
+      "note": { "en": "Dark background of the marquee, how-it-works section and footer.", "fa": "پس‌زمینهٔ تیرهٔ نوار برندها، بخش مراحل و فوتر." } },
+    { "name": "--sage", "type": "color", "default": "#b7c6c2",
+      "note": { "en": "Sage accent for icon boxes, chart panel and testimonials band.", "fa": "رنگ مریم‌گلیِ تأکیدی برای جعبهٔ آیکن‌ها، پنل نمودار و بخش نظرها." } },
+    { "name": "--press", "type": "length", "default": "4px",
+      "note": { "en": "How far buttons travel into their hard shadow on hover.", "fa": "میزان جابه‌جایی دکمه‌ها به سمت سایه‌شان هنگام هاور." } },
+    { "name": "REVENUE", "type": "number", "default": 124502,
+      "note": { "en": "Revenue figure the dashboard mockup counts up to.", "fa": "مبلغ درآمدی که داشبورد ماکت تا آن شمارش می‌کند." } }
+  ]
+}

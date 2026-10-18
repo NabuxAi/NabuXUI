@@ -1,0 +1,20 @@
+{
+  "title": { "en": "nm ASCII city flicker hero", "fa": "هیروی شهر اسکی سوسوزن nm" },
+  "oneLiner": {
+    "en": "A night skyline drawn live in monospace ASCII on a canvas: clouds drift, lit windows flicker and the pointer acts as a lamp. Switch glyph style, density and flicker strength, or pause it.",
+    "fa": "خط آسمان شبانهٔ شهر که زنده با نویسه‌های اسکی تک‌فاصله روی بوم کشیده می‌شود: ابرها می‌لغزند، پنجره‌های روشن سوسو می‌زنند و نشانگر مثل یک چراغ عمل می‌کند. سبک نویسه، تراکم و شدت سوسو را تغییر دهید یا آن را متوقف کنید."
+  },
+  "js": true,
+  "props": [
+    { "name": "--cell", "type": "length", "default": "9px",
+      "note": { "en": "Width of one ASCII cell; smaller means a denser picture.", "fa": "پهنای هر خانهٔ اسکی؛ عدد کوچک‌تر یعنی تصویر متراکم‌تر." } },
+    { "name": "--flicker", "type": "number", "default": "0.18",
+      "note": { "en": "How strongly each glyph's brightness jitters per frame (0–1).", "fa": "شدت لرزش روشنایی هر نویسه در هر فریم (۰ تا ۱)." } },
+    { "name": "CONFIG.fps", "type": "number", "default": "20",
+      "note": { "en": "Redraw rate of the ASCII canvas.", "fa": "نرخ بازترسیم بوم اسکی." } },
+    { "name": "CONFIG.ramps", "type": "object", "default": "chars / blocks / binary",
+      "note": { "en": "Glyph ramps from dark to bright for each style.", "fa": "زنجیرهٔ نویسه‌ها از تاریک به روشن برای هر سبک." } },
+    { "name": "--accent", "type": "color", "default": "#f2f2f2",
+      "note": { "en": "Brand cursor and active control colour.", "fa": "رنگ مکان‌نمای برند و کنترل فعال." } }
+  ]
+}

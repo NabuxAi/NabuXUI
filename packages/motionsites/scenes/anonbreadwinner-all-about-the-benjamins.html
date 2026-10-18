@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>All About The Benjamins — flicker ASCII</title>
+<script>
+  (function () {
+    var p = new URLSearchParams(location.search);
+    var l = p.get('lang') === 'fa' ? 'fa' : 'en';
+    document.documentElement.lang = l;
+    document.documentElement.dir = l === 'fa' ? 'rtl' : 'ltr';
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Vazirmatn:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0d0b;
+    --surface: #111612;
+    --border: #1f2a22;
+    --fg: #e8f2ea;
+    --muted: #8a9a8e;
+    --ink: #11a14a;          /* ASCII glyph colour */
+    --paper: #eef3ee;        /* ASCII background */
+    --glow: rgba(40, 220, 110, .55);
+    --radius: 18px;
+    --cell: 10px;            /* glyph cell size */
+    --fps: 14;
+    --font: 'Inter', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  html[lang="fa"] { --font: 'Vazirmatn', 'Inter', system-ui, sans-serif; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: radial-gradient(1200px 600px at 50% -10%, #12261a 0%, var(--bg) 60%);
+    color: var(--fg);
+    font-family: var(--font);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 28px 20px 64px; }
+
+  header.top {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    margin-block-end: 22px; flex-wrap: wrap;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .logo {
+    inline-size: 38px; block-size: 38px; border-radius: 10px;
+    display: grid; place-items: center;
+    background: #0f2416; border: 1px solid #1f4a2c; color: #3ee07f;
+    font-family: var(--mono); font-weight: 600;
+  }
+  .brand h1 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: -.01em; }
+  .brand p { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+  .chip {
+    font-family: var(--mono); font-size: 12px; color: #6fe3a0;
+    border: 1px solid #1f4a2c; background: #0d1d12; padding: 6px 10px; border-radius: 999px;
+    direction: ltr; unicode-bidi: isolate;
+  }
+
+  /* ---------- Stage ---------- */
+  .stage {
+    position: relative; border-radius: var(--radius); overflow: hidden;
+    border: 1px solid var(--border);
+    aspect-ratio: 16 / 10;
+    background: var(--paper);
+    box-shadow: 0 30px 80px -30px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.02) inset;
+    cursor: crosshair;
+    touch-action: pan-y;
+  }
+  .ascii { position: absolute; inset: 0; inline-size: 100%; block-size: 100%; display: block; }
+  .ascii.glow { filter: drop-shadow(0 0 2px var(--glow)); }
+  .fx-scan, .fx-vig { position: absolute; inset: 0; pointer-events: none; }
+  .fx-scan {
+    background: repeating-linear-gradient(to bottom, rgba(0,0,0,.06) 0 1px, transparent 1px 3px);
+    mix-blend-mode: multiply;
+  }
+  .fx-vig { background: radial-gradient(120% 100% at 50% 45%, transparent 55%, rgba(0,0,0,.28) 100%); }
+  .stage[data-theme="terminal"] .fx-scan { background: repeating-linear-gradient(to bottom, rgba(255,255,255,.035) 0 1px, transparent 1px 3px); mix-blend-mode: screen; }
+  .stage[data-theme="terminal"] .fx-vig { background: radial-gradient(120% 100% at 50% 45%, transparent 50%, rgba(0,0,0,.6) 100%); }
+  .hud {
+    position: absolute; inset-block-end: 12px; inset-inline-start: 12px;
+    font-family: var(--mono); font-size: 11px; color: #0b5a2a;
+    background: rgba(238,243,238,.75); border: 1px solid rgba(17,161,74,.3);
+    padding: 4px 8px; border-radius: 6px; pointer-events: none;
+    direction: ltr; unicode-bidi: isolate;
+  }
+  .stage[data-theme="terminal"] .hud { color: #6fe3a0; background: rgba(0,0,0,.55); }
+
+  /* ---------- Controls ---------- */
+  .controls {
+    margin-block-start: 16px;
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px;
+  }
+  .ctl {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; min-inline-size: 0;
+  }
+  .ctl label, .ctl .lbl { font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
+  .ctl output { font-family: var(--mono); color: var(--fg); }
+  input[type="range"] { inline-size: 100%; accent-color: #22c55e; }
+  .seg { display: flex; gap: 6px; }
+  .seg button, .btn {
+    flex: 1; font: inherit; font-size: 13px; color: var(--fg);
+    background: #0c110d; border: 1px solid var(--border); border-radius: 9px;
+    padding: 8px 10px; cursor: pointer; transition: background .2s, border-color .2s, color .2s;
+  }
+  .seg button[aria-pressed="true"] { background: #11361e; border-color: #22c55e; color: #bdf7d2; }
+  .btn:hover, .seg button:hover { border-color: #2f6b43; }
+  .btn.primary { background: #16a34a; border-color: #16a34a; color: #04120a; font-weight: 600; }
+  .btn.primary:hover { background: #22c55e; }
+  .row { display: flex; gap: 6px; }
+  button:focus-visible, input:focus-visible, a:focus-visible { outline: 2px solid #4ade80; outline-offset: 2px; }
+
+  /* ---------- Variants ---------- */
+  h2 { font-size: 15px; font-weight: 600; margin: 40px 0 6px; }
+  .sub { color: var(--muted); font-size: 13px; margin: 0 0 16px; }
+  .variants { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 16px; }
+  .v {
+    position: relative; overflow: hidden; border-radius: 16px; border: 1px solid var(--border);
+    min-block-size: 280px; background: #000;
+  }
+  .v .ascii { opacity: 1; }
+  .v .content { position: relative; z-index: 2; padding: 22px; block-size: 100%; display: flex; flex-direction: column; }
+  .v-hero { background: #050906; }
+  .v-hero .shade { position: absolute; inset: 0; z-index: 1; background: linear-gradient(to top, rgba(5,9,6,.95) 10%, rgba(5,9,6,.35) 60%, rgba(5,9,6,.1)); }
+  .v-hero .content { justify-content: flex-end; gap: 10px; }
+  .v-hero h3 { margin: 0; font-size: clamp(26px, 3.2vw, 40px); line-height: 1.05; letter-spacing: -.02em; font-weight: 700; }
+  .v-hero p { margin: 0; color: #a8bcad; font-size: 14px; max-inline-size: 36ch; }
+  .v-hero .row { margin-block-start: 6px; }
+  .v-hero .btn { flex: 0 0 auto; }
+  .v-card { background: var(--paper); color: #0b2a17; }
+  .v-card .ascii-box { position: relative; block-size: 150px; border-radius: 10px; overflow: hidden; border: 1px solid rgba(17,161,74,.25); }
+  .v-card .content { gap: 12px; }
+  .v-card .price { display: flex; align-items: baseline; gap: 6px; }
+  .v-card .price b { font-size: 34px; letter-spacing: -.02em; font-family: var(--mono); direction: ltr; unicode-bidi: isolate; }
+  .v-card .price span { color: #4a6b55; font-size: 13px; }
+  .v-card .title { font-weight: 600; font-size: 15px; margin: 0; }
+  .v-card .btn { background: #0b2a17; color: #e8fbe9; border-color: #0b2a17; }
+  .v-card .btn[aria-pressed="true"] { background: #16a34a; border-color: #16a34a; color: #04120a; }
+  .v-term { background: #000; font-family: var(--mono); }
+  .v-term .bar { display: flex; gap: 6px; padding: 12px 14px; border-block-end: 1px solid #142017; position: relative; z-index: 2; background: rgba(0,0,0,.6); }
+  .v-term .bar i { inline-size: 10px; block-size: 10px; border-radius: 50%; background: #2a3a2e; }
+  .v-term .ascii { inset-block-start: 35px; block-size: calc(100% - 35px); }
+  .v-term .prompt {
+    position: absolute; z-index: 2; inset-inline: 0; inset-block-end: 0; padding: 10px 14px;
+    background: linear-gradient(to top, rgba(0,0,0,.95), rgba(0,0,0,0)); color: #6fe3a0; font-size: 12px;
+    direction: ltr; text-align: left;
+  }
+  .caret { display: inline-block; inline-size: 7px; block-size: 13px; background: #6fe3a0; vertical-align: -2px; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  footer { margin-block-start: 36px; color: var(--muted); font-size: 12px; text-align: center; }
+
+  .toast {
+    position: fixed; inset-block-end: 18px; inset-inline-start: 50%; transform: translateX(-50%) translateY(20px);
+    background: #0f2416; border: 1px solid #22c55e; color: #bdf7d2; padding: 10px 14px; border-radius: 10px;
+    font-size: 13px; opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; z-index: 10;
+  }
+  [dir="rtl"] .toast { transform: translateX(50%) translateY(20px); }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  [dir="rtl"] .toast.show { transform: translateX(50%) translateY(0); }
+
+  @media (max-width: 960px) {
+    .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .variants { grid-template-columns: 1fr 1fr; }
+    .v-hero { grid-column: 1 / -1; }
+  }
+  @media (max-width: 600px) {
+    .wrap { padding: 18px 14px 48px; }
+    .stage { aspect-ratio: 4 / 5; }
+    .controls { grid-template-columns: minmax(0, 1fr); }
+    .variants { grid-template-columns: minmax(0, 1fr); }
+    .chip { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .caret { animation: none; }
+    .toast { transition: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">$</div>
+      <div>
+        <h1 data-i18n="title">All About The Benjamins</h1>
+        <p data-i18n="tag">Flicker ASCII art in the Dither style</p>
+      </div>
+    </div>
+    <span class="chip">npx shadcn add all-about-the-benjamins</span>
+  </header>
+
+  <main>
+    <section aria-labelledby="stage-label">
+      <h2 id="stage-label" class="visually" style="position:absolute;inline-size:1px;block-size:1px;overflow:hidden;clip:rect(0 0 0 0)" data-i18n="stageLabel">Live ASCII stage</h2>
+      <div class="stage" id="stage" data-theme="paper" role="img" aria-label="A fan of hundred-dollar bills rendered as flickering green ASCII characters" data-i18n-aria="stageAria">
+        <canvas class="ascii glow" id="main" aria-hidden="true"></canvas>
+        <div class="fx-scan" aria-hidden="true"></div>
+        <div class="fx-vig" aria-hidden="true"></div>
+        <div class="hud" id="hud" aria-hidden="true">— × —</div>
+      </div>
+
+      <div class="controls">
+        <div class="ctl">
+          <label for="density"><span data-i18n="density">Density</span><output id="densityOut" for="density"></output></label>
+          <input id="density" type="range" min="6" max="16" step="1" value="10">
+        </div>
+        <div class="ctl">
+          <label for="flicker"><span data-i18n="flicker">Flicker</span><output id="flickerOut" for="flicker"></output></label>
+          <input id="flicker" type="range" min="0" max="100" step="1" value="35">
+        </div>
+        <div class="ctl">
+          <span class="lbl" id="themeLbl" data-i18n="theme">Palette</span>
+          <div class="seg" role="group" aria-labelledby="themeLbl">
+            <button type="button" data-theme-btn="paper" aria-pressed="true" data-i18n="paper">Paper</button>
+            <button type="button" data-theme-btn="terminal" aria-pressed="false" data-i18n="terminal">Terminal</button>
+          </div>
+        </div>
+        <div class="ctl">
+          <span class="lbl" data-i18n="playback">Playback</span>
+          <div class="row">
+            <button type="button" class="btn" id="play" aria-pressed="false" data-i18n="pause">Pause</button>
+            <button type="button" class="btn primary" id="shuffle" data-i18n="shuffle">Make it rain</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section aria-labelledby="uses">
+      <h2 id="uses" data-i18n="uses">Drop it in anywhere</h2>
+      <p class="sub" data-i18n="usesSub">The same renderer powers hero backgrounds, cards and retro terminal panels.</p>
+      <div class="variants">
+        <article class="v v-hero">
+          <canvas class="ascii" data-variant="hero" aria-hidden="true"></canvas>
+          <div class="shade" aria-hidden="true"></div>
+          <div class="content">
+            <h3 data-i18n="heroH">Get paid in<br>every currency.</h3>
+            <p data-i18n="heroP">Invoices, payouts and cards in one dashboard. Settle in minutes, not days.</p>
+            <div class="row">
+              <a class="btn primary" href="#uses" id="heroCta" data-i18n="heroCta">Open an account</a>
+            </div>
+          </div>
+        </article>
+        <article class="v v-card">
+          <div class="content">
+            <div class="ascii-box"><canvas class="ascii" data-variant="card" aria-hidden="true"></canvas></div>
+            <p class="title" data-i18n="cardT">Pro plan</p>
+            <div class="price"><b>$100</b><span data-i18n="cardPer">per month</span></div>
+            <button type="button" class="btn" id="cardBtn" aria-pressed="false" data-i18n="cardBtn">Choose plan</button>
+          </div>
+        </article>
+        <article class="v v-term">
+          <div class="bar" aria-hidden="true"><i></i><i></i><i></i></div>
+          <canvas class="ascii" data-variant="term" aria-hidden="true"></canvas>
+          <div class="prompt"><span>$ cash --count 10x100</span> <span class="caret" aria-hidden="true"></span></div>
+        </article>
+      </div>
+    </section>
+  </main>
+  <footer data-i18n="foot">Procedural ASCII · Bayer dither · no video, no dependencies</footer>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+  var LANG = document.documentElement.lang === 'fa' ? 'fa' : 'en';
+  var I18N = {
+    en: {
+      title: 'All About The Benjamins', tag: 'Flicker ASCII art in the Dither style',
+      stageLabel: 'Live ASCII stage',
+      stageAria: 'A fan of hundred-dollar bills rendered as flickering green ASCII characters',
+      density: 'Density', flicker: 'Flicker', theme: 'Palette', paper: 'Paper', terminal: 'Terminal',
+      playback: 'Playback', pause: 'Pause', play: 'Play', shuffle: 'Make it rain',
+      uses: 'Drop it in anywhere', usesSub: 'The same renderer powers hero backgrounds, cards and retro terminal panels.',
+      heroH: 'Get paid in<br>every currency.', heroP: 'Invoices, payouts and cards in one dashboard. Settle in minutes, not days.',
+      heroCta: 'Open an account', cardT: 'Pro plan', cardPer: 'per month', cardBtn: 'Choose plan', cardChosen: 'Plan selected',
+      foot: 'Procedural ASCII · Bayer dither · no video, no dependencies',
+      toastRain: 'Fresh stack dealt', toastHero: 'Account form would open here', toastCard: 'Pro plan selected',
+      px: 'px', pct: '%'
+    },
+    fa: {
+      title: 'همه‌چیز دربارهٔ بنجامین‌ها', tag: 'هنر اسکی چشمک‌زن به سبک دیزر',
+      stageLabel: 'صحنهٔ زندهٔ اسکی',
+      stageAria: 'بادبزنی از اسکناس‌های صد دلاری که با کاراکترهای سبز و چشمک‌زن اسکی کشیده شده است',
+      density: 'تراکم', flicker: 'چشمک', theme: 'پالت', paper: 'کاغذی', terminal: 'ترمینال',
+      playback: 'پخش', pause: 'توقف', play: 'پخش', shuffle: 'پول بباره!',
+      uses: 'هر جا که خواستی بگذارش', usesSub: 'همین رندرکننده پس‌زمینهٔ هیرو، کارت‌ها و پنل‌های ترمینالی رترو را می‌سازد.',
+      heroH: 'با هر ارزی<br>پولت را بگیر.', heroP: 'فاکتور، تسویه و کارت در یک داشبورد. تسویه در چند دقیقه، نه چند روز.',
+      heroCta: 'افتتاح حساب', cardT: 'پلن حرفه‌ای', cardPer: 'در ماه', cardBtn: 'انتخاب پلن', cardChosen: 'پلن انتخاب شد',
+      foot: 'اسکی رویه‌ای · دیزر بایر · بدون ویدیو، بدون وابستگی',
+      toastRain: 'یک دستهٔ تازه چیده شد', toastHero: 'فرم افتتاح حساب اینجا باز می‌شود', toastCard: 'پلن حرفه‌ای انتخاب شد',
+      px: ' پیکسل', pct: '٪'
+    }
+  };
+  var T = I18N[LANG];
+  var faDigits = function (s) { return LANG === 'fa' ? String(s).replace(/\d/g, function (d) { return '۰۱۲۳۴۵۶۷۸۹'[d]; }) : String(s); };
+  document.querySelectorAll('[data-i18n]').forEach(function (el) {
+    var k = el.getAttribute('data-i18n');
+    if (T[k] != null) { if (k === 'heroH') el.innerHTML = T[k]; else el.textContent = T[k]; }
+  });
+  document.querySelectorAll('[data-i18n-aria]').forEach(function (el) {
+    var k = el.getAttribute('data-i18n-aria'); if (T[k]) el.setAttribute('aria-label', T[k]);
+  });
+  document.title = T.title + (LANG === 'fa' ? ' — اسکی چشمک‌زن' : ' — flicker ASCII');
+
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var css = getComputedStyle(document.documentElement);
+  var cssVar = function (n, f) { var v = css.getPropertyValue(n).trim(); return v || f; };
+
+  // ---------- Config ----------
+  var BILLS = 10;           // bills in the fan
+  var RAMP = ' .,:-=+*o#%@'; // light → dark glyph ramp
+  var BAYER = [0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5].map(function (v) { return v / 16 - .5; });
+  var PALETTES = {
+    paper:    { bg: cssVar('--paper', '#eef3ee'), ink: cssVar('--ink', '#11a14a') },
+    terminal: { bg: '#030805', ink: '#3ee07f' },
+    heroDark: { bg: '#050906', ink: '#1f9d52' },
+    term:     { bg: '#000000', ink: '#34d27a' }
+  };
+
+  // ---------- Procedural bill ----------
+  function drawBill(g, w, h, seed) {
+    g.save();
+    // white paper margin keeps neighbouring bills apart
+    g.fillStyle = '#ffffff'; g.fillRect(-w/2, -h/2, w, h);
+    // dark engraved frame
+    g.fillStyle = '#3a3a3a'; g.fillRect(-w/2 + h*.08, -h/2 + h*.08, w - h*.16, h - h*.16);
+    // light body with engraved hatching
+    g.fillStyle = '#d4d8d4'; g.fillRect(-w/2 + h*.15, -h/2 + h*.15, w - h*.3, h - h*.3);
+    g.strokeStyle = '#6a6a6a'; g.lineWidth = h * .018;
+    for (var y = -h/2 + h*.2; y < h/2 - h*.18; y += h * .07) {
+      g.beginPath(); g.moveTo(-w/2 + h*.18, y); g.lineTo(-w*.02, y); g.stroke();
+    }
+    // portrait oval (outer end of the bill)
+    var px = w * .22, rx = h * .27, ry = h * .34;
+    g.fillStyle = '#f2f2f2'; g.beginPath(); g.ellipse(px, 0, rx, ry, 0, 0, Math.PI*2); g.fill();
+    g.fillStyle = '#151515';
+    g.beginPath(); g.ellipse(px - rx*.05, -ry*.1, rx*.62, ry*.66, 0, 0, Math.PI*2); g.fill();     // hair/head
+    g.fillStyle = '#8c8c8c';
+    g.beginPath(); g.ellipse(px + rx*.12, ry*.0, rx*.38, ry*.48, 0, 0, Math.PI*2); g.fill();     // face
+    g.fillStyle = '#1e1e1e';
+    g.beginPath(); g.ellipse(px, ry*.95, rx*.9, ry*.4, 0, Math.PI, 0); g.fill();               // shoulders
+    // seals
+    g.fillStyle = '#1e1e1e';
+    g.beginPath(); g.arc(-w*.08, -h*.06, h*.13, 0, Math.PI*2); g.fill();
+    g.fillStyle = '#f0f0f0'; g.beginPath(); g.arc(-w*.08, -h*.06, h*.07, 0, Math.PI*2); g.fill();
+    g.fillStyle = '#1e1e1e';
+    g.beginPath(); g.arc(w*.4, h*.18, h*.09, 0, Math.PI*2); g.fill();
+    // corner numerals
+    g.fillStyle = '#111'; g.font = '800 ' + (h*.2) + 'px Inter, sans-serif'; g.textBaseline = 'middle';
+    g.textAlign = 'left'; g.fillText('100', -w/2 + h*.2, -h/2 + h*.3);
+    g.textAlign = 'right'; g.fillText('100', w/2 - h*.2, -h/2 + h*.3);
+    g.textAlign = 'left'; g.fillText('100', -w/2 + h*.2, h/2 - h*.3);
+    g.restore();
+  }
+
+  // ---------- Renderer ----------
+  function Renderer(canvas, opts) {
+    this.c = canvas; this.ctx = canvas.getContext('2d');
+    this.opts = opts;
+    this.src = document.createElement('canvas'); this.sg = this.src.getContext('2d', { willReadFrequently: true });
+    this.small = document.createElement('canvas'); this.smg = this.small.getContext('2d', { willReadFrequently: true });
+    this.t = Math.random() * 10; this.visible = true; this.last = 0;
+    this.jitter = []; for (var i = 0; i < BILLS; i++) this.jitter.push(Math.random() - .5);
+    this.px = .5; this.py = .5; this.tx = .5; this.ty = .5; this.deal = 1;
+    this.resize();
+  }
+  Renderer.prototype.resize = function () {
+    var r = this.c.getBoundingClientRect();
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    this.w = Math.max(1, r.width); this.h = Math.max(1, r.height);
+    this.c.width = Math.round(this.w * dpr); this.c.height = Math.round(this.h * dpr);
+    this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var cell = this.opts.cell();
+    this.cw = cell * .62 > 4 ? cell * .62 : 4; this.ch = cell;
+    this.cols = Math.max(10, Math.floor(this.w / this.cw));
+    this.rows = Math.max(6, Math.floor(this.h / this.ch));
+    this.src.width = this.cols * 4; this.src.height = this.rows * 4 * (this.ch / this.cw) / 1;
+    this.src.height = Math.round(this.rows * 4 * this.ch / this.cw);
+    this.small.width = this.cols; this.small.height = this.rows;
+  };
+  Renderer.prototype.scene = function () {
+    var g = this.sg, W = this.src.width, H = this.src.height;
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    // paper with vignette (as in the reference)
+    var grd = g.createRadialGradient(W*.5, H*.45, Math.min(W,H)*.15, W*.5, H*.5, Math.max(W,H)*.75);
+    grd.addColorStop(0, '#ffffff'); grd.addColorStop(.7, '#f6f6f6'); grd.addColorStop(1, '#cfcfcf');
+    g.fillStyle = grd; g.fillRect(0, 0, W, H);
+    var o = this.opts, s = Math.min(W, H * 1.3) * (o.scale || 1);
+    var bw = s * .44, bh = bw * .43;
+    var pivX = W * (o.cx || .64) + (this.px - .5) * W * .04;
+    var pivY = H * (o.cy || .86) + (this.py - .5) * H * .03;
+    var breath = reduce ? 0 : Math.sin(this.t * .8) * .05;
+    var spread = (1.35 + (this.px - .5) * .4 + breath) * this.deal;
+    var base = -2.9;
+    for (var i = 0; i < BILLS; i++) {
+      var k = i / (BILLS - 1);
+      var a = base + k * spread + this.jitter[i] * .03;
+      g.save();
+      g.translate(pivX, pivY);
+      g.rotate(a);
+      g.translate(bw * .5 + bh * .1, 0);
+      // drop shadow edge
+      g.fillStyle = 'rgba(0,0,0,.12)'; g.fillRect(-bw/2 + bh*.03, -bh/2 + bh*.08, bw, bh);
+      drawBill(g, bw, bh, i);
+      g.restore();
+    }
+  };
+  Renderer.prototype.frame = function (now, force) {
+    var fps = 14;
+    if (!force && now - this.last < 1000 / fps) return;
+    var dt = this.last ? Math.min(.1, (now - this.last) / 1000) : .016;
+    this.last = now; this.t += dt;
+    this.px += (this.tx - this.px) * .12; this.py += (this.ty - this.py) * .12;
+    if (this.dealStart != null) { var q = Math.min(1, (now - this.dealStart) / 900); this.deal = .15 + .85 * (1 - Math.pow(1 - q, 3)); if (q >= 1) this.dealStart = null; }
+    this.scene();
+    var sm = this.smg;
+    sm.imageSmoothingEnabled = true; sm.imageSmoothingQuality = 'high';
+    sm.drawImage(this.src, 0, 0, this.cols, this.rows);
+    var data = sm.getImageData(0, 0, this.cols, this.rows).data;
+    var pal = PALETTES[this.opts.palette()];
+    var ctx = this.ctx;
+    ctx.fillStyle = pal.bg; ctx.fillRect(0, 0, this.w, this.h);
+    ctx.fillStyle = pal.ink;
+    ctx.font = '700 ' + this.ch + 'px "JetBrains Mono", ui-monospace, monospace';
+    ctx.textBaseline = 'top';
+    var flick = this.opts.flicker() / 100, n = RAMP.length - 1;
+    var offX = (this.w - this.cols * this.cw) / 2, offY = (this.h - this.rows * this.ch) / 2;
+    var glyph = '';
+    for (var y = 0; y < this.rows; y++) {
+      for (var x = 0; x < this.cols; x++) {
+        var p = (y * this.cols + x) * 4;
+        var lum = (data[p] * .299 + data[p+1] * .587 + data[p+2] * .114) / 255;
+        var dark = 1 - lum;
+        // dither: ordered Bayer + temporal flicker noise
+        var d = BAYER[(y & 3) * 4 + (x & 3)] * .22;
+        var noise = flick ? (Math.random() - .5) * flick * .35 : 0;
+        var v = dark * 1.3 + d + noise - .04;
+        if (v <= .2) continue;
+        var idx = Math.max(1, Math.min(n, Math.round(v * n)));
+        ctx.globalAlpha = Math.min(1, .45 + v * 1.2);
+        glyph = RAMP[idx];
+        ctx.fillText(glyph, offX + x * this.cw, offY + y * this.ch);
+      }
+    }
+    ctx.globalAlpha = 1;
+  };
+
+  // ---------- Main stage ----------
+  var stage = document.getElementById('stage');
+  var mainCanvas = document.getElementById('main');
+  var density = document.getElementById('density');
+  var flicker = document.getElementById('flicker');
+  var densityOut = document.getElementById('densityOut');
+  var flickerOut = document.getElementById('flickerOut');
+  var hud = document.getElementById('hud');
+  var state = { theme: 'paper', playing: !reduce };
+  if (!stage || !mainCanvas) return;
+  var cellPx = parseInt(cssVar('--cell', '10'), 10); if (cellPx >= 6 && cellPx <= 16) density.value = cellPx;
+
+  var renderers = [];
+  var main = new Renderer(mainCanvas, {
+    cell: function () { return +density.value; },
+    flicker: function () { return +flicker.value; },
+    palette: function () { return state.theme; },
+    cx: .62, cy: .88, scale: 1.1
+  });
+  renderers.push(main);
+
+  var variantCfg = {
+    hero: { cell: 8, flicker: 30, palette: 'heroDark', cx: .74, cy: .8, scale: 1.05 },
+    card: { cell: 6, flicker: 25, palette: 'paper', cx: .64, cy: .9, scale: 1 },
+    term: { cell: 7, flicker: 55, palette: 'term', cx: .66, cy: .82, scale: 1 }
+  };
+  document.querySelectorAll('canvas[data-variant]').forEach(function (cv) {
+    var cfg = variantCfg[cv.getAttribute('data-variant')];
+    if (!cfg) return;
+    renderers.push(new Renderer(cv, {
+      cell: function () { return cfg.cell; },
+      flicker: function () { return cfg.flicker; },
+      palette: function () { return cfg.palette; },
+      cx: cfg.cx, cy: cfg.cy, scale: cfg.scale
+    }));
+  });
+
+  function updateOutputs() {
+    densityOut.textContent = faDigits(density.value) + T.px;
+    flickerOut.textContent = faDigits(flicker.value) + T.pct;
+    hud.textContent = main.cols + ' × ' + main.rows + ' · ' + (state.playing ? '14fps' : 'paused');
+  }
+  function redrawAll() { renderers.forEach(function (r) { if (r.visible) r.frame(performance.now(), true); }); }
+
+  density.addEventListener('input', function () { main.resize(); main.frame(performance.now(), true); updateOutputs(); });
+  flicker.addEventListener('input', function () { updateOutputs(); if (!state.playing) main.frame(performance.now(), true); });
+  document.querySelectorAll('[data-theme-btn]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      state.theme = b.getAttribute('data-theme-btn');
+      stage.setAttribute('data-theme', state.theme);
+      mainCanvas.classList.toggle('glow', true);
+      document.querySelectorAll('[data-theme-btn]').forEach(function (o) { o.setAttribute('aria-pressed', String(o === b)); });
+      main.frame(performance.now(), true);
+    });
+  });
+  var playBtn = document.getElementById('play');
+  function syncPlay() {
+    playBtn.textContent = state.playing ? T.pause : T.play;
+    playBtn.setAttribute('aria-pressed', String(!state.playing));
+    updateOutputs();
+  }
+  playBtn.addEventListener('click', function () { state.playing = !state.playing; syncPlay(); if (state.playing) kick(); });
+
+  var toastEl = document.getElementById('toast'), toastT;
+  function toast(msg) {
+    toastEl.textContent = msg; toastEl.classList.add('show');
+    clearTimeout(toastT); toastT = setTimeout(function () { toastEl.classList.remove('show'); }, 1800);
+  }
+  document.getElementById('shuffle').addEventListener('click', function () {
+    renderers.forEach(function (r) {
+      r.jitter = r.jitter.map(function () { return Math.random() - .5; });
+      if (!reduce) { r.deal = .15; r.dealStart = performance.now(); }
+    });
+    if (!state.playing || reduce) { renderers.forEach(function (r) { r.deal = 1; r.dealStart = null; }); redrawAll(); }
+    toast(T.toastRain);
+  });
+  document.getElementById('heroCta').addEventListener('click', function (e) { e.preventDefault(); toast(T.toastHero); });
+  var cardBtn = document.getElementById('cardBtn');
+  cardBtn.addEventListener('click', function () {
+    var on = cardBtn.getAttribute('aria-pressed') !== 'true';
+    cardBtn.setAttribute('aria-pressed', String(on));
+    cardBtn.textContent = on ? T.cardChosen : T.cardBtn;
+    if (on) toast(T.toastCard);
+  });
+
+  // pointer: fan spread + parallax (mirrored in RTL so "outward" follows reading direction)
+  stage.addEventListener('pointermove', function (e) {
+    var r = stage.getBoundingClientRect();
+    var x = (e.clientX - r.left) / r.width;
+    main.tx = x; main.ty = (e.clientY - r.top) / r.height;
+    if (!state.playing) main.frame(performance.now(), true);
+  });
+  stage.addEventListener('pointerleave', function () { main.tx = .5; main.ty = .5; });
+
+  // visibility
+  var io = null;
+  if ('IntersectionObserver' in window) {
+    io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        renderers.forEach(function (r) { if (r.c === en.target || r.c.parentElement === en.target) r.visible = en.isIntersecting; });
+      });
+    });
+    renderers.forEach(function (r) { io.observe(r.c); });
+  }
+
+  var raf = 0;
+  function loop(now) {
+    raf = 0;
+    if (!state.playing || document.hidden) return;
+    renderers.forEach(function (r) { if (r.visible) r.frame(now); });
+    raf = requestAnimationFrame(loop);
+  }
+  function kick() { if (!raf && state.playing && !document.hidden) raf = requestAnimationFrame(loop); }
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) kick(); });
+
+  var rt;
+  window.addEventListener('resize', function () {
+    clearTimeout(rt);
+    rt = setTimeout(function () { renderers.forEach(function (r) { r.resize(); }); redrawAll(); updateOutputs(); }, 120);
+  });
+  window.addEventListener('pagehide', function () { if (io) io.disconnect(); if (raf) cancelAnimationFrame(raf); });
+
+  // first paint (deal-in entrance unless reduced motion)
+  if (!reduce) renderers.forEach(function (r) { r.deal = .15; r.dealStart = performance.now(); });
+  syncPlay();
+  redrawAll();
+  updateOutputs();
+  kick();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { redrawAll(); });
+})();
+</script>
+</body>
+</html>

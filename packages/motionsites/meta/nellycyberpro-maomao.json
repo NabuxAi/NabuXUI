@@ -1,0 +1,18 @@
+{
+  "title": { "en": "Maomao ASCII dither CRT card", "fa": "کارت CRT با پرترهٔ اسکی دیتری مائومائو" },
+  "oneLiner": {
+    "en": "A looping, flickering ASCII-dither portrait framed as a CRT card with scanlines, a rolling bar, pointer tilt and palette switches, shown as a hero, terminal background, avatar and collectible card.",
+    "fa": "پرترهٔ اسکی دیتری و لرزانی که در قاب یک کارت CRT با خطوط اسکن، نوار غلتان، کج‌شدن با اشاره‌گر و تغییر پالت رنگ نمایش داده می‌شود؛ در قالب هیرو، پس‌زمینهٔ ترمینال، آواتار و کارت کلکسیونی."
+  },
+  "js": true,
+  "props": [
+    { "name": "--phosphor", "type": "color", "default": "#3dff7a",
+      "note": { "en": "Glow and accent colour of the CRT, chips, switches and ASCII background.", "fa": "رنگ درخشش و تأکید CRT، برچسب‌ها، کلیدها و پس‌زمینهٔ اسکی." } },
+    { "name": "--scanline-opacity", "type": "number", "default": "0.32",
+      "note": { "en": "Darkness of the horizontal scanlines over the video.", "fa": "میزان تیرگی خطوط اسکن افقی روی ویدیو." } },
+    { "name": "--flicker-speed", "type": "time", "default": "0.12s",
+      "note": { "en": "Period of the CRT brightness flicker.", "fa": "دورهٔ سوسوی روشنایی صفحهٔ CRT." } },
+    { "name": "--card-radius", "type": "length", "default": "14px",
+      "note": { "en": "Corner radius of the portrait card.", "fa": "شعاع گوشه‌های کارت پرتره." } }
+  ]
+}

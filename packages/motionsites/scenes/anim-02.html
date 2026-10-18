@@ -1,0 +1,887 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lumen — Glassmorphism UI Component Suite</title>
+<script>
+  (function () {
+    var q = new URLSearchParams(location.search);
+    var l = q.get('lang') === 'fa' ? 'fa' : 'en';
+    var d = document.documentElement;
+    d.lang = l;
+    d.dir = l === 'fa' ? 'rtl' : 'ltr';
+    var t = q.get('theme');
+    d.dataset.theme = t === 'light' || t === 'dark' ? t : 'dark';
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #07080f;
+    --bg-2: #0d1022;
+    --text: #f2f4ff;
+    --muted: rgba(226, 230, 255, .58);
+    --glass: rgba(255, 255, 255, .055);
+    --glass-2: rgba(255, 255, 255, .09);
+    --border: rgba(255, 255, 255, .10);
+    --border-hi: rgba(255, 255, 255, .22);
+    --blur: 18px;
+    --neon: #7c5cff;
+    --neon-2: #22e1ff;
+    --neon-3: #ff4fd8;
+    --good: #3ef0a8;
+    --bad: #ff5c7a;
+    --blob-a: #5b3cff;
+    --blob-b: #00c2ff;
+    --blob-c: #ff3fb4;
+    --shadow: 0 20px 50px -20px rgba(0, 0, 0, .7);
+    --radius: 20px;
+    --font: 'Inter', system-ui, sans-serif;
+    --display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    color-scheme: dark;
+  }
+  :root[data-theme="light"] {
+    --bg: #e9ecf8;
+    --bg-2: #f6f2ff;
+    --text: #12142a;
+    --muted: rgba(25, 28, 60, .6);
+    --glass: rgba(255, 255, 255, .46);
+    --glass-2: rgba(255, 255, 255, .66);
+    --border: rgba(255, 255, 255, .7);
+    --border-hi: rgba(255, 255, 255, .95);
+    --blob-a: #8e7bff;
+    --blob-b: #5fd8ff;
+    --blob-c: #ff8fd6;
+    --shadow: 0 20px 50px -24px rgba(50, 40, 120, .35);
+    color-scheme: light;
+  }
+  html[lang="fa"] { --font: 'Vazirmatn', 'Inter', system-ui, sans-serif; --display: 'Vazirmatn', 'Space Grotesk', sans-serif; }
+  * { box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    margin: 0; min-height: 100vh; color: var(--text); font-family: var(--font);
+    background: radial-gradient(120% 90% at 0% 0%, var(--bg-2), var(--bg) 60%);
+    -webkit-font-smoothing: antialiased; overflow-x: hidden;
+    transition: background .5s ease, color .3s ease;
+  }
+  button, input { font: inherit; color: inherit; }
+  button { cursor: pointer; background: none; border: 0; }
+  :focus-visible { outline: 2px solid var(--neon-2); outline-offset: 2px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .ltr { direction: ltr; unicode-bidi: isolate; }
+
+  /* ---------- ambient background ---------- */
+  .aura { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+  .aura i { position: absolute; border-radius: 50%; filter: blur(80px); opacity: .55; will-change: transform; }
+  .aura .a { width: 46vw; height: 46vw; background: var(--blob-a); top: -12vw; inset-inline-start: -8vw; animation: driftA 22s ease-in-out infinite alternate; }
+  .aura .b { width: 38vw; height: 38vw; background: var(--blob-b); bottom: -14vw; inset-inline-end: -6vw; animation: driftB 26s ease-in-out infinite alternate; opacity: .4; }
+  .aura .c { width: 28vw; height: 28vw; background: var(--blob-c); top: 38%; inset-inline-start: 42%; animation: driftC 30s ease-in-out infinite alternate; opacity: .32; }
+  .aura .grid { position: absolute; inset: 0; background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 56px 56px; mask-image: radial-gradient(80% 70% at 50% 30%, #000 20%, transparent 80%); opacity: .35; }
+  @keyframes driftA { to { transform: translate(14vw, 10vh) scale(1.15); } }
+  @keyframes driftB { to { transform: translate(-12vw, -12vh) scale(1.2); } }
+  @keyframes driftC { to { transform: translate(-16vw, 8vh) scale(.85); } }
+
+  /* ---------- glass primitive ---------- */
+  .glass {
+    background: linear-gradient(160deg, var(--glass-2), var(--glass));
+    border: 1px solid var(--border);
+    backdrop-filter: blur(var(--blur)) saturate(150%);
+    -webkit-backdrop-filter: blur(var(--blur)) saturate(150%);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow), inset 0 1px 0 var(--border-hi);
+  }
+
+  /* ---------- shell ---------- */
+  .shell { position: relative; z-index: 1; display: grid; grid-template-columns: 252px minmax(0, 1fr); gap: 18px; padding: 18px; max-width: 1560px; margin: 0 auto; }
+  .side { position: sticky; top: 18px; height: calc(100vh - 36px); display: flex; flex-direction: column; padding: 18px 14px; gap: 6px; }
+  .brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px 18px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 19px; letter-spacing: -.01em; }
+  .brand .mark { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; background: conic-gradient(from 200deg, var(--neon), var(--neon-2), var(--neon-3), var(--neon)); box-shadow: 0 0 22px -4px var(--neon); }
+  .brand .mark span { width: 12px; height: 12px; border-radius: 4px; background: var(--bg); }
+  .brand small { font-family: var(--mono); font-size: 10px; font-weight: 500; color: var(--muted); border: 1px solid var(--border); padding: 2px 6px; border-radius: 99px; margin-inline-start: auto; }
+  .nav-label { font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); padding: 10px 10px 6px; }
+  html[lang="fa"] .nav-label { letter-spacing: 0; text-transform: none; font-size: 12px; }
+  .nav a { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 500; position: relative; transition: color .2s, background .2s; }
+  .nav a svg { width: 18px; height: 18px; flex: none; }
+  .nav a:hover { color: var(--text); background: var(--glass); }
+  .nav a[aria-current="page"] { color: var(--text); background: var(--glass-2); box-shadow: inset 0 0 0 1px var(--border); }
+  .nav a[aria-current="page"]::before { content: ""; position: absolute; inset-inline-start: -14px; top: 10px; bottom: 10px; width: 3px; border-radius: 3px; background: linear-gradient(var(--neon-2), var(--neon)); box-shadow: 0 0 12px var(--neon-2); }
+  .nav .count { margin-inline-start: auto; font-size: 11px; font-family: var(--mono); padding: 1px 7px; border-radius: 99px; background: color-mix(in srgb, var(--neon) 30%, transparent); color: var(--text); }
+  .plan { margin-top: auto; padding: 16px; border-radius: 16px; background: linear-gradient(140deg, color-mix(in srgb, var(--neon) 26%, transparent), color-mix(in srgb, var(--neon-2) 12%, transparent)); border: 1px solid var(--border); }
+  .plan b { display: block; font-size: 14px; }
+  .plan p { margin: 4px 0 12px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .meter { height: 6px; border-radius: 6px; background: var(--glass-2); overflow: hidden; }
+  .meter i { display: block; height: 100%; width: 72%; border-radius: inherit; background: linear-gradient(90deg, var(--neon-2), var(--neon)); box-shadow: 0 0 10px var(--neon-2); }
+  .plan .row { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 8px; }
+  .user { display: flex; align-items: center; gap: 10px; padding: 12px 8px 2px; }
+  .ava { width: 34px; height: 34px; border-radius: 50%; flex: none; background: linear-gradient(135deg, #ffb36b, #ff4fd8 60%, #7c5cff); display: grid; place-items: center; font-size: 13px; font-weight: 700; color: #fff; }
+  .user b { font-size: 13px; display: block; } .user span { font-size: 11px; color: var(--muted); }
+
+  main { min-width: 0; display: flex; flex-direction: column; gap: 18px; }
+  .top { display: flex; align-items: center; gap: 12px; padding-block: 10px; padding-inline: 18px 12px; }
+  .icon-btn.menu-btn { display: none; }
+  .crumbs { min-width: 0; }
+  .crumbs small { display: block; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .crumbs b { font-size: 16px; font-weight: 600; }
+  .search { margin-inline-start: auto; display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; width: min(320px, 34vw); border-radius: 12px; background: var(--glass); border: 1px solid var(--border); color: var(--muted); transition: border-color .2s, box-shadow .2s; }
+  .search:focus-within { border-color: color-mix(in srgb, var(--neon-2) 70%, transparent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--neon-2) 16%, transparent); }
+  .search input { flex: 1; min-width: 0; background: none; border: 0; outline: none; font-size: 14px; color: var(--text); }
+  .search input::placeholder { color: var(--muted); }
+  .search kbd { font-family: var(--mono); font-size: 11px; padding: 2px 6px; border: 1px solid var(--border); border-radius: 6px; }
+  .icon-btn { width: 40px; height: 40px; flex: none; border-radius: 12px; display: grid; place-items: center; background: var(--glass); border: 1px solid var(--border); position: relative; transition: background .2s, transform .2s; }
+  .icon-btn:hover { background: var(--glass-2); }
+  .icon-btn:active { transform: scale(.94); }
+  .icon-btn svg { width: 18px; height: 18px; }
+  .icon-btn .dot { position: absolute; top: 9px; inset-inline-end: 10px; width: 7px; height: 7px; border-radius: 50%; background: var(--neon-3); box-shadow: 0 0 8px var(--neon-3); }
+  .theme-btn .sun { display: none; } :root[data-theme="light"] .theme-btn .sun { display: block; } :root[data-theme="light"] .theme-btn .moon { display: none; }
+
+  /* ---------- hero ---------- */
+  .hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; padding: 8px 4px 0; flex-wrap: wrap; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-family: var(--mono); color: var(--neon-2); padding: 5px 11px; border-radius: 99px; border: 1px solid color-mix(in srgb, var(--neon-2) 40%, transparent); background: color-mix(in srgb, var(--neon-2) 10%, transparent); }
+  html[lang="fa"] .eyebrow { font-family: var(--font); }
+  .eyebrow i { width: 6px; height: 6px; border-radius: 50%; background: var(--neon-2); box-shadow: 0 0 8px var(--neon-2); animation: pulse 1.8s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .3; } }
+  .hero h1 { font-family: var(--display); font-size: clamp(30px, 4vw, 48px); line-height: 1.05; letter-spacing: -.03em; margin: 14px 0 10px; font-weight: 700; }
+  html[lang="fa"] .hero h1 { letter-spacing: 0; line-height: 1.35; }
+  .hero h1 em { font-style: normal; background: linear-gradient(90deg, var(--neon-2), var(--neon) 50%, var(--neon-3)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero p { margin: 0; max-width: 560px; color: var(--muted); font-size: 15px; line-height: 1.6; }
+  .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .btn { height: 42px; padding: 0 18px; border-radius: 12px; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--border); background: var(--glass); transition: transform .2s, box-shadow .25s, background .2s; position: relative; }
+  .btn:hover { background: var(--glass-2); }
+  .btn:active { transform: scale(.97); }
+  .btn.primary { border-color: transparent; color: #fff; background: linear-gradient(120deg, var(--neon), color-mix(in srgb, var(--neon-2) 70%, var(--neon))); box-shadow: 0 8px 26px -8px var(--neon), inset 0 1px 0 rgba(255,255,255,.3); }
+  .btn.primary:hover { box-shadow: 0 10px 34px -6px var(--neon), 0 0 0 1px rgba(255,255,255,.2) inset; }
+  .btn svg { width: 16px; height: 16px; }
+
+  /* ---------- grid ---------- */
+  .grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 18px; }
+  .card { padding: 20px; position: relative; min-width: 0; opacity: 0; transform: translateY(16px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.8,.2,1); }
+  .card.in { opacity: 1; transform: none; }
+  .card h2 { font-size: 15px; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 8px; }
+  .card .sub { font-size: 12.5px; color: var(--muted); margin: 4px 0 0; }
+  .card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .s3 { grid-column: span 3; } .s4 { grid-column: span 4; } .s5 { grid-column: span 5; } .s6 { grid-column: span 6; } .s7 { grid-column: span 7; } .s8 { grid-column: span 8; }
+
+  /* neon border (masked conic) */
+  .neon::after { content: ""; position: absolute; inset: -1px; border-radius: inherit; padding: 1px; pointer-events: none;
+    background: conic-gradient(from var(--ang, 0deg), transparent 0 60%, var(--neon-2) 72%, var(--neon) 82%, var(--neon-3) 90%, transparent 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+    opacity: 0; transition: opacity .35s; animation: spin 5s linear infinite; }
+  .neon:hover::after, .neon:focus-within::after, .neon.lit::after { opacity: 1; }
+  @property --ang { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+  @keyframes spin { to { --ang: 360deg; } }
+
+  /* stats */
+  .stat { display: flex; flex-direction: column; gap: 12px; cursor: default; }
+  .stat .k { display: flex; align-items: center; justify-content: space-between; font-size: 13px; color: var(--muted); }
+  .stat .ico { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: color-mix(in srgb, var(--c) 18%, transparent); color: var(--c); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 40%, transparent), 0 0 18px -6px var(--c); }
+  .stat .ico svg { width: 17px; height: 17px; }
+  .stat .v { font-family: var(--display); font-size: 30px; font-weight: 600; letter-spacing: -.02em; line-height: 1; }
+  html[lang="fa"] .stat .v { letter-spacing: 0; }
+  .stat .d { font-size: 12px; display: flex; align-items: center; gap: 8px; color: var(--muted); }
+  .chip { direction: ltr; unicode-bidi: isolate; font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 99px; }
+  .chip.up { color: var(--good); background: color-mix(in srgb, var(--good) 14%, transparent); }
+  .chip.down { color: var(--bad); background: color-mix(in srgb, var(--bad) 14%, transparent); }
+  .spark { height: 34px; width: 100%; }
+
+  /* segmented */
+  .seg { display: inline-flex; padding: 3px; border-radius: 11px; background: var(--glass); border: 1px solid var(--border); position: relative; isolation: isolate; }
+  .seg button { position: relative; z-index: 1; height: 30px; padding: 0 12px; border-radius: 8px; font-size: 12.5px; font-weight: 500; color: var(--muted); transition: color .25s; white-space: nowrap; }
+  .seg button[aria-pressed="true"], .seg button[aria-checked="true"] { color: var(--text); }
+  .seg .pill { position: absolute; z-index: 0; top: 3px; bottom: 3px; border-radius: 8px; background: var(--glass-2); box-shadow: inset 0 0 0 1px var(--border-hi), 0 0 16px -6px var(--neon-2); transition: left .35s cubic-bezier(.3,.9,.3,1), width .35s cubic-bezier(.3,.9,.3,1); }
+
+  /* chart */
+  .chart-wrap { position: relative; height: 230px; }
+  .chart-wrap svg { width: 100%; height: 100%; overflow: visible; display: block; }
+  .chart-line { fill: none; stroke: url(#lg); stroke-width: 2.5; stroke-linecap: round; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--neon-2) 70%, transparent)); }
+  .chart-line.b { stroke: var(--neon-3); stroke-width: 1.6; stroke-dasharray: 4 5; opacity: .7; filter: none; }
+  .chart-grid line { stroke: var(--border); }
+  .chart-x text { fill: var(--muted); font-size: 11px; font-family: var(--mono); }
+  .tip { position: absolute; top: 0; pointer-events: none; padding: 8px 10px; border-radius: 10px; font-size: 12px; white-space: nowrap; transform: translate(-50%, -110%); opacity: 0; transition: opacity .15s; }
+  .tip b { display: block; font-size: 14px; }
+  .legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted); margin-top: 8px; flex-wrap: wrap; }
+  .legend span::before { content: ""; display: inline-block; width: 10px; height: 3px; border-radius: 2px; margin-inline-end: 6px; vertical-align: middle; background: var(--neon-2); }
+  .legend span.b::before { background: var(--neon-3); }
+
+  /* activity */
+  .feed { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+  .feed li { display: flex; gap: 12px; align-items: center; padding: 10px; border-radius: 12px; transition: background .2s; }
+  .feed li:hover { background: var(--glass); }
+  .feed .b { width: 34px; height: 34px; border-radius: 10px; flex: none; display: grid; place-items: center; background: var(--glass-2); border: 1px solid var(--border); font-size: 12px; font-weight: 700; }
+  .feed p { margin: 0; font-size: 13px; line-height: 1.4; min-width: 0; }
+  .feed p span { color: var(--muted); }
+  .feed time { margin-inline-start: auto; font-size: 11px; color: var(--muted); white-space: nowrap; }
+
+  /* form controls */
+  .form { display: grid; gap: 16px; }
+  .field label, .lbl { font-size: 12.5px; font-weight: 500; color: var(--muted); display: block; margin-bottom: 7px; }
+  .input { display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; border-radius: 12px; background: var(--glass); border: 1px solid var(--border); transition: border-color .2s, box-shadow .2s, background .2s; }
+  .input input { flex: 1; min-width: 0; height: 100%; background: none; border: 0; outline: none; font-size: 14px; }
+  .input input::placeholder { color: var(--muted); }
+  .input svg { width: 16px; height: 16px; flex: none; color: var(--muted); }
+  .input:focus-within { border-color: color-mix(in srgb, var(--neon) 80%, transparent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--neon) 20%, transparent); background: var(--glass-2); }
+  .input.err { border-color: var(--bad); box-shadow: 0 0 0 4px color-mix(in srgb, var(--bad) 16%, transparent); animation: shake .35s; }
+  .input.ok { border-color: var(--good); box-shadow: 0 0 0 4px color-mix(in srgb, var(--good) 14%, transparent); }
+  .input .state { opacity: 0; transition: opacity .2s; }
+  .input.ok .state.ok, .input.err .state.no { opacity: 1; }
+  .input .state.ok { color: var(--good); } .input .state.no { color: var(--bad); }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 6px; min-height: 1.4em; }
+  .hint.err { color: var(--bad); } .hint.ok { color: var(--good); }
+  @keyframes shake { 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
+  .row2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px 14px; }
+  .toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: 12px; background: var(--glass); border: 1px solid var(--border); font-size: 13.5px; }
+  .sw { width: 42px; height: 24px; flex: none; border-radius: 99px; background: var(--glass-2); border: 1px solid var(--border); position: relative; transition: background .3s, box-shadow .3s; }
+  .sw::after { content: ""; position: absolute; top: 2px; inset-inline-start: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.3); transition: transform .3s cubic-bezier(.3,1.4,.5,1); }
+  .sw[aria-checked="true"] { background: linear-gradient(90deg, var(--neon), var(--neon-2)); box-shadow: 0 0 14px -2px var(--neon-2); border-color: transparent; }
+  .sw[aria-checked="true"]::after { transform: translateX(18px); }
+  html[dir="rtl"] .sw[aria-checked="true"]::after { transform: translateX(-18px); }
+  .range { display: flex; align-items: center; gap: 12px; }
+  .range output { font-family: var(--mono); font-size: 12px; min-width: 44px; text-align: end; color: var(--text); }
+  input[type=range] { -webkit-appearance: none; appearance: none; flex: 1; min-width: 0; height: 6px; border-radius: 6px; background: linear-gradient(90deg, var(--neon-2), var(--neon)) 0 / var(--p, 50%) 100% no-repeat, var(--glass-2); outline: none; }
+  html[dir="rtl"] input[type=range] { background-position: 100% 0; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 0; box-shadow: 0 0 0 4px color-mix(in srgb, var(--neon) 35%, transparent), 0 2px 6px rgba(0,0,0,.4); cursor: grab; }
+  input[type=range]::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 0; box-shadow: 0 0 0 4px color-mix(in srgb, var(--neon) 35%, transparent); cursor: grab; }
+  input[type=range]:focus-visible { outline: 2px solid var(--neon-2); outline-offset: 4px; }
+  .submit { width: 100%; height: 46px; overflow: hidden; }
+  .submit .lab { transition: opacity .2s, transform .3s; display: inline-flex; align-items: center; gap: 8px; }
+  .submit .spin { width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(255,255,255,.3); border-top-color: #fff; animation: rot .8s linear infinite; }
+  .submit[data-state="success"] { background: linear-gradient(120deg, #18c38b, var(--good)); box-shadow: 0 8px 26px -8px var(--good); }
+  .submit[data-state="error"] { background: linear-gradient(120deg, #e0335a, var(--bad)); box-shadow: 0 8px 26px -8px var(--bad); }
+  @keyframes rot { to { transform: rotate(360deg); } }
+
+  /* loaders */
+  .loaders { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .ld { height: 108px; border-radius: 14px; background: var(--glass); border: 1px solid var(--border); display: grid; place-items: center; position: relative; overflow: hidden; }
+  .ld small { position: absolute; bottom: 8px; inset-inline-start: 10px; font-size: 11px; color: var(--muted); }
+  .ring { width: 40px; height: 40px; border-radius: 50%; background: conic-gradient(from 0deg, transparent, var(--neon-2), var(--neon)); -webkit-mask: radial-gradient(circle, transparent 13px, #000 14px); mask: radial-gradient(circle, transparent 13px, #000 14px); animation: rot 1s linear infinite; filter: drop-shadow(0 0 8px var(--neon-2)); }
+  .dots { display: flex; gap: 6px; } .dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--neon-3); box-shadow: 0 0 10px var(--neon-3); animation: bounce 1s ease-in-out infinite; } .dots i:nth-child(2) { animation-delay: .15s; background: var(--neon); box-shadow: 0 0 10px var(--neon); } .dots i:nth-child(3) { animation-delay: .3s; background: var(--neon-2); box-shadow: 0 0 10px var(--neon-2); }
+  @keyframes bounce { 50% { transform: translateY(-10px); opacity: .5; } }
+  .bars { display: flex; gap: 4px; align-items: end; height: 34px; } .bars i { width: 6px; border-radius: 3px; background: linear-gradient(var(--neon-2), var(--neon)); animation: eq 1s ease-in-out infinite; } .bars i:nth-child(1){animation-delay:-.2s}.bars i:nth-child(2){animation-delay:-.5s}.bars i:nth-child(3){animation-delay:-.1s}.bars i:nth-child(4){animation-delay:-.7s}.bars i:nth-child(5){animation-delay:-.35s}
+  @keyframes eq { 0%,100% { height: 25%; } 50% { height: 100%; } }
+  .ld .ok-ico, .ld .no-ico { display: none; width: 40px; height: 40px; border-radius: 50%; place-items: center; }
+  .ld .ok-ico { background: color-mix(in srgb, var(--good) 18%, transparent); color: var(--good); box-shadow: 0 0 20px -4px var(--good); }
+  .ld .no-ico { background: color-mix(in srgb, var(--bad) 18%, transparent); color: var(--bad); box-shadow: 0 0 20px -4px var(--bad); }
+  .ld .ok-ico svg, .ld .no-ico svg { width: 20px; height: 20px; }
+  .loaders[data-state="success"] .anim, .loaders[data-state="error"] .anim { display: none; }
+  .loaders[data-state="success"] .ok-ico { display: grid; animation: pop .45s cubic-bezier(.3,1.6,.5,1); }
+  .loaders[data-state="error"] .no-ico { display: grid; animation: pop .45s cubic-bezier(.3,1.6,.5,1); }
+  @keyframes pop { from { transform: scale(.3); opacity: 0; } }
+  .progress { margin-top: 14px; }
+  .progress .top-row { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--muted); margin-bottom: 8px; }
+  .progress .top-row b { color: var(--text); font-family: var(--mono); font-weight: 500; }
+  .track { height: 8px; border-radius: 8px; background: var(--glass-2); overflow: hidden; }
+  .track i { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--neon-2), var(--neon), var(--neon-3)); box-shadow: 0 0 12px var(--neon); transition: width .25s linear; }
+  .loaders[data-state="error"] ~ .progress .track i { background: var(--bad); box-shadow: 0 0 12px var(--bad); }
+  .skel { margin-top: 14px; display: flex; gap: 12px; align-items: center; padding: 12px; border-radius: 14px; background: var(--glass); border: 1px solid var(--border); }
+  .skel .sk { border-radius: 8px; background: linear-gradient(90deg, var(--glass-2) 0%, color-mix(in srgb, var(--text) 16%, transparent) 50%, var(--glass-2) 100%) 0 0 / 200% 100%; animation: shimmer 1.4s linear infinite; }
+  html[dir="rtl"] .skel .sk { animation-direction: reverse; }
+  @keyframes shimmer { to { background-position: -200% 0; } }
+
+  /* vector canvas */
+  .vcanvas { position: relative; height: 250px; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); background-color: color-mix(in srgb, var(--bg) 40%, transparent); background-image: radial-gradient(var(--border-hi) 1px, transparent 1.2px); background-size: 18px 18px; touch-action: none; }
+  .vcanvas svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .shape { cursor: grab; }
+  .shape.drag { cursor: grabbing; }
+  .sel-box { fill: none; stroke: var(--neon-2); stroke-width: 1; stroke-dasharray: 4 3; }
+  .handle { fill: #fff; stroke: var(--neon-2); stroke-width: 1.5; }
+  .vc-ctrls { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; margin-top: 14px; }
+  .matrix { margin-top: 12px; font-family: var(--mono); font-size: 11.5px; color: var(--muted); padding: 10px 12px; border-radius: 10px; background: var(--glass); border: 1px solid var(--border); white-space: nowrap; overflow-x: auto; }
+  .matrix b { color: var(--neon-2); font-weight: 500; }
+  .vc-badge { position: absolute; top: 10px; inset-inline-start: 10px; font-size: 11px; font-family: var(--mono); padding: 4px 8px; border-radius: 8px; color: var(--muted); }
+  html[lang="fa"] .vc-badge { font-family: var(--font); }
+
+  /* toast */
+  .toast { position: fixed; bottom: 20px; inset-inline-end: 20px; z-index: 50; padding: 12px 16px; display: flex; align-items: center; gap: 10px; font-size: 13.5px; transform: translateY(20px); opacity: 0; transition: .35s cubic-bezier(.2,.9,.3,1); pointer-events: none; max-width: calc(100vw - 40px); }
+  .toast.show { transform: none; opacity: 1; }
+  .toast i { width: 8px; height: 8px; border-radius: 50%; background: var(--good); box-shadow: 0 0 10px var(--good); flex: none; }
+
+  .scrim { display: none; }
+  footer { text-align: center; font-size: 12px; color: var(--muted); padding: 6px 0 4px; }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 1240px) {
+    .s3 { grid-column: span 6; } .s8, .s4, .s7, .s5 { grid-column: span 12; }
+    .half { grid-column: span 6 !important; }
+  }
+  @media (max-width: 960px) {
+    .shell { grid-template-columns: minmax(0, 1fr); padding: 12px; gap: 14px; }
+    .side { position: fixed; top: 12px; bottom: 12px; height: auto; inset-inline-start: 12px; width: 268px; z-index: 40; transform: translateX(calc(-100% - 24px)); transition: transform .4s cubic-bezier(.2,.9,.3,1); --blur: 28px; }
+    html[dir="rtl"] .side { transform: translateX(calc(100% + 24px)); }
+    body.nav-open .side { transform: none; }
+    .scrim { display: block; position: fixed; inset: 0; z-index: 30; background: rgba(5,6,15,.45); opacity: 0; pointer-events: none; transition: opacity .3s; }
+    body.nav-open .scrim { opacity: 1; pointer-events: auto; }
+    .icon-btn.menu-btn { display: grid; }
+    .half { grid-column: span 12 !important; }
+    .search kbd { display: none; }
+  }
+  @media (max-width: 640px) {
+    .grid { gap: 12px; }
+    .s3 { grid-column: span 12; }
+    .top { padding-inline: 10px; gap: 8px; }
+    .search { width: 40px; padding: 0; justify-content: center; border-radius: 12px; }
+    .search input { display: none; }
+    .search:focus-within input, .search.open input { display: block; }
+    .search.open { position: absolute; inset-inline: 10px; width: auto; z-index: 3; padding: 0 12px; background: var(--glass-2); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+    .top { position: relative; }
+    .bell-btn { display: none; }
+    .card { padding: 16px; }
+    .row2, .vc-ctrls { grid-template-columns: 1fr; }
+    .loaders { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .ld { height: 92px; }
+    .hero-actions { width: 100%; } .hero-actions .btn { flex: 1; }
+    .toast { inset-inline: 12px; bottom: 12px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+    .card { opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body>
+<div class="aura" aria-hidden="true"><i class="a"></i><i class="b"></i><i class="c"></i><div class="grid"></div></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="lg" x1="0" x2="1"><stop offset="0" stop-color="#22e1ff"/><stop offset=".55" stop-color="#7c5cff"/><stop offset="1" stop-color="#ff4fd8"/></linearGradient>
+    <linearGradient id="area" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#7c5cff" stop-opacity=".35"/><stop offset="1" stop-color="#7c5cff" stop-opacity="0"/></linearGradient>
+    <linearGradient id="shapeGrad" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#22e1ff"/><stop offset=".5" stop-color="#7c5cff"/><stop offset="1" stop-color="#ff4fd8"/></linearGradient>
+  </defs>
+</svg>
+
+<div class="shell">
+  <div class="scrim" id="scrim" aria-hidden="true"></div>
+  <aside class="side glass" id="side" aria-label="Sidebar">
+    <div class="brand"><span class="mark" aria-hidden="true"><span></span></span>Lumen<small class="ltr">v2.4</small></div>
+    <div class="nav-label" data-i18n="navMain">Workspace</div>
+    <nav class="nav" aria-label="Main">
+      <a href="#overview" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/></svg><span data-i18n="nav1">Overview</span></a>
+      <a href="#analytics"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg><span data-i18n="nav2">Analytics</span></a>
+      <a href="#components"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg><span data-i18n="nav3">Components</span><span class="count" data-num="128">128</span></a>
+      <a href="#canvas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 19l7-7 3 3-7 7-3-3Z"/><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5Z"/><circle cx="11" cy="11" r="2"/></svg><span data-i18n="nav4">Vector canvas</span></a>
+      <a href="#tokens"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="13.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 22a10 10 0 1 1 10-10c0 2-1.5 3-3 3h-2a2 2 0 0 0-1.5 3.3A2 2 0 0 1 14 22h-2Z"/></svg><span data-i18n="nav5">Design tokens</span></a>
+    </nav>
+    <div class="nav-label" data-i18n="navSys">System</div>
+    <nav class="nav" aria-label="System">
+      <a href="#settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg><span data-i18n="nav6">Settings</span></a>
+    </nav>
+    <div class="plan">
+      <b data-i18n="planT">Pro workspace</b>
+      <p data-i18n="planP">72% of your monthly render credits used.</p>
+      <div class="meter" role="progressbar" aria-valuenow="72" aria-valuemin="0" aria-valuemax="100" aria-label="Render credits"><i></i></div>
+      <div class="row"><span data-i18n="planUsed">7.2k / 10k</span><span data-i18n="planDays">9 days left</span></div>
+    </div>
+    <div class="user"><span class="ava" aria-hidden="true">MR</span><div><b data-i18n="userN">Maya Reyes</b><span data-i18n="userR">Design lead</span></div></div>
+  </aside>
+
+  <main id="overview">
+    <header class="top glass">
+      <button class="icon-btn menu-btn" id="menuBtn" aria-expanded="false" aria-controls="side" aria-label="Open menu" data-i18n-aria="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg></button>
+      <div class="crumbs"><small data-i18n="crumb">Design system / Glass suite</small><b data-i18n="pageT">Overview</b></div>
+      <label class="search" id="search"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span class="sr" data-i18n="searchL">Search components</span><input type="search" id="searchIn" data-i18n-ph="searchPh" placeholder="Search components…"><kbd class="ltr">⌘K</kbd></label>
+      <button class="icon-btn bell-btn" aria-label="Notifications" data-i18n-aria="notif"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg><span class="dot"></span></button>
+      <button class="icon-btn theme-btn" id="themeBtn" aria-label="Toggle theme" data-i18n-aria="theme"><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg><svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+    </header>
+
+    <section class="hero" aria-labelledby="heroT">
+      <div>
+        <span class="eyebrow"><i aria-hidden="true"></i><span data-i18n="eyebrow">Glass suite · live preview</span></span>
+        <h1 id="heroT"><span data-i18n="h1a">Translucent components,</span> <em data-i18n="h1b">crystal-clear state.</em></h1>
+        <p data-i18n="heroP">A glassmorphic dashboard kit: backdrop-blur surfaces, hairline white/10 borders, neon accent edges and multi-state controls that respond as you work.</p>
+      </div>
+      <div class="hero-actions">
+        <button class="btn" id="exportBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg><span data-i18n="export">Export tokens</span></button>
+        <button class="btn primary" id="newBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span data-i18n="newC">New component</span></button>
+      </div>
+    </section>
+
+    <div class="grid">
+      <article class="card glass neon stat s3" style="--c: var(--neon-2)">
+        <div class="k"><span data-i18n="st1">Active sessions</span><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg></span></div>
+        <div class="v" data-count="12480">0</div>
+        <div class="d"><span class="chip up" data-chip="8.2">+8.2%</span><span data-i18n="vsLast">vs last week</span></div>
+        <svg class="spark" viewBox="0 0 120 34" preserveAspectRatio="none" aria-hidden="true"><path d="M0 28 L15 24 L30 26 L45 18 L60 20 L75 12 L90 14 L105 6 L120 8" fill="none" stroke="var(--neon-2)" stroke-width="2"/></svg>
+      </article>
+      <article class="card glass neon stat s3" style="--c: var(--neon)">
+        <div class="k"><span data-i18n="st2">Median render</span><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></svg></span></div>
+        <div class="v"><span data-count="14">0</span><small style="font-size:16px;color:var(--muted)" data-i18n="ms"> ms</small></div>
+        <div class="d"><span class="chip up" data-chip="-3.1">−3.1%</span><span data-i18n="faster">faster frames</span></div>
+        <svg class="spark" viewBox="0 0 120 34" preserveAspectRatio="none" aria-hidden="true"><path d="M0 10 L15 14 L30 12 L45 18 L60 16 L75 22 L90 20 L105 26 L120 24" fill="none" stroke="var(--neon)" stroke-width="2"/></svg>
+      </article>
+      <article class="card glass neon stat s3" style="--c: var(--neon-3)">
+        <div class="k"><span data-i18n="st3">Components shipped</span><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/></svg></span></div>
+        <div class="v" data-count="128">0</div>
+        <div class="d"><span class="chip up" data-chip="12">+12</span><span data-i18n="thisSprint">this sprint</span></div>
+        <svg class="spark" viewBox="0 0 120 34" preserveAspectRatio="none" aria-hidden="true"><path d="M0 30 L15 28 L30 22 L45 24 L60 16 L75 18 L90 10 L105 12 L120 4" fill="none" stroke="var(--neon-3)" stroke-width="2"/></svg>
+      </article>
+      <article class="card glass neon stat s3" style="--c: var(--good)">
+        <div class="k"><span data-i18n="st4">Uptime</span><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span></div>
+        <div class="v"><span data-count="99.98" data-dec="2">0</span><small style="font-size:16px;color:var(--muted)" data-i18n="pct">%</small></div>
+        <div class="d"><span class="chip down" data-chip="-0.01">−0.01%</span><span data-i18n="last30">last 30 days</span></div>
+        <svg class="spark" viewBox="0 0 120 34" preserveAspectRatio="none" aria-hidden="true"><path d="M0 8 L15 8 L30 9 L45 8 L60 8 L75 16 L90 8 L105 8 L120 8" fill="none" stroke="var(--good)" stroke-width="2"/></svg>
+      </article>
+
+      <article class="card glass s8" id="analytics">
+        <div class="card-head">
+          <div><h2 data-i18n="chartT">Interaction throughput</h2><p class="sub" data-i18n="chartS">Component renders across every connected surface.</p></div>
+          <div class="seg" role="group" aria-label="Range" id="rangeSeg" data-i18n-aria="range">
+            <span class="pill" aria-hidden="true"></span>
+            <button type="button" aria-pressed="true" data-r="7" data-i18n="r7">7D</button>
+            <button type="button" aria-pressed="false" data-r="30" data-i18n="r30">30D</button>
+            <button type="button" aria-pressed="false" data-r="90" data-i18n="r90">90D</button>
+          </div>
+        </div>
+        <div class="chart-wrap ltr" id="chart">
+          <svg viewBox="0 0 600 220" preserveAspectRatio="none" role="img" aria-label="Throughput chart" data-i18n-aria="chartA">
+            <g class="chart-grid"><line x1="0" x2="600" y1="20" y2="20"/><line x1="0" x2="600" y1="80" y2="80"/><line x1="0" x2="600" y1="140" y2="140"/><line x1="0" x2="600" y1="200" y2="200"/></g>
+            <path id="areaP" fill="url(#area)"/>
+            <path id="lineB" class="chart-line b"/>
+            <path id="lineA" class="chart-line"/>
+            <line id="cursorL" x1="0" x2="0" y1="10" y2="200" stroke="var(--border-hi)" stroke-dasharray="3 3" opacity="0"/>
+            <circle id="cursorD" r="5" fill="#fff" stroke="var(--neon-2)" stroke-width="3" opacity="0"/>
+          </svg>
+          <div class="tip glass" id="tip" style="--radius:10px"><span id="tipL"></span><b id="tipV"></b></div>
+        </div>
+        <div class="legend"><span data-i18n="lgA">This period</span><span class="b" data-i18n="lgB">Previous period</span></div>
+      </article>
+
+      <article class="card glass s4 half">
+        <div class="card-head">
+          <div><h2 data-i18n="ldT">Stateful loaders</h2><p class="sub" data-i18n="ldS">One state machine drives every indicator.</p></div>
+          <div class="seg" role="radiogroup" aria-label="Loader state" data-i18n-aria="ldA" id="ldSeg">
+            <span class="pill" aria-hidden="true"></span>
+            <button type="button" role="radio" aria-checked="true" data-s="loading" data-i18n="ls1">Loading</button>
+            <button type="button" role="radio" aria-checked="false" data-s="success" data-i18n="ls2">Done</button>
+            <button type="button" role="radio" aria-checked="false" data-s="error" data-i18n="ls3">Error</button>
+          </div>
+        </div>
+        <div class="loaders" id="loaders" data-state="loading">
+          <div class="ld"><span class="ring anim" aria-hidden="true"></span><span class="ok-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span><span class="no-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small data-i18n="l1">Ring</small></div>
+          <div class="ld"><span class="dots anim" aria-hidden="true"><i></i><i></i><i></i></span><span class="ok-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span><span class="no-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small data-i18n="l2">Pulse</small></div>
+          <div class="ld"><span class="bars anim" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span class="ok-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg></span><span class="no-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></span><small data-i18n="l3">Equalizer</small></div>
+        </div>
+        <div class="progress">
+          <div class="top-row"><span id="pLab" data-i18n="pLoad">Compiling tokens</span><b id="pVal" class="ltr">0%</b></div>
+          <div class="track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="pTrack" aria-labelledby="pLab"><i id="pBar"></i></div>
+        </div>
+        <div class="skel" aria-hidden="true">
+          <span class="sk" style="width:40px;height:40px;border-radius:12px;flex:none"></span>
+          <span style="flex:1;display:grid;gap:8px"><span class="sk" style="height:10px;width:70%"></span><span class="sk" style="height:10px;width:45%"></span></span>
+        </div>
+      </article>
+
+      <article class="card glass neon s4 half" id="components">
+        <div class="card-head"><div><h2 data-i18n="formT">Multi-state controls</h2><p class="sub" data-i18n="formS">Idle, focus, error and success, all on glass.</p></div></div>
+        <form class="form" id="form" novalidate>
+          <div class="field">
+            <label for="email" data-i18n="emailL">Work email</label>
+            <div class="input" id="emailBox">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="3"/><path d="m22 7-10 6L2 7"/></svg>
+              <input id="email" type="email" dir="ltr" autocomplete="off" data-i18n-ph="emailPh" placeholder="you@studio.com" aria-describedby="emailHint">
+              <svg class="state ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>
+              <svg class="state no" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true" style="margin-inline-start:-24px"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </div>
+            <div class="hint" id="emailHint" aria-live="polite" data-i18n="emailH">We'll send the token export here.</div>
+          </div>
+          <div>
+            <span class="lbl" id="densL" data-i18n="densL">Density</span>
+            <div class="seg" role="radiogroup" aria-labelledby="densL" id="densSeg">
+              <span class="pill" aria-hidden="true"></span>
+              <button type="button" role="radio" aria-checked="false" data-d="12" data-i18n="d1">Compact</button>
+              <button type="button" role="radio" aria-checked="true" data-d="20" data-i18n="d2">Comfort</button>
+              <button type="button" role="radio" aria-checked="false" data-d="28" data-i18n="d3">Spacious</button>
+            </div>
+          </div>
+          <div class="field">
+            <span class="lbl" id="blurL" data-i18n="blurL">Backdrop blur</span>
+            <div class="range"><input type="range" id="blur" min="0" max="40" value="18" aria-labelledby="blurL"><output id="blurO" for="blur" class="ltr">18px</output></div>
+          </div>
+          <div class="row2">
+            <div class="toggle"><span id="t1" data-i18n="tg1">Neon edges</span><button type="button" class="sw" role="switch" aria-checked="false" aria-labelledby="t1" id="neonSw"></button></div>
+            <div class="toggle"><span id="t2" data-i18n="tg2">Ambient glow</span><button type="button" class="sw" role="switch" aria-checked="true" aria-labelledby="t2" id="auraSw"></button></div>
+          </div>
+          <button class="btn primary submit" type="submit" id="submit" data-state="idle"><span class="lab" id="subLab" data-i18n="sub0">Send export</span></button>
+        </form>
+      </article>
+
+      <article class="card glass s8" id="canvas">
+        <div class="card-head">
+          <div><h2 data-i18n="vcT">Vector canvas transforms</h2><p class="sub" data-i18n="vcS">Drag the shape, then rotate and scale it. The matrix updates live.</p></div>
+          <button class="btn" type="button" id="vcReset" style="height:34px;font-size:13px" data-i18n="reset">Reset</button>
+        </div>
+        <div class="vcanvas" id="vc">
+          <span class="vc-badge glass" style="--radius:8px" data-i18n="vcBadge">Frame 01 · 1x</span>
+          <svg id="vcSvg" viewBox="0 0 600 250" preserveAspectRatio="xMidYMid meet" aria-label="Vector canvas" data-i18n-aria="vcA" role="img">
+            <g id="shapeG" class="shape" tabindex="0" role="button" aria-label="Movable shape — use arrow keys" data-i18n-aria="shapeA">
+              <path d="M0 -62 L54 -31 L54 31 L0 62 L-54 31 L-54 -31 Z" fill="url(#shapeGrad)" opacity=".9"/>
+              <path d="M0 -62 L54 -31 L0 0 L-54 -31 Z" fill="#fff" opacity=".18"/>
+              <circle r="16" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="2"/>
+              <rect class="sel-box" x="-62" y="-70" width="124" height="140" rx="4"/>
+              <rect class="handle" x="-66" y="-74" width="8" height="8" rx="2"/><rect class="handle" x="58" y="-74" width="8" height="8" rx="2"/><rect class="handle" x="-66" y="66" width="8" height="8" rx="2"/><rect class="handle" x="58" y="66" width="8" height="8" rx="2"/>
+            </g>
+          </svg>
+        </div>
+        <div class="vc-ctrls">
+          <div><span class="lbl" id="rotL" data-i18n="rotL">Rotate</span><div class="range"><input type="range" id="rot" min="-180" max="180" value="0" aria-labelledby="rotL"><output id="rotO" class="ltr">0°</output></div></div>
+          <div><span class="lbl" id="sclL" data-i18n="sclL">Scale</span><div class="range"><input type="range" id="scl" min="50" max="160" value="100" aria-labelledby="sclL"><output id="sclO" class="ltr">1.00×</output></div></div>
+        </div>
+        <div class="matrix ltr" id="matrix">matrix(1, 0, 0, 1, 300, 125)</div>
+      </article>
+
+      <article class="card glass s6 half">
+        <div class="card-head"><div><h2 data-i18n="feedT">Live activity</h2><p class="sub" data-i18n="feedS">Changes from your team, in real time.</p></div></div>
+        <ul class="feed" id="feed"></ul>
+      </article>
+
+      <article class="card glass s6 half" id="tokens">
+        <div class="card-head"><div><h2 data-i18n="tkT">Surface tokens</h2><p class="sub" data-i18n="tkS">The four values every glass layer is built from.</p></div></div>
+        <ul class="feed" id="tokenList"></ul>
+      </article>
+    </div>
+    <footer data-i18n="foot">Lumen glass suite — built on blur, light and a single hairline.</footer>
+  </main>
+</div>
+<div class="toast glass" id="toast" role="status" aria-live="polite"><i aria-hidden="true"></i><span id="toastT"></span></div>
+
+<script>
+(function () {
+  const LANG = document.documentElement.lang === 'fa' ? 'fa' : 'en';
+  const RM = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const I18N = {
+    en: {
+      navMain: 'Workspace', nav1: 'Overview', nav2: 'Analytics', nav3: 'Components', nav4: 'Vector canvas', nav5: 'Design tokens', navSys: 'System', nav6: 'Settings',
+      planT: 'Pro workspace', planP: '72% of your monthly render credits used.', planUsed: '7.2k / 10k', planDays: '9 days left',
+      userN: 'Maya Reyes', userR: 'Design lead', menu: 'Open menu', crumb: 'Design system / Glass suite', pageT: 'Overview',
+      searchL: 'Search components', searchPh: 'Search components…', notif: 'Notifications', theme: 'Toggle theme',
+      eyebrow: 'Glass suite · live preview', h1a: 'Translucent components,', h1b: 'crystal-clear state.',
+      heroP: 'A glassmorphic dashboard kit: backdrop-blur surfaces, hairline white/10 borders, neon accent edges and multi-state controls that respond as you work.',
+      export: 'Export tokens', newC: 'New component',
+      st1: 'Active sessions', st2: 'Median render', st3: 'Components shipped', st4: 'Uptime', ms: ' ms', pct: '%',
+      vsLast: 'vs last week', faster: 'faster frames', thisSprint: 'this sprint', last30: 'last 30 days',
+      chartT: 'Interaction throughput', chartS: 'Component renders across every connected surface.', range: 'Range', r7: '7D', r30: '30D', r90: '90D',
+      chartA: 'Throughput chart', lgA: 'This period', lgB: 'Previous period', renders: 'renders',
+      feedT: 'Live activity', feedS: 'Changes from your team, in real time.',
+      formT: 'Multi-state controls', formS: 'Idle, focus, error and success, all on glass.',
+      emailL: 'Work email', emailPh: 'you@studio.com', emailH: "We'll send the token export here.", emailErr: 'That address looks incomplete.', emailOk: 'Looks good — ready to send.',
+      densL: 'Density', d1: 'Compact', d2: 'Comfort', d3: 'Spacious', blurL: 'Backdrop blur', tg1: 'Neon edges', tg2: 'Ambient glow',
+      sub0: 'Send export', sub1: 'Sending…', sub2: 'Export sent', sub3: 'Fix the email first',
+      ldT: 'Stateful loaders', ldS: 'One state machine drives every indicator.', ldA: 'Loader state', ls1: 'Loading', ls2: 'Done', ls3: 'Error',
+      l1: 'Ring', l2: 'Pulse', l3: 'Equalizer', pLoad: 'Compiling tokens', pDone: 'Build complete', pErr: 'Build failed — retry',
+      vcT: 'Vector canvas transforms', vcS: 'Drag the shape, then rotate and scale it. The matrix updates live.', reset: 'Reset', vcBadge: 'Frame 01 · 1x',
+      vcA: 'Vector canvas', shapeA: 'Movable shape — use arrow keys', rotL: 'Rotate', sclL: 'Scale',
+      tkT: 'Surface tokens', tkS: 'The four values every glass layer is built from.',
+      foot: 'Lumen glass suite — built on blur, light and a single hairline.',
+      tThemeD: 'Switched to dark glass', tThemeL: 'Switched to frosted light', tExport: 'tokens.json copied to your clipboard', tNew: 'Draft “Glass card 129” created', tSent: 'Export sent to ',
+      feed: [
+        ['AL', '<b>Ari Lund</b> <span>published</span> Glass Modal v3', '2m'],
+        ['NK', '<b>Noor Kaya</b> <span>tuned blur on</span> Sidebar', '9m'],
+        ['JS', '<b>Jonah Seo</b> <span>added a state to</span> Toggle', '24m'],
+        ['EV', '<b>Elena Voss</b> <span>reviewed</span> Neon Button', '1h'],
+        ['TM', '<b>Theo Marsh</b> <span>merged</span> Loader states', '3h']
+      ],
+      tokens: [
+        ['bg', 'Surface fill', 'white / 6%'], ['bd', 'Hairline border', 'white / 10%'], ['bl', 'Backdrop blur', '18px · saturate 150%'], ['nx', 'Neon accent', '#7C5CFF → #22E1FF']
+      ],
+      days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], wk: 'W', dayP: 'Day '
+    },
+    fa: {
+      navMain: 'فضای کار', nav1: 'نمای کلی', nav2: 'تحلیل‌ها', nav3: 'کامپوننت‌ها', nav4: 'بوم وکتور', nav5: 'توکن‌های طراحی', navSys: 'سیستم', nav6: 'تنظیمات',
+      planT: 'فضای کار حرفه‌ای', planP: '۷۲٪ از اعتبار رندر این ماه مصرف شده است.', planUsed: '۷٫۲ هزار از ۱۰ هزار', planDays: '۹ روز مانده',
+      userN: 'مایا ریس', userR: 'سرپرست طراحی', menu: 'باز کردن منو', crumb: 'سیستم طراحی / مجموعهٔ شیشه‌ای', pageT: 'نمای کلی',
+      searchL: 'جست‌وجوی کامپوننت‌ها', searchPh: 'جست‌وجوی کامپوننت…', notif: 'اعلان‌ها', theme: 'تغییر پوسته',
+      eyebrow: 'مجموعهٔ شیشه‌ای · پیش‌نمایش زنده', h1a: 'کامپوننت‌های شفاف،', h1b: 'وضعیت‌های زلال.',
+      heroP: 'کیت داشبورد شیشه‌ای: سطوحی با تاری پس‌زمینه، حاشیه‌های مویی سفید با شفافیت ده درصد، لبه‌های نئونی و کنترل‌های چندحالته که همراه کار شما واکنش نشان می‌دهند.',
+      export: 'خروجی توکن‌ها', newC: 'کامپوننت تازه',
+      st1: 'نشست‌های فعال', st2: 'میانهٔ زمان رندر', st3: 'کامپوننت‌های منتشرشده', st4: 'پایداری سرویس', ms: ' میلی‌ثانیه', pct: '٪',
+      vsLast: 'نسبت به هفتهٔ پیش', faster: 'فریم‌های سریع‌تر', thisSprint: 'در این اسپرینت', last30: 'در ۳۰ روز گذشته',
+      chartT: 'حجم تعامل‌ها', chartS: 'رندر کامپوننت‌ها در همهٔ سطوح متصل.', range: 'بازهٔ زمانی', r7: '۷ روز', r30: '۳۰ روز', r90: '۹۰ روز',
+      chartA: 'نمودار حجم تعامل', lgA: 'این دوره', lgB: 'دورهٔ قبل', renders: 'رندر',
+      feedT: 'فعالیت زنده', feedS: 'تغییرات تیم شما، همین لحظه.',
+      formT: 'کنترل‌های چندحالته', formS: 'حالت عادی، فوکوس، خطا و موفقیت، همه روی شیشه.',
+      emailL: 'ایمیل کاری', emailPh: 'you@studio.com', emailH: 'فایل توکن‌ها به این نشانی فرستاده می‌شود.', emailErr: 'این نشانی کامل به نظر نمی‌رسد.', emailOk: 'درست است؛ آمادهٔ ارسال.',
+      densL: 'تراکم', d1: 'فشرده', d2: 'راحت', d3: 'باز', blurL: 'تاری پس‌زمینه', tg1: 'لبه‌های نئونی', tg2: 'درخشش محیطی',
+      sub0: 'ارسال خروجی', sub1: 'در حال ارسال…', sub2: 'خروجی ارسال شد', sub3: 'اول ایمیل را اصلاح کنید',
+      ldT: 'لودرهای حالت‌مند', ldS: 'یک ماشین حالت همهٔ نشانگرها را می‌گرداند.', ldA: 'وضعیت لودر', ls1: 'در حال بارگذاری', ls2: 'انجام شد', ls3: 'خطا',
+      l1: 'حلقه', l2: 'تپش', l3: 'اکولایزر', pLoad: 'در حال کامپایل توکن‌ها', pDone: 'ساخت کامل شد', pErr: 'ساخت ناموفق بود؛ دوباره تلاش کنید',
+      vcT: 'تبدیل‌های بوم وکتور', vcS: 'شکل را بکشید، بعد بچرخانید و اندازه‌اش را تغییر دهید. ماتریس همزمان به‌روز می‌شود.', reset: 'بازنشانی', vcBadge: 'فریم ۰۱ · ۱×',
+      vcA: 'بوم وکتور', shapeA: 'شکل جابه‌جاشدنی؛ با کلیدهای جهت حرکت دهید', rotL: 'چرخش', sclL: 'مقیاس',
+      tkT: 'توکن‌های سطح', tkS: 'چهار مقداری که هر لایهٔ شیشه‌ای از آن‌ها ساخته می‌شود.',
+      foot: 'مجموعهٔ شیشه‌ای Lumen؛ ساخته از تاری، نور و یک خط مویی.',
+      tThemeD: 'پوستهٔ شیشهٔ تیره فعال شد', tThemeL: 'پوستهٔ شیشهٔ مات روشن فعال شد', tExport: 'فایل tokens.json در کلیپ‌بورد کپی شد', tNew: 'پیش‌نویس «کارت شیشه‌ای ۱۲۹» ساخته شد', tSent: 'خروجی فرستاده شد به ',
+      feed: [
+        ['AL', '<b>آری لوند</b> <span>منتشر کرد:</span> مودال شیشه‌ای نسخهٔ ۳', '۲ دقیقه'],
+        ['NK', '<b>نور کایا</b> <span>تاری را تنظیم کرد در</span> سایدبار', '۹ دقیقه'],
+        ['JS', '<b>جونا سئو</b> <span>حالتی تازه افزود به</span> تاگل', '۲۴ دقیقه'],
+        ['EV', '<b>النا فوس</b> <span>بازبینی کرد:</span> دکمهٔ نئونی', '۱ ساعت'],
+        ['TM', '<b>تئو مارش</b> <span>ادغام کرد:</span> حالت‌های لودر', '۳ ساعت']
+      ],
+      tokens: [
+        ['bg', 'رنگ سطح', 'white / 6%'], ['bd', 'حاشیهٔ مویی', 'white / 10%'], ['bl', 'تاری پس‌زمینه', '18px · saturate 150%'], ['nx', 'رنگ تأکید نئونی', '#7C5CFF → #22E1FF']
+      ],
+      days: ['دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنجشنبه', 'جمعه', 'شنبه', 'یکشنبه'], wk: 'هفتهٔ ', dayP: 'روز '
+    }
+  };
+  const T = I18N[LANG];
+  const NF = new Intl.NumberFormat(LANG === 'fa' ? 'fa-IR' : 'en-US');
+  const fmt = (n, dec) => new Intl.NumberFormat(LANG === 'fa' ? 'fa-IR' : 'en-US', { minimumFractionDigits: dec || 0, maximumFractionDigits: dec || 0 }).format(n);
+  const $ = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+
+  // ---- apply i18n ----
+  $$('[data-i18n]').forEach(el => { const v = T[el.dataset.i18n]; if (typeof v === 'string') el.textContent = v; });
+  $$('[data-i18n-ph]').forEach(el => { const v = T[el.dataset.i18nPh]; if (v) el.placeholder = v; });
+  $$('[data-i18n-aria]').forEach(el => { const v = T[el.dataset.i18nAria]; if (v) el.setAttribute('aria-label', v); });
+  $$('[data-num]').forEach(el => { el.textContent = NF.format(+el.dataset.num); });
+  $$('[data-chip]').forEach(el => {
+    const raw = el.dataset.chip, n = +raw, pct = el.textContent.includes('%');
+    const dec = raw.includes('.') ? raw.split('.')[1].length : 0;
+    el.textContent = (n > 0 ? '+' : '−') + fmt(Math.abs(n), dec) + (pct ? (LANG === 'fa' ? '٪' : '%') : '');
+  });
+  if (LANG === 'fa') document.title = 'Lumen — مجموعهٔ کامپوننت‌های شیشه‌ای';
+  const side = $('#side'); if (side) side.setAttribute('aria-label', LANG === 'fa' ? 'نوار کناری' : 'Sidebar');
+
+  // ---- toast ----
+  const toast = $('#toast'), toastT = $('#toastT'); let toastTimer;
+  function say(msg) { if (!toast) return; toastT.textContent = msg; toast.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('show'), 2400); }
+
+  // ---- theme ----
+  const root = document.documentElement;
+  $('#themeBtn')?.addEventListener('click', () => {
+    const next = root.dataset.theme === 'light' ? 'dark' : 'light';
+    root.dataset.theme = next; say(next === 'dark' ? T.tThemeD : T.tThemeL);
+  });
+
+  // ---- mobile nav ----
+  const menuBtn = $('#menuBtn'), scrim = $('#scrim');
+  function setNav(open) { document.body.classList.toggle('nav-open', open); menuBtn?.setAttribute('aria-expanded', String(open)); }
+  menuBtn?.addEventListener('click', () => setNav(!document.body.classList.contains('nav-open')));
+  scrim?.addEventListener('click', () => setNav(false));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') setNav(false); });
+  $$('.nav a').forEach(a => a.addEventListener('click', e => {
+    $$('.nav a').forEach(x => x.removeAttribute('aria-current')); a.setAttribute('aria-current', 'page');
+    const pt = $('[data-i18n="pageT"]'); if (pt) pt.textContent = a.querySelector('span')?.textContent || '';
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) { e.preventDefault(); target.scrollIntoView({ behavior: RM ? 'auto' : 'smooth', block: 'start' }); }
+    setNav(false);
+  }));
+
+  // ---- search: mobile expand + ⌘K + filter-highlight ----
+  const search = $('#search'), searchIn = $('#searchIn');
+  search?.addEventListener('click', () => { search.classList.add('open'); searchIn?.focus(); });
+  searchIn?.addEventListener('blur', () => { if (!searchIn.value) search.classList.remove('open'); });
+  document.addEventListener('keydown', e => { if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); search?.classList.add('open'); searchIn?.focus(); } });
+  searchIn?.addEventListener('input', () => {
+    const q = searchIn.value.trim().toLowerCase();
+    $$('.grid > .card').forEach(c => { const h = c.querySelector('h2'); const hit = q && h && h.textContent.toLowerCase().includes(q); c.classList.toggle('lit', !!hit); c.style.opacity = q && !hit && c.classList.contains('in') ? '.45' : ''; });
+  });
+
+  // ---- hero buttons ----
+  $('#exportBtn')?.addEventListener('click', () => {
+    const json = JSON.stringify({ surface: 'rgba(255,255,255,.06)', border: 'rgba(255,255,255,.10)', blur: getComputedStyle(root).getPropertyValue('--blur').trim() });
+    try { navigator.clipboard?.writeText(json).catch(() => {}); } catch (_) {}
+    say(T.tExport);
+  });
+  $('#newBtn')?.addEventListener('click', () => say(T.tNew));
+
+  // ---- reveal + count up ----
+  function countUp(el) {
+    const end = +el.dataset.count, dec = +(el.dataset.dec || 0);
+    if (RM) { el.textContent = fmt(end, dec); return; }
+    const t0 = performance.now(), D = 1400;
+    (function step(t) { const p = Math.min(1, (t - t0) / D); const e = 1 - Math.pow(1 - p, 4); el.textContent = fmt(end * e, dec); if (p < 1) requestAnimationFrame(step); })(t0);
+  }
+  const cards = $$('.card');
+  if ('IntersectionObserver' in window && !RM) {
+    const io = new IntersectionObserver(entries => entries.forEach(en => {
+      if (!en.isIntersecting) return;
+      const c = en.target; const i = cards.indexOf(c);
+      setTimeout(() => { c.classList.add('in'); $$('[data-count]', c).forEach(countUp); }, Math.min(i, 6) * 70);
+      io.unobserve(c);
+    }), { threshold: 0, rootMargin: '0px 0px -40px 0px' });
+    cards.forEach(c => io.observe(c));
+    setTimeout(() => cards.forEach(c => { if (!c.classList.contains('in')) { io.unobserve(c); c.classList.add('in'); $$('[data-count]', c).forEach(countUp); } }), 3000);
+  } else { cards.forEach(c => { c.classList.add('in'); $$('[data-count]', c).forEach(countUp); }); }
+
+  // ---- segmented control pill ----
+  function placePill(seg) {
+    const pill = $('.pill', seg); const on = $('[aria-pressed="true"],[aria-checked="true"]', seg);
+    if (!pill || !on) return; pill.style.left = on.offsetLeft + 'px'; pill.style.width = on.offsetWidth + 'px';
+  }
+  function bindSeg(seg, attr, cb) {
+    if (!seg) return;
+    $$('button', seg).forEach(b => b.addEventListener('click', () => {
+      $$('button', seg).forEach(x => x.setAttribute(attr, 'false')); b.setAttribute(attr, 'true'); placePill(seg); cb && cb(b);
+    }));
+    if (attr === 'aria-checked') seg.addEventListener('keydown', e => {
+      const bs = $$('button', seg); const i = bs.findIndex(b => b.getAttribute(attr) === 'true');
+      const fwd = LANG === 'fa' ? 'ArrowLeft' : 'ArrowRight', back = LANG === 'fa' ? 'ArrowRight' : 'ArrowLeft';
+      let n = -1; if (e.key === fwd) n = (i + 1) % bs.length; if (e.key === back) n = (i - 1 + bs.length) % bs.length;
+      if (n >= 0) { e.preventDefault(); bs[n].click(); bs[n].focus(); }
+    });
+    placePill(seg);
+  }
+  const segs = $$('.seg');
+  window.addEventListener('resize', () => segs.forEach(placePill));
+  document.fonts && document.fonts.ready.then(() => segs.forEach(placePill));
+
+  // ---- chart ----
+  const W = 600, H = 220, PAD = 20;
+  function series(n, seed, base) {
+    let s = seed; const r = () => (s = (s * 9301 + 49297) % 233280) / 233280;
+    const out = []; let v = base;
+    for (let i = 0; i < n; i++) { v += (r() - .42) * base * .18; v = Math.max(base * .4, v); out.push(Math.round(v)); }
+    return out;
+  }
+  const DATA = { 7: [series(7, 3, 4200), series(7, 11, 3600)], 30: [series(30, 5, 4600), series(30, 17, 3900)], 90: [series(13, 7, 5200), series(13, 23, 4100)] };
+  let cur = DATA[7], curR = 7;
+  function pts(arr, max) { return arr.map((v, i) => [i / (arr.length - 1) * W, H - PAD - (v / max) * (H - PAD * 2.4)]); }
+  function smooth(p) {
+    let d = `M${p[0][0].toFixed(1)} ${p[0][1].toFixed(1)}`;
+    for (let i = 1; i < p.length; i++) { const [x0, y0] = p[i - 1], [x1, y1] = p[i]; const cx = (x0 + x1) / 2; d += ` C${cx.toFixed(1)} ${y0.toFixed(1)} ${cx.toFixed(1)} ${y1.toFixed(1)} ${x1.toFixed(1)} ${y1.toFixed(1)}`; }
+    return d;
+  }
+  const lineA = $('#lineA'), lineB = $('#lineB'), areaP = $('#areaP');
+  function drawChart(animate) {
+    if (!lineA) return;
+    const max = Math.max(...cur[0], ...cur[1]) * 1.08;
+    const pa = pts(cur[0], max), pb = pts(cur[1], max);
+    const dA = smooth(pa);
+    lineA.setAttribute('d', dA); lineB.setAttribute('d', smooth(pb));
+    areaP.setAttribute('d', dA + ` L${W} ${H - PAD} L0 ${H - PAD} Z`);
+    if (animate && !RM && lineA.getTotalLength) {
+      const L = lineA.getTotalLength();
+      lineA.animate([{ strokeDasharray: `${L} ${L}`, strokeDashoffset: L }, { strokeDasharray: `${L} ${L}`, strokeDashoffset: 0 }], { duration: 1100, easing: 'cubic-bezier(.3,.8,.2,1)' });
+      areaP.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 900, easing: 'ease-out' });
+    }
+  }
+  drawChart(true);
+  bindSeg($('#rangeSeg'), 'aria-pressed', b => { curR = +b.dataset.r; cur = DATA[curR]; drawChart(true); });
+  const chart = $('#chart'), tip = $('#tip'), cL = $('#cursorL'), cD = $('#cursorD');
+  function label(i) {
+    if (curR === 7) return T.days[i];
+    if (curR === 30) return T.dayP + fmt(i + 1);
+    return T.wk + fmt(i + 1);
+  }
+  chart?.addEventListener('pointermove', e => {
+    const r = chart.getBoundingClientRect(); const x = (e.clientX - r.left) / r.width;
+    const n = cur[0].length; const i = Math.max(0, Math.min(n - 1, Math.round(x * (n - 1))));
+    const max = Math.max(...cur[0], ...cur[1]) * 1.08; const p = pts(cur[0], max)[i];
+    cL.setAttribute('x1', p[0]); cL.setAttribute('x2', p[0]); cL.setAttribute('opacity', 1);
+    cD.setAttribute('cx', p[0]); cD.setAttribute('cy', p[1]); cD.setAttribute('opacity', 1);
+    const px = p[0] / W * r.width, py = p[1] / H * r.height;
+    tip.style.left = Math.max(60, Math.min(r.width - 60, px)) + 'px'; tip.style.top = py - 8 + 'px'; tip.style.opacity = 1;
+    $('#tipL').textContent = label(i); $('#tipV').textContent = fmt(cur[0][i]) + ' ' + T.renders;
+  });
+  chart?.addEventListener('pointerleave', () => { tip.style.opacity = 0; cL.setAttribute('opacity', 0); cD.setAttribute('opacity', 0); });
+
+  // ---- feed ----
+  const feed = $('#feed');
+  if (feed) feed.innerHTML = T.feed.map(f => `<li><span class="b ltr" aria-hidden="true">${f[0]}</span><p>${f[1]}</p><time>${f[2]}</time></li>`).join('');
+  const tokenList = $('#tokenList');
+  const swatch = { bg: 'rgba(255,255,255,.12)', bd: 'transparent', bl: 'linear-gradient(135deg,rgba(124,92,255,.4),rgba(34,225,255,.3))', nx: 'linear-gradient(135deg,#7c5cff,#22e1ff)' };
+  if (tokenList) tokenList.innerHTML = T.tokens.map(t => `<li><span class="b" aria-hidden="true" style="background:${swatch[t[0]]};${t[0] === 'bd' ? 'border:1px solid rgba(255,255,255,.5)' : ''}"></span><p>${t[1]}<br><span class="ltr" style="font-family:var(--mono);font-size:12px">${t[2]}</span></p><time class="ltr" style="font-family:var(--mono)">--${t[0] === 'bg' ? 'glass' : t[0] === 'bd' ? 'border' : t[0] === 'bl' ? 'blur' : 'neon'}</time></li>`).join('');
+
+  // ---- form: validation + submit states ----
+  const email = $('#email'), box = $('#emailBox'), hint = $('#emailHint'), submit = $('#submit'), subLab = $('#subLab');
+  const valid = v => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+  function setEmailState(force) {
+    const v = email.value.trim();
+    box.classList.remove('ok', 'err'); hint.className = 'hint';
+    if (!v && !force) { hint.textContent = T.emailH; return null; }
+    if (valid(v)) { box.classList.add('ok'); hint.classList.add('ok'); hint.textContent = T.emailOk; email.setAttribute('aria-invalid', 'false'); return true; }
+    if (force || v.includes('@')) { void box.offsetWidth; box.classList.add('err'); hint.classList.add('err'); hint.textContent = T.emailErr; email.setAttribute('aria-invalid', 'true'); }
+    return false;
+  }
+  email?.addEventListener('input', () => setEmailState(false));
+  let subTimer;
+  function setSubmit(state) {
+    submit.dataset.state = state; clearTimeout(subTimer);
+    const lab = { idle: T.sub0, loading: T.sub1, success: T.sub2, error: T.sub3 }[state];
+    subLab.innerHTML = (state === 'loading' ? '<span class="spin" aria-hidden="true"></span>' : '') + lab;
+    submit.disabled = state === 'loading';
+  }
+  $('#form')?.addEventListener('submit', e => {
+    e.preventDefault();
+    if (!setEmailState(true)) { setSubmit('error'); subTimer = setTimeout(() => setSubmit('idle'), 1800); email.focus(); return; }
+    setSubmit('loading');
+    subTimer = setTimeout(() => { setSubmit('success'); say(T.tSent + email.value.trim()); subTimer = setTimeout(() => setSubmit('idle'), 2200); }, 1400);
+  });
+  bindSeg($('#densSeg'), 'aria-checked', b => { $$('.grid > .card').forEach(c => c.style.padding = b.dataset.d + 'px'); segs.forEach(placePill); });
+  const blur = $('#blur'), blurO = $('#blurO');
+  function setRangeFill(r) { r.style.setProperty('--p', ((r.value - r.min) / (r.max - r.min) * 100) + '%'); }
+  blur?.addEventListener('input', () => { root.style.setProperty('--blur', blur.value + 'px'); blurO.textContent = blur.value + 'px'; setRangeFill(blur); });
+  blur && setRangeFill(blur);
+  function bindSwitch(sw, cb) { sw?.addEventListener('click', () => { const on = sw.getAttribute('aria-checked') !== 'true'; sw.setAttribute('aria-checked', String(on)); cb(on); }); }
+  bindSwitch($('#neonSw'), on => $$('.neon').forEach(c => c.classList.toggle('lit', on)));
+  bindSwitch($('#auraSw'), on => { const a = $('.aura'); if (a) a.style.opacity = on ? '1' : '.15'; });
+
+  // ---- loaders state machine ----
+  const loaders = $('#loaders'), pBar = $('#pBar'), pVal = $('#pVal'), pLab = $('#pLab'), pTrack = $('#pTrack');
+  let prog = 0, progTimer = null, ldState = 'loading', ldVisible = true;
+  function setProg(v) { prog = v; pBar.style.width = v + '%'; pVal.textContent = fmt(Math.round(v)) + (LANG === 'fa' ? '٪' : '%'); pTrack.setAttribute('aria-valuenow', Math.round(v)); }
+  function setLd(state) {
+    ldState = state; loaders.dataset.state = state; clearInterval(progTimer); progTimer = null;
+    $$('#ldSeg button').forEach(b => b.setAttribute('aria-checked', String(b.dataset.s === state))); placePill($('#ldSeg'));
+    if (state === 'loading') {
+      pLab.textContent = T.pLoad; setProg(0);
+      if (RM) { setProg(64); return; }
+      if (ldVisible) startProg();
+    } else if (state === 'success') { pLab.textContent = T.pDone; setProg(100); }
+    else { pLab.textContent = T.pErr; setProg(Math.max(prog, 38)); }
+  }
+  function startProg() {
+    clearInterval(progTimer);
+    progTimer = setInterval(() => {
+      const next = prog + 2 + Math.random() * 6;
+      if (next >= 100) { setProg(100); clearInterval(progTimer); progTimer = null; setTimeout(() => { if (ldState === 'loading') setLd('success'); setTimeout(() => { if (ldState === 'success' && !RM) setLd('loading'); }, 2200); }, 300); }
+      else setProg(next);
+    }, 180);
+  }
+  if (loaders) {
+    bindSeg($('#ldSeg'), 'aria-checked', b => setLd(b.dataset.s));
+    setLd('loading');
+    if ('IntersectionObserver' in window) {
+      const lio = new IntersectionObserver(([en]) => { ldVisible = en.isIntersecting; if (!ldVisible) { clearInterval(progTimer); progTimer = null; } else if (ldState === 'loading' && !progTimer && !RM) startProg(); });
+      lio.observe(loaders);
+    }
+    document.addEventListener('visibilitychange', () => { if (document.hidden) { clearInterval(progTimer); progTimer = null; } else if (ldState === 'loading' && ldVisible && !RM && !progTimer) startProg(); });
+  }
+
+  // ---- vector canvas ----
+  const svg = $('#vcSvg'), g = $('#shapeG'), rot = $('#rot'), scl = $('#scl'), matrix = $('#matrix');
+  const S = { x: 300, y: 125, r: 0, s: 1 };
+  function renderShape() {
+    if (!g) return;
+    g.setAttribute('transform', `translate(${S.x.toFixed(1)} ${S.y.toFixed(1)}) rotate(${S.r}) scale(${S.s})`);
+    const rad = S.r * Math.PI / 180, a = Math.cos(rad) * S.s, b = Math.sin(rad) * S.s;
+    const f = n => (Math.round(n * 100) / 100).toString();
+    matrix.innerHTML = `matrix(<b>${f(a)}</b>, <b>${f(b)}</b>, <b>${f(-b)}</b>, <b>${f(a)}</b>, ${f(S.x)}, ${f(S.y)})`;
+    rot.value = S.r; scl.value = Math.round(S.s * 100);
+    $('#rotO').textContent = S.r + '°'; $('#sclO').textContent = S.s.toFixed(2) + '×';
+    setRangeFill(rot); setRangeFill(scl);
+  }
+  function toSvg(e) { const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY; const m = svg.getScreenCTM(); return m ? pt.matrixTransform(m.inverse()) : { x: 0, y: 0 }; }
+  let drag = null;
+  g?.addEventListener('pointerdown', e => { const p = toSvg(e); drag = { dx: p.x - S.x, dy: p.y - S.y }; g.classList.add('drag'); g.setPointerCapture(e.pointerId); });
+  g?.addEventListener('pointermove', e => { if (!drag) return; const p = toSvg(e); S.x = Math.max(40, Math.min(560, p.x - drag.dx)); S.y = Math.max(40, Math.min(210, p.y - drag.dy)); renderShape(); });
+  const endDrag = () => { drag = null; g?.classList.remove('drag'); };
+  g?.addEventListener('pointerup', endDrag); g?.addEventListener('pointercancel', endDrag);
+  g?.addEventListener('keydown', e => {
+    const k = { ArrowLeft: [-10, 0], ArrowRight: [10, 0], ArrowUp: [0, -10], ArrowDown: [0, 10] }[e.key];
+    if (k) { e.preventDefault(); S.x = Math.max(40, Math.min(560, S.x + k[0])); S.y = Math.max(40, Math.min(210, S.y + k[1])); renderShape(); }
+  });
+  rot?.addEventListener('input', () => { S.r = +rot.value; renderShape(); });
+  scl?.addEventListener('input', () => { S.s = +scl.value / 100; renderShape(); });
+  $('#vcReset')?.addEventListener('click', () => {
+    const from = { ...S }, to = { x: 300, y: 125, r: 0, s: 1 };
+    if (RM) { Object.assign(S, to); renderShape(); return; }
+    const t0 = performance.now();
+    (function step(t) { const p = Math.min(1, (t - t0) / 500), e = 1 - Math.pow(1 - p, 3); for (const k in to) S[k] = from[k] + (to[k] - from[k]) * e; S.r = Math.round(S.r); renderShape(); if (p < 1) requestAnimationFrame(step); })(t0);
+  });
+  renderShape();
+})();
+</script>
+</body>
+</html>

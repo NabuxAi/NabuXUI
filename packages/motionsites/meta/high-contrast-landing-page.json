@@ -1,0 +1,20 @@
+{
+  "title": { "en": "Super Travel high-contrast landing page", "fa": "لندینگ پرکنتراست سوپر تراول" },
+  "oneLiner": {
+    "en": "A Swiss, luxury-brutalist travel landing page in off-white and deep black: a giant “Journeys” echo stack whose grey layers fan out and lean away from the pointer, an editorial quote, an asymmetric showcase with clip-path reveals and grayscale-to-colour hovers, rotating service icons and a dark footer.",
+    "fa": "لندینگ سفری با حال‌وهوای سوئیسی و بروتالیستِ لوکس، در سفیدِ مایل به خاکستری و مشکیِ عمیق: پشتهٔ پژواکِ عظیمِ «سفرها» که لایه‌های خاکستری‌اش باز می‌شوند و از نشانگر فاصله می‌گیرند، نقل‌قولی مجله‌ای، ویترینی نامتقارن با آشکارشدنِ clip-path و رنگ‌گرفتنِ تصاویر با هاور، آیکون‌های چرخانِ خدمات و فوتری تیره."
+  },
+  "js": true,
+  "props": [
+    { "name": "--echo-step", "type": "length", "default": "0.04em",
+      "note": { "en": "Offset between each grey echo layer behind the hero word.", "fa": "فاصلهٔ جابه‌جایی هر لایهٔ خاکستری پژواک پشت واژهٔ هیرو." } },
+    { "name": "--echo-1", "type": "color", "default": "#bfbfbf",
+      "note": { "en": "Darkest echo layer; --echo-2…--echo-4 fade to #d9d9d9.", "fa": "تیره‌ترین لایهٔ پژواک؛ ‎--echo-2 تا ‎--echo-4 تا ‎#d9d9d9 کم‌رنگ می‌شوند." } },
+    { "name": "--bg", "type": "color", "default": "#f2f2f2",
+      "note": { "en": "Off-white page and sticky-nav background.", "fa": "رنگ پس‌زمینهٔ صفحه و نوار ناوبری چسبان." } },
+    { "name": "--ink", "type": "color", "default": "#111111",
+      "note": { "en": "Foreground text and the top echo layer.", "fa": "رنگ متن اصلی و لایهٔ رویی پژواک." } },
+    { "name": "--reveal", "type": "time", "default": "700ms",
+      "note": { "en": "Duration of image clip-path reveals and hover colour/scale transitions.", "fa": "مدت آشکارشدن تصاویر با clip-path و گذارِ رنگ و بزرگ‌نمایی در هاور." } }
+  ]
+}

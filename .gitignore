@@ -1,3 +1,4 @@
+
 node_modules/
 dist/
 !packages/livewire/dist/
@@ -33,3 +34,6 @@ playground/.env
 apps/showcase/public/_lab/
 apps/showcase/lab.html
 apps/showcase/src/_lab/
+.mimosa/
+*.source
+

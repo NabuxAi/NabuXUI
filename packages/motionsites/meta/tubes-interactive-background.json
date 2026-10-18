@@ -1,0 +1,18 @@
+{
+  "title": { "en": "Tubes Cursor neon background", "fa": "پس‌زمینهٔ نئونی نشانگر لوله‌ای" },
+  "oneLiner": {
+    "en": "A full-screen WebGL background of glowing neon tubes that chase the cursor in 3D and drift in a lazy loop when idle; click anywhere to randomize the tube and light colors.",
+    "fa": "پس‌زمینهٔ تمام‌صفحهٔ WebGL با لوله‌های نئونی درخشان که در فضای سه‌بعدی دنبال نشانگر می‌روند و در حالت بیکار آرام می‌چرخند؛ با کلیک در هر جای صفحه رنگ لوله‌ها و نورها عوض می‌شود."
+  },
+  "js": true,
+  "props": [
+    { "name": "TUBE_COLORS", "type": "string[]", "default": "[\"#f967fb\", \"#53bc28\", \"#6958d5\"]",
+      "note": { "en": "Initial gradient colors of the three tube groups.", "fa": "رنگ‌های اولیهٔ گرادیان سه دستهٔ لوله." } },
+    { "name": "LIGHT_COLORS", "type": "string[]", "default": "[\"#83f36e\", \"#fe8a2e\", \"#ff008a\", \"#60aed5\"]",
+      "note": { "en": "Colors of the four point lights that tint the tubes.", "fa": "رنگ چهار نور نقطه‌ای که لوله‌ها را رنگ‌آمیزی می‌کنند." } },
+    { "name": "LIGHT_INTENSITY", "type": "number", "default": 200,
+      "note": { "en": "Brightness of the scene lights.", "fa": "شدت روشنایی نورهای صحنه." } },
+    { "name": "ENABLE_CLICK_INTERACTION", "type": "boolean", "default": true,
+      "note": { "en": "Whether clicking anywhere randomizes the neon colors.", "fa": "اینکه کلیک در هر جای صفحه رنگ‌های نئون را تصادفی کند یا نه." } }
+  ]
+}
