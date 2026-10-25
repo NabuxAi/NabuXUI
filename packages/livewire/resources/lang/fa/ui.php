@@ -5,6 +5,10 @@
 return [
     'close' => 'بستن',
     'dismiss' => 'بستن',
+    'minimize' => 'کوچک‌کردن',
+    'maximize' => 'بزرگ‌کردن',
+    'restore' => 'بازگرداندن',
+    'snapLayouts' => 'چیدمان‌های اسنپ',
     'copy' => 'کپی',
     'copied' => 'کپی شد',
     'pullCord' => 'برای تغییر بکشید',

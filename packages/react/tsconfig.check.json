@@ -5,7 +5,6 @@
     "emitDeclarationOnly": false,
     "declaration": false,
     "rootDir": "..",
-    "baseUrl": ".",
     "paths": {
       "@nabuxai/ui-core": [
         "../core/src/js/index.ts"

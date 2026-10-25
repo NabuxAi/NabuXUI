@@ -33,6 +33,7 @@
 @import "./blocks/glass.css";
 @import "./blocks/backdrops.css";
 @import "./blocks/admin-shell.css";
+@import "./blocks/platform.css";
 @import "./blocks/auth-card.css";
 @import "./blocks/calendar.css";
 @import "./blocks/chat.css";

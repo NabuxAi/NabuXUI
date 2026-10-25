@@ -36,6 +36,7 @@ export * from './blocks/sort-pill';
 export * from './blocks/glass';
 export * from './blocks/backdrops';
 export * from './blocks/admin-shell';
+export * from './blocks/platform';
 export * from './blocks/auth';
 export * from './blocks/calendar';
 export * from './blocks/chat';

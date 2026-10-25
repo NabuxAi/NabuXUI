@@ -5,6 +5,10 @@
 return [
     'close' => 'Close',
     'dismiss' => 'Dismiss',
+    'minimize' => 'Minimize',
+    'maximize' => 'Maximize',
+    'restore' => 'Restore',
+    'snapLayouts' => 'Snap layouts',
     'copy' => 'Copy',
     'copied' => 'Copied',
     'pullCord' => 'Pull to toggle',

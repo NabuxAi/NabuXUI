@@ -7,6 +7,10 @@ export const messages = {
   en: {
     close: 'Close',
     dismiss: 'Dismiss',
+    minimize: 'Minimize',
+    maximize: 'Maximize',
+    restore: 'Restore',
+    snapLayouts: 'Snap layouts',
     copy: 'Copy',
     copied: 'Copied',
     pullCord: 'Pull to toggle',
@@ -244,6 +248,10 @@ export const messages = {
   fa: {
     close: 'بستن',
     dismiss: 'بستن',
+    minimize: 'کوچک‌کردن',
+    maximize: 'بزرگ‌کردن',
+    restore: 'بازگرداندن',
+    snapLayouts: 'چیدمان‌های اسنپ',
     copy: 'کپی',
     copied: 'کپی شد',
     pullCord: 'برای تغییر بکشید',
@@ -477,6 +485,10 @@ export const messages = {
   ar: {
     close: 'إغلاق',
     dismiss: 'تجاهل',
+    minimize: 'تصغير',
+    maximize: 'تكبير',
+    restore: 'استعادة',
+    snapLayouts: 'تخطيطات الالتصاق',
     copy: 'نسخ',
     copied: 'تم النسخ',
     pullCord: 'اسحب للتبديل',

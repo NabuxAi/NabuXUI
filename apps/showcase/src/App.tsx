@@ -15,6 +15,7 @@ import { MenusBlocks } from './blocks/menus';
 import { NavExtrasBlocks } from './blocks/nav-extras';
 import { GlassBlocks } from './blocks/glass';
 import { PickersBlocks } from './blocks/pickers';
+import { PlatformBlocks } from './blocks/platform';
 import { AgentBlocks } from './blocks/agent';
 import { InteractBlocks } from './blocks/interact';
 import { ChartsPlusBlocks } from './blocks/charts-plus';
@@ -66,6 +67,7 @@ const BLOCK_GROUPS: Array<{ id: string; fa: string; en: string; icon: NonNullabl
   { id: 'data-blocks', fa: 'بلوک‌های داده', en: 'Data blocks', icon: 'chart' },
   { id: 'backdrops', fa: 'پس‌زمینه‌های متحرک', en: 'Animated backdrops', icon: 'image' },
   { id: 'menus-blocks', fa: 'منو و پنل‌های شکل‌پذیر', en: 'Menus & morphing panels', icon: 'sliders' },
+  { id: 'platform-blocks', fa: 'پنجرهٔ اپ پلتفرمی', en: 'Platform app window', icon: 'grid' },
   { id: 'nav-extras-blocks', fa: 'فیلتر، آمار و مرتب‌سازی', en: 'Filter, stats & sort', icon: 'grid' },
   { id: 'cta-blocks', fa: 'دعوت به کنش', en: 'CTA', icon: 'zap' },
   { id: 'flows-blocks', fa: 'جریان‌های واقعی', en: 'Real flows', icon: 'arrow-right' },
@@ -239,6 +241,7 @@ export function App() {
             <NavigationSection />
             <BackdropsBlocks />
             <MenusBlocks />
+            <PlatformBlocks />
             <NavExtrasBlocks />
             <PickersBlocks />
             <AgentBlocks />

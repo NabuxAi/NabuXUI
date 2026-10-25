@@ -39,6 +39,7 @@ import { installAgentBlocks } from './alpine/blocks/agent';
 import { installInteractBlocks } from './alpine/blocks/interact';
 import { installChartsPlusBlocks } from './alpine/blocks/charts-plus';
 import { installEffectsBlocks } from './alpine/blocks/effects';
+import { installPlatformBlocks } from './alpine/blocks/platform';
 
 
 declare global {
@@ -89,6 +90,7 @@ function install(Alpine: AlpineLike | undefined) {
   installInteractBlocks(Alpine);
   installChartsPlusBlocks(Alpine);
   installEffectsBlocks(Alpine);
+  installPlatformBlocks(Alpine);
 }
 
 if (window.Alpine) install(window.Alpine);

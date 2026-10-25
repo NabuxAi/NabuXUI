@@ -49,7 +49,7 @@ export function Icons3dBlocks() {
           <GlassSegmented
             aria-label={tr('رنگ مجموعه', 'Set colour')}
             value={tone}
-            onValueChange={setTone}
+            onValueChange={(value) => setTone(value as Icon3dTone)}
             options={[
               { value: 'lapis', label: tr('لاژوردی', 'Lapis') },
               { value: 'violet', label: tr('بنفش', 'Violet') },

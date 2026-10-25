@@ -5,6 +5,10 @@
 return [
     'close' => 'إغلاق',
     'dismiss' => 'تجاهل',
+    'minimize' => 'تصغير',
+    'maximize' => 'تكبير',
+    'restore' => 'استعادة',
+    'snapLayouts' => 'تخطيطات الالتصاق',
     'copy' => 'نسخ',
     'copied' => 'تم النسخ',
     'pullCord' => 'اسحب للتبديل',

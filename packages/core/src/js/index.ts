@@ -45,3 +45,4 @@ export * from './blocks/entrances';
 export * from './blocks/hover-fx';
 export * from './blocks/kinetic';
 export * from './blocks/micro-fx';
+export * from './blocks/platform';

@@ -804,6 +804,7 @@ theme.watch((scheme) => …); // تغییر سیستم و تب‌های دیگر
 | بلوک | تگ یک‌خطی | React | Blade | JS رفتاری |
 |---|---|---|---|---|
 | admin-shell | پوستهٔ پنل: سایدبار گروهی با نشان فنری، تاپ‌بار، دراور موبایل | `AdminShell` + `AdminSidebar` + `AdminTopbar` | `<x-nx::admin-shell>` + `<x-nx::admin-sidebar>` + `<x-nx::admin-topbar>` | `indicator` + `place` + `lightDismiss` |
+| app-window | پنجرهٔ اپ با چهار پوستهٔ ویندوز/مک/اندروید/iOS روی یک DOM (`data-platform` روی خودِ پنجره)؛ کمینه/بشینهٔ واقعی، منوی اسنپ ویندوزی با نگه‌داشتن بزرگ‌کردن، تب‌بار و FAB موبایل | `AppWindow` | `<x-nx::app-window>` | `platformWindow` |
 | fold-menu | هر بخش یک تایِ تاشو؛ سه‌چهار بخش بهتر خوانده می‌شود | `FoldMenu` | `<x-nx::fold-menu>` | بله |
 | dock-panels | داک که خودش به پنل آیتم فعال بزرگ می‌شود | `DockPanels` | `<x-nx::dock-panels>` | بله |
 | morph-menu | دکمهٔ فیلتری که ظرفِ خودش منو می‌شود | `MorphMenu` | `<x-nx::morph-menu>` | `morphShell` |

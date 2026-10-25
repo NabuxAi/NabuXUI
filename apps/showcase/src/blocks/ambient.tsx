@@ -6,7 +6,7 @@ import {
   Metaballs,
   PerspectiveGrid,
   StarfieldBackdrop,
-  StarfieldHandle,
+  type StarfieldHandle,
   type AuroraColors,
   type ContourPeak,
 } from '@nabuxai/ui-react';

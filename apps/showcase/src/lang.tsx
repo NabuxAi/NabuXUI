@@ -24,9 +24,15 @@ export interface FrameworkState {
 export const FrameworkContext = createContext<FrameworkState>({ framework: 'react', setFramework: () => undefined });
 
 /** `tr('ذخیره', 'Save')` — the showcase speaks Persian first, English second. */
-export function useTr() {
+export interface Tr {
+  <T extends string>(fa: T, en: T): string;
+  <T extends string[]>(fa: T, en: T): string[];
+}
+
+export function useTr(): Tr {
   const lang = useContext(LangContext);
-  return (fa: string, en: string) => (lang === 'fa' ? fa : en);
+  return <T extends string | string[]>(fa: T, en: T): T =>
+    (lang === 'fa' ? fa : en);
 }
 
 export function useLang() {

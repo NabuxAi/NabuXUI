@@ -6,7 +6,6 @@
     "types": [
       "vite/client"
     ],
-    "baseUrl": ".",
     "paths": {
       "@nabuxai/ui-core": [
         "../../packages/core/src/js/index.ts"

@@ -1,0 +1,1040 @@
+/*
+ * Blocks: platform windows — one app window, four platform shells.
+ *
+ *   <div class="nx-app-window" data-platform="windows|macos|android|ios"
+ *        data-state="rest|minimized|maximized" [data-shape] [data-closed]>
+ *     <div class="nx-app-status">                      phone shells only: .nx-app-status-time +
+ *                                                      .nx-app-status-icons > .nx-app-status-signal
+ *                                                      + .nx-app-status-battery; iOS paints its
+ *                                                      notch, android its punch-hole, on the strip
+ *     <div class="nx-app-frame">                        the frosted card (grid: sidebar · main)
+ *       <aside class="nx-app-sidebar">                  desktop only — brand · nav · foot
+ *         <div class="nx-app-brand"> <span class="nx-app-mark"> <span class="nx-app-brand-text">
+ *         <nav class="nx-app-nav"> <span class="nx-indicator"> <ul>
+ *           <a|button class="nx-app-item" data-value data-label [aria-current]>
+ *             .nx-icon · <span class="nx-app-label"> · <span class="nx-app-badge">
+ *         <div class="nx-app-sidebar-foot">
+ *       <div class="nx-app-main">
+ *         <header class="nx-app-titlebar">              grows to --_titlebar-h
+ *           <span class="nx-app-title-icon"> · <div class="nx-app-heading"> (h2.nx-app-title,
+ *           p.nx-app-subtitle) · <div class="nx-app-toolbar"> · <div class="nx-app-caption">
+ *             (desktop only): button.nx-app-caption-btn[data-kind=minimize] ·
+ *             .nx-app-snap > button.nx-app-caption-btn[data-kind=maximize] +
+ *             .nx-app-snap-menu[popover=auto][role=menu] > .nx-app-snap-layout[data-zones]
+ *               > button[role=menuitem][data-shape] · button.nx-app-caption-btn[data-kind=close]
+ *         <div class="nx-app-content">                  dl.nx-app-metrics > .nx-app-metric … + slot
+ *         <footer class="nx-app-statusbar">
+ *     <nav class="nx-app-tabbar">                       mobile only: .nx-app-tab > .nx-app-tab-label
+ *     <span class="nx-app-homebar">                     mobile only: iOS home indicator / android
+ *                                                      gesture line, below the tab bar
+ *     <button class="nx-app-fab">                       android only
+ *
+ * The shell is a set of private custom properties (`--_…`, BLOCKS.md) that each
+ * `[data-platform]` overrides — radius, titlebar height, control radius, caption
+ * button size, sidebar width and the surface material — so four windows in four
+ * shells can stand side by side on one page (the attribute lives on the window,
+ * never on :root). Windows wears mica (a translucent surface over a blurred
+ * page) with acrylic for its snap flyout; macOS wears vibrancy with traffic
+ * lights; android and iOS are solid surfaces with a bottom tab bar (iOS glass,
+ * android Material). React renders only the parts a shell uses; Blade always
+ * renders them and the CSS hides the rest, so both builds share one look.
+ */
+@layer nx.components {
+  /* ============================================================================
+   * The window — private variables each platform shell overrides
+   * ========================================================================== */
+  .nx-app-window {
+    /* windows defaults; see the four shells below */
+    --_radius: var(--nx-app-radius, 8px);
+    --_titlebar-h: 2.5rem;
+    --_control-radius: 4px;
+    --_caption-w: 46px;
+    --_caption-h: 32px;
+    --_sidebar-w: 17rem;
+    --_sidebar-min: 9.5rem;
+    --_tabbar-h: 3.5rem;
+    --_homebar-h: 0rem;
+    --_surface: color-mix(in oklab, var(--nx-surface) 84%, transparent);
+    --_chrome-blur: 24px;
+    --_content-bg: color-mix(in oklab, var(--nx-surface) 62%, transparent);
+    --_hairline: color-mix(in oklab, var(--nx-border) 65%, transparent);
+
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    block-size: var(--nx-app-height, 30rem);
+    min-block-size: 10rem;
+    border: 1px solid var(--_hairline);
+    border-radius: var(--_radius);
+    box-shadow: var(--nx-shadow-md);
+    overflow: clip;
+    color: var(--nx-text);
+    font-family: var(--nx-font-sans);
+    font-size: var(--nx-text-sm);
+    line-height: 1.5;
+    /* State changes are transitions (interruptible); see the state rules below. */
+    transition:
+      translate var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      scale var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      opacity var(--nx-dur-base) var(--nx-ease-out),
+      border-radius var(--nx-spring-gentle-duration) var(--nx-spring-gentle),
+      box-shadow var(--nx-spring-gentle-duration) var(--nx-spring-gentle);
+  }
+
+  /* ---- The four shells — only the variables and short structural rules ------- */
+  .nx-app-window[data-platform='macos'] {
+    --_radius: var(--nx-app-radius, 10px);
+    --_titlebar-h: 3.25rem;
+    --_control-radius: 6px;
+    --_caption-w: 12px;
+    --_caption-h: 12px;
+    --_sidebar-w: 15rem;
+    --_surface: color-mix(in oklab, var(--nx-surface-2) 78%, transparent);
+    --_chrome-blur: 22px;
+    --_content-bg: color-mix(in oklab, var(--nx-surface) 58%, transparent);
+  }
+
+  .nx-app-window[data-platform='android'] {
+    --_radius: var(--nx-app-radius, 16px);
+    --_titlebar-h: 3.5rem;
+    --_control-radius: var(--nx-radius-full);
+    --_sidebar-w: 0rem;
+    --_homebar-h: 1.25rem;
+    --_surface: var(--nx-surface);
+    --_content-bg: transparent;
+  }
+
+  .nx-app-window[data-platform='ios'] {
+    --_radius: var(--nx-app-radius, 14px);
+    --_titlebar-h: 3.5rem;
+    --_control-radius: 12px;
+    --_sidebar-w: 0rem;
+    --_homebar-h: 1.25rem;
+    --_surface: var(--nx-surface);
+    --_content-bg: transparent;
+  }
+
+  /* Parts only a shell uses (Blade always renders them; React prunes them).
+     Desktop keeps the sidebar and the caption cluster; mobile keeps the status
+     strip, the tab bar and the home indicator, and the FAB is android's alone.
+     With the sidebar gone the frame must also drop its column — a display:none
+     item still leaves the 0-wide track for .nx-app-main to fall into. Mobile
+     windows also grow two rows: the status strip above the frame and the home
+     indicator below the tab bar. */
+  .nx-app-window > :is(.nx-app-status, .nx-app-homebar) { display: none; }
+  .nx-app-window:is([data-platform='android'], [data-platform='ios']) :is(.nx-app-sidebar, .nx-app-caption) { display: none; }
+  .nx-app-window:is([data-platform='android'], [data-platform='ios']) { grid-template-rows: auto minmax(0, 1fr) auto auto; background: var(--_surface); }
+  .nx-app-window:is([data-platform='android'], [data-platform='ios']) .nx-app-frame { grid-template-columns: minmax(0, 1fr); }
+  /* The home indicator is the last row now; the window's own clip rounds the
+     corner, so the tab bar needs no end radius of its own. */
+  .nx-app-window:is([data-platform='android'], [data-platform='ios']) > .nx-app-tabbar { border-end-end-radius: 0; border-end-start-radius: 0; }
+  .nx-app-window:is([data-platform='windows'], [data-platform='macos']) > .nx-app-tabbar { display: none; }
+
+  /* ---- The frame: sidebar · main, wearing the platform material ------------- */
+  .nx-app-frame {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    /* The sidebar track is proportional between its floor and the skin's width:
+       a fixed 17rem pane in a narrow window starves .nx-app-main — the Windows
+       caption cluster alone is ~8.5rem — until the titlebar's own heading
+       collapses to a sliver and every title reads as an ellipsis. Wide windows
+       clamp up to var(--_sidebar-w) exactly as before; the mobile shells swap
+       the columns wholesale below. */
+    grid-template-columns: clamp(var(--_sidebar-min), 36%, var(--_sidebar-w)) minmax(0, 1fr);
+    min-block-size: 0;
+    min-inline-size: 0;
+    transition: background-color var(--nx-dur-base) var(--nx-ease-out);
+
+    /* The material (mica / vibrancy) is frosted on an underlay, not on the
+       frame itself: a backdrop-filter on the frame would become the containing
+       block of the fixed-positioned snap flyout and misplace it. The card's
+       own rounding and clipping live on the window, so the frost meets the
+       corners cleanly (mobile shells are opaque — no frost to blur through). */
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: var(--_surface);
+      -webkit-backdrop-filter: blur(var(--_chrome-blur)) saturate(1.15);
+      backdrop-filter: blur(var(--_chrome-blur)) saturate(1.15);
+      .nx-app-window:is([data-platform='android'], [data-platform='ios']) & { backdrop-filter: none; -webkit-backdrop-filter: none; }
+    }
+  }
+
+  /* ---- Sidebar (desktop shells) ---------------------------------------------- */
+  .nx-app-sidebar {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: var(--nx-space-2);
+    min-inline-size: 0;
+    min-block-size: 0;
+    padding: var(--nx-space-3) var(--nx-space-2);
+    border-inline-end: 1px solid var(--_hairline);
+    /* Windows lets the mica run through the nav pane; macOS frosts the pane. */
+    background: transparent;
+    transition: background-color var(--nx-dur-base) var(--nx-ease-out);
+  }
+
+  .nx-app-window[data-platform='macos'] .nx-app-sidebar {
+    background: color-mix(in oklab, var(--nx-surface-2) 62%, transparent);
+  }
+
+  .nx-app-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-block-size: 2.5rem;
+    padding-inline: 0.625rem;
+    overflow: hidden;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .nx-app-mark {
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 1.625rem;
+    block-size: 1.625rem;
+    /* The mark follows its shell's control radius: near-square on Windows,
+       softer on macOS. */
+    border-radius: var(--_control-radius);
+    background: var(--nx-gradient-brand);
+    color: var(--nx-accent-contrast);
+    font-size: var(--nx-text-xs);
+    font-weight: 800;
+    box-shadow: var(--nx-shadow-glow);
+  }
+
+  .nx-app-brand-text {
+    overflow: hidden;
+    color: var(--nx-text);
+    text-overflow: ellipsis;
+  }
+
+  .nx-app-nav {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    flex: 1;
+    align-content: start;
+    gap: 0.125rem;
+    min-block-size: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    padding-inline-end: 0.125rem;
+
+    ul { display: grid; gap: 0.125rem; margin: 0; padding: 0; list-style: none; }
+
+    /* The spring highlight behind the current item (core `indicator`). */
+    .nx-indicator {
+      z-index: -1;
+      inset-inline: 0;
+      inline-size: auto;
+      translate: 0 var(--nx-ind-y, 0px);
+      block-size: var(--nx-ind-h, 0px);
+      border-radius: var(--_control-radius);
+      background: color-mix(in oklab, var(--nx-surface-3) 70%, transparent);
+      box-shadow: var(--nx-shadow-xs), inset 0 1px 0 var(--nx-highlight);
+      transition:
+        translate var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+        block-size var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+        opacity var(--nx-dur-fast) var(--nx-ease-out);
+    }
+  }
+
+  /* Windows: the indicator is Fluent's accent pill, glued to the pane edge. */
+  .nx-app-window[data-platform='windows'] .nx-app-nav .nx-indicator {
+    inset-inline: auto;
+    inset-inline-start: 0;
+    inline-size: 3px;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-accent);
+    box-shadow: 0 0 8px var(--nx-accent-soft);
+  }
+
+  .nx-app-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    inline-size: 100%;
+    min-block-size: 2.375rem;
+    padding-inline: 0.625rem;
+    border: 0;
+    border-radius: var(--_control-radius);
+    background: transparent;
+    color: var(--nx-text-muted);
+    font: 500 var(--nx-text-sm) / 1 var(--nx-font-sans);
+    text-align: start;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      color var(--nx-dur-fast) var(--nx-ease-out),
+      background-color var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+
+    .nx-icon { flex: none; inline-size: 1.125rem; block-size: 1.125rem; color: var(--nx-text-subtle); transition: color var(--nx-dur-fast) var(--nx-ease-out); }
+    &:hover { color: var(--nx-text); background: color-mix(in oklab, var(--nx-surface-3) 55%, transparent); }
+    &:is([aria-current='page'], [aria-current='true']) { color: var(--nx-text); font-weight: 600; }
+    &:is([aria-current='page'], [aria-current='true']) .nx-icon { color: var(--nx-accent-text); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: -2px; }
+    &:active:not(:disabled) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:disabled, &[aria-disabled='true'] { opacity: 0.45; cursor: not-allowed; }
+  }
+
+  .nx-app-label {
+    flex: 1;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .nx-app-badge {
+    flex: none;
+    min-inline-size: 1.25rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-accent-soft);
+    color: var(--nx-accent-text);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+  }
+
+  .nx-app-sidebar-foot {
+    display: grid;
+    gap: 0.25rem;
+    margin-block-start: auto;
+    padding-block-start: var(--nx-space-2);
+    border-block-start: 1px solid var(--_hairline);
+  }
+
+  /* ---- Main, titlebar, caption ------------------------------------------------ */
+  .nx-app-main {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    min-inline-size: 0;
+    min-block-size: 0;
+  }
+
+  .nx-app-titlebar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    min-block-size: var(--_titlebar-h);
+    padding-inline: var(--nx-space-3);
+  }
+
+  .nx-app-title-icon {
+    display: grid;
+    place-items: center;
+    flex: none;
+    color: var(--nx-text-subtle);
+
+    .nx-icon { inline-size: 1.125rem; block-size: 1.125rem; }
+  }
+
+  .nx-app-heading {
+    display: grid;
+    flex: 1;
+    gap: 0.0625rem;
+    min-inline-size: 0;
+
+    &:empty { display: none; }
+  }
+
+  .nx-app-title {
+    margin: 0;
+    overflow: hidden;
+    color: var(--nx-text);
+    font: 650 var(--nx-text-md) / 1.25 var(--nx-font-display);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .nx-app-subtitle {
+    margin: 0;
+    overflow: hidden;
+    /* muted, not subtle: on the dark glass the subtle tone loses the
+       subtitle to the frost (5.1:1); muted keeps it a clear 7.3:1 while
+       staying a step under the title. */
+    color: var(--nx-text-muted);
+    font-size: var(--nx-text-xs);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .nx-app-toolbar {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: var(--nx-space-2);
+
+    &:empty { display: none; }
+  }
+
+  .nx-app-caption {
+    display: flex;
+    flex: none;
+    align-items: center;
+    /* With a heading present it eats the free space; without one this pushes
+       the cluster to the edge. */
+    margin-inline-start: auto;
+  }
+
+  /* The glyph squares Windows draws (and the circles macOS lights up) come
+     from the CSS: the Blade buttons are empty and React's generic icons stand
+     in only until the shell paints over them. */
+  .nx-app-caption-btn .nx-icon { display: none; }
+
+  .nx-app-caption-btn {
+    position: relative;
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: var(--_caption-w);
+    block-size: var(--_caption-h);
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--nx-text);
+    cursor: pointer;
+    transition:
+      background-color var(--nx-dur-fast) var(--nx-ease-out),
+      color var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: -2px; }
+    &:active:not(:disabled) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+  }
+
+  /* ---- Windows caption: Fluent squares, drawn glyph by glyph ------------------ */
+  .nx-app-window[data-platform='windows'] .nx-app-titlebar { padding-inline-end: 0; }
+
+  .nx-app-window[data-platform='windows'] .nx-app-caption { align-items: stretch; }
+
+  .nx-app-window[data-platform='windows'] .nx-app-caption-btn::before,
+  .nx-app-window[data-platform='windows'] .nx-app-caption-btn::after {
+    content: '';
+    position: absolute;
+    background: currentColor;
+  }
+
+  .nx-app-window[data-platform='windows'] .nx-app-caption-btn[data-kind='minimize'] {
+    &::before { inline-size: 10px; block-size: 1px; inset-block-end: 9px; inset-inline: calc(50% - 5px); }
+    &::after { content: none; }
+  }
+
+  .nx-app-window[data-platform='windows'] .nx-app-caption-btn[data-kind='maximize'] {
+    &::before {
+      inline-size: 9px;
+      block-size: 9px;
+      inset-block-start: calc(50% - 5px);
+      inset-inline-start: calc(50% - 5px);
+      border: 1px solid currentColor;
+      border-radius: 1px;
+      background: none;
+    }
+    &::after { content: none; }
+  }
+
+  /* Maximized, the glyph becomes the two overlapping restore squares. */
+  .nx-app-window[data-platform='windows'][data-state='maximized'] .nx-app-caption-btn[data-kind='maximize'] {
+    &::before {
+      inline-size: 8px;
+      block-size: 8px;
+      inset-block-start: calc(50% - 5.5px);
+      inset-inline-start: calc(50% - 5.5px);
+      border-color: color-mix(in oklab, currentColor 55%, transparent);
+    }
+    &::after {
+      content: '';
+      position: absolute;
+      inline-size: 8px;
+      block-size: 8px;
+      inset-block-start: calc(50% - 2.5px);
+      inset-inline-start: calc(50% - 2.5px);
+      border: 1px solid currentColor;
+      border-radius: 1px;
+      background: none;
+    }
+  }
+
+  .nx-app-window[data-platform='windows'] .nx-app-caption-btn[data-kind='close'] {
+    &::before,
+    &::after {
+      inline-size: 1px;
+      block-size: 11px;
+      inset-block: calc(50% - 5.5px);
+      inset-inline: calc(50% - 0.5px);
+    }
+    &::before { rotate: 45deg; }
+    &::after { rotate: -45deg; }
+  }
+
+  /* Fluent hover: quiet tint for min/max, danger red for close. */
+  @media (hover: hover) {
+    .nx-app-window[data-platform='windows'] .nx-app-caption-btn:is([data-kind='minimize'], [data-kind='maximize']):hover {
+      background: color-mix(in oklab, var(--nx-text) 9%, transparent);
+    }
+  }
+  .nx-app-window[data-platform='windows'] .nx-app-caption-btn:is([data-kind='minimize'], [data-kind='maximize']):active {
+    background: color-mix(in oklab, var(--nx-text) 14%, transparent);
+  }
+  .nx-app-window[data-platform='windows'] .nx-app-caption-btn[data-kind='close']:hover {
+    background: var(--nx-danger);
+    color: var(--nx-accent-contrast);
+  }
+
+  /* ---- macOS caption: the traffic lights, inline-start, in mac order --------- */
+  .nx-app-window[data-platform='macos'] .nx-app-titlebar {
+    padding-inline: var(--nx-space-4);
+    box-shadow: inset 0 -1px 0 var(--_hairline);
+  }
+
+  .nx-app-window[data-platform='macos'] .nx-app-caption {
+    order: -1;
+    gap: 0.5rem;
+    margin-inline: 0 var(--nx-space-2);
+  }
+
+  /* The heading centres between the lights and whatever sits at the end. */
+  .nx-app-window[data-platform='macos'] .nx-app-heading {
+    position: absolute;
+    inset-inline: 18%;
+    flex: none;
+    text-align: center;
+    pointer-events: none;
+  }
+
+  .nx-app-window[data-platform='macos'] .nx-app-toolbar { margin-inline-start: auto; }
+
+  .nx-app-window[data-platform='macos'] .nx-app-caption-btn {
+    border-radius: var(--nx-radius-full);
+    transition:
+      background-color var(--nx-dur-fast) var(--nx-ease-out),
+      filter var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+
+    /* Close · minimize · maximize, read in macOS order from the DOM's
+       minimize · maximize · close. */
+    &[data-kind='close'] { order: 1; background: var(--nx-danger); }
+    &[data-kind='minimize'] { order: 2; background: var(--nx-warning); }
+    &[data-kind='maximize'] { order: 3; background: var(--nx-success); }
+  }
+
+  /* The lights' glyphs surface on hover — dark marks, the way macOS draws
+     them (black at an opacity, in the spirit of the image-outline rule). */
+  .nx-app-window[data-platform='macos'] .nx-app-caption-btn::before,
+  .nx-app-window[data-platform='macos'] .nx-app-caption-btn::after {
+    content: '';
+    position: absolute;
+    background: color-mix(in oklab, black 55%, transparent);
+    opacity: 0;
+    transition: opacity var(--nx-dur-fast) var(--nx-ease-out);
+  }
+  @media (hover: hover) {
+    .nx-app-window[data-platform='macos'] .nx-app-caption:hover .nx-app-caption-btn::before,
+    .nx-app-window[data-platform='macos'] .nx-app-caption:hover .nx-app-caption-btn::after { opacity: 1; }
+  }
+
+  .nx-app-window[data-platform='macos'] .nx-app-caption-btn[data-kind='close'] {
+    &::before, &::after { inline-size: 1px; block-size: 7px; inset-block: calc(50% - 3.5px); inset-inline: calc(50% - 0.5px); }
+    &::before { rotate: 45deg; }
+    &::after { rotate: -45deg; }
+  }
+  .nx-app-window[data-platform='macos'] .nx-app-caption-btn[data-kind='minimize']::before {
+    inline-size: 7px;
+    block-size: 1px;
+    inset-block-start: calc(50% - 0.5px);
+    inset-inline: calc(50% - 3.5px);
+  }
+  .nx-app-window[data-platform='macos'] .nx-app-caption-btn[data-kind='maximize'] {
+    &::before, &::after { inline-size: 1px; block-size: 7px; inset-block: calc(50% - 3.5px); inset-inline: calc(50% - 0.5px); }
+    &::before { rotate: 90deg; }
+  }
+
+  /* ---- Snap layouts (Windows) -------------------------------------------------- */
+  .nx-app-snap {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+  }
+
+  .nx-app-snap-menu {
+    position: absolute;
+    inset-block-start: calc(100% + 0.5rem);
+    inset-inline-end: 0;
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    gap: var(--nx-space-2);
+    inline-size: max-content;
+    max-inline-size: none;
+    max-block-size: none;
+    margin: 0;
+    padding: var(--nx-space-2);
+    border: 0;
+    border-radius: var(--nx-radius-lg);
+    /* Acrylic: the glass token over its own frost. */
+    background: var(--nx-glass);
+    -webkit-backdrop-filter: blur(20px) saturate(1.35);
+    backdrop-filter: blur(20px) saturate(1.35);
+    box-shadow: inset 0 0 0 1px var(--nx-glass-border), var(--nx-shadow-lg);
+    color: var(--nx-text);
+    overflow: visible;
+    z-index: var(--nx-z-dropdown);
+    transform-origin: 100% 0;
+    opacity: 0;
+    scale: 0.95;
+    transition:
+      opacity var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy),
+      display var(--nx-dur-fast) allow-discrete,
+      overlay var(--nx-dur-fast) allow-discrete;
+  }
+
+  /* The flyout scales from its trigger — the corner the button sits in. */
+  .nx-app-snap-menu:dir(rtl) { transform-origin: 0 0; }
+
+  .nx-app-snap-menu:where(:popover-open, [data-open]) {
+    opacity: 1;
+    scale: 1;
+
+    @starting-style { opacity: 0; scale: 0.95; }
+  }
+
+  /* In native mode the core's place() pins the flyout with fixed left/top;
+     the fallback anchors above must not fight it (over-constrained insets
+     resolve to the wrong edge in RTL). */
+  .nx-app-snap-menu:popover-open { inset-block-start: auto; inset-inline-end: auto; }
+
+  /* Without popover support the flyout opens from data-open (core writes it). */
+  .nx-app-snap-menu:not([popover]):not([data-open]) { display: none; }
+
+  .nx-app-snap-layout {
+    display: grid;
+    gap: 3px;
+    padding: 4px;
+    inline-size: 7.5rem;
+    block-size: 4.75rem;
+    border-radius: var(--nx-radius-sm);
+    background: color-mix(in oklab, var(--nx-surface-2) 55%, transparent);
+    box-shadow: inset 0 0 0 1px var(--nx-glass-border);
+  }
+
+  /* Each group is the screen the zones tile; the zone that spans carries the
+     row/column its shape describes. */
+  .nx-app-snap-layout[data-zones='halves'] { grid-template-columns: repeat(2, 1fr); }
+  .nx-app-snap-layout[data-zones='thirds'] { grid-template-columns: repeat(3, 1fr); }
+  .nx-app-snap-layout[data-zones='big-start'] { grid-template-columns: 2fr 1fr; }
+  .nx-app-snap-layout[data-zones='quads'] { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); }
+  .nx-app-snap-layout[data-zones='big-top'] { grid-template-columns: repeat(2, 1fr); }
+  .nx-app-snap-layout[data-zones='mixed'] { grid-template-columns: 1fr 1fr; }
+
+  .nx-app-snap-layout[data-zones='big-start'] > button:first-child { grid-row: 1 / span 2; }
+  .nx-app-snap-layout[data-zones='big-top'] > button:first-child { grid-column: 1 / -1; }
+  .nx-app-snap-layout[data-zones='mixed'] > button:first-child { grid-row: 1 / span 2; }
+
+  .nx-app-snap-layout > button {
+    min-inline-size: 0;
+    min-block-size: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 3px;
+    background: color-mix(in oklab, var(--nx-text) 16%, transparent);
+    cursor: pointer;
+    transition:
+      background-color var(--nx-dur-fast) var(--nx-ease-out),
+      box-shadow var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+
+    &:hover { background: var(--nx-accent-soft); box-shadow: inset 0 0 0 1px var(--nx-accent-border); }
+    &:active:not(:disabled) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 1px; }
+  }
+
+  /* ---- Content, metrics, statusbar ---------------------------------------------- */
+  .nx-app-content {
+    min-block-size: 0;
+    padding: var(--nx-space-4);
+    background: var(--_content-bg);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: -2px; }
+  }
+
+  .nx-app-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+    gap: var(--nx-space-2);
+    margin: 0 0 var(--nx-space-4);
+  }
+
+  /* Phone screens are narrow enough that the 8rem floor wraps three metrics
+     into 2+1 and stretches the last card over half a row; a softer floor
+     keeps the strip in one line (two, once the window truly runs out). */
+  .nx-app-window:is([data-platform='android'], [data-platform='ios']) .nx-app-metrics {
+    grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+  }
+
+  .nx-app-metric {
+    display: grid;
+    justify-items: start;
+    gap: 0.125rem;
+    padding: var(--nx-space-3);
+    border-radius: var(--_control-radius);
+    background: color-mix(in oklab, var(--nx-surface-2) 72%, transparent);
+    box-shadow: inset 0 0 0 1px var(--_hairline);
+  }
+
+  /* Value over label whatever order the wrapper wrote them in. */
+  .nx-app-metric-value {
+    order: 1;
+    color: var(--nx-text);
+    font: 700 var(--nx-text-lg) / 1.15 var(--nx-font-display);
+    font-variant-numeric: tabular-nums;
+  }
+  .nx-app-metric-label { order: 2; color: var(--nx-text-subtle); font-size: var(--nx-text-xs); }
+  .nx-app-metric-delta {
+    order: 3;
+    color: var(--nx-text-subtle);
+    font-size: var(--nx-text-xs);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+
+    &[data-trend='up'] { color: var(--nx-success-text); }
+    &[data-trend='down'] { color: var(--nx-danger-text); }
+  }
+
+  .nx-app-statusbar {
+    display: flex;
+    align-items: center;
+    gap: var(--nx-space-2);
+    min-block-size: 1.75rem;
+    padding-inline: var(--nx-space-3);
+    border-block-start: 1px solid var(--_hairline);
+    color: var(--nx-text-subtle);
+    font-size: var(--nx-text-xs);
+  }
+
+  /* ---- Mobile shells: titlebar accents, status strip, tab bar, home bar, FAB ----- */
+
+  /* Android keeps a plain top bar; iOS leans on its large title. */
+  .nx-app-window[data-platform='ios'] .nx-app-titlebar { padding-block: var(--nx-space-3); }
+  .nx-app-window[data-platform='ios'] .nx-app-title {
+    font-size: var(--nx-text-xl);
+    font-weight: 750;
+    letter-spacing: var(--nx-tracking-tight);
+  }
+  .nx-app-window[data-platform='android'] .nx-app-title { font: 500 var(--nx-text-md) / 1.3 var(--nx-font-sans); }
+
+  /* ---- The phone status strip: 9:41 with CSS-drawn signal and battery ------ */
+  /* The window root wears the surface on mobile shells (the frame's underlay
+     covers only the frame), so the strip and the home bar sit on the same
+     material as the screen — no page bleeding through above the titlebar. */
+  .nx-app-window:is([data-platform='android'], [data-platform='ios']) > .nx-app-status {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--nx-space-2);
+    min-block-size: 1.875rem;
+    padding-inline: var(--nx-space-4);
+    color: var(--nx-text);
+    font-size: var(--nx-text-xs);
+    font-weight: 600;
+    letter-spacing: var(--nx-tracking-tight);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nx-app-status-icons {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 0.375rem;
+  }
+
+  /* Signal: three ascending bars — the element itself is the tallest bar, the
+     pseudo-elements the two shorter ones at its sides. */
+  .nx-app-status-signal {
+    position: relative;
+    display: block;
+    flex: none;
+    inline-size: 3px;
+    block-size: 0.6875rem;
+    border-radius: 1px;
+    background: currentColor;
+
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      inset-block-end: 0;
+      inline-size: 3px;
+      border-radius: 1px;
+      background: currentColor;
+    }
+    &::before { inset-inline-start: -5px; block-size: 0.4375rem; opacity: 0.5; }
+    &::after { inset-inline-end: -5px; block-size: 0.5625rem; opacity: 0.75; }
+  }
+
+  /* Battery: the outline, its charge fill and the terminal nub. */
+  .nx-app-status-battery {
+    position: relative;
+    display: block;
+    flex: none;
+    inline-size: 1.375rem;
+    block-size: 0.6875rem;
+    border: 1px solid currentColor;
+    border-radius: 2px;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset-block: 1px;
+      inset-inline-start: 1px;
+      inline-size: 60%;
+      border-radius: 1px;
+      background: currentColor;
+    }
+    &::after {
+      content: '';
+      position: absolute;
+      inset-block: 2px;
+      inset-inline-end: -3px;
+      inline-size: 2px;
+      border-radius: 0 1px 1px 0;
+      background: currentColor;
+    }
+  }
+
+  /* iOS: the Dynamic-Island pill centred on the strip — near-black in both
+     themes, the way the hardware draws it. */
+  .nx-app-window[data-platform='ios'] > .nx-app-status::before {
+    content: '';
+    position: absolute;
+    inset-block-start: 0.3125rem;
+    inset-inline: calc(50% - 3.75rem);
+    block-size: 1.25rem;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-ink-950);
+  }
+
+  /* Android: a small centred camera punch-hole instead. */
+  .nx-app-window[data-platform='android'] > .nx-app-status::after {
+    content: '';
+    position: absolute;
+    inset-block-start: 0.5rem;
+    inset-inline: calc(50% - 0.3125rem);
+    block-size: 0.625rem;
+    inline-size: 0.625rem;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-ink-950);
+  }
+
+  /* ---- The home indicator below the tab bar --------------------------------- */
+  /* iOS draws the centred pill; android the thin full-width gesture line. The
+     strip keeps each shell's tab-bar material so the bar reads as sitting in
+     the same chrome, and the FAB lifts clear of it (see .nx-app-fab). */
+  .nx-app-window:is([data-platform='android'], [data-platform='ios']) > .nx-app-homebar {
+    display: grid;
+    place-items: center;
+    min-block-size: var(--_homebar-h);
+    padding-block: 0.25rem;
+    background: var(--nx-surface-2);
+  }
+
+  .nx-app-window:is([data-platform='android'], [data-platform='ios']) > .nx-app-homebar::before {
+    content: '';
+    block-size: 0.1875rem;
+    inline-size: 40%;
+    border-radius: var(--nx-radius-full);
+    background: color-mix(in oklab, var(--nx-text) 45%, transparent);
+  }
+
+  .nx-app-window[data-platform='ios'] > .nx-app-homebar { background: var(--nx-glass); }
+  .nx-app-window[data-platform='ios'] > .nx-app-homebar::before {
+    block-size: 0.3125rem;
+    inline-size: 8.5rem;
+    background: color-mix(in oklab, var(--nx-text) 40%, transparent);
+  }
+
+  .nx-app-window[data-platform='android'] > .nx-app-homebar::before {
+    inline-size: 40%;
+    block-size: 0.125rem;
+  }
+
+  .nx-app-tabbar {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    align-items: center;
+    min-block-size: var(--_tabbar-h);
+    padding-block: var(--nx-space-1);
+    border-end-end-radius: var(--_radius);
+    border-end-start-radius: var(--_radius);
+    background: var(--nx-surface-2);
+    transition: background-color var(--nx-dur-base) var(--nx-ease-out);
+  }
+
+  .nx-app-tab {
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    justify-items: center;
+    gap: 0.1875rem;
+    padding-inline: var(--nx-space-1);
+    border: 0;
+    background: transparent;
+    color: var(--nx-text-subtle);
+    font: 500 var(--nx-text-xs) / 1.2 var(--nx-font-sans);
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      color var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-spring-snappy-duration) var(--nx-spring-snappy);
+
+    .nx-icon { inline-size: 1.25rem; block-size: 1.25rem; }
+    .nx-app-tab-label { max-inline-size: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    &:is([aria-current='page'], [aria-current='true']) { color: var(--nx-accent-text); font-weight: 600; }
+    &:hover { color: var(--nx-text); }
+    &:is([aria-current='page'], [aria-current='true']):hover { color: var(--nx-accent-text); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: -2px; border-radius: var(--_control-radius); }
+    &:active:not(:disabled) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+  }
+
+  /* Android: Material's pill sits behind the current tab's icon. */
+  .nx-app-window[data-platform='android'] .nx-app-tab:is([aria-current='page'], [aria-current='true'])::before {
+    content: '';
+    position: absolute;
+    inset-block-start: 0.25rem;
+    inset-inline: calc(50% - 1.75rem);
+    block-size: 2rem;
+    border-radius: var(--nx-radius-full);
+    background: var(--nx-accent-soft);
+    z-index: -1;
+  }
+
+  /* iOS: the glass tab bar over whatever scrolls beneath it. */
+  .nx-app-window[data-platform='ios'] .nx-app-tabbar {
+    background: var(--nx-glass);
+    -webkit-backdrop-filter: blur(18px) saturate(1.5);
+    backdrop-filter: blur(18px) saturate(1.5);
+    box-shadow: inset 0 1px 0 var(--nx-glass-border);
+  }
+
+  .nx-app-fab {
+    position: absolute;
+    /* Sits above the tab bar and, on the phone shells, above the home
+       indicator strip too (the var is 0rem on desktop). */
+    inset-block-end: calc(var(--_tabbar-h) + var(--_homebar-h) + 1rem);
+    inset-inline-end: var(--nx-space-4);
+    display: none;
+    place-items: center;
+    inline-size: 3.5rem;
+    block-size: 3.5rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--nx-radius-lg);
+    background: var(--nx-accent);
+    color: var(--nx-accent-contrast);
+    box-shadow: var(--nx-shadow-lg);
+    cursor: pointer;
+    z-index: 2;
+    transition:
+      background-color var(--nx-dur-fast) var(--nx-ease-out),
+      box-shadow var(--nx-dur-fast) var(--nx-ease-out),
+      scale var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy),
+      translate var(--nx-spring-bouncy-duration) var(--nx-spring-bouncy);
+
+    .nx-icon { inline-size: 1.375rem; block-size: 1.375rem; }
+    &:hover { background: var(--nx-accent-hover); }
+    &:active:not(:disabled) { scale: calc(1 - 0.04 * var(--nx-motion)); }
+    &:focus-visible { outline: 2px solid var(--nx-ring); outline-offset: 2px; }
+  }
+
+  /* The FAB's hover lift is pointer-only motion. */
+  @media (hover: hover) and (pointer: fine) {
+    .nx-app-fab:hover { translate: 0 calc(-2px * var(--nx-motion)); box-shadow: var(--nx-shadow-xl); }
+  }
+
+  .nx-app-window[data-platform='android'] .nx-app-fab { display: grid; }
+
+  /* ---- Window states ------------------------------------------------------------ */
+
+  /* Minimized: parked toward the taskbar/tab bar until it restores. */
+  .nx-app-window[data-state='minimized'] {
+    translate: 0 calc(9% * var(--nx-motion));
+    scale: 0.94 0.9;
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  /* Maximized: the chrome squares off and the window gains weight. */
+  .nx-app-window[data-state='maximized'] {
+    border-radius: 0;
+    box-shadow: var(--nx-shadow-xl);
+  }
+
+  /* Closed: a soft, fast exit (auto-restore brings it back when on). */
+  .nx-app-window[data-closed] {
+    scale: 0.97;
+    opacity: 0;
+    pointer-events: none;
+    transition-duration: 150ms, 150ms, 150ms, 150ms, 150ms;
+    transition-timing-function: var(--nx-ease-out);
+  }
+
+  /* A snap zone pick flashes the window into that share of the screen —
+     anchored to the inline-start edge (translate × --nx-dir), travel ×
+     --nx-motion — before it settles back. */
+  .nx-app-window[data-shape='half'] { scale: 0.5 1; translate: calc(-25% * var(--nx-dir) * var(--nx-motion)) 0; }
+  .nx-app-window[data-shape='third'] { scale: 0.34 1; translate: calc(-33% * var(--nx-dir) * var(--nx-motion)) 0; }
+  .nx-app-window[data-shape='big'] { scale: 0.67 1; translate: calc(-16.5% * var(--nx-dir) * var(--nx-motion)) 0; }
+  .nx-app-window[data-shape='quarter'] { scale: 0.5 0.5; translate: calc(-25% * var(--nx-dir) * var(--nx-motion)) calc(-25% * var(--nx-motion)); }
+  .nx-app-window[data-shape='wide'] { scale: 1 0.5; translate: 0 calc(-25% * var(--nx-motion)); }
+  .nx-app-window[data-shape='mid'] { scale: 0.5 0.85; translate: calc(-25% * var(--nx-dir) * var(--nx-motion)) calc(-7.5% * var(--nx-motion)); }
+  .nx-app-window[data-shape='full'] {
+    border-radius: 0;
+    box-shadow: var(--nx-shadow-xl);
+  }
+
+  /* ---- Reduced motion: springs become short fades, presses go still ------------- */
+  @media (prefers-reduced-motion: reduce) {
+    .nx-app-window,
+    .nx-app-frame,
+    .nx-app-snap-menu {
+      transition-duration: var(--nx-dur-fast);
+      transition-timing-function: var(--nx-ease-out);
+    }
+    .nx-app-caption-btn:active,
+    .nx-app-item:active,
+    .nx-app-tab:active,
+    .nx-app-fab:active,
+    .nx-app-snap-layout > button:active { scale: none; }
+    .nx-app-fab { translate: none; }
+  }
+
+  /* ---- Forced colors -------------------------------------------------------------- */
+  @media (forced-colors: active) {
+    .nx-app-item[aria-current] { border: 1px solid CanvasText; }
+    .nx-app-nav .nx-indicator { background: Highlight; }
+    .nx-app-window[data-platform='macos'] .nx-app-caption-btn { border: 1px solid CanvasText; }
+  }
+}
