@@ -133,6 +133,7 @@ pnpm test           # تست‌های core و livewire
 pnpm showcase       # نمایشگاه React روی 5199
 ```
 
+- **سند کامل سیستم طراحی (فلسفه، توکن‌ها، حرکت، آیین کار):** [docs/DESIGN.md](docs/DESIGN.md)
 - **ساخت بلوک تازه:** قواعد لایه‌ها، فنرها و RTL در [docs/BLOCKS.md](docs/BLOCKS.md)
 - **معماری یک‌هسته-پنج‌حالت + کاتالوگ کامل:** [docs/FRAMEWORKS.md](docs/FRAMEWORKS.md)
 - **دموی پنل مدیریت (دو طعم):** [docs/ADMIN.md](docs/ADMIN.md)
