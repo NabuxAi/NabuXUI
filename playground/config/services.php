@@ -35,4 +35,18 @@ return [
         ],
     ],
 
+    /*
+    |----------------------------------------------------------------------
+    | NabuGate — the product's LLM gateway, wired into the /ai studio.
+    | With no endpoint the studio says so and serves the local intent-engine
+    | drafts instead; with one, POST {model, locale, intent, prompt} returns
+    | {name, description, html} and the draft renders in a sandboxed frame.
+    |----------------------------------------------------------------------
+    */
+    'nabugate' => [
+        'endpoint' => env('NABUGATE_ENDPOINT'),
+        'key' => env('NABUGATE_KEY'),
+        'model' => env('NABUGATE_MODEL', 'nabugate-1'),
+    ],
+
 ];

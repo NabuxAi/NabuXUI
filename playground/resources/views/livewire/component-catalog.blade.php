@@ -16,6 +16,19 @@
         $chipOptions[$id] = DemoCatalog::pick($manifest['label']);
         $chipCounts[$id] = NabuXUI::formatNumber(count($manifest['items']));
     }
+
+    // The "what am I building" axis: twelve use cases, each counting the demos
+    // its mapped groups hold (a demo can serve several use cases).
+    $useOptions = ['all' => $say('Everything', 'همهٔ کاربردها')];
+    $useCounts = ['all' => NabuXUI::formatNumber($total)];
+    foreach ($usecases as $usecase) {
+        $count = 0;
+        foreach ($usecase['groups'] as $gid) {
+            $count += count($groups[$gid]['items'] ?? []);
+        }
+        $useOptions[$usecase['id']] = DemoCatalog::pick($usecase['label']);
+        $useCounts[$usecase['id']] = NabuXUI::formatNumber($count);
+    }
 @endphp
 <div>
     <main class="nx-page" wire:transition.navigate="nx-page">
@@ -48,7 +61,18 @@
                 <x-nx::input :label="$say('Search demos', 'جست‌وجوی دموها')" icon="search" size="md"
                     :placeholder="$say('button, card, table…', 'دکمه، کارت، جدول…')"
                     wire:model.live.debounce.300ms="search" />
-                <x-nx::chip-filter :options="$chipOptions" :counts="$chipCounts" wire:model.live="group" :label="$say('Group', 'گروه')" />
+                <div style="display: grid; gap: .9rem">
+                    <x-nx::chip-filter :options="$useOptions" :counts="$useCounts" wire:model.live="usecase" :label="$say('I am building', 'دارم می‌سازم')" />
+                    <x-nx::chip-filter :options="$chipOptions" :counts="$chipCounts" wire:model.live="group" :label="$say('Group', 'گروه')" />
+                </div>
+                <div class="pg-row" style="justify-content: space-between; align-items: center">
+                    <p style="margin: 0; font-size: var(--nx-text-sm); color: var(--nx-text-muted)">
+                        {{ $say('Not sure which component? Tell the studio what you are building and it assembles a live draft.', 'نمی‌دانید کدام کامپوننت؟ به استودیو بگویید چه می‌سازید تا پیش‌نویس زنده سرهم کند.') }}
+                    </p>
+                    <x-nx::button variant="primary" icon="sparkles" href="/ai" wire:navigate>
+                        {{ $say('Build with NabuGate', 'ساختن با نابوگیت') }}
+                    </x-nx::button>
+                </div>
             </div>
 
             @if (count($demos) === 0)

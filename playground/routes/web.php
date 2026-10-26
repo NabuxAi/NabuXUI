@@ -16,6 +16,10 @@ Route::get('/components/{group}/{slug}', \App\Livewire\ComponentDemo::class)
     ->where(['group' => '[a-z][a-z0-9-]*', 'slug' => '[a-z][a-z0-9-]*'])
     ->name('components.demo');
 
+// The NabuGate studio: "I am building …" in, a live draft out — the gateway
+// when configured, the local intent-engine recipes otherwise.
+Route::get('/ai', \App\Livewire\AiStudio::class)->name('ai.studio');
+
 // The MotionSites scenes (packages/motionsites/scenes): standalone pages the
 // ms-* demos frame in an iframe. Served raw, never through Blade.
 Route::get('/motionsites/{slug}.html', function (string $slug) {

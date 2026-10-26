@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Livewire\Concerns\SwitchesDemoLocale;
 use App\Support\DemoCatalog;
 use App\Support\MotionSites;
+use App\Support\UseCases;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -21,6 +22,9 @@ class ComponentCatalog extends Component
 
     public string $group = 'all';
 
+    /** The "what am I building" axis: a UseCases bucket id, or all. */
+    public string $usecase = 'all';
+
     /** Cards rendered so far — the catalog holds ~1,200 demos, so it grows by a page at a time. */
     public int $limit = self::PAGE;
 
@@ -35,6 +39,7 @@ class ComponentCatalog extends Component
     {
         $this->search = '';
         $this->group = 'all';
+        $this->usecase = 'all';
         $this->limit = self::PAGE;
     }
 
@@ -44,6 +49,11 @@ class ComponentCatalog extends Component
     }
 
     public function updatedGroup(): void
+    {
+        $this->limit = self::PAGE;
+    }
+
+    public function updatedUsecase(): void
     {
         $this->limit = self::PAGE;
     }
@@ -64,10 +74,16 @@ class ComponentCatalog extends Component
     {
         $needle = self::fold($this->search);
         $locale = app()->getLocale();
+        $bucket = $this->usecase !== 'all' ? UseCases::find($this->usecase) : null;
+        $allowedGroups = $bucket ? array_fill_keys($bucket['groups'], true) : null;
 
         $demos = [];
         foreach (DemoCatalog::flat() as $demo) {
             if ($this->group !== 'all' && $this->group !== $demo['group']) {
+                continue;
+            }
+
+            if ($allowedGroups !== null && ! isset($allowedGroups[$demo['group']])) {
                 continue;
             }
 
@@ -106,6 +122,7 @@ class ComponentCatalog extends Component
             'matching' => count($demos),
             'groups' => DemoCatalog::groups(),
             'total' => count(DemoCatalog::flat()),
+            'usecases' => UseCases::all(),
         ]);
     }
 
