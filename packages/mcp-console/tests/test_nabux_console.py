@@ -385,3 +385,145 @@ def test_secret_key_is_required():
 def test_json_payload_is_plain_json():
     payload = nx.owner_accounts_payload("x", [{"account_key": "k", "connected_at": 1}])
     assert json.loads(json.dumps(payload))["accounts"][0]["connected_at"] == "1970-01-01T00:00:01Z"
+
+
+# ---- 1.1: forms -------------------------------------------------------------
+def test_form_helpers_label_describe_and_escape():
+    evil = '<script>x</script>'
+    f = nx.text_field("phone", evil, type="tel", value='"+98', hint=evil, error="Bad <number>", ltr=True,
+                      autocomplete="tel", required=True, cls="nx-input--lg")
+    assert "<script>" not in f and 'value="&quot;+98"' in f and 'dir="ltr"' in f and " required" in f
+    assert 'for="f-phone"' in f and 'id="f-phone"' in f and 'class="nx-input nx-input--lg"' in f
+    assert 'aria-describedby="f-phone-hint f-phone-err"' in f and 'aria-invalid="true"' in f
+    assert "Bad &lt;number&gt;" in f
+    pw = nx.text_field("password", "Password", type="password", value="hunter2")
+    assert "hunter2" not in pw and "aria-invalid" not in pw and "aria-describedby" not in pw
+    sel = nx.select_field("mode", "Mode", [("a", "A <1>"), "b"], value="b", hint="h")
+    assert '<option value="b" selected>b</option>' in sel and "A &lt;1&gt;" in sel and 'class="nx-select ' in sel
+    ta = nx.textarea_field("cookies", "Cookies", value="</textarea><b>", mono=True, ltr=True, rows=5)
+    assert "&lt;/textarea&gt;&lt;b&gt;" in ta and 'class="nx-textarea nx-textarea--mono"' in ta and 'rows="5"' in ta
+    cb = nx.checkbox("days", "Mon <1>", checked=True, value="mon")
+    assert 'class="nx-check ' in cb and 'value="mon" checked' in cb and "Mon &lt;1&gt;" in cb
+    assert "checked" not in nx.checkbox("x", "y")
+    d = nx.details("Edit <it>", nx.Html("<p>body</p>"), open=True)
+    assert d.startswith('<details class="nx-details ') and " open>" in d and "Edit &lt;it&gt;" in d and "<p>body</p>" in d
+    assert 'class="nx-disclosure__body"' in nx.details("Advanced", "x", subtle=True)
+    assert nx.hidden_field("txn", '"x') == '<input type="hidden" name="txn" value="&quot;x">'
+
+
+def _css() -> str:
+    return (nx.STATIC_DIR / "console.css").read_text()
+
+
+def test_one_forms_system_in_the_stylesheet():
+    css = _css()
+    for cls in ("nx-form", "nx-form--row", "nx-form--narrow", "nx-label", "nx-input", "nx-select", "nx-textarea",
+                "nx-check", "nx-form__actions", "nx-form__hint", "nx-actions", "nx-details", "nx-details__body",
+                "nx-disclosure", "nx-field__error", "nx-input--code", "nx-input--lg"):
+        assert f".{cls} " in css or f".{cls}," in css or f".{cls}." in css or f".{cls}[" in css or f".{cls}:" in css, cls
+    # Each rule is written once: no second copy of the block a gateway once carried.
+    selectors = [line.split("{")[0].strip() for line in css.splitlines() if "{" in line and not line.startswith("@")]
+    for sel in (".nx-form", ".nx-label", ".nx-input, .nx-select, .nx-textarea", ".nx-check",
+                ".nx-form__actions, .nx-actions", ".nx-details, .nx-disclosure"):
+        assert selectors.count(sel) == 1, sel
+    # The 1.0 gateway patches capped every .nx-form at 460px; now only --narrow does.
+    form_rule = css.split("\n.nx-form {", 1)[1].split("}", 1)[0]
+    assert "max-width" not in form_rule
+
+
+# ---- 1.1: Html concatenation ------------------------------------------------
+def test_plain_str_next_to_html_is_a_clear_type_error():
+    with pytest.raises(TypeError, match="ambiguous"):
+        "<div>" + nx.button("x")
+    with pytest.raises(TypeError, match="Html"):
+        nx.button("x") + "</div>"
+    with pytest.raises(TypeError):
+        nx.Html("<i>") + 5
+    joined = nx.Html("<div>") + nx.button("x") + nx.Html("</div>")
+    assert isinstance(joined, nx.Html) and joined.startswith("<div><button") and joined.endswith("</button></div>")
+    t = nx.tag('<span class="nx-actions">', "a<b", nx.badge("ok"), None, close="</span>")
+    assert isinstance(t, nx.Html) and t.startswith('<span class="nx-actions">a&lt;b<span class="nx-badge')
+    assert t.endswith("</span></span>")
+    assert nx.tag("<p>", "x") == "<p>x"
+
+
+# ---- 1.1: sign-in trust line and privacy ------------------------------------
+def test_signin_trust_line_and_privacy_are_per_app():
+    con, client, *_ = make()
+    html = client.get("/?sso=0&lang=en", headers=HTML).text
+    assert "Official platform APIs" in html
+    con.trust_line = "signin.trust.mixed"
+    html = client.get("/?sso=0&lang=en", headers=HTML).text
+    assert "Official platform APIs" not in html and "Official APIs + opt-in web sessions" in html
+    assert "API رسمی + نشست وب اختیاری" in client.get("/?sso=0&lang=fa", headers=HTML).text
+    con.trust_line = {"en": "Your own Telegram session", "fa": "نشست تلگرام خود شما"}
+    con.privacy = {"en": "Your two-step password is used once <never stored>.", "fa": "رمز فقط یک بار به کار می‌رود."}
+    html = client.get("/?sso=0&lang=en", headers=HTML).text
+    assert "Your own Telegram session" in html and "used once &lt;never stored&gt;." in html
+    assert "never sees your passwords" not in html
+
+
+# ---- 1.1: icons ---------------------------------------------------------------
+def test_phone_qr_and_calls_icons():
+    zap = nx.icon("zap")
+    for name in ("phone", "phone-incoming", "calls", "qr", "qr-code"):
+        assert name in nx._UI_ICONS and nx.icon(name) != zap and nx.icon(name) != nx.icon("info"), name
+    assert nx.icon("calls") == nx.icon("phone-incoming") and nx.icon("qr") == nx.icon("qr-code")
+
+
+# ---- 1.1: Persian separators ------------------------------------------------
+def test_persian_separators_never_sit_next_to_persian_digits():
+    assert nx.sep("fa") == "، " and nx.sep("en") == " · "
+    assert nx.sep_join("fa", "۳ دریافتی", "", None, "۲ ارسالی") == "۳ دریافتی، ۲ ارسالی"
+    assert nx.sep_join("en", "3 in", nx.Html("<b>2</b> out"), "<x>") == "3 in · <b>2</b> out · &lt;x&gt;"
+    assert nx.fa_separators("پیام‌ها · ۷ روز") == "پیام‌ها، ۷ روز"
+    assert nx.fa_separators("۵ دریافتی · ۳ ارسالی") == "۵ دریافتی، ۳ ارسالی"
+    assert nx.fa_separators("mode=web · QR · Cloud API") == "mode=web · QR · Cloud API"
+    con, client, _, app = make()
+    route = nx.registrar(app)
+
+    @route("/sep", ["GET"])
+    async def sep_page(request):
+        c = con.ctx(request)
+        return con.render_page(request, "Sep", nx.stack(nx.stat("پیام‌ها · ۷ روز", c.num(12), hint=c.sep_join(
+            f"{c.num(5)} in", f"{c.num(7)} out")), nx.Html('<p class="x">a · b</p>')))
+
+    client.cookies.set("demo_session", "u-1")
+    fa = client.get("/sep?lang=fa").text
+    assert "پیام‌ها، ۷ روز" in fa and "۵ in، ۷ out" in fa and "a · b" in fa
+    assert not any(f"{d} ·" in fa or f"· {d}" in fa for d in "۰۱۲۳۴۵۶۷۸۹")
+    en = client.get("/sep?lang=en").text
+    assert "5 in · 7 out" in en and "پیام‌ها · ۷ روز" in en
+
+
+# ---- 1.1: owner discovery passes mode and extras, never logs the query ------
+def test_owner_accounts_keep_mode_and_plain_extra_fields():
+    payload = nx.owner_accounts_payload("instagram", [
+        {"account_key": "ig_1", "mode": "web", "session": "browser", "status": "needs_relogin", "verified": True,
+         "followers": 12, "Bad-Key": "x", "nested": {"a": 1}, "items": [1], "note": "n" * 500},
+        {"account_key": "ig_2", "mode": "pirate"},
+    ])
+    first, second = payload["accounts"]
+    assert first["mode"] == "web" and first["session"] == "browser" and first["status"] == "needs_relogin"
+    assert first["verified"] is True and first["followers"] == 12 and len(first["note"]) == 200
+    assert "Bad-Key" not in first and "nested" not in first and "items" not in first
+    assert "mode" not in second and set(second) == {"account_key", "label", "kind", "status", "connected_at"}
+
+
+def test_owner_accounts_route_blanks_the_query_string_before_the_access_log():
+    con, client, _, app = make()
+    app.state.lookup = lambda sub, email: [{"account_key": "tg_1", "mode": "web"}]
+    seen = []
+    inner = app
+
+    async def logged(scope, receive, send):  # what an access log reads once the response starts
+        async def spy(message):
+            if message["type"] == "http.response.start":
+                seen.append(scope.get("query_string"))
+            await send(message)
+        await inner(scope, receive, spy)
+
+    wrapped = TestClient(logged, base_url=BASE)
+    r = wrapped.get("/internal/v1/owners/accounts?sub=42&email=a@b.co", headers={"authorization": "Bearer internal-token"})
+    assert r.status_code == 200 and r.json()["accounts"][0]["mode"] == "web"
+    assert seen == [b"redacted"] and b"42" not in seen[0]
