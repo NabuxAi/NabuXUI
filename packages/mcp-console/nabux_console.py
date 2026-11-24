@@ -36,6 +36,7 @@ import hmac
 import html as _html
 import json
 import os
+import re
 import secrets
 import time
 from dataclasses import dataclass, field
@@ -48,7 +49,7 @@ import httpx
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 
-KIT_VERSION = "1.0.0"
+KIT_VERSION = "1.1.0"
 STATIC_DIR = Path(__file__).resolve().parent / "static" / "console"
 STATIC_PREFIX = "/static/console"
 
@@ -69,13 +70,36 @@ SILENT_ERRORS = {"login_required", "consent_required", "interaction_required", "
 # Escaping
 # ---------------------------------------------------------------------------
 class Html(str):
-    """Markup that is already safe. Everything that is not ``Html`` is escaped."""
+    """Markup that is already safe. Everything that is not ``Html`` is escaped.
+
+    ``Html + Html`` is Html. A plain ``str`` on either side of ``+`` raises
+    TypeError: Python cannot tell markup you wrote (``'<div>' + button(...)``,
+    which would come out escaped as visible ``&lt;div&gt;``) from text that
+    must be escaped (a user name). Say which one it is:
+
+    - ``join('<b>', x)`` / ``tag('<div class="a">', x, close='</div>')`` treat
+      a plain str as *text* (escaped) or the open/close strings as *markup*;
+    - ``Html('<div>') + x`` marks markup you wrote yourself;
+    - an f-string (``Html(f'<div>{h(x)}</div>')``) for anything longer.
+    """
 
     def __add__(self, other: Any) -> "Html":
-        return Html(str.__add__(self, h(other)))
+        if isinstance(other, Html):
+            return Html(str.__add__(self, other))
+        return _concat_error(other, "Html + str")
 
     def __radd__(self, other: Any) -> "Html":
-        return Html(h(other) + str(self))
+        if isinstance(other, Html):
+            return Html(str.__add__(other, self))
+        return _concat_error(other, "str + Html")
+
+
+def _concat_error(other: Any, shape: str) -> Any:
+    if not isinstance(other, str):
+        return NotImplemented
+    raise TypeError(
+        f"nabux_console: {shape} is ambiguous: is the str markup or text? Wrap markup you wrote in Html(...), "
+        "or build it with join(...) / tag(open, *items, close=...), which escape text and keep Html as it is.")
 
 
 def esc(value: Any) -> str:
@@ -93,7 +117,35 @@ def h(value: Any) -> str:
 
 
 def join(*parts: Any) -> Html:
+    """Parts side by side: Html kept, everything else escaped as text; None and "" skipped."""
     return Html("".join(h(p) for p in parts if p is not None and p != ""))
+
+
+def tag(open_: str, *items: Any, close: str = "") -> Html:
+    """``open_`` + items + ``close``: the two ends are markup you wrote, each item is
+    escaped unless it is Html. ``tag('<div class="nx-actions">', a, b, close='</div>')``."""
+    return Html(str(open_) + "".join(h(i) for i in items if i is not None) + str(close))
+
+
+# A separator between short facts ("3 in · 2 out"). Persian uses the Persian
+# comma: a middle dot beside a Persian digit reads as a zero ("۱ ·" looks like "۱۰").
+SEPARATORS = {"fa": "، ", "en": " · "}
+_FA_DIGIT = "[\u06f0-\u06f9\u0660-\u0669]"
+_FA_DOT = re.compile(f"[ \u00a0]*\u00b7[ \u00a0]*(?={_FA_DIGIT})|(?<={_FA_DIGIT})[ \u00a0]*\u00b7[ \u00a0]*")
+
+
+def sep(lang: str) -> str:
+    return SEPARATORS.get(lang, SEPARATORS["en"])
+
+
+def sep_join(lang: str, *parts: Any) -> Html:
+    """Non-empty parts joined with the reader's separator (escaped unless Html)."""
+    return Html(esc(sep(lang)).join(h(p) for p in parts if p is not None and p != ""))
+
+
+def fa_separators(text: str) -> str:
+    """A middle dot next to a Persian digit becomes a Persian comma. Every fa page goes through this."""
+    return _FA_DOT.sub(SEPARATORS["fa"], text)
 
 
 def _attrs(attrs: Optional[Mapping[str, Any]]) -> str:
@@ -150,8 +202,15 @@ _UI_ICONS = {
     "plug": '<path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"/>',
     "book": '<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H19a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6.5a1 1 0 0 1 0-5H20"/>',
     "refresh": '<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>',
+    "phone": '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
+    "phone-incoming": '<path d="M16 2v6h6"/><path d="m22 2-6 6"/><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
+    "qr": '<rect x="3" y="3" width="5" height="5" rx="1"/><rect x="16" y="3" width="5" height="5" rx="1"/><rect x="3" y="16" width="5" height="5" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/>',
     "trash": '<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>',
 }
+
+# Other names for the same drawing.
+_UI_ICONS["calls"] = _UI_ICONS["phone-incoming"]
+_UI_ICONS["qr-code"] = _UI_ICONS["qr"]
 
 # Platform glyphs, filled, drawn on the brand tile. Simplified marks, not logos.
 _PLATFORM_GLYPHS = {
@@ -291,6 +350,7 @@ STRINGS: dict[str, dict[str, str]] = {
         "signin.mcp.s1": "Sign in with your Nabux account", "signin.mcp.s2": "Connect the accounts you own",
         "signin.mcp.s3": "Add the endpoint to Claude, ChatGPT or Cursor",
         "signin.trust.official": "Official platform APIs", "signin.trust.encrypted": "Tokens encrypted at rest",
+        "signin.trust.mixed": "Official APIs + opt-in web sessions",
         "signin.trust.revoke": "Revoke access any time",
         "signin.privacy": "Nabux never sees your passwords. Access tokens stay encrypted on this server and are used only "
                           "for the actions you or your AI assistant ask for.",
@@ -350,6 +410,7 @@ STRINGS: dict[str, dict[str, str]] = {
         "signin.mcp.s1": "با حساب Nabux وارد شوید", "signin.mcp.s2": "حساب‌هایی را که مال شماست وصل کنید",
         "signin.mcp.s3": "آدرس را به Claude، ChatGPT یا Cursor بدهید",
         "signin.trust.official": "API رسمی پلتفرم", "signin.trust.encrypted": "توکن‌ها رمزنگاری‌شده",
+        "signin.trust.mixed": "API رسمی + نشست وب اختیاری",
         "signin.trust.revoke": "قطع دسترسی در هر زمان",
         "signin.privacy": "Nabux هیچ‌وقت رمز عبور شما را نمی‌بیند. توکن‌های دسترسی رمزنگاری‌شده روی همین سرور می‌مانند "
                           "و فقط برای کارهایی به کار می‌روند که شما یا دستیارتان درخواست می‌کنید.",
@@ -555,6 +616,14 @@ class Console:
     terms_url: str = "https://nabuxai.com/terms"
     http_transport: Any = None
     http_timeout: float = 30.0
+    # The sign-in page's first trust line. "signin.trust.official" fits a gateway
+    # that only uses the platform's official API; one with unofficial paths (web
+    # sessions, QR-linked devices, user sessions) says so: "signin.trust.mixed" or
+    # its own {"fa": ..., "en": ...}.
+    trust_line: Union[str, Mapping[str, str]] = "signin.trust.official"
+    # The privacy sentence under the sign-in page. Override it when the gateway
+    # does take a password (a web-session or two-step login form).
+    privacy: Union[str, Mapping[str, str]] = "signin.privacy"
 
     def __post_init__(self) -> None:
         self.base_url = self.base_url.rstrip("/")
@@ -1007,8 +1076,26 @@ def iso_time(value: Any) -> Optional[str]:
     return str(value)
 
 
+ACCOUNT_MODES = ("official", "web")
+_STANDARD_ACCOUNT_FIELDS = ("account_key", "label", "kind", "status", "connected_at", "mode")
+_EXTRA_FIELD_MAX = 200
+
+
+def _extra_field_name(name: Any) -> bool:
+    return isinstance(name, str) and 0 < len(name) <= 40 and name[0].isalpha() and name.isascii() \
+        and all(ch.isalnum() or ch == "_" for ch in name) and name == name.lower()
+
+
 def owner_accounts_payload(provider: str, accounts: Iterable[Mapping[str, Any]]) -> dict:
-    """The JSON shape every gateway answers with, de-duplicated by account_key."""
+    """The JSON shape every gateway answers with, de-duplicated by account_key.
+
+    Each account has account_key, label, kind, status and connected_at.
+    ``mode`` ("official" for the platform's API, "web" for an unofficial web /
+    QR / user session) is kept when the lookup gives one of those two values.
+    Any other snake_case field with a plain value (str, int, float, bool, None),
+    such as Instagram's ``"session": "browser"``, is passed through as it is,
+    strings cut to 200 characters. Lists, dicts and other objects are dropped.
+    """
     seen: set[str] = set()
     out = []
     for a in accounts:
@@ -1016,13 +1103,23 @@ def owner_accounts_payload(provider: str, accounts: Iterable[Mapping[str, Any]])
         if not key or key in seen:
             continue
         seen.add(key)
-        out.append({
+        item: dict[str, Any] = {
             "account_key": key,
             "label": str(a.get("label") or key),
             "kind": str(a.get("kind") or "account"),
             "status": str(a.get("status") or "connected"),
             "connected_at": iso_time(a.get("connected_at")),
-        })
+        }
+        if a.get("mode") in ACCOUNT_MODES:
+            item["mode"] = str(a["mode"])
+        for name, value in a.items():
+            if name in _STANDARD_ACCOUNT_FIELDS or not _extra_field_name(name):
+                continue
+            if isinstance(value, str):
+                item[name] = value[:_EXTRA_FIELD_MAX]
+            elif value is None or isinstance(value, (bool, int, float)):
+                item[name] = value
+        out.append(item)
     return {"ok": True, "provider": provider, "accounts": out}
 
 
@@ -1033,8 +1130,11 @@ def register_owner_accounts_route(target: Any, *, provider: str, token: Union[st
 
     ``lookup(sub, email)`` returns the accounts owned by that NabuAuth subject
     or by that (verified, lower-cased) email: dicts with account_key, label,
-    kind, status, connected_at. The account_key is the one the gateway's
-    ``/internal/v1/accounts/{account_key}`` already answers for.
+    kind, status, connected_at, and ``mode`` ("official" | "web") plus any
+    extra plain fields (see ``owner_accounts_payload``). The account_key is the
+    one the gateway's ``/internal/v1/accounts/{account_key}`` already answers for.
+    The sub and email are never logged: the query string is blanked before the
+    access log sees it.
     """
     route = registrar(target)
 
@@ -1050,6 +1150,8 @@ def register_owner_accounts_route(target: Any, *, provider: str, token: Union[st
         email = (request.query_params.get("email") or "").strip().lower()[:320]
         if email and ("@" not in email or any(ch.isspace() for ch in email)):
             email = ""
+        # The access log prints the query string once the response starts: keep the sub and email out of it.
+        request.scope["query_string"] = b"redacted"
         if not sub and not email:
             return JSONResponse({"ok": False, "detail": "sub_or_email_required"}, status_code=400)
         return JSONResponse(owner_accounts_payload(provider, lookup(sub, email)))
@@ -1080,6 +1182,14 @@ class Ctx:
 
     def num(self, value: Any) -> str:
         return digits(value, self.lang)
+
+    @property
+    def sep(self) -> str:
+        """" · " in English, "، " in Persian (see ``sep_join``)."""
+        return sep(self.lang)
+
+    def sep_join(self, *parts: Any) -> Html:
+        return sep_join(self.lang, *parts)
 
     @property
     def csrf(self) -> str:
@@ -1213,6 +1323,98 @@ def endpoint_row(label: Any, value: str, ctx: Ctx, *, hint: Any = None, copy: bo
     shown = esc(value).replace("/", "/<wbr>").replace("/<wbr>/<wbr>", "//")  # break long URLs after a slash
     return Html(f'<div class="nx-field">{lab}<div class="nx-endpoint"><code dir="ltr">{shown}</code>{cp}</div>'
                 f'{hint_html}</div>')
+
+
+# ---- forms (classes in console.css "Forms") ---------------------------------
+def _described(fid: str, hint: Any, error: Any) -> tuple[str, str, dict[str, Any]]:
+    hint_id, err_id = f"{fid}-hint", f"{fid}-err"
+    described = " ".join(x for x, on in ((hint_id, hint is not None), (err_id, error is not None)) if on)
+    hint_html = f'<p class="nx-field__hint" id="{esc(hint_id)}">{h(hint)}</p>' if hint is not None else ""
+    err_html = (f'<p class="nx-field__error" id="{esc(err_id)}">{icon("alert", 14)}<span>{h(error)}</span></p>'
+                if error is not None else "")
+    return hint_html, err_html, {"aria-describedby": described or None,
+                                 "aria-invalid": "true" if error is not None else None}
+
+
+def _field(fid: str, label: Any, control: str, hint_html: str, err_html: str, kind: str) -> Html:
+    return Html(f'<div class="nx-field nx-field--{kind}"><label class="nx-field__label" for="{esc(fid)}">{h(label)}</label>'
+                f'{control}{err_html}{hint_html}</div>')
+
+
+def text_field(name: str, label: Any, *, type: str = "text", value: Any = "", placeholder: str = "",
+               hint: Any = None, error: Any = None, autocomplete: Optional[str] = None,
+               inputmode: Optional[str] = None, required: bool = False, autofocus: bool = False,
+               ltr: bool = False, cls: str = "", id: Optional[str] = None,
+               attrs: Optional[Mapping[str, Any]] = None) -> Html:
+    """A labelled native input (phone numbers, codes, passwords, keys). ``ltr`` for numbers/latin.
+
+    A password's value is never written back into the page. ``cls`` adds
+    ``nx-input--lg`` (a big phone field) or ``nx-input--code`` (a one-time code).
+    """
+    fid = id or f"f-{name}"
+    hint_html, err_html, aria = _described(fid, hint, error)
+    extra: dict[str, Any] = {"autocomplete": autocomplete, "inputmode": inputmode, "required": required,
+                             "autofocus": autofocus, "dir": "ltr" if ltr else None, **aria}
+    extra.update(attrs or {})
+    ph = f' placeholder="{esc(placeholder)}"' if placeholder else ""
+    val = f' value="{esc(value)}"' if value not in (None, "") and type != "password" else ""
+    control = (f'<input class="nx-input {esc(cls)}" id="{esc(fid)}" name="{esc(name)}" type="{esc(type)}"{val}{ph}'
+               f'{_attrs(extra)}>')
+    return _field(fid, label, control, hint_html, err_html, "input")
+
+
+def select_field(name: str, label: Any, options: Iterable[Union[tuple[Any, Any], Any]], *, value: Any = "",
+                 hint: Any = None, error: Any = None, required: bool = False, cls: str = "",
+                 id: Optional[str] = None, attrs: Optional[Mapping[str, Any]] = None) -> Html:
+    """A labelled <select>. ``options`` are (value, label) pairs or plain values; ``value`` is selected."""
+    fid = id or f"f-{name}"
+    hint_html, err_html, aria = _described(fid, hint, error)
+    extra: dict[str, Any] = {"required": required, **aria}
+    extra.update(attrs or {})
+    opts = []
+    for opt in options:
+        v, lab = opt if isinstance(opt, tuple) else (opt, opt)
+        sel = " selected" if str(v) == str(value) else ""
+        opts.append(f'<option value="{esc(v)}"{sel}>{h(lab)}</option>')
+    control = (f'<select class="nx-select {esc(cls)}" id="{esc(fid)}" name="{esc(name)}"{_attrs(extra)}>'
+               f'{"".join(opts)}</select>')
+    return _field(fid, label, control, hint_html, err_html, "select")
+
+
+def textarea_field(name: str, label: Any, *, value: Any = "", placeholder: str = "", hint: Any = None,
+                   error: Any = None, required: bool = False, ltr: bool = False, rows: Optional[int] = None,
+                   mono: bool = False, cls: str = "", id: Optional[str] = None,
+                   attrs: Optional[Mapping[str, Any]] = None) -> Html:
+    """A labelled <textarea>. ``mono`` for pasted cookies, JSON or keys."""
+    fid = id or f"f-{name}"
+    hint_html, err_html, aria = _described(fid, hint, error)
+    extra: dict[str, Any] = {"required": required, "dir": "ltr" if ltr else None, "rows": rows,
+                             "placeholder": placeholder or None, **aria}
+    extra.update(attrs or {})
+    klass = "nx-textarea" + (" nx-textarea--mono" if mono else "") + (f" {cls}" if cls else "")
+    control = (f'<textarea class="{esc(klass)}" id="{esc(fid)}" name="{esc(name)}"{_attrs(extra)}>'
+               f'{esc(value)}</textarea>')
+    return _field(fid, label, control, hint_html, err_html, "textarea")
+
+
+def checkbox(name: str, label: Any, *, checked: bool = False, value: Any = "1", cls: str = "",
+             attrs: Optional[Mapping[str, Any]] = None) -> Html:
+    """A checkbox with its label beside it (wraps onto more lines cleanly)."""
+    extra: dict[str, Any] = {"checked": checked}
+    extra.update(attrs or {})
+    return Html(f'<label class="nx-check {esc(cls)}"><input type="checkbox" name="{esc(name)}" value="{esc(value)}"'
+                f'{_attrs(extra)}><span>{h(label)}</span></label>')
+
+
+def hidden_field(name: str, value: Any) -> Html:
+    return Html(f'<input type="hidden" name="{esc(name)}" value="{esc(value)}">')
+
+
+def details(summary: Any, body: Any, *, open: bool = False, subtle: bool = False, cls: str = "") -> Html:
+    """A native disclosure: "Advanced", "Edit", "Replace". ``subtle`` is the quieter summary style."""
+    base = "nx-disclosure" if subtle else "nx-details"
+    return Html(f'<details class="{base} {esc(cls)}"{" open" if open else ""}><summary>{h(summary)}</summary>'
+                f'<div class="{base}__body">{h(body)}</div></details>')
 
 
 def code_block(text: str, ctx: Ctx, *, label: Any = None, copy: bool = True) -> Html:
@@ -1384,6 +1586,8 @@ def _shell_response(c: Ctx, title: str, body: str, *, status: int = 200, headers
         f'<style>:root{{--nx-platform:{esc(bg)};--nx-platform-fg:{esc(fg)}}}</style>'
         f'</head>{body}</html>'
     )
+    if c.lang == "fa":
+        doc = fa_separators(doc)
     base = {
         "Cache-Control": "no-store",
         "X-Frame-Options": "DENY",
@@ -1567,8 +1771,8 @@ def _signin_page(c: Ctx, notice_html: Any, next_path: Optional[str]) -> str:
         fallback_note = notice(c.t("signin.disabled.text"), tone="warning", title=c.t("signin.disabled.title"))
     headline = con.text(c.lang, con.headline) or con.product
     tagline = con.text(c.lang, con.tagline)
-    trust = "".join(f'<li>{icon(ic, 15)}<span>{esc(c.t(k))}</span></li>' for ic, k in (
-        ("shield", "signin.trust.official"), ("lock", "signin.trust.encrypted"), ("refresh", "signin.trust.revoke")))
+    trust = "".join(f'<li>{icon(ic, 15)}<span>{esc(con.text(c.lang, k))}</span></li>' for ic, k in (
+        ("shield", con.trust_line), ("lock", "signin.trust.encrypted"), ("refresh", "signin.trust.revoke")))
     features = "".join(
         f'<li class="nx-feat"><span class="nx-feat__icon">{icon(f.icon, 16)}</span><div><p class="nx-feat__title">'
         f'{esc(con.text(c.lang, f.title))}</p><p class="nx-feat__text">{esc(con.text(c.lang, f.text))}</p></div></li>'
@@ -1608,7 +1812,7 @@ def _signin_page(c: Ctx, notice_html: Any, next_path: Optional[str]) -> str:
         f'<ul class="nx-trust">{trust}</ul></div>'
         f'<div class="nx-hero__art">{diagram}</div></section>'
         f'{connects}{mcp}'
-        f'<p class="nx-land__privacy">{icon("lock", 14)}<span>{esc(c.t("signin.privacy"))}</span></p>'
+        f'<p class="nx-land__privacy">{icon("lock", 14)}<span>{esc(con.text(c.lang, con.privacy))}</span></p>'
         f'</main>{_footer(c)}<div class="nx-toasts" aria-live="polite" aria-atomic="true"></div></body>'
     )
 
@@ -1634,5 +1838,6 @@ __all__ = [
     "code_block", "steps", "notice", "danger_zone", "kv_list", "tabs", "avatar", "platform_tile", "nabux_mark",
     "tools_list", "mcp_tools", "connect_ai", "theme_switch", "lang_switch", "pick_lang", "direction", "safe_next", "pkce", "verified_email",
     "registrar", "serve_static", "asset", "ASSET_VERSION", "register_owner_accounts_route", "owner_accounts_payload",
-    "iso_time", "accessible_pair", "contrast", "digits",
+    "iso_time", "accessible_pair", "contrast", "digits", "text_field", "hidden_field", "select_field",
+    "textarea_field", "checkbox", "details", "tag", "sep", "sep_join", "fa_separators", "ACCOUNT_MODES",
 ]

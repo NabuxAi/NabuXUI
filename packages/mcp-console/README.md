@@ -165,9 +165,49 @@ Helpers (all escape their text; pass `nx.Html(...)` for markup you built safely)
 labelled rows on phones), `empty_state`, `notice`, `endpoint_row` (monospace value +
 copy), `code_block`, `copy_button`, `steps`, `kv_list`, `tabs`, `danger_zone`,
 `button` (`primary`/`secondary`/`ghost`/`danger`/`danger-outline`/`platform`),
-`post_form` (adds the console CSRF field; `confirm=` asks first), `icon`.
+`post_form` (adds the console CSRF field; `confirm=` asks first), `icon`, `join`, `tag`.
 
-Forms: validate with `console.csrf_ok(request, form.get("csrf"))`; `ctx.csrf_field()` / `post_form` add it.
+Icons worth knowing besides the nav set: `phone`, `calls` (= `phone-incoming`, for call
+logs and voice), `qr` (QR linking), `key`, `lock`, `shield`, `zap` (automation only, not calls).
+
+**`Html` and `+`.** `Html + Html` is `Html`. A plain `str` on either side of `+` raises
+`TypeError`, because Python cannot tell markup you wrote (`'<div>' + nx.button(...)`
+used to come out as visible `&lt;div&gt;`) from text that must be escaped (a user
+name). Say which one it is:
+
+```python
+nx.Html('<div class="nx-actions">') + nx.button("Save") + nx.Html("</div>")   # markup you wrote
+nx.tag('<div class="nx-actions">', nx.button("Save"), name, close="</div>")  # ends are markup, items escaped
+nx.join(name, " ", nx.badge("Live"))                                         # text escaped, Html kept
+nx.Html(f'<p class="nx-muted">{nx.esc(name)} {nx.badge("Live")}</p>')        # f-string: escape by hand
+```
+
+**Forms.** Validate with `console.csrf_ok(request, form.get("csrf"))`; `ctx.csrf_field()` /
+`post_form` add it. The kit has one form system (`console.css`, "Forms"); do not carry
+form CSS in a gateway.
+
+- Fields: `nx.text_field(name, label, type=, value=, hint=, error=, ltr=, autocomplete=, cls="nx-input--lg"|"nx-input--code")`
+  (labelled, `aria-describedby` for the hint and error, a password value is never written back),
+  `nx.select_field(name, label, [(value, label), ...], value=)`, `nx.textarea_field(name, label, mono=True, ltr=True)`,
+  `nx.checkbox(name, label, checked=)`, `nx.hidden_field(name, value)`, `nx.details(summary, body, open=, subtle=)`.
+- Hand-written markup uses the same classes: `<form class="nx-form">` (16px grid; add
+  `nx-form--narrow` for a 460px login form, `nx-form--row` for fields side by side),
+  `<label class="nx-label"><span>Label</span><input class="nx-input">…<span class="nx-form__hint">…</span></label>`,
+  `nx-select`, `nx-textarea`, `nx-check`, `<div class="nx-form__actions">` (buttons),
+  `nx-actions` (buttons/badges in a table cell), `nx-details` / `nx-disclosure` (+ `__body`).
+
+**Persian separators.** A middle dot beside a Persian digit reads as a zero ("۱ ·" looks like
+"۱۰"). Join short facts with `ctx.sep_join(a, b)` (`" · "` in English, `"، "` in Persian).
+As a safety net every fa page passes through `nx.fa_separators`, which turns a `·` next to a
+Persian digit into `"، "`; dots between words are left alone.
+
+**Sign-in page.** `Console(trust_line=...)` is the first trust line under the button:
+the default `"signin.trust.official"` ("Official platform APIs") only for a gateway that
+uses nothing but the platform's API. A gateway with an unofficial path (web or browser
+sessions, QR-linked devices, user sessions) sets `"signin.trust.mixed"` ("Official APIs +
+opt-in web sessions") or its own `{"fa": ..., "en": ...}`. `Console(privacy=...)` replaces
+the "Nabux never sees your passwords" sentence; set it when the gateway has a form that
+takes a password or a two-step code.
 
 Language: `ctx.lang` is `fa` or `en` (`?lang=`, then the `nx_lang` cookie, then
 Accept-Language, then fa). Use `ctx.pick(fa, en)` for page copy, `ctx.t(key)` for
@@ -193,8 +233,12 @@ nx.register_owner_accounts_route(
 
 - 404 when `INTERNAL_SERVICE_TOKEN` is unset, 401 on a wrong token (constant-time compare),
   400 when neither `sub` nor a valid `email` is given.
-- 200 `{"ok": true, "provider": "<name>", "accounts": [{"account_key", "label", "kind", "status", "connected_at"}]}`;
+- 200 `{"ok": true, "provider": "<name>", "accounts": [{"account_key", "label", "kind", "status", "connected_at", "mode"?, ...}]}`;
   `connected_at` is ISO 8601 UTC (unix seconds/ms are converted); duplicates are dropped.
+- `mode`: `"official"` (the platform's API) or `"web"` (an unofficial web, QR or user session) — kept when
+  the lookup gives one of those; Social marks web accounts as unofficial. Any other snake_case field with a
+  plain value (`"session": "browser"`, a bool, a number) is passed through; lists and dicts are dropped.
+- The query string (sub and email) is blanked before the access log prints the request.
 - `account_key` **must** be the key the app's existing `/internal/v1/accounts/{account_key}` answers for —
   test that round trip (FaceBookMCP's `test_owner_accounts_route_finds_pages_by_sub_or_verified_email`).
 - Match by `nabu_sub`, or by email only where NabuAuth said `email_verified: true` at sign-in.
@@ -247,3 +291,13 @@ Embedded Signup) passes `headers={"Content-Security-Policy": ...}` to `render_pa
 
 The product switcher list (`PRODUCTS`) lives only in `nabux_console.py`. Add a new
 MCP there, run the tests, and sync to every repo.
+
+## Versions
+
+- **1.1.0** — the fixes the ten rollout lanes carried locally, upstreamed: one forms system
+  (`text_field`, `select_field`, `textarea_field`, `checkbox`, `hidden_field`, `details`, `.nx-form*`
+  classes; `.nx-form` no longer caps width, use `nx-form--narrow`); `tag()`; plain `str` + `Html`
+  raises `TypeError` instead of silently escaping; `Console(trust_line=, privacy=)`; `phone`,
+  `calls`, `qr` icons; Persian separators (`sep_join`, `fa_separators`); owner discovery keeps
+  `mode` and plain extra fields and blanks the query string before the access log.
+- **1.0.0** — first release (FaceBookMCP reference integration).

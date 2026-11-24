@@ -515,6 +515,60 @@ html[lang="fa"] .nx-page__title { letter-spacing: 0; font-weight: 700; font-size
 .nx-copy.is-copied .nx-copy__b { display: block; }
 .no-js .nx-copy { display: none; }
 
+/* ---- Forms ----------------------------------------------------------------
+ * One system for every gateway form (schedules, rules, app settings, phone /
+ * code / password logins). Python helpers: text_field, select_field,
+ * textarea_field, checkbox, details (nabux_console.py). Hand-written markup
+ * uses the same classes:
+ *   <form class="nx-form [nx-form--narrow | nx-form--row]">
+ *     <label class="nx-label"><span>Label</span><input class="nx-input"><span class="nx-form__hint">…</span></label>
+ *     <div class="nx-form__actions">buttons</div>
+ *   </form>
+ * Compact controls (38px) sit in .nx-label grids; text_field() is the roomier
+ * single-field style (44px) the login steps use. */
+.nx-form { display: grid; gap: 16px; min-width: 0; }
+.nx-form--narrow { max-width: 460px; }
+.nx-form--wide { max-width: none; }
+.nx-form--row { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; align-items: end; }
+.nx-form__actions, .nx-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.nx-actions form { display: inline-flex; margin: 0; }
+.nx-form__hint { font-size: 12.5px; font-weight: 400; line-height: 1.5; color: var(--nx-text-muted); }
+.nx-label { display: grid; gap: 6px; min-width: 0; align-content: start; font-size: 12.5px; font-weight: 600; color: var(--nx-text-muted); }
+.nx-field--input .nx-field__label { font-size: 13.5px; color: var(--nx-text); }
+.nx-input, .nx-select, .nx-textarea {
+  width: 100%; min-width: 0; min-height: 38px; padding: 8px 11px; border-radius: var(--nx-radius-sm);
+  border: 1px solid var(--nx-border); background: var(--nx-surface); color: var(--nx-text);
+  font: inherit; font-size: 14px; font-weight: 400; line-height: 1.45; box-shadow: var(--nx-shadow-xs);
+  transition: border-color var(--nx-dur-fast) var(--nx-ease-out), box-shadow var(--nx-dur-base) var(--nx-ease-out);
+}
+.nx-input::placeholder, .nx-textarea::placeholder { color: var(--nx-text-subtle); opacity: 1; }
+.nx-input:hover, .nx-select:hover, .nx-textarea:hover { border-color: var(--nx-border-strong); }
+.nx-input:focus, .nx-select:focus, .nx-textarea:focus {
+  outline: none; border-color: var(--nx-accent); box-shadow: 0 0 0 3px var(--nx-accent-soft);
+}
+.nx-input[aria-invalid="true"], .nx-select[aria-invalid="true"], .nx-textarea[aria-invalid="true"] { border-color: var(--nx-danger); }
+.nx-input[aria-invalid="true"]:focus, .nx-select[aria-invalid="true"]:focus, .nx-textarea[aria-invalid="true"]:focus {
+  box-shadow: 0 0 0 3px var(--nx-danger-soft);
+}
+.nx-input[dir="ltr"], .nx-textarea[dir="ltr"] { text-align: left; }
+.nx-input[type="file"] { padding: 6px; }
+.nx-textarea { min-height: 96px; line-height: 1.6; resize: vertical; }
+.nx-textarea--mono { font-family: var(--nx-font-mono); font-size: 12.5px; }
+.nx-select { appearance: auto; }
+.nx-field--input .nx-input { min-height: 44px; padding: 0 14px; font-size: 15px; }
+.nx-input.nx-input--lg { min-height: 50px; font-size: 17px; }
+.nx-input.nx-input--code { min-height: 54px; font: 600 24px/1 var(--nx-font-mono); letter-spacing: .32em; text-align: center; }
+.nx-field__error { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--nx-danger-text); }
+.nx-check { display: flex; align-items: flex-start; gap: 8px; font-size: 13.5px; font-weight: 500; line-height: 1.5; color: var(--nx-text); cursor: pointer; }
+.nx-check input { flex: none; width: 16px; height: 16px; margin: 2px 0 0; accent-color: var(--nx-accent); }
+.nx-details, .nx-disclosure { border: 1px solid var(--nx-border); border-radius: var(--nx-radius-sm); background: var(--nx-bg-subtle); min-width: 0; }
+.nx-details > summary, .nx-disclosure > summary {
+  cursor: pointer; padding: 10px 14px; font-size: 13.5px; font-weight: 600; color: var(--nx-text); list-style-position: inside;
+}
+.nx-disclosure > summary { font-size: 13px; font-weight: 400; color: var(--nx-text-muted); }
+.nx-details[open] > summary, .nx-disclosure[open] > summary { border-bottom: 1px solid var(--nx-border); }
+.nx-details__body, .nx-disclosure__body { display: grid; gap: 12px; padding: 14px; }
+
 .nx-code { border: 1px solid var(--nx-border); border-radius: var(--nx-radius-sm); overflow: hidden; background: var(--nx-bg-subtle); min-width: 0; }
 .nx-code__head {
   display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 38px;
@@ -819,6 +873,7 @@ html[lang="fa"] .nx-land__h2 { letter-spacing: 0; font-weight: 700; }
 @keyframes nx-fade { from { opacity: 0; } }
 @media (max-width: 720px) {
   .nx-grid--2, .nx-grid--3, .nx-tools__list { grid-template-columns: minmax(0, 1fr); }
+  .nx-form--row { grid-template-columns: minmax(0, 1fr); }
   .nx-feats { grid-template-columns: minmax(0, 1fr); }
   .nx-switch__panel { position: fixed; top: calc(var(--nx-top-h) + 4px); inset-inline: 10px; width: auto; }
   .nx-user__panel { position: fixed; top: calc(var(--nx-top-h) + 4px); inset-inline: 10px auto; inset-inline-end: 10px; width: auto; }
